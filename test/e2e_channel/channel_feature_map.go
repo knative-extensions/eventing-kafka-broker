@@ -20,26 +20,26 @@
 package e2e_channel
 
 import (
-	"os"
-	"testing"
-
-	eventingTest "knative.dev/eventing/test"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/pkg/system"
+
+	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 )
 
-var channelTestRunner testlib.ComponentsTestRunner
+// Kind for messaging resources.
+const (
+	KafkaChannelKind string = "KafkaChannel"
+)
 
-func TestMain(m *testing.M) {
-
-	eventingTest.InitializeEventingFlags()
-	channelTestRunner = testlib.ComponentsTestRunner{
-		ComponentFeatureMap: ChannelFeatureMap,
-		ComponentsToTest:    eventingTest.EventingFlags.Channels,
-	}
-	os.Exit(func() int {
-		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
-
-		return m.Run()
-	}())
+// ChannelFeatureMap saves the channel-features mapping.
+// Each pair means the channel support the list of features.
+var ChannelFeatureMap = map[metav1.TypeMeta][]testlib.Feature{
+	{
+		APIVersion: messagingv1beta1.SchemeGroupVersion.String(),
+		Kind:       KafkaChannelKind,
+	}: {
+		testlib.FeatureBasic,
+		testlib.FeatureRedelivery,
+		testlib.FeaturePersistence,
+	},
 }
