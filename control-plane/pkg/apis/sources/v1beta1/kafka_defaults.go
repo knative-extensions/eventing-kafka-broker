@@ -24,7 +24,7 @@ import (
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 
-	"knative.dev/eventing-kafka/pkg/apis/sources/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/config"
 )
 
 const (

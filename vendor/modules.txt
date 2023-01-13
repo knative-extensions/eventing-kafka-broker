@@ -1378,27 +1378,17 @@ knative.dev/eventing/test/upgrade/prober/wathola/sender
 ## explicit; go 1.18
 knative.dev/eventing-kafka/pkg/apis/bindings
 knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1
-knative.dev/eventing-kafka/pkg/apis/kafka
-knative.dev/eventing-kafka/pkg/apis/kafka/v1alpha1
 knative.dev/eventing-kafka/pkg/apis/messaging
 knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1
 knative.dev/eventing-kafka/pkg/apis/sources/config
 knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
 knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants
-knative.dev/eventing-kafka/pkg/client/clientset/versioned
-knative.dev/eventing-kafka/pkg/client/clientset/versioned/scheme
-knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/bindings/v1beta1
-knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/kafka/v1alpha1
-knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/messaging/v1beta1
-knative.dev/eventing-kafka/pkg/client/clientset/versioned/typed/sources/v1beta1
 knative.dev/eventing-kafka/pkg/common/client
 knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
 knative.dev/eventing-kafka/pkg/common/kafka/offset
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
 knative.dev/eventing-kafka/test
-knative.dev/eventing-kafka/test/lib
-knative.dev/eventing-kafka/test/lib/resources
 # knative.dev/hack v0.0.0-20230110013548-af8745e34e08
 ## explicit; go 1.18
 knative.dev/hack
