@@ -31,6 +31,26 @@ import (
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 )
 
+func SetupNamespacedBroker(name string) *feature.Feature {
+	f := feature.NewFeatureNamed("setup namespaced broker")
+
+	f.Setup("Create broker config", brokerconfigmap.Install(
+		"kafka-broker-config",
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+	))
+	f.Setup(fmt.Sprintf("install broker %q", name), broker.Install(
+		name,
+		broker.WithBrokerClass(kafka.NamespacedBrokerClass),
+		broker.WithConfig("kafka-broker-config"),
+	))
+	f.Setup("Broker is ready", broker.IsReady(name))
+	f.Setup("Broker is addressable", broker.IsAddressable(name))
+
+	return f
+}
+
 func NamespacedBrokerResourcesPropagation() *feature.Feature {
 	f := feature.NewFeatureNamed("Namespaced Broker resource propagation")
 
