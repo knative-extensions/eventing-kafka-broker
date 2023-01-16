@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"

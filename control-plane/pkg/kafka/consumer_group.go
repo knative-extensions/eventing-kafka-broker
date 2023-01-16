@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/Shopify/sarama"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 )
 
 // InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.

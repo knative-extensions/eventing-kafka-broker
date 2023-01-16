@@ -20,7 +20,7 @@ import (
 	"github.com/Shopify/sarama"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"knative.dev/eventing-kafka/pkg/common/client"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 // EKKubernetesConfig and these EK sub-structs contain our custom configuration settings,
@@ -86,10 +86,10 @@ type EKSaramaConfig struct {
 
 // EventingKafkaConfig is the main struct that holds the Receiver, Dispatcher, and Kafka sub-items
 type EventingKafkaConfig struct {
-	Channel     EKChannelConfig         `json:"channel,omitempty"`
-	CloudEvents EKCloudEventConfig      `json:"cloudevents,omitempty"`
-	Kafka       EKKafkaConfig           `json:"kafka,omitempty"`
-	Sarama      EKSaramaConfig          `json:"sarama,omitempty"`
-	Source      EKSourceConfig          `json:"source,omitempty"`
-	Auth        *client.KafkaAuthConfig `json:"-"` // Not directly part of the configmap; loaded from the secret
+	Channel     EKChannelConfig           `json:"channel,omitempty"`
+	CloudEvents EKCloudEventConfig        `json:"cloudevents,omitempty"`
+	Kafka       EKKafkaConfig             `json:"kafka,omitempty"`
+	Sarama      EKSaramaConfig            `json:"sarama,omitempty"`
+	Source      EKSourceConfig            `json:"source,omitempty"`
+	Auth        *security.KafkaAuthConfig `json:"-"` // Not directly part of the configmap; loaded from the secret
 }

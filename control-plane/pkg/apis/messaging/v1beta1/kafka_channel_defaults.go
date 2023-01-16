@@ -18,11 +18,27 @@ package v1beta1
 
 import (
 	"context"
+	"time"
 
 	"knative.dev/eventing/pkg/apis/messaging"
 	"knative.dev/pkg/apis"
+)
 
-	"knative.dev/eventing-kafka/pkg/common/constants"
+const (
+	// DefaultNumPartitions is the KafkaChannel Spec default for the number of partitions
+	DefaultNumPartitions = 1
+
+	// DefaultReplicationFactor is the KafkaChannel Spec default for the replication factor
+	DefaultReplicationFactor = 1
+
+	// DefaultRetentionISO8601Duration is the KafkaChannel Spec default for the retention duration as an ISO-8601 string
+	DefaultRetentionISO8601Duration = "PT168H" // Precise 7 Days
+
+	// DefaultRetentionDuration is the time.Duration equivalent of the DefaultRetentionISO8601Duration
+	DefaultRetentionDuration = 7 * 24 * time.Hour // Precise 7 Days
+
+	// KafkaTopicConfigRetentionMs is the key in the Sarama TopicDetail ConfigEntries map for retention time (in ms)
+	KafkaTopicConfigRetentionMs = "retention.ms"
 )
 
 func (kc *KafkaChannel) SetDefaults(ctx context.Context) {
@@ -45,13 +61,13 @@ func (kc *KafkaChannel) SetDefaults(ctx context.Context) {
 
 func (kcs *KafkaChannelSpec) SetDefaults(ctx context.Context) {
 	if kcs.NumPartitions == 0 {
-		kcs.NumPartitions = constants.DefaultNumPartitions
+		kcs.NumPartitions = DefaultNumPartitions
 	}
 	if kcs.ReplicationFactor == 0 {
-		kcs.ReplicationFactor = constants.DefaultReplicationFactor
+		kcs.ReplicationFactor = DefaultReplicationFactor
 	}
 	if len(kcs.RetentionDuration) <= 0 {
-		kcs.RetentionDuration = constants.DefaultRetentionISO8601Duration
+		kcs.RetentionDuration = DefaultRetentionISO8601Duration
 	}
 	kcs.Delivery.SetDefaults(ctx)
 }

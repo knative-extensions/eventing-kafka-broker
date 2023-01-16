@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 
-	knsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
+	knsarama "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/sarama"
 )
 
 // We want to make sure that ALL consumer group offsets are set before marking

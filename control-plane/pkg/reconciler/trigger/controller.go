@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
