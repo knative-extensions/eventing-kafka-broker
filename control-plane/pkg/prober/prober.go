@@ -81,7 +81,7 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 	response, err := client.Do(r)
 	if err != nil {
 		logger.Error("Failed probe", zap.Error(err))
-		return StatusUnknown
+		return StatusUnknownErr
 	}
 
 	if response.StatusCode != http.StatusOK {

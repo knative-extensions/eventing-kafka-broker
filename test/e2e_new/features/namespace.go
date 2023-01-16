@@ -19,10 +19,12 @@ package features
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/reconciler-test/pkg/feature"
 )
@@ -50,12 +52,28 @@ func SetupNamespace(name string) *feature.Feature {
 func CleanupNamespace(name string) *feature.Feature {
 	f := feature.NewFeatureNamed("delete namespace")
 
-	f.Setup(fmt.Sprintf("install namespace %s", name), func(ctx context.Context, t feature.T) {
-		err := kubeclient.Get(ctx).CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+	f.Setup(fmt.Sprintf("delete namespace %s", name), func(ctx context.Context, t feature.T) {
+		pp := metav1.DeletePropagationForeground
+		err := kubeclient.Get(ctx).CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{
+			PropagationPolicy: &pp,
+		})
 		if err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 
+	})
+
+	f.Assert(fmt.Sprintf("wait for namespace %s to be deleted", name), func(ctx context.Context, t feature.T) {
+		err := wait.PollImmediate(100*time.Millisecond, time.Minute, func() (done bool, err error) {
+			_, err = kubeclient.Get(ctx).CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+			if err != nil && apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		})
+		if err != nil {
+			t.Errorf("failed while waiting for namespace %s to be deleted %v", name, err)
+		}
 	})
 
 	return f
