@@ -108,7 +108,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	brokerConfig, err := r.brokerConfigMap(logger, broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+
+	topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -347,10 +352,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
 	if !externalTopic {
-
-		// I do not like the use of `_`
-		// TODO: refactor
-		topicConfig, _, err := r.topicConfig(logger, broker)
+		topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 		if err != nil {
 			return fmt.Errorf("failed to resolve broker config: %w", err)
 		}
@@ -505,28 +507,19 @@ func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker
 	return cm, getCmError
 }
 
-// TODO: pass the configmap to this function
-func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
-
-	cm, getCmError := r.brokerConfigMap(logger, broker)
-	// For generic errors, we return the error, when the ConfigMap wasn't found we try to get topic information from
-	// the rebuilt ConfigMap, if it's still not possible we return the `getCmError` down below.
-	if getCmError != nil && !apierrors.IsNotFound(getCmError) {
-		return nil, nil, getCmError
-	}
-
-	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
+func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker, brokerConfig *corev1.ConfigMap) (*kafka.TopicConfig, error) {
+	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, brokerConfig)
 	if err != nil {
 		// Check if the rebuilt CM is empty
-		if cm != nil && len(cm.Data) == 0 {
-			return nil, cm, fmt.Errorf("unable to rebuild topic config, failed to get configmap %s/%s: %w", r.brokerNamespace(broker), broker.Spec.Config.Name, getCmError)
+		if brokerConfig != nil && len(brokerConfig.Data) == 0 {
+			return nil, fmt.Errorf("unable to rebuild topic config, failed to get configmap %s/%s", r.brokerNamespace(broker), broker.Spec.Config.Name)
 		}
-		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
+		return nil, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, brokerConfig.Data)
 	}
 
-	storeConfigMapAsStatusAnnotation(broker, cm)
+	storeConfigMapAsStatusAnnotation(broker, brokerConfig)
 
-	return topicConfig, cm, nil
+	return topicConfig, nil
 }
 
 // Save ConfigMap's data into broker annotations, to prevent issue when the ConfigMap itself is being deleted
