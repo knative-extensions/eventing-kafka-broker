@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -142,28 +141,4 @@ func (a *AnnotationsSecretLocator) SecretName() (string, bool) {
 func (a *AnnotationsSecretLocator) SecretNamespace() (string, bool) {
 	name, ok := a.SecretName()
 	return a.Namespace, len(a.Namespace) > 0 && ok && len(name) > 0
-}
-
-type KafkaAuthConfig struct {
-	TLS  *KafkaTlsConfig
-	SASL *KafkaSaslConfig
-}
-
-type KafkaTlsConfig struct {
-	Cacert   string
-	Usercert string
-	Userkey  string
-}
-
-type KafkaSaslConfig struct {
-	User     string
-	Password string
-	SaslType string
-}
-
-// HasSameSettings returns true if all of the SASL settings in the provided config are the same as in this struct
-func (c *KafkaSaslConfig) HasSameSettings(saramaConfig *sarama.Config) bool {
-	return saramaConfig.Net.SASL.User == c.User &&
-		saramaConfig.Net.SASL.Password == c.Password &&
-		string(saramaConfig.Net.SASL.Mechanism) == c.SaslType
 }
