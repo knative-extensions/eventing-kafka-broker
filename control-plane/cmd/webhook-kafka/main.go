@@ -32,11 +32,11 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
-	sourcesv1beta1 "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingcorev1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 
-	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/core"
 	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"

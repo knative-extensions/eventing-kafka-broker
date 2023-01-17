@@ -17,9 +17,10 @@
 package security
 
 import (
+	"strconv"
+
+	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
-	"knative.dev/eventing-kafka/pkg/common/client"
-	legacycommonconfig "knative.dev/eventing-kafka/pkg/common/config"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
@@ -29,7 +30,7 @@ func ResolveAuthContextFromLegacySecret(s *corev1.Secret) (*NetSpecAuthContext, 
 		return &NetSpecAuthContext{}, nil
 	}
 
-	legacyAuth := legacycommonconfig.GetAuthConfigFromSecret(s)
+	legacyAuth := getAuthConfigFromSecret(s)
 	protocolStr, protocolContract := extractProtocol(legacyAuth)
 
 	virtualSecret := s.DeepCopy()
@@ -103,7 +104,7 @@ func maybeAddKeyFieldRef(s *corev1.Secret, key string, field contract.SecretFiel
 	return false
 }
 
-func extractProtocol(auth *client.KafkaAuthConfig) (string, contract.Protocol) {
+func extractProtocol(auth *KafkaAuthConfig) (string, contract.Protocol) {
 	if hasTLSEnabled(auth) && hasSASLEnabled(auth) {
 		return ProtocolSASLSSL, contract.Protocol_SASL_SSL
 	}
@@ -116,10 +117,70 @@ func extractProtocol(auth *client.KafkaAuthConfig) (string, contract.Protocol) {
 	return ProtocolPlaintext, contract.Protocol_PLAINTEXT
 }
 
-func hasTLSEnabled(auth *client.KafkaAuthConfig) bool {
+func hasTLSEnabled(auth *KafkaAuthConfig) bool {
 	return auth.TLS != nil && (auth.TLS.Userkey != "" || auth.TLS.Cacert != "" || auth.TLS.Usercert != "")
 }
 
-func hasSASLEnabled(auth *client.KafkaAuthConfig) bool {
+func hasSASLEnabled(auth *KafkaAuthConfig) bool {
 	return auth.SASL != nil && auth.SASL.User != "" || auth.SASL.Password != ""
+}
+
+// getAuthConfigFromSecret Looks Up And Returns Kafka Auth Config And Brokers From Provided Secret
+func getAuthConfigFromSecret(secret *corev1.Secret) *KafkaAuthConfig {
+	if secret == nil || secret.Data == nil {
+		return nil
+	}
+
+	username := string(secret.Data[SaslUsernameKey])
+	saslType := string(secret.Data[SaslType])
+	var authConfig KafkaAuthConfig
+	// Backwards-compatibility - Support old consolidated secret fields if present
+	// (TLS data is now in the configmap, e.g. sarama.Config.Net.TLS.Config.RootPEMs)
+	_, hasTlsCaCert := secret.Data[CaCertificateKey]
+	_, hasTlsEnabled := secret.Data[SSLLegacyEnabled]
+	if hasTlsEnabled || hasTlsCaCert {
+		parseTls(secret, &authConfig)
+		username = string(secret.Data[SaslUserKey])
+		saslType = string(secret.Data[SaslTypeLegacy]) // old "saslType" is different than new "sasltype"
+	}
+
+	// If we don't convert the empty string to the "PLAIN" default, the client.HasSameSettings()
+	// function will assume that they should be treated as differences and needlessly reconfigure
+	if saslType == "" {
+		saslType = sarama.SASLTypePlaintext
+	}
+
+	authConfig.SASL = &KafkaSaslConfig{
+		User:     username,
+		Password: string(secret.Data[SaslPasswordKey]),
+		SaslType: saslType,
+	}
+
+	return &authConfig
+}
+
+// parseTls allows backward-compatibility with older consolidated channel secrets
+func parseTls(secret *corev1.Secret, kafkaAuthConfig *KafkaAuthConfig) {
+
+	// self-signed CERTs we need CA CERT, USER CERT and KEY
+	if string(secret.Data[CaCertificateKey]) != "" {
+		// We have a self-signed TLS cert
+		tls := &KafkaTlsConfig{
+			Cacert:   string(secret.Data[CaCertificateKey]),
+			Usercert: string(secret.Data[UserCertificate]),
+			Userkey:  string(secret.Data[UserKey]),
+		}
+		kafkaAuthConfig.TLS = tls
+	} else {
+		// Public CERTS from a proper CA do not need this,
+		// we can just say `tls.enabled: true`
+		tlsEnabled, err := strconv.ParseBool(string(secret.Data[SSLLegacyEnabled]))
+		if err != nil {
+			tlsEnabled = false
+		}
+		if tlsEnabled {
+			// Looks like TLS is desired/enabled:
+			kafkaAuthConfig.TLS = &KafkaTlsConfig{}
+		}
+	}
 }

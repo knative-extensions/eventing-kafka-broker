@@ -23,7 +23,7 @@ import (
 	"log"
 
 	"k8s.io/client-go/kubernetes"
-	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
+	kcs "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	"knative.dev/pkg/environment"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"

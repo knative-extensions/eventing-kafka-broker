@@ -29,8 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
-	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 

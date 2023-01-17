@@ -33,7 +33,7 @@ import (
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	_ "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
 
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
 

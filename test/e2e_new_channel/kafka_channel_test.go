@@ -24,8 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants"
-
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -36,7 +34,12 @@ import (
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkachannel"
 )
 
-const kafkaChannelTestPrefix = "kc-rekt-test-"
+const (
+	// kafkaChannelServiceNameSuffix Is The Specific Service Name Suffix For Use With Knative E2E Tests
+	kafkaChannelServiceNameSuffix = "kn-channel"
+
+	kafkaChannelTestPrefix = "kc-rekt-test-"
+)
 
 func TestKafkaChannelReadiness(t *testing.T) {
 
@@ -90,7 +93,7 @@ func TestKafkaChannelEvents(t *testing.T) {
 	// Generate Unique Test Names And Add To Context Store
 	ctx = state.ContextWith(ctx, &state.KVStore{})
 	testName := feature.MakeRandomK8sName(kafkaChannelTestPrefix)
-	kafkaChannelServiceName := fmt.Sprintf("%s-%s", testName, constants.KafkaChannelServiceNameSuffix)
+	kafkaChannelServiceName := fmt.Sprintf("%s-%s", testName, kafkaChannelServiceNameSuffix)
 	state.SetOrFail(ctx, t, kafkachannel.TestNameKey, testName)
 	state.SetOrFail(ctx, t, kafkachannel.SenderNameKey, testName+"-sender")
 	state.SetOrFail(ctx, t, kafkachannel.SenderSinkKey, kafkaChannelServiceName)

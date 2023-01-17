@@ -35,12 +35,11 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
-	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	"knative.dev/eventing-kafka/pkg/common/constants"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/apis"
@@ -658,7 +657,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 	if err != nil {
 		// Should never happen with webhook defaulting and validation in place.
 		logger.Error("Error parsing RetentionDuration, using default instead", zap.String("RetentionDuration", channel.Spec.RetentionDuration), zap.Error(err))
-		retentionDuration = constants.DefaultRetentionDuration
+		retentionDuration = messagingv1beta1.DefaultRetentionDuration
 	}
 	retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
 
@@ -667,7 +666,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 			NumPartitions:     channel.Spec.NumPartitions,
 			ReplicationFactor: channel.Spec.ReplicationFactor,
 			ConfigEntries: map[string]*string{
-				constants.KafkaTopicConfigRetentionMs: &retentionMillisString,
+				messagingv1beta1.KafkaTopicConfigRetentionMs: &retentionMillisString,
 			},
 		},
 		BootstrapServers: bootstrapServers,

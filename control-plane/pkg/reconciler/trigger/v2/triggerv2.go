@@ -28,7 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"

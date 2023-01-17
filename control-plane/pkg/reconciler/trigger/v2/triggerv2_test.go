@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"k8s.io/utils/pointer"
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"

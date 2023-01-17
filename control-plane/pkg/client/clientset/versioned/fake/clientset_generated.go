@@ -25,8 +25,14 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 	clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1"
+	fakebindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1/fake"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	fakeeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
+	fakemessagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1/fake"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
+	fakesourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -79,7 +85,22 @@ var (
 	_ testing.FakeClient  = &Clientset{}
 )
 
+// BindingsV1beta1 retrieves the BindingsV1beta1Client
+func (c *Clientset) BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface {
+	return &fakebindingsv1beta1.FakeBindingsV1beta1{Fake: &c.Fake}
+}
+
 // EventingV1alpha1 retrieves the EventingV1alpha1Client
 func (c *Clientset) EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface {
 	return &fakeeventingv1alpha1.FakeEventingV1alpha1{Fake: &c.Fake}
+}
+
+// MessagingV1beta1 retrieves the MessagingV1beta1Client
+func (c *Clientset) MessagingV1beta1() messagingv1beta1.MessagingV1beta1Interface {
+	return &fakemessagingv1beta1.FakeMessagingV1beta1{Fake: &c.Fake}
+}
+
+// SourcesV1beta1 retrieves the SourcesV1beta1Client
+func (c *Clientset) SourcesV1beta1() sourcesv1beta1.SourcesV1beta1Interface {
+	return &fakesourcesv1beta1.FakeSourcesV1beta1{Fake: &c.Fake}
 }

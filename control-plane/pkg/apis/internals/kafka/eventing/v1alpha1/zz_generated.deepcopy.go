@@ -23,8 +23,8 @@ package v1alpha1
 
 import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	v1beta1 "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	duckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	apis "knative.dev/pkg/apis"

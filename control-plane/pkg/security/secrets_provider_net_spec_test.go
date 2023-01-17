@@ -25,7 +25,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 

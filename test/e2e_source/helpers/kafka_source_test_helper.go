@@ -31,9 +31,9 @@ import (
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
-	sourcesv1beta1 "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	contribtestlib "knative.dev/eventing-kafka/test/lib"
-	contribresources "knative.dev/eventing-kafka/test/lib/resources"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
+	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
 )
 
 func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {

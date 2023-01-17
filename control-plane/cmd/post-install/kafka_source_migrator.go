@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
+	kcs "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	"knative.dev/pkg/logging"
 )
 

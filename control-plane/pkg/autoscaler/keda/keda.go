@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/kmeta"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
@@ -215,7 +215,7 @@ func retrieveSaslTypeIfPresent(cg *kafkainternals.ConsumerGroup, secret corev1.S
 	}
 
 	if cg.Spec.Template.Spec.Auth.SecretSpec != nil && cg.Spec.Template.Spec.Auth.SecretSpec.Ref != nil {
-		if saslTypeValue, ok := secret.Data[security.SaslType]; ok {
+		if saslTypeValue, ok := secret.Data[security.SaslTypeLegacy]; ok {
 			return pointer.String(string(saslTypeValue))
 		}
 	}

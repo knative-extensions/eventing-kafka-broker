@@ -25,7 +25,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	"google.golang.org/protobuf/encoding/protojson"

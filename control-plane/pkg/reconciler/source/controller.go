@@ -25,10 +25,10 @@ import (
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
-	kafkainformer "knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource"
-	"knative.dev/eventing-kafka/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
+	kafkainformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"

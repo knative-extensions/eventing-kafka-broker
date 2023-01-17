@@ -54,10 +54,9 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	"github.com/rickb777/date/period"
-	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	fakeeventingkafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client/fake"
-	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-	commonconstants "knative.dev/eventing-kafka/pkg/common/constants"
+	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 )
 
 const (
@@ -1761,7 +1760,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			replicationFactor = v.(int16)
 		}
 
-		retentionDuration := commonconstants.DefaultRetentionDuration
+		retentionDuration := messagingv1beta.DefaultRetentionDuration
 		if v, ok := row.OtherTestData[TestExpectedRetentionDuration]; ok {
 			retentionPeriod, err := period.Parse(v.(string))
 			if err != nil {
@@ -1801,7 +1800,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 						NumPartitions:     numPartitions,
 						ReplicationFactor: replicationFactor,
 						ConfigEntries: map[string]*string{
-							commonconstants.KafkaTopicConfigRetentionMs: &retentionMillisString,
+							messagingv1beta.KafkaTopicConfigRetentionMs: &retentionMillisString,
 						},
 					},
 					T: t,

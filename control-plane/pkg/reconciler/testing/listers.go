@@ -34,11 +34,10 @@ import (
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 	"knative.dev/pkg/reconciler/testing"
 
-	eventingkafkachannels "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	eventingkafkasources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	fakeeventingkafkaclientset "knative.dev/eventing-kafka/pkg/client/clientset/versioned/fake"
-	eventingkafkachannelslisters "knative.dev/eventing-kafka/pkg/client/listers/messaging/v1beta1"
-	eventingkafkasourceslisters "knative.dev/eventing-kafka/pkg/client/listers/sources/v1beta1"
+	eventingkafkachannels "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	eventingkafkasources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	eventingkafkachannelslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1beta1"
+	eventingkafkasourceslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1beta1"
 
 	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 
@@ -54,7 +53,6 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakeapiextensionsclientset.AddToScheme,
 	fakeeventingkafkabrokerclientset.AddToScheme,
-	fakeeventingkafkaclientset.AddToScheme,
 	fakekafkainternalsclientset.AddToScheme,
 }
 
@@ -100,10 +98,6 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 
 func (l *Listers) GetEventingKafkaBrokerObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkabrokerclientset.AddToScheme)
-}
-
-func (l *Listers) GetEventingKafkaObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaclientset.AddToScheme)
 }
 
 func (l *Listers) GetKafkaInternalsObjects() []runtime.Object {

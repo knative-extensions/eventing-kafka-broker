@@ -24,8 +24,8 @@ import (
 
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
-	kafkaclient "knative.dev/eventing-kafka/pkg/client/injection/client"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/reconciler-test/pkg/environment"

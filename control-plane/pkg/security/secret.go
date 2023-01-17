@@ -39,7 +39,8 @@ const (
 	SaslMechanismKey = "sasl.mechanism"
 	SaslUserKey      = "user"
 	SaslPasswordKey  = "password"
-	SaslType         = "saslType" // legacy secrets
+	SaslType         = "sasltype"
+	SaslTypeLegacy   = "saslType" // legacy secrets
 	SaslUsernameKey  = "username" // legacy secrets
 
 	ProtocolPlaintext     = "PLAINTEXT"
@@ -50,6 +51,9 @@ const (
 	SaslPlain       = "PLAIN"
 	SaslScramSha256 = "SCRAM-SHA-256"
 	SaslScramSha512 = "SCRAM-SHA-512"
+
+	// Legacy Channel config to enable TLS, see https://github.com/knative-sandbox/eventing-kafka-broker/issues/2231
+	SSLLegacyEnabled = "tls.enabled"
 )
 
 var supportedProtocols = fmt.Sprintf("%v", []string{

@@ -23,7 +23,6 @@ import (
 	"os"
 	"testing"
 
-	"knative.dev/eventing-kafka/test"
 	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
@@ -35,7 +34,7 @@ func TestMain(m *testing.M) {
 
 	eventingTest.InitializeEventingFlags()
 	channelTestRunner = testlib.ComponentsTestRunner{
-		ComponentFeatureMap: test.ChannelFeatureMap,
+		ComponentFeatureMap: ChannelFeatureMap,
 		ComponentsToTest:    eventingTest.EventingFlags.Channels,
 	}
 	os.Exit(func() int {

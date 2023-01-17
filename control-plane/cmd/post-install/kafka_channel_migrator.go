@@ -33,9 +33,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	kcs "knative.dev/eventing-kafka/pkg/client/clientset/versioned"
-	"knative.dev/eventing-kafka/pkg/common/config"
-	"knative.dev/eventing-kafka/pkg/common/constants"
+	kbcs "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
@@ -43,7 +42,7 @@ import (
 )
 
 type kafkaChannelMigrator struct {
-	kcs kcs.Interface
+	kcs kbcs.Interface
 	k8s kubernetes.Interface
 }
 
@@ -60,6 +59,9 @@ const (
 
 	NewConfigmapNameKey     = "CHANNEL_GENERAL_CONFIG_MAP_NAME"
 	NewConfigmapNameDefault = "kafka-channel-config"
+
+	// EventingKafkaSettingsConfigKey is the field in the configmap used to hold eventing-kafka settings
+	EventingKafkaSettingsConfigKey = "eventing-kafka"
 )
 
 func (m *kafkaChannelMigrator) Migrate(ctx context.Context) error {
@@ -246,9 +248,9 @@ func (m *kafkaChannelMigrator) migrateConfigmap(ctx context.Context, logger *zap
 func getEventingKafkaConfig(configMap map[string]string) (*config.EventingKafkaConfig, error) {
 	// Unmarshal The Eventing-Kafka ConfigMap YAML Into A EventingKafkaSettings Struct
 	eventingKafkaConfig := &config.EventingKafkaConfig{}
-	err := yaml.Unmarshal([]byte(configMap[constants.EventingKafkaSettingsConfigKey]), &eventingKafkaConfig)
+	err := yaml.Unmarshal([]byte(configMap[EventingKafkaSettingsConfigKey]), &eventingKafkaConfig)
 	if err != nil {
-		return nil, fmt.Errorf("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: %s : %v", err, configMap[constants.EventingKafkaSettingsConfigKey])
+		return nil, fmt.Errorf("ConfigMap's eventing-kafka value could not be converted to an EventingKafkaConfig struct: %s : %v", err, configMap[EventingKafkaSettingsConfigKey])
 	}
 
 	return eventingKafkaConfig, nil

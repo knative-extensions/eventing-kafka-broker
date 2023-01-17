@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
