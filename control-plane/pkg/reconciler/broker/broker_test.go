@@ -1320,7 +1320,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					fmt.Sprintf(`failed to get contract configuration: unable to rebuild topic config, failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName),
+					fmt.Sprintf(`failed to get contract configuration: unable to rebuild topic config, failed to get configmap %s/%s`, ConfigMapNamespace, ConfigMapName),
 				),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
@@ -1338,7 +1338,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						),
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerDataPlaneAvailable,
-						StatusBrokerConfigNotParsed(fmt.Sprintf(`unable to rebuild topic config, failed to get configmap %s/%s: configmap %q not found`, ConfigMapNamespace, ConfigMapName, ConfigMapName)),
+						StatusBrokerConfigNotParsed(fmt.Sprintf(`unable to rebuild topic config, failed to get configmap %s/%s`, ConfigMapNamespace, ConfigMapName)),
 					),
 				},
 			},
