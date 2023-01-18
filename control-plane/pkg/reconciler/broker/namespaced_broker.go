@@ -435,7 +435,7 @@ func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, erro
 
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
-		if resource.GetKind() == "Namespace" {
+		if isClusterScoped(resource.GetKind()) {
 			return nil
 		}
 
@@ -519,4 +519,33 @@ func filterMetadataMap(metadata map[string]string) map[string]string {
 func propagateErrorCondition(broker *eventing.Broker, err error) error {
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionDataPlaneAvailable, "CreateDataPlane", err.Error())
 	return err
+}
+
+// Copied from https://github.com/manifestival/manifestival/blob/82196bd303e23c641fda3d002c0663b892092e9c/transform.go#L102
+func isClusterScoped(kind string) bool {
+	// TODO: something more clever using !APIResource.Namespaced maybe?
+	switch strings.ToLower(kind) {
+	case "componentstatus",
+		"namespace",
+		"node",
+		"persistentvolume",
+		"mutatingwebhookconfiguration",
+		"validatingwebhookconfiguration",
+		"customresourcedefinition",
+		"apiservice",
+		"meshpolicy",
+		"tokenreview",
+		"selfsubjectaccessreview",
+		"selfsubjectrulesreview",
+		"subjectaccessreview",
+		"certificatesigningrequest",
+		"podsecuritypolicy",
+		"clusterrolebinding",
+		"clusterrole",
+		"priorityclass",
+		"storageclass",
+		"volumeattachment":
+		return true
+	}
+	return false
 }
