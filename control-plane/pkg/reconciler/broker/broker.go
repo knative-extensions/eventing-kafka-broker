@@ -326,15 +326,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	}
 
 	brokerConfig, err := r.brokerConfigMap(logger, broker)
-
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
 	// If the broker config data is empty we simply return,
 	// as the configuration may already be gone
 	if len(brokerConfig.Data) == 0 {
 		return nil
-	}
-
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
 	}
 
 	_, externalTopic := isExternalTopic(broker)
