@@ -335,15 +335,17 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return nil
 	}
 
-	_, externalTopic := isExternalTopic(broker)
 	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
 	if err != nil {
-
-		if externalTopic {
-			// we don't care
-			return nil
+		// If we can not get the referenced secret,
+		// let us try for a bit before we give up.
+		brokerUUID := string(broker.GetUID())
+		if r.Counter.Inc(brokerUUID) <= 5 {
+			return controller.NewRequeueAfter(5 * time.Second)
 		} else {
-			return fmt.Errorf("failed to get secret: %w", err)
+			r.Counter.Del(brokerUUID)
+			logger.Error("failed to get secret", zap.Error(err))
+			return nil
 		}
 	}
 
@@ -358,6 +360,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
+	_, externalTopic := isExternalTopic(broker)
 	if !externalTopic {
 		topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 		if err != nil {
