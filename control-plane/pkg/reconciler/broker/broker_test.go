@@ -22,6 +22,8 @@ import (
 	"net/url"
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/utils/pointer"
@@ -2427,8 +2429,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:    env,
-			Prober: proberMock,
+			Env:     env,
+			Prober:  proberMock,
+			Counter: counter.NewExpiringCounter(ctx),
 		}
 
 		reconciler.Tracker = &FakeTracker{}
