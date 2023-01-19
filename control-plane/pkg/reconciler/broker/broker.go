@@ -342,10 +342,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		brokerUUID := string(broker.GetUID())
 		if r.Counter.Inc(brokerUUID) <= 5 {
 			return controller.NewRequeueAfter(5 * time.Second)
-		} else {
-			r.Counter.Del(brokerUUID)
-			logger.Error("failed to get secret", zap.Error(err))
-			return nil
 		}
 	}
 
