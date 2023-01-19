@@ -347,21 +347,21 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		}
 	}
 
+	if secret != nil {
+		logger.Debug("Secret reference",
+			zap.String("apiVersion", secret.APIVersion),
+			zap.String("name", secret.Name),
+			zap.String("namespace", secret.Namespace),
+			zap.String("kind", secret.Kind),
+		)
+	}
+
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
 	if !externalTopic {
 		topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 		if err != nil {
 			return fmt.Errorf("failed to resolve broker config: %w", err)
-		}
-
-		if secret != nil {
-			logger.Debug("Secret reference",
-				zap.String("apiVersion", secret.APIVersion),
-				zap.String("name", secret.Name),
-				zap.String("namespace", secret.Namespace),
-				zap.String("kind", secret.Kind),
-			)
 		}
 
 		// get security option for Sarama with secret info in it
