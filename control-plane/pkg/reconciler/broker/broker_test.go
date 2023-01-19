@@ -2181,7 +2181,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
-			Key: testKey,
+			Key:     testKey,
+			WantErr: true,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources:  []*contract.Resource{},
