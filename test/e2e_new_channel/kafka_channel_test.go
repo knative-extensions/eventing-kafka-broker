@@ -20,7 +20,6 @@
 package e2e_new_channel
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -35,9 +34,6 @@ import (
 )
 
 const (
-	// kafkaChannelServiceNameSuffix Is The Specific Service Name Suffix For Use With Knative E2E Tests
-	kafkaChannelServiceNameSuffix = "kn-channel"
-
 	kafkaChannelTestPrefix = "kc-rekt-test-"
 )
 
@@ -72,38 +68,4 @@ func TestKafkaChannelReadiness(t *testing.T) {
 	for _, f := range testFeatures {
 		env.Test(ctx, t, f)
 	}
-}
-
-func TestKafkaChannelEvents(t *testing.T) {
-	t.Skip()
-
-	// Run Test In Parallel With Others
-	t.Parallel()
-
-	// Create The Test Context / Environment
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.WithPollTimings(4*time.Second, 120*time.Second),
-		environment.Managed(t),
-	)
-
-	// Generate Unique Test Names And Add To Context Store
-	ctx = state.ContextWith(ctx, &state.KVStore{})
-	testName := feature.MakeRandomK8sName(kafkaChannelTestPrefix)
-	kafkaChannelServiceName := fmt.Sprintf("%s-%s", testName, kafkaChannelServiceNameSuffix)
-	state.SetOrFail(ctx, t, kafkachannel.TestNameKey, testName)
-	state.SetOrFail(ctx, t, kafkachannel.SenderNameKey, testName+"-sender")
-	state.SetOrFail(ctx, t, kafkachannel.SenderSinkKey, kafkaChannelServiceName)
-	state.SetOrFail(ctx, t, kafkachannel.ReceiverNameKey, testName+"-receiver")
-
-	// Determine Time Prior To Test To Replay From
-	offsetTime := time.Now().Add(-1 * time.Minute).Format(time.RFC3339)
-
-	// Configure DataPlane, Send Events, Replay Events
-	env.Test(ctx, t, kafkachannel.ConfigureDataPlane(ctx, t))
-	env.Test(ctx, t, kafkachannel.SendEvents(ctx, t, 10, 1, 10))               // 10 Events with IDs 1-10
-	env.Test(ctx, t, kafkachannel.ReplayEvents(ctx, t, offsetTime, 20, 1, 10)) // 20 Events with IDs 1-10
 }

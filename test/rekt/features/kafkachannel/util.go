@@ -33,7 +33,6 @@ import (
 	"knative.dev/reconciler-test/pkg/state"
 
 	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
-	resetoffsetresources "knative.dev/eventing-kafka-broker/test/rekt/resources/resetoffset"
 )
 
 const (
@@ -96,18 +95,6 @@ func setupSubscription(f *feature.Feature, name string, receiverName string) {
 	))
 }
 
-// setupResetOffset adds a Setup() to the specified Feature to create a ResetOffset for a KafkaChannel Subscription.
-func setupResetOffset(f *feature.Feature, name string, offsetTime string) {
-	f.Setup("Install A ResetOffset", resetoffsetresources.Install(name,
-		resetoffsetresources.WithOffsetTime(offsetTime),
-		resetoffsetresources.WithRef(&duckv1.KReference{
-			Kind:       "Subscription",
-			Name:       name,
-			APIVersion: "messaging.knative.dev/v1", // gvr() in knative.dev/eventing/test/rekt/resources/subscription is private
-		}),
-	))
-}
-
 // setupEventsHubSender adds a Setup() to the specified Feature to create an EventsHub Sender to send CloudEvents.
 func setupEventsHubSender(f *feature.Feature, senderName string, senderSink string, event cloudevents.Event, eventCount int) {
 	f.Setup("Install An EventsHub Sender", eventshub.Install(senderName,
@@ -139,11 +126,6 @@ func assertKafkaChannelReady(f *feature.Feature, name string) {
 // assertSubscriptionReady adds an Assert() to the specified Feature to verify the Subscription is READY.
 func assertSubscriptionReady(f *feature.Feature, name string) {
 	f.Assert("Subscription Is Ready", subscriptionresources.IsReady(name))
-}
-
-// assertResetOffsetSucceeded adds an Assert() to the specified Feature to verify the ResetOffset is SUCCEEDED
-func assertResetOffsetSucceeded(f *feature.Feature, name string) {
-	f.Assert("ResetOffset Is Succeeded", resetoffsetresources.IsSucceeded(name))
 }
 
 // assertEventsReceived adds an Assert() to the specified Feature to verify the expected CloudEvents were received successfully.
