@@ -68,28 +68,3 @@ func SendEvents(ctx context.Context, t *testing.T, eventCount int, startId int, 
 	// Return The SendEvents Feature
 	return f
 }
-
-// ReplayEvents creates a Feature which adjusts a KafkaChannel Subscription to a specific
-// offset time by creating a ResetOffset and verifying the expected final event count.
-// The actual count is dependent upon the number of events in the KafkaChannel (Topic)
-// related to the specified offsetTime.
-func ReplayEvents(ctx context.Context, t *testing.T, offsetTime string, eventCount int, startId int, endId int) *feature.Feature {
-
-	// Get Test Names From Context
-	testName := TestName(ctx, t)
-	senderName := SenderName(ctx, t)
-	receiverName := ReceiverName(ctx, t)
-
-	// Create The Base CloudEvent To Send (ID will be set by the EventsHub Sender)
-	event, err := newEvent(testName, senderName)
-	assert.Nil(t, err)
-
-	// Create A New Feature To Replay Events And Verify Receipt
-	f := feature.NewFeatureNamed("Replay Events")
-	setupResetOffset(f, testName, offsetTime)
-	assertResetOffsetSucceeded(f, testName)
-	assertEventsReceived(f, receiverName, event, eventCount, startId, endId)
-
-	// Return The ReplayEvents Feature
-	return f
-}
