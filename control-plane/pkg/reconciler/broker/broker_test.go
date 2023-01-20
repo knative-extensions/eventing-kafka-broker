@@ -22,6 +22,8 @@ import (
 	"net/url"
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/utils/pointer"
@@ -2179,7 +2181,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
-			Key: testKey,
+			Key:     testKey,
+			WantErr: true,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources:  []*contract.Resource{},
@@ -2427,8 +2430,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:    env,
-			Prober: proberMock,
+			Env:     env,
+			Prober:  proberMock,
+			Counter: counter.NewExpiringCounter(ctx),
 		}
 
 		reconciler.Tracker = &FakeTracker{}
