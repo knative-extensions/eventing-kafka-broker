@@ -243,6 +243,19 @@ func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int,
 	return cm
 }
 
+func BogusBrokerConfig() *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ConfigMapNamespace,
+			Name:      ConfigMapName,
+		},
+		Data: map[string]string{
+			"foo": "bar",
+		},
+	}
+	return cm
+}
+
 func BrokerAuthConfig(name string) CMOption {
 	return func(cm *corev1.ConfigMap) {
 		if cm.Data == nil {

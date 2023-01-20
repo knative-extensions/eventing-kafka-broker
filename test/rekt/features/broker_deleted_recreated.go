@@ -19,6 +19,7 @@ package features
 import (
 	"k8s.io/apimachinery/pkg/types"
 	kafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/bogus_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
 	"knative.dev/pkg/system"
@@ -209,6 +210,25 @@ func BrokerAuthSecretForInternalTopicDoesNotExist() *feature.Feature {
 			broker.WithEnvConfig(),
 			broker.WithConfig(configName))...))
 
+	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
+
+	return f
+}
+
+// BrokerWithBogusConfig tests that a broker can be deleted even when it has a bogus config attached.
+func BrokerWithBogusConfig() *feature.Feature {
+	f := feature.NewFeatureNamed("delete broker with bogus config")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	f.Setup("install bogus configuration", bogus_config.Install)
+
+	f.Requirement("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), "strimzi-sasl-secret"))
+
+	f.Setup("install broker", broker.Install(
+		brokerName,
+		broker.WithConfig(bogus_config.ConfigMapName),
+	))
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
 
 	return f
