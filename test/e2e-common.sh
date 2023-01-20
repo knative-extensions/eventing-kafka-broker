@@ -292,6 +292,10 @@ function delete_sacura() {
   kubectl delete --ignore-not-found ns sacura-sink-source || return $?
 }
 
+function apply_inmemorychannel() {
+  kubectl apply -f "${EVENTING_CONFIG}/in-memory-channel.yaml"
+}
+
 function export_logs_continuously() {
 
   labels=("kafka-broker-dispatcher" "kafka-broker-receiver" "kafka-sink-receiver" "kafka-channel-receiver" "kafka-channel-dispatcher" "kafka-source-dispatcher" "kafka-webhook-eventing" "kafka-controller" "kafka-source-controller")

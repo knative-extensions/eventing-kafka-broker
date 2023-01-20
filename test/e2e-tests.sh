@@ -12,6 +12,7 @@ if ! ${LOCAL_DEVELOPMENT}; then
   apply_sacura                            || fail_test "Failed to apply Sacura"
   apply_sacura_sink_source || fail_test "Failed to apply Sacura (Source, Sink, Broker, Channel)"
   apply_chaos                             || fail_test "Failed to apply chaos"
+  apply_inmemorychannel                   || fail_test "Failed to apply in-memory-channel"
 fi
 
 header "Waiting Knative eventing to come up"
