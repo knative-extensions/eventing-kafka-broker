@@ -360,7 +360,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	if !externalTopic {
 		topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 		if err != nil {
-			return fmt.Errorf("failed to resolve broker config: %w", err)
+
+			// On finalize, we fail to get a valid config, we can safely ignore and return nil
+			// no further actions are needed since we are also not putting the finalizer on given secret
+			// if we are not having a valid topic config
+			if strings.Contains(err.Error(), "validating topic config") {
+				return nil
+			} else {
+				return fmt.Errorf("failed to resolve broker config: %w", err)
+			}
 		}
 
 		// get security option for Sarama with secret info in it

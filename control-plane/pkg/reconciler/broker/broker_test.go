@@ -2201,7 +2201,50 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
-
+		{
+			Name: "Reconciled normal - with broken config",
+			Objects: []runtime.Object{
+				NewDeletedBroker(
+					WithBrokerConfig(KReference(BogusBrokerConfig())),
+				),
+				BogusBrokerConfig(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+					Generation: 1,
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources:  []*contract.Resource{},
+					Generation: 2,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "2",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			OtherTestData: map[string]interface{}{
+				testProber: probertesting.MockProber(prober.StatusNotReady),
+			},
+		},
 		{
 			Name: "Failed to delete topic",
 			Objects: []runtime.Object{
