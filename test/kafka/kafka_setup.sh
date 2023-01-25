@@ -24,7 +24,7 @@ SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-"knative-eventing"}
 kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
 
 header "Applying Strimzi Cluster Operator file"
-cat $(dirname $0)/strimzi-cluster-operator.yaml | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
+cat $(dirname $0)/strimzi-cluster-operator.yaml | sed 's/namespace: .*/namespace: kafka/' | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
 
 sleep 10
 
