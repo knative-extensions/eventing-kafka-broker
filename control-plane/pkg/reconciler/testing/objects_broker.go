@@ -330,7 +330,7 @@ func NamespacedBrokerAddressable(env *config.Env) func(broker *eventing.Broker) 
 }
 
 func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace string) {
-	broker.Status.AddressStatus.Address = &duckv1.Addressable{
+	broker.Status.Address = duckv1.Addressable{
 		URL: &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(serviceName, serviceNamespace),

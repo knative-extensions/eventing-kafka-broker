@@ -35,9 +35,6 @@ import (
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-
-	// needed for vendoring the test resource files
-	_ "knative.dev/eventing/test/rekt/resources/eventlibrary/events"
 )
 
 // TestChannelConformance
