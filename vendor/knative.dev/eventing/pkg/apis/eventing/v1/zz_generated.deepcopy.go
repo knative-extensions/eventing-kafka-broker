@@ -119,7 +119,7 @@ func (in *BrokerSpec) DeepCopy() *BrokerSpec {
 func (in *BrokerStatus) DeepCopyInto(out *BrokerStatus) {
 	*out = *in
 	in.Status.DeepCopyInto(&out.Status)
-	in.AddressStatus.DeepCopyInto(&out.AddressStatus)
+	in.Address.DeepCopyInto(&out.Address)
 	in.DeliveryStatus.DeepCopyInto(&out.DeliveryStatus)
 	return
 }

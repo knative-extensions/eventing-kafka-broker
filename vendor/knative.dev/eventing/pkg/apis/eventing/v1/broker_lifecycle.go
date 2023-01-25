@@ -20,7 +20,6 @@ import (
 	"sync"
 
 	"knative.dev/pkg/apis"
-	v1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
@@ -73,12 +72,7 @@ func (bs *BrokerStatus) GetTopLevelCondition() *apis.Condition {
 // SetAddress makes this Broker addressable by setting the URI. It also
 // sets the BrokerConditionAddressable to true.
 func (bs *BrokerStatus) SetAddress(url *apis.URL) {
-	bs.AddressStatus = v1.AddressStatus{
-		Address: &v1.Addressable{
-			URL: url,
-		},
-	}
-
+	bs.Address.URL = url
 	if url != nil {
 		bs.GetConditionSet().Manage(bs).MarkTrue(BrokerConditionAddressable)
 	} else {

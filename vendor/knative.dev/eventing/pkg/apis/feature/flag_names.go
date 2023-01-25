@@ -21,5 +21,6 @@ const (
 	DeliveryRetryAfter = "delivery-retryafter"
 	DeliveryTimeout    = "delivery-timeout"
 	KReferenceMapping  = "kreference-mapping"
+	StrictSubscriber   = "strict-subscriber"
 	NewTriggerFilters  = "new-trigger-filters"
 )
