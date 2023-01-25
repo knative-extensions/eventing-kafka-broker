@@ -301,7 +301,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return err
 	}
 
-	broker.Status.Address = v1.Addressable{}
+	broker.Status.Address = &v1.Addressable{}
 
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.DataPlaneNamespace)
 
