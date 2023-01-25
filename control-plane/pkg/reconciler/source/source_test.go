@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	cm "knative.dev/pkg/configmap/testing"
 	"knative.dev/pkg/kmeta"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
@@ -961,10 +962,142 @@ func TestReconcileKind(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled normal - update cg replicas",
+			Objects: []runtime.Object{
+				NewSource(WithSourceConsumers(3)),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT0.3S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(2),
+					ConsumerGroupReplicasStatus(1),
+					ConsumerGroupReady,
+				),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(SourceUUID),
+						WithConsumerGroupNamespace(SourceNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+						WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+						WithConsumerGroupLabels(ConsumerSourceLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							),
+							ConsumerAuth(NewConsumerSpecAuth()),
+							ConsumerDelivery(
+								NewConsumerSpecDelivery(
+									internals.Ordered,
+									NewConsumerTimeout("PT600S"),
+									NewConsumerRetry(10),
+									NewConsumerBackoffDelay("PT0.3S"),
+									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								),
+							),
+							ConsumerSubscriber(NewSourceSinkReference()),
+							ConsumerReply(ConsumerNoReply()),
+						)),
+						ConsumerGroupReplicas(3),
+						ConsumerGroupReplicasStatus(1),
+						ConsumerGroupReady,
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithSourceConsumers(3),
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+						StatusSourceConsumerGroupReplicas(1),
+						StatusSourceSelector(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - ignore source replicas when KEDA is enabled",
+			Objects: []runtime.Object{
+				NewSource(WithSourceConsumers(3)),
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT0.3S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(2),
+					ConsumerGroupReplicasStatus(1),
+					ConsumerGroupReady,
+				),
+			},
+			WithReactors: []clientgotesting.ReactionFunc{
+				ReactorKEDAEnabled(),
+			},
+			Key: testKey,
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithSourceConsumers(3),
+						StatusSourceConsumerGroup(),
+						StatusSourceSinkResolved(""),
+						StatusSourceConsumerGroupReplicas(1),
+						StatusSourceSelector(),
+					),
+				},
+			},
+		},
 	}
 
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-		ctx, _ = kedaclient.With(ctx)
+		store := configapis.NewStore(ctx)
+		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
+		store.OnConfigChanged(exampleConfig)
 
 		reconciler := &Reconciler{
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
@@ -972,6 +1105,8 @@ func TestReconcileKind(t *testing.T) {
 			KedaClient:          kedaclient.Get(ctx),
 			KafkaFeatureFlags:   configapis.DefaultFeaturesConfig(),
 		}
+
+		reconciler.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
 
 		r := eventingkafkasourcereconciler.NewReconciler(
 			ctx,

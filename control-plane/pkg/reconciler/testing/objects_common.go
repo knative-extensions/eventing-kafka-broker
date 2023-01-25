@@ -25,8 +25,9 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -684,5 +685,14 @@ func DataPlaneConfigInitialOffset(key string, offset sources.Offset) reconcilert
 		props := properties.MustLoadString(cm.Data[key])
 		_, _, _ = props.Set("auto.offset.reset", string(offset))
 		cm.Data[key] = props.String()
+	}
+}
+
+func ReactorKEDAEnabled() clientgotesting.ReactionFunc {
+	return func(action clientgotesting.Action) (handled bool, ret runtime.Object, err error) {
+		if action.Matches("list", "scaledobjects") {
+			return true, nil, nil
+		}
+		return false, nil, nil
 	}
 }
