@@ -20,8 +20,10 @@ import (
 	"context"
 
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 
@@ -34,7 +36,7 @@ import (
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
 )
 
-func NewController(ctx context.Context) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 
 	kafkaInformer := kafkainformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
@@ -45,11 +47,18 @@ func NewController(ctx context.Context) *controller.Impl {
 		ConsumerGroupLister: consumerGroupInformer.Lister(),
 		InternalsClient:     consumergroupclient.Get(ctx),
 		KedaClient:          kedaclient.Get(ctx),
+		KafkaFeatureFlags:   config.DefaultFeaturesConfig(),
 	}
 
 	impl := kafkasource.NewImpl(ctx, r)
 
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
+		r.KafkaFeatureFlags.Reset(value)
+		impl.GlobalResync(kafkaInformer.Informer())
+	})
+	configStore.WatchConfigs(watcher)
 
 	// ConsumerGroup changes and enqueue associated KafkaSource
 	consumerGroupInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{

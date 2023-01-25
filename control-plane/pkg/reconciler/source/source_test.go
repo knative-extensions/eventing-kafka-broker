@@ -26,10 +26,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 
@@ -968,6 +970,7 @@ func TestReconcileKind(t *testing.T) {
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			KedaClient:          kedaclient.Get(ctx),
+			KafkaFeatureFlags:   configapis.DefaultFeaturesConfig(),
 		}
 
 		r := eventingkafkasourcereconciler.NewReconciler(
