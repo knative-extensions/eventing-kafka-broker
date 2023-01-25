@@ -65,7 +65,6 @@ func TestKafkaSourceDeletedFromContractConfigMaps(t *testing.T) {
 
 func TestKafkaSourceScale(t *testing.T) {
 
-
 	t.Parallel()
 
 	ctx, env := global.Environment(
