@@ -24,14 +24,15 @@ import (
 
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/resources/svc"
+
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
@@ -144,4 +145,32 @@ type ResourceError struct {
 func (r ResourceError) Error() string {
 	bytes, _ := json.Marshal(r)
 	return string(bytes)
+}
+
+func ScaleKafkaSource() *feature.Feature {
+	f := feature.NewFeatureNamed("scale KafkaSource")
+
+	replicas := int32(3)
+	source := feature.MakeRandomK8sName("kafkasource")
+	topicName := feature.MakeRandomK8sName("scale-topic")
+	sink := feature.MakeRandomK8sName("sink")
+
+	f.Setup("install kafka topic", kafkatopic.Install(topicName))
+	f.Setup("scale kafkasource", kafkasource.Install(source,
+		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithTopics([]string{topicName}),
+		kafkasource.WithSink(svc.AsKReference(sink), ""),
+		kafkasource.WithAnnotations(map[string]string{
+			// Disable autoscaling for this KafkaSource since we want to have the expected replicas
+			// in the status reflected without the autoscaler intervention.
+			"autoscaling.eventing.knative.dev/class": "disabled",
+		}),
+		kafkasource.WithConsumers(replicas),
+	))
+
+	f.Requirement("kafkasource is ready", kafkasource.IsReady(source))
+
+	f.Assert("kafkasource is scaled", kafkasource.VerifyScale(source, replicas))
+
+	return f
 }
