@@ -22,8 +22,9 @@ package e2e_new
 import (
 	"testing"
 
-	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/reconciler-test/pkg/feature"
+
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -31,8 +32,8 @@ import (
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
 
-	brokerfeatures "knative.dev/eventing/test/rekt/features/broker"
-	"knative.dev/eventing/test/rekt/resources/broker"
+	"knative.dev/eventing/test/rekt/features/broker"
+	b "knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
@@ -52,14 +53,10 @@ func TestBrokerConformance(t *testing.T) {
 	env.Prerequisite(ctx, t, features.BrokerConfigmapCreated(configName))
 
 	// Install and wait for a Ready Broker.
-	env.Prerequisite(ctx, t,
-		brokerfeatures.GoesReady(
-			"default",
-			broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-			broker.WithConfig(configName),
-		),
-	)
+	cfg := b.WithEnvConfig()
+	cfg = append(cfg, b.WithConfig(configName))
+	env.Prerequisite(ctx, t, broker.GoesReady("default", cfg...))
 
-	env.TestSet(ctx, t, brokerfeatures.ControlPlaneConformance("default", broker.WithConfig(configName)))
-	env.TestSet(ctx, t, brokerfeatures.DataPlaneConformance("default"))
+	env.TestSet(ctx, t, broker.ControlPlaneConformance("default"))
+	env.TestSet(ctx, t, broker.DataPlaneConformance("default"))
 }

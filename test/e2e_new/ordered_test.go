@@ -97,7 +97,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source", eventshub.Install(
+	f.Requirement("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
@@ -155,21 +155,21 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Setup("install source for events keyed 'a'", eventshub.Install(
+	f.Requirement("install source for events keyed 'a'", eventshub.Install(
 		feature.MakeRandomK8sName("source-a"),
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(evA, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
-	f.Setup("install source for events keyed 'b'", eventshub.Install(
+	f.Requirement("install source for events keyed 'b'", eventshub.Install(
 		feature.MakeRandomK8sName("source-b"),
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(evB, cloudevents.EncodingBinary),
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
 	))
-	f.Setup("install source for events keyed 'c'", eventshub.Install(
+	f.Requirement("install source for events keyed 'c'", eventshub.Install(
 		feature.MakeRandomK8sName("source-c"),
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEventWithEncoding(evC, cloudevents.EncodingBinary),
