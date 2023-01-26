@@ -155,6 +155,7 @@ func ScaleKafkaSource() *feature.Feature {
 	topicName := feature.MakeRandomK8sName("scale-topic")
 	sink := feature.MakeRandomK8sName("sink")
 
+	f.Setup("install a sink", svc.Install(sink, "app", "rekt"))
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("scale kafkasource", kafkasource.Install(source,
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
