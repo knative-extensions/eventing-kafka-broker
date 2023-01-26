@@ -134,7 +134,7 @@ func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) erro
 }
 
 func removePlacement(before []eventingduckv1alpha1.Placement, toRemove *eventingduckv1alpha1.Placement) []eventingduckv1alpha1.Placement {
-	after := make([]eventingduckv1alpha1.Placement, 0, len(before)-1)
+	after := make([]eventingduckv1alpha1.Placement, 0, len(before))
 	for _, p := range before {
 		if p.PodName != toRemove.PodName {
 			after = append(after, p)
