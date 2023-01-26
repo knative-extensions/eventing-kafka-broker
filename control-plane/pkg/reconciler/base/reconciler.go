@@ -153,6 +153,10 @@ func (r *Reconciler) createDataPlaneConfigMap(ctx context.Context) (*corev1.Conf
 		},
 	}
 
+	if r.DataPlaneConfigMapTransformer != nil {
+		r.DataPlaneConfigMapTransformer(cm)
+	}
+
 	return r.KubeClient.CoreV1().ConfigMaps(r.DataPlaneConfigMapNamespace).Create(ctx, cm, metav1.CreateOptions{})
 }
 
