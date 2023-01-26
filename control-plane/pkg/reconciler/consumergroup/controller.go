@@ -167,10 +167,12 @@ func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
 
 func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) func(obj interface{}) {
 	return func(obj interface{}) {
-		c := obj.(*kafkainternals.Consumer)
-		or := c.GetConsumerGroup()
-		if or != nil {
-			enqueue(types.NamespacedName{Namespace: c.GetNamespace(), Name: or.Name})
+		c, ok := obj.(*kafkainternals.Consumer)
+		if ok {
+			or := c.GetConsumerGroup()
+			if or != nil {
+				enqueue(types.NamespacedName{Namespace: c.GetNamespace(), Name: or.Name})
+			}
 		}
 	}
 }
