@@ -191,8 +191,8 @@ func TestReconcileKind(t *testing.T) {
 				}),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(systemNamespace, "p1", nil),
-				NewConfigMapWithBinaryData(systemNamespace, "p2", nil),
+				NewConfigMapWithBinaryData(systemNamespace, "p1", nil, DispatcherPodAsOwnerReference("p1")),
+				NewConfigMapWithBinaryData(systemNamespace, "p2", nil, DispatcherPodAsOwnerReference("p2")),
 				NewConsumer(1,
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),

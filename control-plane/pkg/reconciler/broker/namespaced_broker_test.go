@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/utils/pointer"
+
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -163,7 +164,17 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					WithNamespacedBrokerOwnerRef,
 					WithNamespacedLabel,
 				),
-				NewConfigMapWithBinaryData(BrokerNamespace, env.ContractConfigMapName, nil),
+				NewConfigMapWithBinaryData(BrokerNamespace, env.ContractConfigMapName, nil,
+					reconcilertesting.WithConfigMapLabels(metav1.LabelSelector{MatchLabels: map[string]string{"eventing.knative.dev/namespaced": "true"}}),
+					WithConfigmapOwnerRef(&metav1.OwnerReference{
+						APIVersion:         eventing.SchemeGroupVersion.String(),
+						Kind:               "Broker",
+						Name:               BrokerName,
+						UID:                BrokerUUID,
+						Controller:         pointer.Bool(false),
+						BlockOwnerDeletion: pointer.Bool(true),
+					}),
+				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(BrokerNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat,
@@ -262,7 +273,17 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(BrokerNamespace, env.ContractConfigMapName, nil),
+				NewConfigMapWithBinaryData(BrokerNamespace, env.ContractConfigMapName, nil,
+					reconcilertesting.WithConfigMapLabels(metav1.LabelSelector{MatchLabels: map[string]string{"eventing.knative.dev/namespaced": "true"}}),
+					WithConfigmapOwnerRef(&metav1.OwnerReference{
+						APIVersion:         eventing.SchemeGroupVersion.String(),
+						Kind:               "Broker",
+						Name:               BrokerName,
+						UID:                BrokerUUID,
+						Controller:         pointer.Bool(false),
+						BlockOwnerDeletion: pointer.Bool(true),
+					}),
+				),
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),

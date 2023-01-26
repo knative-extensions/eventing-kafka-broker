@@ -93,7 +93,7 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
@@ -195,7 +195,7 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
@@ -297,7 +297,7 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
@@ -405,7 +405,7 @@ func TestReconcileKind(t *testing.T) {
 				patchFinalizers(),
 			},
 			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte("")),
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
