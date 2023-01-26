@@ -19,13 +19,21 @@ package kafkasource
 import (
 	"context"
 	"embed"
+	"encoding/json"
+	"fmt"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/wait"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/manifest"
+
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkaclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 )
 
 //go:embed *.yaml
@@ -51,6 +59,46 @@ func Install(name string, opts ...manifest.CfgFn) feature.StepFn {
 	}
 }
 
+func VerifyScale(name string, replicas int32) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		interval, timeout := environment.PollTimingsFromContext(ctx)
+		last := &sources.KafkaSource{}
+		err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+			ks, err := kafkaclientset.Get(ctx).
+				SourcesV1beta1().
+				KafkaSources(environment.FromContext(ctx).Namespace()).
+				Get(ctx, name, metav1.GetOptions{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			last = ks
+
+			if *ks.Spec.Consumers != replicas {
+				return false, fmt.Errorf("spec.consumers wanted %d, got %d", replicas, *ks.Spec.Consumers)
+			}
+
+			if ks.Status.Consumers != replicas {
+				return false, nil
+			}
+
+			count := int32(0)
+			for _, p := range ks.Status.Placements {
+				count += p.VReplicas
+			}
+
+			if count != replicas {
+				return false, nil
+			}
+
+			return true, nil
+		})
+		if err != nil {
+			bytes, _ := json.MarshalIndent(last, "", "  ")
+			t.Errorf("failed to verify kafkasource scale: %w, last state:\n%s\n", err, string(bytes))
+		}
+	}
+}
+
 // IsReady tests to see if a KafkaSource becomes ready within the time given.
 func IsReady(name string, timings ...time.Duration) feature.StepFn {
 	return k8s.IsReady(GVR(), name, timings...)
@@ -62,6 +110,13 @@ func WithVersion(version string) manifest.CfgFn {
 		if version != "" {
 			cfg["version"] = version
 		}
+	}
+}
+
+// WithConsumers adds consumers to a KafkaSource spec.
+func WithConsumers(consumers int32) manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		cfg["consumers"] = consumers
 	}
 }
 

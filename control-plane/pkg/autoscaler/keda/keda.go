@@ -17,14 +17,19 @@
 package keda
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
 	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
@@ -260,13 +265,28 @@ func setAnnotation(objAnnotations map[string]string, key string, cgAnnotations m
 	cgAnnotations[key] = value
 }
 
-func IsEnabled(cg *kafkainternals.ConsumerGroup) bool {
-	v, ok := cg.GetAnnotations()[autoscaler.AutoscalingClassAnnotation]
+func IsEnabled(ctx context.Context, features *config.KafkaFeatureFlags, client versioned.Interface, object metav1.Object) bool {
+	if !features.IsControllerAutoscalerEnabled() {
+		return false
+	}
+
+	v, ok := object.GetAnnotations()[autoscaler.AutoscalingClassAnnotation]
 	if ok && v == autoscaler.AutoscalingClassDisabledAnnotationValue {
 		return false
 	}
 	if ok && len(v) > 0 && v != AutoscalerClass {
 		return false
 	}
+
+	// TODO: code below failing unit tests with err: "panic: interface conversion: testing.ActionImpl is not testing.GetAction: missing method GetName"
+	/*if err := discovery.ServerSupportsVersion(r.KubeClient.Discovery(), keda.KedaSchemeGroupVersion); err == nil {
+		 return true
+	 }*/
+
+	if _, err := client.KedaV1alpha1().ScaledObjects(object.GetNamespace()).List(ctx, metav1.ListOptions{}); err != nil {
+		logging.FromContext(ctx).Debug("KEDA not installed, failed to list ScaledObjects")
+		return false
+	}
+
 	return true
 }

@@ -39,6 +39,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	fakekafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	fakekeda "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
 const (
@@ -60,6 +61,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 		ctx, eventingKafkaBrokerClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
 		ctx, kubeClient := fakekubeclient.With(ctx, listers.GetKubeObjects()...)
 		ctx, kafkaInternalsClient := fakekafkainternals.With(ctx, listers.GetKafkaInternalsObjects()...)
+		ctx, kedaClient := fakekeda.With(ctx, []runtime.Object{}...)
 
 		ctx, dynamicClient := fakedynamicclient.With(ctx,
 			newScheme(),
@@ -95,6 +97,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 			eventingClient.PrependReactor("*", "*", reactor)
 			eventingKafkaBrokerClient.PrependReactor("*", "*", reactor)
 			kafkaInternalsClient.PrependReactor("*", "*", reactor)
+			kedaClient.PrependReactor("*", "*", reactor)
 		}
 
 		actionRecorderList := ActionRecorderList{
