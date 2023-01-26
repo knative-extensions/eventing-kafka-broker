@@ -19,41 +19,88 @@ package security
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/pkg/system"
 )
 
-func TestGetAuthConfigFromSecret(t *testing.T) {
+func Test_getProtocolFromLegacyChannelSecret(t *testing.T) {
 	// Define The TestCase Struct
 	type TestCase struct {
-		name      string
-		data      map[string][]byte
-		expectNil bool
-	}
-
-	// Asserts that, if there is a key in the data, that its mapped value is the same as the given value
-	assertKey := func(t *testing.T, data map[string][]byte, key string, value string) {
-		mapValue, ok := data[key]
-		if !ok {
-			return
-		}
-		assert.Equal(t, string(mapValue), value)
+		name                     string
+		data                     map[string][]byte
+		expectedProtocolStr      string
+		expectedProtocolContract contract.Protocol
 	}
 
 	// Create The TestCases
 	testCases := []TestCase{
 		{
-			name: "Valid secret",
-			data: map[string][]byte{
-				SaslUsernameKey: []byte("OldAuthUsername"),
-				SaslPasswordKey: []byte("OldAuthPassword"),
-				SaslType:        []byte("OldAuthSaslType"),
-			},
+			name:                     "Plaintext",
+			data:                     map[string][]byte{},
+			expectedProtocolStr:      ProtocolPlaintext,
+			expectedProtocolContract: contract.Protocol_PLAINTEXT,
 		},
 		{
-			name: "Valid secret, backwards-compatibility, TLS and SASL",
+			name: "SSL/TLS via CA cert",
+			data: map[string][]byte{
+				CaCertificateKey: []byte("test-cacert"),
+			},
+			expectedProtocolStr:      ProtocolSSL,
+			expectedProtocolContract: contract.Protocol_SSL,
+		},
+		{
+			name: "SSL/TLS via tls.enabled",
+			data: map[string][]byte{
+				SSLLegacyEnabled: []byte("true"),
+			},
+			expectedProtocolStr:      ProtocolSSL,
+			expectedProtocolContract: contract.Protocol_SSL,
+		},
+		{
+			name: "SASL",
+			data: map[string][]byte{
+				SaslUsernameKey: []byte("test-sasluser"),
+				SaslPasswordKey: []byte("test-password"),
+			},
+			expectedProtocolStr:      ProtocolSASLPlaintext,
+			expectedProtocolContract: contract.Protocol_SASL_PLAINTEXT,
+		},
+		{
+			name: "SASL via legacy channel secret",
+			data: map[string][]byte{
+				SaslUserKey:     []byte("test-sasluser"),
+				SaslPasswordKey: []byte("test-password"),
+			},
+			expectedProtocolStr:      ProtocolSASLPlaintext,
+			expectedProtocolContract: contract.Protocol_SASL_PLAINTEXT,
+		},
+
+		{
+			name: "SASL and TLS/SSL via ca cert",
+			data: map[string][]byte{
+				CaCertificateKey: []byte("test-cacert"),
+
+				SaslUsernameKey: []byte("test-sasluser"),
+				SaslPasswordKey: []byte("test-password"),
+			},
+			expectedProtocolStr:      ProtocolSASLSSL,
+			expectedProtocolContract: contract.Protocol_SASL_SSL,
+		},
+		{
+			name: "SASL and TLS/SSL via tls.enabled",
+			data: map[string][]byte{
+				SSLLegacyEnabled: []byte("true"),
+
+				SaslUsernameKey: []byte("test-sasluser"),
+				SaslPasswordKey: []byte("test-password"),
+			},
+			expectedProtocolStr:      ProtocolSASLSSL,
+			expectedProtocolContract: contract.Protocol_SASL_SSL,
+		},
+		{
+			name: "SASL and TLS/SSL",
 			data: map[string][]byte{
 				CaCertificateKey: []byte("test-cacert"),
 				UserCertificate:  []byte("test-usercert"),
@@ -62,27 +109,18 @@ func TestGetAuthConfigFromSecret(t *testing.T) {
 				SaslUserKey:      []byte("test-sasluser"),
 				SaslPasswordKey:  []byte("test-password"),
 			},
+			expectedProtocolStr:      ProtocolSASLSSL,
+			expectedProtocolContract: contract.Protocol_SASL_SSL,
 		},
 		{
-			name: "Valid secret, backwards-compatibility, TLS/SASL without CA cert",
-			data: map[string][]byte{
-				SSLLegacyEnabled: []byte("true"),
-				SaslUserKey:      []byte("test-sasluser"),
-				SaslPasswordKey:  []byte("test-password"),
-			},
-		},
-		{
-			name: "Valid secret, backwards-compatibility, SASL, Invalid TLS",
+			name: "SASL and TLS/SSL (with invalid TLS)",
 			data: map[string][]byte{
 				SSLLegacyEnabled: []byte("invalid-bool"),
 				SaslUserKey:      []byte("test-sasluser"),
 				SaslPasswordKey:  []byte("test-password"),
 			},
-		},
-		{
-			name:      "Valid secret, backwards-compatibility, nil data",
-			data:      nil,
-			expectNil: true,
+			expectedProtocolStr:      ProtocolSASLPlaintext,
+			expectedProtocolContract: contract.Protocol_SASL_PLAINTEXT,
 		},
 	}
 
@@ -100,21 +138,13 @@ func TestGetAuthConfigFromSecret(t *testing.T) {
 				},
 				Data: testCase.data,
 			}
-			kafkaAuth := getAuthConfigFromSecret(secret)
-			if testCase.expectNil {
-				assert.Nil(t, kafkaAuth)
-			} else {
-				assert.NotNil(t, kafkaAuth)
-				assert.NotNil(t, kafkaAuth.SASL)
-				assertKey(t, testCase.data, SaslUsernameKey, kafkaAuth.SASL.User)
-				assertKey(t, testCase.data, SaslType, kafkaAuth.SASL.SaslType)
-				assertKey(t, testCase.data, SaslUserKey, kafkaAuth.SASL.User)
-				assertKey(t, testCase.data, SaslPasswordKey, kafkaAuth.SASL.Password)
-				if kafkaAuth.TLS != nil {
-					assertKey(t, testCase.data, CaCertificateKey, kafkaAuth.TLS.Cacert)
-					assertKey(t, testCase.data, UserCertificate, kafkaAuth.TLS.Usercert)
-					assertKey(t, testCase.data, UserKey, kafkaAuth.TLS.Userkey)
-				}
+
+			gotProtocolStr, gotRrotocolContract := getProtocolFromLegacyChannelSecret(secret)
+			if gotProtocolStr != testCase.expectedProtocolStr {
+				t.Errorf("getProtocolFromLegacyChannelSecret() gotProtocolStr = %v, want %v", gotProtocolStr, testCase.expectedProtocolStr)
+			}
+			if gotRrotocolContract != testCase.expectedProtocolContract {
+				t.Errorf("getProtocolFromLegacyChannelSecret() gotRrotocolContract = %v, want %v", gotRrotocolContract, testCase.expectedProtocolContract)
 			}
 		})
 	}
