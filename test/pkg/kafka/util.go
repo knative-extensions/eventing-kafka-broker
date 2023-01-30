@@ -19,6 +19,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -27,6 +28,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	testlib "knative.dev/eventing/test/lib"
+)
+
+const (
+	interval = 1 * time.Second
+	timeout  = 2 * time.Minute
 )
 
 func verifyJobSucceeded(

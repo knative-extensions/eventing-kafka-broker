@@ -21,8 +21,11 @@ import (
 	"embed"
 	"time"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/manifest"
@@ -65,6 +68,50 @@ func IsReady(name string, timings ...time.Duration) feature.StepFn {
 		interval, timeout := k8s.PollTimings(ctx, timings)
 		if err := k8s.WaitForResourceReady(ctx, t, kafkaNamespace, name, GVR(), interval, timeout); err != nil {
 			t.Error(GVR(), "did not become ready,", err)
+		}
+	}
+}
+
+// HasReplicationFactor asserts that the Topic has the given replication factor.
+func HasReplicationFactor(name string, replicationFactor int) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		ut, err := dynamicclient.Get(ctx).
+			Resource(GVR()).
+			Namespace(kafkaNamespace).
+			Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("failed to get topic %s/%s: %v", kafkaNamespace, name, err)
+		}
+
+		topicObj := &topic{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(ut.UnstructuredContent(), topicObj); err != nil {
+			t.Fatal(err)
+		}
+
+		if topicObj.Spec.Replicas != replicationFactor {
+			t.Fatalf("Kafkatopic %s/%s does not have the expected replication factor of %d. Has %d instead.", name, kafkaNamespace, topicObj.Spec.Replicas, replicationFactor)
+		}
+	}
+}
+
+// HasReplicationFactor asserts that the Topic has the given replication factor.
+func HasNumPartitions(name string, numPartitions int) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		ut, err := dynamicclient.Get(ctx).
+			Resource(GVR()).
+			Namespace(kafkaNamespace).
+			Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("failed to get topic %s/%s: %v", kafkaNamespace, name, err)
+		}
+
+		topicObj := &topic{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(ut.UnstructuredContent(), topicObj); err != nil {
+			t.Fatal(err)
+		}
+
+		if topicObj.Spec.Partitions != numPartitions {
+			t.Fatalf("Kafkatopic %s/%s does not have the expected number of partitions of %d. Has %d instead.", name, kafkaNamespace, topicObj.Spec.Partitions, numPartitions)
 		}
 	}
 }

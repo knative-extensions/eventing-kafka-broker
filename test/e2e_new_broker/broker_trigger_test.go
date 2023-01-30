@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/pkg/system"
-	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -36,9 +36,14 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestBrokerTrigger(t *testing.T) {
@@ -58,8 +63,6 @@ func TestBrokerTrigger(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
-		environment.WithPollTimings(3*time.Second, 120*time.Second),
-		environment.Managed(t),
 	)
 
 	brokerName := feature.MakeRandomK8sName("broker")
@@ -122,6 +125,58 @@ func TestBrokerTrigger(t *testing.T) {
 		time.Sleep(20 * time.Second)
 		assert.OnStore(sink).MatchEvent(test.HasId(nonMatchingEventId)).Not()(ctx, t)
 	})
+
+	env.Test(ctx, t, f)
+}
+
+func TestBrokerWithConfig(t *testing.T) {
+
+	const (
+		numPartitions     = 20
+		replicationFactor = 1
+		verifierName      = "num-partitions-replication-factor-verifier"
+	)
+
+	// Run Test In Parallel With Others
+	t.Parallel()
+
+	//Create The Test Context / Environment
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+	)
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	brokerConfig := feature.MakeRandomK8sName("brokercfg")
+
+	f := feature.NewFeatureNamed("Trigger filters events")
+
+	f.Setup("Create broker config", brokerconfigmap.Install(
+		brokerConfig,
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
+		brokerconfigmap.WithNumPartitions(numPartitions),
+		brokerconfigmap.WithReplicationFactor(replicationFactor),
+	))
+
+	f.Setup("Install broker", broker.Install(brokerName,
+		append(
+			broker.WithEnvConfig(),
+			broker.WithConfig(brokerConfig))...,
+	))
+	f.Assert("Broker ready", broker.IsReady(brokerName))
+
+	topic := kafka.BrokerTopic(brokerreconciler.TopicPrefix, &eventing.Broker{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      brokerName,
+			Namespace: env.Namespace(),
+		},
+	})
+
+	f.Assert("Topic is ready", kafkatopic.IsReady(topic))
+	f.Assert("Replication factor", kafkatopic.HasReplicationFactor(topic, replicationFactor))
+	f.Assert("Number of partitions", kafkatopic.HasNumPartitions(topic, numPartitions))
 
 	env.Test(ctx, t, f)
 }
