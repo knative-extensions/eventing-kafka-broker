@@ -19,9 +19,11 @@ package kafkasink
 import (
 	"context"
 	"embed"
+	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/manifest"
@@ -63,7 +65,7 @@ func WithAuthSecretName(name string) manifest.CfgFn {
 }
 
 // Install will create a Trigger resource, augmented with the config fn options.
-func Install(name, topic, bootstrapServers []string, opts ...manifest.CfgFn) feature.StepFn {
+func Install(name, topic string, bootstrapServers []string, opts ...manifest.CfgFn) feature.StepFn {
 	cfg := map[string]interface{}{
 		"name":             name,
 		"topic":            topic,
@@ -82,4 +84,13 @@ func Install(name, topic, bootstrapServers []string, opts ...manifest.CfgFn) fea
 // IsReady tests to see if a Trigger becomes ready within the time given.
 func IsReady(name string, timing ...time.Duration) feature.StepFn {
 	return k8s.IsReady(gvr(), name, timing...)
+}
+
+func AsKReference(name string, namespace string) *duckv1.KReference {
+	return &duckv1.KReference{
+		Kind:       "KafkaSink",
+		APIVersion: fmt.Sprintf("%s/%s", gvr().Group, gvr().Version),
+		Namespace:  namespace,
+		Name:       name,
+	}
 }
