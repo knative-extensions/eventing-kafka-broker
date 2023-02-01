@@ -353,6 +353,7 @@ func addControlPlaneDelivery(fs *feature.FeatureSet, brokerOpts ...manifest.CfgF
 		t1FailCount: 4, // Should end up in Trigger DLQ.
 		t2FailCount: 2, // Should end up in Broker DLQ.
 	}} {
+		tt := tt
 		// TODO: Each of these creates quite a few resources. We need to figure out a way
 		// to delete the resources for each Feature once the test completes. Today it's
 		// not easy (if at all possible) to do this, since Environment contains the References
@@ -505,6 +506,7 @@ func addControlPlaneEventRouting(fs *feature.FeatureSet, brokerOpts ...manifest.
 		config:   []triggerCfg{{}, {}},
 		inEvents: []conformanceevent.Event{knconf.EventToEvent(&fullEvent)},
 	}} {
+		tt := tt
 		brokerName := fmt.Sprintf("routing-test-%d", i)
 		f := feature.NewFeatureNamed(fmt.Sprintf("Event Routing Spec - %s", brokerName))
 		f.Setup("Set Broker Name", setBrokerName(brokerName))
