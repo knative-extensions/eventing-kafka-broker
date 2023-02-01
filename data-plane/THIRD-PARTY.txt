@@ -1,5 +1,5 @@
 
-Lists of 217 third-party dependencies.
+Lists of 216 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.11 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.11 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.8.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -192,7 +192,6 @@ Lists of 217 third-party dependencies.
      (Apache License, version 2.0) JBoss Logging 3 (org.jboss.logging:jboss-logging:3.5.0.Final - http://www.jboss.org)
      (Apache License, version 2.0) JBoss Logging I18n Annotations (org.jboss.logging:jboss-logging-annotations:2.2.1.Final - http://www.jboss.org/jboss-logging-tools-parent/jboss-logging-annotations)
      (Apache License 2.0) JBoss Log Manager (Embedded) (org.jboss.logmanager:jboss-logmanager-embedded:1.0.10 - http://www.jboss.org/jboss-logmanager-embedded)
-     (Apache License 2.0) SLF4J: JBoss Log Manager (org.jboss.slf4j:slf4j-jboss-logmanager:1.2.0.Final - http://www.jboss.org/slf4j-jboss-logmanager)
      (Apache License 2.0) JBoss Threads (org.jboss.threads:jboss-threads:3.4.3.Final - http://www.jboss.org/jboss-threads)
      (Eclipse Public License v2.0) JUnit Jupiter (Aggregator) (org.junit.jupiter:junit-jupiter:5.9.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter API (org.junit.jupiter:junit-jupiter-api:5.9.1 - https://junit.org/junit5/)
