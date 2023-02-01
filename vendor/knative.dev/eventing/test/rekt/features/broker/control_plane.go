@@ -443,7 +443,7 @@ func addControlPlaneEventRouting(fs *feature.FeatureSet, brokerOpts ...manifest.
 		},
 		inEvents: []conformanceevent.Event{knconf.EventToEvent(&fullEvent)},
 	}, {
-		// name: "Two triggers, with filter, both get the event",
+		name: "Two triggers, with filter, both get the event",
 		config: []triggerCfg{
 			{
 				filter: &eventingv1.TriggerFilter{
