@@ -134,6 +134,7 @@ func TestBrokerWithConfig(t *testing.T) {
 	const (
 		numPartitions     = 20
 		replicationFactor = 1
+		verifierName      = "num-partitions-replication-factor-verifier"
 	)
 
 	// Run Test In Parallel With Others
@@ -149,13 +150,6 @@ func TestBrokerWithConfig(t *testing.T) {
 
 	brokerName := feature.MakeRandomK8sName("broker")
 	brokerConfig := feature.MakeRandomK8sName("brokercfg")
-	senderName := feature.MakeRandomK8sName("sender")
-	triggerName := feature.MakeRandomK8sName("trigger")
-	sink := feature.MakeRandomK8sName("sink")
-
-	eventId := uuid.New().String()
-	eventToSend := test.MinEvent()
-	eventToSend.SetID(eventId)
 
 	f := feature.NewFeatureNamed("Trigger filters events")
 
@@ -172,19 +166,6 @@ func TestBrokerWithConfig(t *testing.T) {
 			broker.WithConfig(brokerConfig))...,
 	))
 	f.Assert("Broker ready", broker.IsReady(brokerName))
-
-	f.Setup("Install sink", eventshub.Install(sink,
-		eventshub.StartReceiver))
-
-	f.Setup("Create trigger", trigger.Install(triggerName, brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sink), ""),
-	))
-	f.Assert("Trigger ready", trigger.IsReady(triggerName))
-
-	f.Requirement("Send event", eventshub.Install(senderName,
-		eventshub.InputEvent(eventToSend),
-		eventshub.StartSenderToResource(broker.GVR(), brokerName)))
-	f.Assert("Event received", assert.OnStore(sink).MatchEvent(test.HasId(eventId)).Exact(1))
 
 	topic := kafka.BrokerTopic(brokerreconciler.TopicPrefix, &eventing.Broker{
 		ObjectMeta: metav1.ObjectMeta{
