@@ -98,7 +98,7 @@ func TestBrokerTrigger(t *testing.T) {
 			broker.WithEnvConfig(),
 			broker.WithConfig(brokerConfig))...,
 	))
-	f.Assert("Broker ready", broker.IsReady(brokerName))
+	f.Setup("Broker ready", broker.IsReady(brokerName))
 
 	f.Setup("Install sink", eventshub.Install(sink,
 		eventshub.StartReceiver))
@@ -111,7 +111,7 @@ func TestBrokerTrigger(t *testing.T) {
 			"type":     "",
 		}),
 	))
-	f.Assert("Trigger ready", trigger.IsReady(triggerName))
+	f.Setup("Trigger ready", trigger.IsReady(triggerName))
 
 	f.Requirement("Send matching event", eventshub.Install(senderNameMatchingEvent,
 		eventshub.InputEvent(eventToSend),
@@ -134,7 +134,6 @@ func TestBrokerWithConfig(t *testing.T) {
 	const (
 		numPartitions     = 20
 		replicationFactor = 1
-		verifierName      = "num-partitions-replication-factor-verifier"
 	)
 
 	// Run Test In Parallel With Others
@@ -165,7 +164,7 @@ func TestBrokerWithConfig(t *testing.T) {
 			broker.WithEnvConfig(),
 			broker.WithConfig(brokerConfig))...,
 	))
-	f.Assert("Broker ready", broker.IsReady(brokerName))
+	f.Setup("Broker ready", broker.IsReady(brokerName))
 
 	topic := kafka.BrokerTopic(brokerreconciler.TopicPrefix, &eventing.Broker{
 		ObjectMeta: metav1.ObjectMeta{
@@ -173,8 +172,8 @@ func TestBrokerWithConfig(t *testing.T) {
 			Namespace: env.Namespace(),
 		},
 	})
+	f.Setup("Topic is ready", kafkatopic.IsReady(topic))
 
-	f.Assert("Topic is ready", kafkatopic.IsReady(topic))
 	f.Assert("Replication factor", kafkatopic.HasReplicationFactor(topic, replicationFactor))
 	f.Assert("Number of partitions", kafkatopic.HasNumPartitions(topic, numPartitions))
 
