@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_broker
+package e2e_new
 
 import (
 	"context"
