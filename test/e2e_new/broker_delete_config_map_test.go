@@ -82,12 +82,12 @@ func BrokerDeleteContractConfigMap() *feature.Feature {
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
 	// Let's delete the contract config map and then wait for it to be recreated
-	f.Setup("delete config map", configmap.DeleteContract)
-	f.Setup("wait config map", configmap.ExistsContract)
-	f.Setup("trigger is ready after deleting the contract config map", trigger.IsReady(triggerName))
+	f.Requirement("delete config map", configmap.DeleteContract)
+	f.Requirement("wait config map", configmap.ExistsContract)
+	f.Requirement("trigger is ready after deleting the contract config map", trigger.IsReady(triggerName))
 
 	// Let's send a message and check if it's received
-	f.Setup("install source", eventshub.Install(
+	f.Assert("install source", eventshub.Install(
 		sourceName,
 		eventshub.StartSenderToResource(broker.GVR(), brokerName),
 		eventshub.InputEvent(ev),

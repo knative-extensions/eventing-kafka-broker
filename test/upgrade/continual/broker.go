@@ -155,10 +155,7 @@ func (k *kafkaBrokerSut) fetchURL(ctx sut.Context) *apis.URL {
 		ctx.T.Fatal(err)
 	}
 
-	var url *apis.URL
-	if br.Status.AddressStatus.Address != nil {
-		url = br.Status.Address.URL
-	}
+	url := br.Status.Address.URL
 	ctx.Log.Debugf("\"%s\" broker URL for ns %s is %v", k.Broker.Name, namespace, url)
 	return url
 }
