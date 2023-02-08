@@ -26,6 +26,7 @@ type topic struct {
 
 	Spec topicSpec `json:"spec,omitempty"`
 }
+
 type topicSpec struct {
 	Partitions int    `json:"partitions,omitempty"`
 	Replicas   int    `json:"replicas,omitempty"`
