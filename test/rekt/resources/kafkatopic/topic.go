@@ -142,9 +142,8 @@ func HasNumPartitions(name string, numPartitions int, timings ...time.Duration) 
 				t.Logf("Kafkatopic %s/%s does not have the expected number of partitions of %d. Has %d instead.", name, kafkaNamespace, topicObj.Spec.Partitions, numPartitions)
 				// keep polling
 				return false, nil
-			} else {
-				return true, nil
 			}
+			return true, nil
 		})
 
 		if err != nil {
