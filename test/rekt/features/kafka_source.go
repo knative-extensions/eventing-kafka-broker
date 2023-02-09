@@ -29,7 +29,7 @@ import (
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
@@ -52,7 +52,8 @@ func SetupKafkaSources(prefix string, n int) *feature.Feature {
 	sink := "sink"
 	f := feature.NewFeatureNamed("KafkaSources")
 
-	f.Setup("install a sink", svc.Install(sink, "app", "rekt"))
+	f.Setup("install a sink", service.Install(sink,
+		service.WithSelectors(map[string]string{"app": "rekt"})))
 
 	for i := 0; i < n; i++ {
 		topicName := feature.MakeRandomK8sName("topic") // A k8s name is also a valid topic name.
@@ -155,12 +156,13 @@ func ScaleKafkaSource() *feature.Feature {
 	topicName := feature.MakeRandomK8sName("scale-topic")
 	sink := feature.MakeRandomK8sName("sink")
 
-	f.Setup("install a sink", svc.Install(sink, "app", "rekt"))
+	f.Setup("install a sink", service.Install(sink,
+		service.WithSelectors(map[string]string{"app": "rekt"})))
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("scale kafkasource", kafkasource.Install(source,
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topicName}),
-		kafkasource.WithSink(svc.AsKReference(sink), ""),
+		kafkasource.WithSink(service.AsKReference(sink), ""),
 		kafkasource.WithAnnotations(map[string]string{
 			// Disable autoscaling for this KafkaSource since we want to have the expected replicas
 			// in the status reflected without the autoscaler intervention.

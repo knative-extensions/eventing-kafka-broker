@@ -38,7 +38,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
@@ -97,8 +97,8 @@ func SendsEventWithRetries() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -162,8 +162,8 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -224,8 +224,8 @@ func SendsEventNoRetries() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
