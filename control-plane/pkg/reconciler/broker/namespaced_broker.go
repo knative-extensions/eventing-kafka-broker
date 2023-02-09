@@ -30,6 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	appslisters "k8s.io/client-go/listers/apps/v1"
@@ -42,6 +43,8 @@ import (
 	"knative.dev/pkg/resolver"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
@@ -61,11 +64,13 @@ type NamespacedReconciler struct {
 
 	Resolver *resolver.URIResolver
 
+	NamespaceLister          corelisters.NamespaceLister
 	ConfigMapLister          corelisters.ConfigMapLister
 	ServiceAccountLister     corelisters.ServiceAccountLister
 	ServiceLister            corelisters.ServiceLister
 	ClusterRoleBindingLister rbaclisters.ClusterRoleBindingLister
 	DeploymentLister         appslisters.DeploymentLister
+	BrokerLister             eventinglisters.BrokerLister
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -112,7 +117,54 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventin
 
 	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
 
+	err := r.cleanUpClusterScopedResources(ctx, broker)
+	if err != nil {
+		// we don't let this error propagate, as we don't want to requeue this forever
+		logging.FromContext(ctx).Errorw("Error while cleaning up cluster scoped resources for KafkaNamespaced brokers in the namespace", zap.Error(err))
+		return result
+	}
+
 	return result
+}
+
+// cleanUpClusterScopedResources deletes the cluster scoped resources created for the data plane in the namespace, if
+// this is the last namespaced broker in the namespace
+func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context, broker *eventing.Broker) error {
+	var list []*eventing.Broker
+	var err error
+
+	// TODO: can we use a label to select KafkaNamespaced brokers instead of listing all brokers in the namespace?
+	if list, err = r.BrokerLister.Brokers(broker.Namespace).List(labels.Everything()); err != nil {
+		return fmt.Errorf("failed to list brokers in the namespace: %w", err)
+	}
+
+	namespacedBrokerCount := 0
+	for _, b := range list {
+		if b.DeletionTimestamp != nil {
+			continue
+		}
+		if b.Annotations[brokerreconciler.ClassAnnotationKey] == kafka.NamespacedBrokerClass {
+			namespacedBrokerCount++
+		}
+	}
+
+	if namespacedBrokerCount > 0 {
+		// there's still at least one namespaced broker in the namespace, so we don't delete the cluster scoped resources
+		return nil
+	}
+
+	manifest, err := r.getManifest(ctx, broker)
+
+	// Delete the cluster scoped resources created for the data plane in the namespace.
+	manifest = manifest.Filter(FilterClusterScoped)
+
+	// Only delete cluster scoped resources, others are garbage collected by Kubernetes already
+	err = manifest.Delete()
+	if err != nil {
+		return fmt.Errorf("failed to delete additional resources: %w", err)
+	}
+
+	return nil
 }
 
 func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventing.Broker) *Reconciler {
@@ -150,6 +202,11 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 // getManifest returns the manifest that is transformed from the BaseDataPlaneManifest with the changes
 // for the given broker
 func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing.Broker) (mf.Manifest, error) {
+	namespace, err := r.NamespaceLister.Get(broker.Namespace)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("failed to get namespace of the broker: %w", err)
+	}
+
 	var resources []unstructured.Unstructured
 
 	additionalConfigMaps, err := r.configMapsFromSystemNamespace(broker)
@@ -201,6 +258,14 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
+	}
+
+	// Set the namespace as owner ref to cluster-scoped resources. We delete them manually, but as a safety net we set
+	// the namespace as owner ref so that even when cluster scoped resources cannot be deleted, they will be garbage
+	// collected when the namespace is deleted.
+	manifest, err = manifest.Transform(appendNamespaceAsOwnerRefsToClusterScoped(namespace))
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to set namespace as owner ref to cluster-scoped resources: %w", err)
 	}
 
 	manifest, err = manifest.Transform(filterMetadata)
@@ -433,6 +498,22 @@ func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, erro
 	return unstructured.Unstructured{Object: unstr}, nil
 }
 
+func appendNamespaceAsOwnerRefsToClusterScoped(namespace *corev1.Namespace) mf.Transformer {
+	return func(resource *unstructured.Unstructured) error {
+		if !isClusterScoped(resource.GetKind()) {
+			return nil
+		}
+
+		ref := *metav1.NewControllerRef(namespace, corev1.SchemeGroupVersion.WithKind("Namespace"))
+		ref.Controller = pointer.Bool(true)
+		ref.BlockOwnerDeletion = pointer.Bool(false)
+
+		resource.SetOwnerReferences([]metav1.OwnerReference{ref})
+
+		return nil
+	}
+}
+
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
 		if isClusterScoped(resource.GetKind()) {
@@ -548,4 +629,8 @@ func isClusterScoped(kind string) bool {
 		return true
 	}
 	return false
+}
+
+func FilterClusterScoped(u *unstructured.Unstructured) bool {
+	return isClusterScoped(u.GetKind())
 }
