@@ -49,7 +49,7 @@ import (
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 )
 
 func compose(steps ...feature.StepFn) feature.StepFn {
@@ -92,7 +92,7 @@ func BrokerSmokeTest(brokerName, triggerName string) feature.StepFn {
 			triggerName,
 			brokerName,
 			trigger.WithRetry(3, &backoffPolicy, pointer.String("PT1S")),
-			trigger.WithSubscriber(svc.AsKReference(sink), ""),
+			trigger.WithSubscriber(service.AsKReference(sink), ""),
 		),
 		trigger.IsReady(triggerName),
 		eventshub.Install(

@@ -28,7 +28,7 @@ import (
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
@@ -77,7 +77,7 @@ func BrokerConfigMapDeletedFirst() *feature.Feature {
 	))
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(cmName))...))
 	f.Setup("install trigger", trigger.Install(triggerName, brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sink), "")),
+		trigger.WithSubscriber(service.AsKReference(sink), "")),
 	)
 
 	f.Requirement("delete Broker ConfigMap", featuressteps.DeleteConfigMap(cmName))

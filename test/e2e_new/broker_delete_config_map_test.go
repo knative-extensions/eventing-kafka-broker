@@ -32,7 +32,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/configmap"
 )
@@ -77,7 +77,7 @@ func BrokerDeleteContractConfigMap() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
