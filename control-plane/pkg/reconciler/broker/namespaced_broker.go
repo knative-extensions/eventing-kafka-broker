@@ -139,7 +139,7 @@ func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context
 
 	namespacedBrokerCount := 0
 	for _, b := range list {
-		if b.DeletionTimestamp != nil {
+		if !b.DeletionTimestamp.IsZero() {
 			continue
 		}
 		if b.Annotations[brokerreconciler.ClassAnnotationKey] == kafka.NamespacedBrokerClass {
