@@ -52,6 +52,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 )
 
 // TODO: 5.
@@ -83,9 +84,15 @@ type NamespacedReconciler struct {
 
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
+
+	LockMap util.LockMap
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	namespaceLock := r.LockMap.GetLock(broker.Namespace)
+	namespaceLock.Lock()
+	defer namespaceLock.Unlock()
+
 	r.IPsLister.Register(
 		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
@@ -112,6 +119,10 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	namespaceLock := r.LockMap.GetLock(broker.Namespace)
+	namespaceLock.Lock()
+	defer namespaceLock.Unlock()
+
 	br := r.createReconcilerForBrokerInstance(broker)
 	result := br.FinalizeKind(ctx, broker)
 

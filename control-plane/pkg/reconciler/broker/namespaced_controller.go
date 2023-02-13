@@ -19,6 +19,9 @@ package broker
 import (
 	"context"
 	"net/http"
+	"time"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
 	"github.com/Shopify/sarama"
 	mfclient "github.com/manifestival/client-go-client"
@@ -101,6 +104,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		Env:                        env,
 		Counter:                    counter.NewExpiringCounter(ctx),
 		ManifestivalClient:         mfc,
+		LockMap:                    util.NewLockMap(ctx, time.Minute*30),
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {
