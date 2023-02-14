@@ -104,7 +104,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		Env:                        env,
 		Counter:                    counter.NewExpiringCounter(ctx),
 		ManifestivalClient:         mfc,
-		LockMap:                    util.NewLockMap(ctx, time.Minute*30),
+		LockMap:                    util.NewExpiringLockMap(ctx, time.Minute*30),
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {
