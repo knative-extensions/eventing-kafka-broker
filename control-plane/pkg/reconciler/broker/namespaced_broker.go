@@ -85,7 +85,7 @@ type NamespacedReconciler struct {
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
 
-	LockMap util.LockMap
+	LockMap util.LockMap[string]
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
