@@ -130,8 +130,7 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventin
 
 	err := r.cleanUpClusterScopedResources(ctx, broker)
 	if err != nil {
-		// we don't let this error propagate, as we don't want to requeue this forever
-		logging.FromContext(ctx).Errorw("Error while cleaning up cluster scoped resources for KafkaNamespaced brokers in the namespace", zap.Error(err))
+		return fmt.Errorf("failed to clean up cluster scoped resources for KafkaNamespaced brokers in the namespace: %w", err)
 	}
 
 	return result
