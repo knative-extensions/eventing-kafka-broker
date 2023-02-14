@@ -22,11 +22,12 @@ import (
 	"time"
 )
 
+// LockMap provides a mechanism to get a lock for a given key.
 type LockMap interface {
 	GetLock(interface{}) *sync.Mutex
 }
 
-type lockMap struct {
+type expiringLockMap struct {
 	mu     sync.Mutex
 	locks  map[interface{}]*sync.Mutex
 	access map[interface{}]time.Time
@@ -34,8 +35,9 @@ type lockMap struct {
 	ttl time.Duration
 }
 
-func NewLockMap(ctx context.Context, ttl time.Duration) LockMap {
-	lm := &lockMap{
+// NewExpiringLockMap returns a new LockMap that removes entries after the given TTL.
+func NewExpiringLockMap(ctx context.Context, ttl time.Duration) LockMap {
+	lm := &expiringLockMap{
 		locks:  make(map[interface{}]*sync.Mutex),
 		access: make(map[interface{}]time.Time),
 		ttl:    ttl,
@@ -55,7 +57,7 @@ func NewLockMap(ctx context.Context, ttl time.Duration) LockMap {
 	return lm
 }
 
-func (lm *lockMap) GetLock(key interface{}) *sync.Mutex {
+func (lm *expiringLockMap) GetLock(key interface{}) *sync.Mutex {
 	lm.mu.Lock()
 	defer lm.mu.Unlock()
 
@@ -71,7 +73,7 @@ func (lm *lockMap) GetLock(key interface{}) *sync.Mutex {
 	return lock
 }
 
-func (lm *lockMap) removeExpiredEntries(now time.Time) {
+func (lm *expiringLockMap) removeExpiredEntries(now time.Time) {
 	lm.mu.Lock()
 	defer lm.mu.Unlock()
 
