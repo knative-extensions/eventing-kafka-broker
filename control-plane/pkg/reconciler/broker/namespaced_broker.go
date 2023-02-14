@@ -143,7 +143,6 @@ func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context
 	var list []*eventing.Broker
 	var err error
 
-	// TODO: can we use a label to select KafkaNamespaced brokers instead of listing all brokers in the namespace?
 	if list, err = r.BrokerLister.Brokers(broker.Namespace).List(labels.Everything()); err != nil {
 		return fmt.Errorf("failed to list brokers in the namespace: %w", err)
 	}
