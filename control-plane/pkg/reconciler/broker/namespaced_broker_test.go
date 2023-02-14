@@ -41,6 +41,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/manifestival/client-go-client"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -295,6 +296,9 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal",
 			Objects: []runtime.Object{
+				reconcilertesting.NewNamespace(BrokerNamespace, func(ns *corev1.Namespace) {
+					ns.UID = BrokerNamespaceUUID
+				}),
 				NewDeletedBroker(reconcilertesting.WithBrokerClass(kafka.NamespacedBrokerClass)),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -307,6 +311,41 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 					},
 					Generation: 1,
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				reconcilertesting.NewConfigMap(env.DataPlaneConfigConfigMapName, SystemNamespace),
+				reconcilertesting.NewConfigMap("config-tracing", SystemNamespace),
+				reconcilertesting.NewConfigMap("kafka-config-logging", SystemNamespace),
+				reconcilertesting.NewDeployment("kafka-broker-receiver", SystemNamespace),
+				reconcilertesting.NewDeployment("kafka-broker-dispatcher", SystemNamespace),
+				NewServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
+				reconcilertesting.NewService("kafka-broker-ingress", SystemNamespace),
+				NewClusterRoleBinding("knative-kafka-broker-data-plane",
+					WithClusterRoleBindingSubjectServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
+				),
+				NewConfigMapWithTextData(SystemNamespace, NamespacedBrokerAdditionalResourcesConfigMapName, map[string]string{
+					"resources": `
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: test-role
+    labels:
+      "knative.foo": "foo-{{.Namespace}}"
+    creationTimestamp: null
+  rules:
+    - apiGroups:
+        - "v1"
+      resources:
+        - pods
+      verbs:
+        - get
+`,
+				}),
+				NewClusterRole("test-role",
+					WithClusterRoleLabel("knative.foo", "foo-"+BrokerNamespace),
+					WithClusterRoleRules(rbacv1.PolicyRule{
+						APIGroups: []string{"v1"},
+						Resources: []string{"pods"},
+						Verbs:     []string{"get"},
+					})),
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
@@ -321,6 +360,18 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 						BlockOwnerDeletion: pointer.Bool(true),
 					}),
 				),
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Resource: schema.GroupVersionResource{
+							Group:    rbacv1.SchemeGroupVersion.Group,
+							Version:  rbacv1.SchemeGroupVersion.Version,
+							Resource: "clusterroles",
+						},
+					},
+					Name: "test-role",
+				},
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),

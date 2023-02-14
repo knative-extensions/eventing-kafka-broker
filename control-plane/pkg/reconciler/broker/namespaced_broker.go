@@ -163,6 +163,9 @@ func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context
 	}
 
 	manifest, err := r.getManifest(ctx, broker)
+	if err != nil {
+		return fmt.Errorf("unable to transform dataplane manifest for deletion: %w", err)
+	}
 
 	// Delete the cluster scoped resources created for the data plane in the namespace.
 	manifest = manifest.Filter(FilterClusterScoped)
