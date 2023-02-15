@@ -21,26 +21,13 @@ import (
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
+var WithAnnotations = manifest.WithAnnotations
+var WithLabels = manifest.WithLabels
+
 func WithEnvs(envs map[string]string) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
 		if envs != nil {
 			cfg["envs"] = envs
-		}
-	}
-}
-
-func WithAnnotations(annotations map[string]interface{}) manifest.CfgFn {
-	return func(cfg map[string]interface{}) {
-		if annotations != nil {
-			cfg["annotations"] = annotations
-		}
-	}
-}
-
-func WithLabels(labels map[string]string) manifest.CfgFn {
-	return func(cfg map[string]interface{}) {
-		if labels != nil {
-			cfg["labels"] = labels
 		}
 	}
 }
