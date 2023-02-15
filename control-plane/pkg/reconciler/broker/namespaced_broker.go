@@ -128,9 +128,17 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventin
 
 	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
 
-	err := r.cleanUpClusterScopedResources(ctx, broker)
+	count, err := r.namespacedBrokerCountInNamespace(broker.Namespace)
 	if err != nil {
-		return fmt.Errorf("failed to clean up cluster scoped resources for KafkaNamespaced brokers in the namespace: %w", err)
+		return fmt.Errorf("failed to count namespaced brokers in the namespace for clean up: %w", err)
+	}
+
+	if count == 0 {
+		// there's no more namespaced broker in the namespace, we can clean up the cluster scoped resources
+		err := r.cleanUpClusterScopedResources(ctx, broker)
+		if err != nil {
+			return fmt.Errorf("failed to clean up cluster scoped resources for KafkaNamespaced brokers in the namespace: %w", err)
+		}
 	}
 
 	return result
@@ -139,28 +147,6 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventin
 // cleanUpClusterScopedResources deletes the cluster scoped resources created for the data plane in the namespace, if
 // this is the last namespaced broker in the namespace
 func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context, broker *eventing.Broker) error {
-	var list []*eventing.Broker
-	var err error
-
-	if list, err = r.BrokerLister.Brokers(broker.Namespace).List(labels.Everything()); err != nil {
-		return fmt.Errorf("failed to list brokers in the namespace: %w", err)
-	}
-
-	namespacedBrokerCount := 0
-	for _, b := range list {
-		if !b.DeletionTimestamp.IsZero() {
-			continue
-		}
-		if b.Annotations[brokerreconciler.ClassAnnotationKey] == kafka.NamespacedBrokerClass {
-			namespacedBrokerCount++
-		}
-	}
-
-	if namespacedBrokerCount > 0 {
-		// there's still at least one namespaced broker in the namespace, so we don't delete the cluster scoped resources
-		return nil
-	}
-
 	manifest, err := r.getManifest(ctx, broker)
 	if err != nil {
 		return fmt.Errorf("unable to transform dataplane manifest for deletion: %w", err)
@@ -176,6 +162,28 @@ func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context
 	}
 
 	return nil
+}
+
+// namespacedBrokerCountInNamespace returns the number of non-deleted namespaced brokers in the namespace
+func (r *NamespacedReconciler) namespacedBrokerCountInNamespace(namespace string) (int, error) {
+	var list []*eventing.Broker
+	var err error
+
+	if list, err = r.BrokerLister.Brokers(namespace).List(labels.Everything()); err != nil {
+		return 0, fmt.Errorf("failed to list brokers in the namespace: %w", err)
+	}
+
+	namespacedBrokerCount := 0
+	for _, b := range list {
+		if !b.DeletionTimestamp.IsZero() {
+			continue
+		}
+		if b.Annotations[brokerreconciler.ClassAnnotationKey] == kafka.NamespacedBrokerClass {
+			namespacedBrokerCount++
+		}
+	}
+
+	return namespacedBrokerCount, err
 }
 
 func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventing.Broker) *Reconciler {
