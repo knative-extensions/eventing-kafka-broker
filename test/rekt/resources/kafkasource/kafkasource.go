@@ -147,6 +147,15 @@ func WithTopics(topics []string) manifest.CfgFn {
 	}
 }
 
+// WithInitialOffset adds the initial offset config to a KafkaSource spec.
+func WithInitialOffset(offset sources.Offset) manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		if offset != "" {
+			cfg["initialOffset"] = string(offset)
+		}
+	}
+}
+
 // WithTLSEnabled enables TLS to a KafkaSource spec.
 func WithTLSEnabled() manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
