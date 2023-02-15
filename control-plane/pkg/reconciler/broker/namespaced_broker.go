@@ -511,7 +511,7 @@ func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, erro
 
 func appendNamespaceAsOwnerRefsToClusterScoped(namespace *corev1.Namespace) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
-		if !isClusterScoped(resource.GetKind()) {
+		if !isClusterScoped(resource.GetKind()) || strings.ToLower(resource.GetKind()) == "namespace" {
 			return nil
 		}
 
