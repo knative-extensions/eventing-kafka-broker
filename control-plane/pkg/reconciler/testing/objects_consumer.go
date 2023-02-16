@@ -24,12 +24,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -114,7 +115,9 @@ func ConsumerUID(uid string) ConsumerOption {
 type DeliverySpecOption func(spec *kafkainternals.DeliverySpec)
 
 func NewConsumerSpecDelivery(order internals.DeliveryOrdering, options ...DeliverySpecOption) *kafkainternals.DeliverySpec {
-	d := &kafkainternals.DeliverySpec{Ordering: order}
+	d := &kafkainternals.DeliverySpec{
+		Ordering: order,
+	}
 
 	for _, opt := range options {
 		opt(d)
