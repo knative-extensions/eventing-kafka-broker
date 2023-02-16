@@ -186,7 +186,7 @@ func (manager *StatusConditionManager) TopicReady(topic string) {
 func (manager *StatusConditionManager) FailedToGetBrokerAuthSecret(err error) reconciler.Event {
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
-		apis.ConditionReady,
+		ConditionTopicReady,
 		"Failed to get broker auth secret",
 		"%v",
 		err,
