@@ -18,17 +18,12 @@ package features
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
@@ -36,6 +31,15 @@ import (
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/resources/job"
+
+	cetest "github.com/cloudevents/sdk-go/v2/test"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 )
 
 const (
@@ -135,6 +139,29 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 		job.WithBackoffLimit(2),
 		job.WithImagePullPolicy(corev1.PullIfNotPresent)))
 	f.Assert("Verify-messages job succeeded", job.IsSucceeded(verifyMessagesJobName))
+
+	return f
+}
+
+func SetupKafkaTopicWithEvents(count int, topic string) *feature.Feature {
+
+	f := feature.NewFeatureNamed(fmt.Sprintf("setup Kafka topic with %d events", count))
+
+	ksink := feature.MakeRandomK8sName("ksink")
+	source := feature.MakeRandomK8sName("source-to-ksink")
+
+	f.Setup("install kafka topic", kafkatopic.Install(topic))
+	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Setup("install kafkasink", kafkasink.Install(ksink, topic, testpkg.BootstrapServersPlaintextArr))
+	f.Setup("KafkaSink is ready", kafkasink.IsReady(ksink))
+
+	f.Requirement("install source for ksink", eventshub.Install(
+		source,
+		eventshub.StartSenderToResource(kafkasink.GVR(), ksink),
+		eventshub.InputEvent(cetest.FullEvent()),
+		eventshub.AddSequence,
+		eventshub.SendMultipleEvents(2, time.Millisecond),
+	))
 
 	return f
 }

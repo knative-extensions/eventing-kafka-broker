@@ -32,7 +32,7 @@ import (
 //go:embed *.yaml
 var yaml embed.FS
 
-func gvr() schema.GroupVersionResource {
+func GVR() schema.GroupVersionResource {
 	return schema.GroupVersionResource{Group: "eventing.knative.dev", Version: "v1alpha1", Resource: "kafkasinks"}
 }
 
@@ -83,13 +83,13 @@ func Install(name, topic string, bootstrapServers []string, opts ...manifest.Cfg
 
 // IsReady tests to see if a Trigger becomes ready within the time given.
 func IsReady(name string, timing ...time.Duration) feature.StepFn {
-	return k8s.IsReady(gvr(), name, timing...)
+	return k8s.IsReady(GVR(), name, timing...)
 }
 
 func AsKReference(name string, namespace string) *duckv1.KReference {
 	return &duckv1.KReference{
 		Kind:       "KafkaSink",
-		APIVersion: fmt.Sprintf("%s/%s", gvr().Group, gvr().Version),
+		APIVersion: fmt.Sprintf("%s/%s", GVR().Group, GVR().Version),
 		Namespace:  namespace,
 		Name:       name,
 	}
