@@ -183,6 +183,18 @@ func (manager *StatusConditionManager) TopicReady(topic string) {
 	)
 }
 
+func (manager *StatusConditionManager) FailedToGetBrokerAuthSecret(err error) reconciler.Event {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		apis.ConditionReady,
+		"Failed to get broker auth secret",
+		"%v",
+		err,
+	)
+
+	return fmt.Errorf("failed to get broker auth secret: %w", err)
+}
+
 func (manager *StatusConditionManager) Addressable(address *url.URL) {
 	manager.SetAddress(&apis.URL{
 		Scheme:      address.Scheme,

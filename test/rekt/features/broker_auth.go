@@ -18,6 +18,7 @@ package features
 
 import (
 	"context"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
@@ -94,6 +95,36 @@ func SetupBrokerAuth(bootstrapServer string, authSecretOptions ...manifest.CfgFn
 		eventshub.StartSenderToResource(broker.GVR(), brokerName)))
 
 	f.Assert("Event received", assert.OnStore(sinkName).MatchEvent(test.HasId(eventId)).Exact(1))
+
+	return f
+}
+
+func BrokerNotReadyWithoutAuthSecret() *feature.Feature {
+	f := feature.NewFeatureNamed("Broker not ready without Kafka Auth Secret")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	brokerConfigName := feature.MakeRandomK8sName("brokercfg")
+	authSecretName := feature.MakeRandomK8sName("kafkaauth")
+
+	f.Setup("Create broker config", brokerconfigmap.Install(brokerConfigName,
+		brokerconfigmap.WithNumPartitions(3),
+		brokerconfigmap.WithReplicationFactor(1),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
+		brokerconfigmap.WithAuthSecret(authSecretName)))
+
+	f.Setup("Install broker", broker.Install(brokerName, append(
+		broker.WithEnvConfig(),
+		broker.WithConfig(brokerConfigName))...,
+	))
+
+	f.Setup("Broker is not ready without Kafka Auth Secret", func(ctx context.Context, t feature.T) {
+		time.Sleep(10 * time.Second)
+		broker.IsNotReady(brokerName)(ctx, t)
+	})
+
+	f.Requirement("Create auth secret", kafkaauthsecret.Install(authSecretName,
+		kafkaauthsecret.WithPlaintextData()))
+	f.Assert("Broker becomes ready with Kafka Auth Secret", broker.IsReady(brokerName))
 
 	return f
 }
