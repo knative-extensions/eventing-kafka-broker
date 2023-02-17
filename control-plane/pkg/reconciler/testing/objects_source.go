@@ -23,6 +23,7 @@ import (
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -31,11 +32,15 @@ import (
 )
 
 const (
-	SourceName             = "ks"
-	SourceNamespace        = "test-ns"
-	SourceConsumerGroup    = "ks-group"
-	SourceUUID             = "uuid"
-	SourceBootstrapServers = "kafka:9092"
+	SourceName                      = "ks"
+	SourceNamespace                 = "test-ns"
+	SourceConsumerGroup             = "ks-group"
+	SourceUUID                      = "uuid"
+	SourceBootstrapServers          = "kafka:9092"
+	SourceDeliverySpecRetry         = 3
+	SourceDeliverySpecBackoffPolicy = eventingduck.BackoffPolicyExponential
+	SourceDeliverySpecBackoffDelay  = "PT5S"
+	SourceDeliverySpecTimeout       = "PT24H"
 )
 
 var (
@@ -83,6 +88,22 @@ func WithKeyType(keyType string) KRShapedOption {
 			ks.Labels = make(map[string]string, 1)
 		}
 		ks.Labels[sources.KafkaKeyTypeLabel] = keyType
+	}
+}
+
+func WithDeliverySpec() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		if ks.Spec.Delivery == nil {
+			backoffPolicy := SourceDeliverySpecBackoffPolicy
+			ks.Spec.Delivery = &eventingduck.DeliverySpec{
+				Retry:         pointer.Int32(SourceDeliverySpecRetry),
+				BackoffPolicy: &backoffPolicy,
+				BackoffDelay:  pointer.String(SourceDeliverySpecBackoffDelay),
+				Timeout:       pointer.String(SourceDeliverySpecTimeout),
+			}
+		}
+		ks.Spec.Delivery.DeadLetterSink = &duckv1.Destination{URI: ConsumerDeadLetterSinkURI}
 	}
 }
 
