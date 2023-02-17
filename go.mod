@@ -41,8 +41,8 @@ require (
 	github.com/kedacore/keda/v2 v2.8.1
 	knative.dev/eventing v0.36.5
 	knative.dev/hack v0.0.0-20230210215449-d71d569c4308
-	knative.dev/pkg v0.0.0-20230213131952-c889c5b7e128
-	knative.dev/reconciler-test v0.0.0-20230215013752-e459729bd24f
+	knative.dev/pkg v0.0.0-20230215234751-2f55fe00c5a1
+	knative.dev/reconciler-test v0.0.0-20230216102253-e707ddfb3379
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
