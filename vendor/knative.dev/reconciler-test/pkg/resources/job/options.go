@@ -18,24 +18,20 @@ package job
 
 import (
 	corev1 "k8s.io/api/core/v1"
+
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
-var WithAnnotations = manifest.WithAnnotations
-var WithLabels = manifest.WithLabels
+var (
+	WithLabels         = manifest.WithLabels
+	WithAnnotations    = manifest.WithAnnotations
+	WithPodAnnotations = manifest.WithPodAnnotations
+)
 
 func WithEnvs(envs map[string]string) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
 		if envs != nil {
 			cfg["envs"] = envs
-		}
-	}
-}
-
-func WithPodAnnotations(annotations map[string]interface{}) manifest.CfgFn {
-	return func(cfg map[string]interface{}) {
-		if annotations != nil {
-			cfg["podannotations"] = annotations
 		}
 	}
 }
