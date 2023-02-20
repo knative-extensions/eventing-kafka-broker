@@ -30,6 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	appslisters "k8s.io/client-go/listers/apps/v1"
@@ -42,6 +43,8 @@ import (
 	"knative.dev/pkg/resolver"
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
@@ -49,6 +52,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 )
 
 // TODO: 5.
@@ -61,11 +65,13 @@ type NamespacedReconciler struct {
 
 	Resolver *resolver.URIResolver
 
+	NamespaceLister          corelisters.NamespaceLister
 	ConfigMapLister          corelisters.ConfigMapLister
 	ServiceAccountLister     corelisters.ServiceAccountLister
 	ServiceLister            corelisters.ServiceLister
 	ClusterRoleBindingLister rbaclisters.ClusterRoleBindingLister
 	DeploymentLister         appslisters.DeploymentLister
+	BrokerLister             eventinglisters.BrokerLister
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -78,14 +84,11 @@ type NamespacedReconciler struct {
 
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
+
+	DataplaneLifecycleLocksByNamespace util.LockMap[string]
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	r.IPsLister.Register(
-		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
-		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
-	)
-
 	if broker.Spec.Config != nil && broker.Spec.Config.Namespace != "" && broker.Spec.Config.Namespace != broker.Namespace {
 		return propagateErrorCondition(broker,
 			fmt.Errorf("broker with %q class need the config in the same namespace with the broker. broker.spec.config.namespace=%q, broker.namespace=%q",
@@ -93,6 +96,27 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 	}
 
 	br := r.createReconcilerForBrokerInstance(broker)
+
+	event := r.reconcileDataPlane(ctx, broker)
+	if event != nil {
+		return event
+	}
+
+	return br.ReconcileKind(ctx, broker)
+}
+
+// reconcileDataPlane reconciles the data plane in the namespace of the given broker.
+// A lock is acquired for the namespace of the broker to ensure that the creation of the data plane is not done
+// at the same time with the deletion of the data plane.
+func (r *NamespacedReconciler) reconcileDataPlane(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
+	namespaceLock.Lock()
+	defer namespaceLock.Unlock()
+
+	r.IPsLister.Register(
+		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
+		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
+	)
 
 	manifest, err := r.getManifest(ctx, broker)
 	if err != nil {
@@ -103,7 +127,7 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		return propagateErrorCondition(broker, fmt.Errorf("unable to apply dataplane manifest: %w", err))
 	}
 
-	return br.ReconcileKind(ctx, broker)
+	return nil
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -112,7 +136,77 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventin
 
 	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
 
+	if err := r.finalizeDataPlane(ctx, broker); err != nil {
+		return err
+	}
+
 	return result
+}
+
+// finalizeDataPlane finalizes the data plane in the namespace of the given broker.
+// A lock is acquired for the namespace of the broker to ensure that the deletion of the data plane is not done
+// at the same time with the creation of the data plane.
+func (r *NamespacedReconciler) finalizeDataPlane(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
+	namespaceLock.Lock()
+	defer namespaceLock.Unlock()
+
+	count, err := r.namespacedBrokerCountInNamespace(broker.Namespace)
+	if err != nil {
+		return fmt.Errorf("failed to count namespaced brokers in the namespace for clean up: %w", err)
+	}
+
+	if count == 0 {
+		// there's no more namespaced broker in the namespace, we can clean up the cluster scoped resources
+		err := r.cleanUpClusterScopedResources(ctx, broker)
+		if err != nil {
+			return fmt.Errorf("failed to clean up cluster scoped resources for KafkaNamespaced brokers in the namespace: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// cleanUpClusterScopedResources deletes the cluster scoped resources created for the data plane in the namespace, if
+// this is the last namespaced broker in the namespace
+func (r *NamespacedReconciler) cleanUpClusterScopedResources(ctx context.Context, broker *eventing.Broker) error {
+	manifest, err := r.getManifest(ctx, broker)
+	if err != nil {
+		return fmt.Errorf("unable to transform dataplane manifest for deletion: %w", err)
+	}
+
+	// Delete the cluster scoped resources created for the data plane in the namespace.
+	manifest = manifest.Filter(FilterClusterScoped)
+
+	// Only delete cluster scoped resources, others are garbage collected by Kubernetes already
+	err = manifest.Delete()
+	if err != nil {
+		return fmt.Errorf("failed to delete additional resources: %w", err)
+	}
+
+	return nil
+}
+
+// namespacedBrokerCountInNamespace returns the number of non-deleted namespaced brokers in the namespace
+func (r *NamespacedReconciler) namespacedBrokerCountInNamespace(namespace string) (int, error) {
+	var list []*eventing.Broker
+	var err error
+
+	if list, err = r.BrokerLister.Brokers(namespace).List(labels.Everything()); err != nil {
+		return 0, fmt.Errorf("failed to list brokers in the namespace: %w", err)
+	}
+
+	namespacedBrokerCount := 0
+	for _, b := range list {
+		if !b.DeletionTimestamp.IsZero() {
+			continue
+		}
+		if b.Annotations[brokerreconciler.ClassAnnotationKey] == kafka.NamespacedBrokerClass {
+			namespacedBrokerCount++
+		}
+	}
+
+	return namespacedBrokerCount, err
 }
 
 func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventing.Broker) *Reconciler {
@@ -150,6 +244,11 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 // getManifest returns the manifest that is transformed from the BaseDataPlaneManifest with the changes
 // for the given broker
 func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing.Broker) (mf.Manifest, error) {
+	namespace, err := r.NamespaceLister.Get(broker.Namespace)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("failed to get namespace of the broker: %w", err)
+	}
+
 	var resources []unstructured.Unstructured
 
 	additionalConfigMaps, err := r.configMapsFromSystemNamespace(broker)
@@ -201,6 +300,14 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
+	}
+
+	// Set the namespace as owner ref to cluster-scoped resources. We delete them manually, but as a safety net we set
+	// the namespace as owner ref so that even when cluster scoped resources cannot be deleted, they will be garbage
+	// collected when the namespace is deleted.
+	manifest, err = manifest.Transform(appendNamespaceAsOwnerRefsToClusterScoped(namespace))
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to set namespace as owner ref to cluster-scoped resources: %w", err)
 	}
 
 	manifest, err = manifest.Transform(filterMetadata)
@@ -433,6 +540,22 @@ func unstructuredFromObject(obj runtime.Object) (unstructured.Unstructured, erro
 	return unstructured.Unstructured{Object: unstr}, nil
 }
 
+func appendNamespaceAsOwnerRefsToClusterScoped(namespace *corev1.Namespace) mf.Transformer {
+	return func(resource *unstructured.Unstructured) error {
+		if !isClusterScoped(resource.GetKind()) || strings.ToLower(resource.GetKind()) == "namespace" {
+			return nil
+		}
+
+		ref := *metav1.NewControllerRef(namespace, corev1.SchemeGroupVersion.WithKind("Namespace"))
+		ref.Controller = pointer.Bool(true)
+		ref.BlockOwnerDeletion = pointer.Bool(false)
+
+		resource.SetOwnerReferences([]metav1.OwnerReference{ref})
+
+		return nil
+	}
+}
+
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
 	return func(resource *unstructured.Unstructured) error {
 		if isClusterScoped(resource.GetKind()) {
@@ -548,4 +671,8 @@ func isClusterScoped(kind string) bool {
 		return true
 	}
 	return false
+}
+
+func FilterClusterScoped(u *unstructured.Unstructured) bool {
+	return isClusterScoped(u.GetKind())
 }

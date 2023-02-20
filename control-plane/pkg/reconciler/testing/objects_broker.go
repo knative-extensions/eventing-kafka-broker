@@ -43,10 +43,11 @@ import (
 )
 
 const (
-	BrokerUUID        = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
-	BrokerNamespace   = "test-namespace"
-	BrokerName        = "test-broker"
-	ExternalTopicName = "test-topic"
+	BrokerUUID          = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
+	BrokerNamespaceUUID = "d1234567-8910-1234-5678-901234567890"
+	BrokerNamespace     = "test-namespace"
+	BrokerName          = "test-broker"
+	ExternalTopicName   = "test-topic"
 
 	SecretFinalizerName = "kafka.eventing/" + BrokerUUID
 
