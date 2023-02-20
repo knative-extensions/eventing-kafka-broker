@@ -97,7 +97,7 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 
 	br := r.createReconcilerForBrokerInstance(broker)
 
-	event := r.reconcileDataPlane(ctx, br, broker)
+	event := r.reconcileDataPlane(ctx, broker)
 	if event != nil {
 		return event
 	}
@@ -108,7 +108,7 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 // reconcileDataPlane reconciles the data plane in the namespace of the given broker.
 // A lock is acquired for the namespace of the broker to ensure that the creation of the data plane is not done
 // at the same time with the deletion of the data plane.
-func (r *NamespacedReconciler) reconcileDataPlane(ctx context.Context, br *Reconciler, broker *eventing.Broker) reconciler.Event {
+func (r *NamespacedReconciler) reconcileDataPlane(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
 	namespaceLock.Lock()
 	defer namespaceLock.Unlock()
