@@ -89,6 +89,26 @@ type NamespacedReconciler struct {
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	if broker.Spec.Config != nil && broker.Spec.Config.Namespace != "" && broker.Spec.Config.Namespace != broker.Namespace {
+		return propagateErrorCondition(broker,
+			fmt.Errorf("broker with %q class need the config in the same namespace with the broker. broker.spec.config.namespace=%q, broker.namespace=%q",
+				kafka.NamespacedBrokerClass, broker.Spec.Config.Namespace, broker.Namespace))
+	}
+
+	br := r.createReconcilerForBrokerInstance(broker)
+
+	event := r.reconcileDataPlane(ctx, br, broker)
+	if event != nil {
+		return event
+	}
+
+	return br.ReconcileKind(ctx, broker)
+}
+
+// reconcileDataPlane reconciles the data plane in the namespace of the given broker.
+// A lock is acquired for the namespace of the broker to ensure that the creation of the data plane is not done
+// at the same time with the deletion of the data plane.
+func (r *NamespacedReconciler) reconcileDataPlane(ctx context.Context, br *Reconciler, broker *eventing.Broker) reconciler.Event {
 	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
 	namespaceLock.Lock()
 	defer namespaceLock.Unlock()
@@ -97,14 +117,6 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
 		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
 	)
-
-	if broker.Spec.Config != nil && broker.Spec.Config.Namespace != "" && broker.Spec.Config.Namespace != broker.Namespace {
-		return propagateErrorCondition(broker,
-			fmt.Errorf("broker with %q class need the config in the same namespace with the broker. broker.spec.config.namespace=%q, broker.namespace=%q",
-				kafka.NamespacedBrokerClass, broker.Spec.Config.Namespace, broker.Namespace))
-	}
-
-	br := r.createReconcilerForBrokerInstance(broker)
 
 	manifest, err := r.getManifest(ctx, broker)
 	if err != nil {
@@ -115,18 +127,29 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 		return propagateErrorCondition(broker, fmt.Errorf("unable to apply dataplane manifest: %w", err))
 	}
 
-	return br.ReconcileKind(ctx, broker)
+	return nil
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
-	namespaceLock.Lock()
-	defer namespaceLock.Unlock()
-
 	br := r.createReconcilerForBrokerInstance(broker)
 	result := br.FinalizeKind(ctx, broker)
 
 	r.IPsLister.Unregister(types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name})
+
+	if err := r.finalizeDataPlane(ctx, broker); err != nil {
+		return err
+	}
+
+	return result
+}
+
+// finalizeDataPlane finalizes the data plane in the namespace of the given broker.
+// A lock is acquired for the namespace of the broker to ensure that the deletion of the data plane is not done
+// at the same time with the creation of the data plane.
+func (r *NamespacedReconciler) finalizeDataPlane(ctx context.Context, broker *eventing.Broker) reconciler.Event {
+	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
+	namespaceLock.Lock()
+	defer namespaceLock.Unlock()
 
 	count, err := r.namespacedBrokerCountInNamespace(broker.Namespace)
 	if err != nil {
@@ -141,7 +164,7 @@ func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventin
 		}
 	}
 
-	return result
+	return nil
 }
 
 // cleanUpClusterScopedResources deletes the cluster scoped resources created for the data plane in the namespace, if
