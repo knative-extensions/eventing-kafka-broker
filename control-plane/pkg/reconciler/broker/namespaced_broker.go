@@ -85,11 +85,11 @@ type NamespacedReconciler struct {
 	IPsLister          prober.IPListerWithMapping
 	ManifestivalClient mf.Client
 
-	LockMap util.LockMap[string]
+	DataplaneLifecycleLocksByNamespace util.LockMap[string]
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	namespaceLock := r.LockMap.GetLock(broker.Namespace)
+	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
 	namespaceLock.Lock()
 	defer namespaceLock.Unlock()
 
@@ -119,7 +119,7 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 }
 
 func (r *NamespacedReconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	namespaceLock := r.LockMap.GetLock(broker.Namespace)
+	namespaceLock := r.DataplaneLifecycleLocksByNamespace.GetLock(broker.Namespace)
 	namespaceLock.Lock()
 	defer namespaceLock.Unlock()
 

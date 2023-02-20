@@ -460,10 +460,10 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:                env,
-			Prober:             proberMock,
-			ManifestivalClient: mfcMockClient,
-			LockMap:            util.NewExpiringLockMap[string](ctx, time.Minute*30),
+			Env:                                env,
+			Prober:                             proberMock,
+			ManifestivalClient:                 mfcMockClient,
+			DataplaneLifecycleLocksByNamespace: util.NewExpiringLockMap[string](ctx, time.Minute*30),
 		}
 
 		r := brokerreconciler.NewReconciler(
