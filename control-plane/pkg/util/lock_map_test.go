@@ -55,9 +55,11 @@ func TestExpiringLockMap_GetLock(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			for key := range chans[i] {
-				lock := lm.GetLock(key)
-				lock.Lock()
-				lock.Unlock()
+				func() {
+					lock := lm.GetLock(key)
+					lock.Lock()
+					defer lock.Unlock()
+				}()
 			}
 		}(i)
 	}
