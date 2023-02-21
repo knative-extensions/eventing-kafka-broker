@@ -1370,11 +1370,11 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20230210215449-d71d569c4308
+# knative.dev/hack v0.0.0-20230217131352-f2f3107be156
 ## explicit; go 1.18
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20230215234751-2f55fe00c5a1
+# knative.dev/pkg v0.0.0-20230220111620-f306c139ba1c
 ## explicit; go 1.18
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
