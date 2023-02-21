@@ -164,6 +164,10 @@ func (l *Listers) GetClusterRoleBindingLister() rbaclisters.ClusterRoleBindingLi
 	return rbaclisters.NewClusterRoleBindingLister(l.indexerFor(&rbacv1.ClusterRoleBinding{}))
 }
 
+func (l *Listers) GetNamespaceLister() corelisters.NamespaceLister {
+	return corelisters.NewNamespaceLister(l.indexerFor(&corev1.Namespace{}))
+}
+
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {
 	return l.sorter.IndexerForObjectType(obj)
 }
