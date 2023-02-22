@@ -52,7 +52,6 @@ func ChannelPostDowngradeTest() pkgupgrade.Operation {
 // SinkPostDowngradeTest tests sink basic operations after downgrade.
 func SinkPostDowngradeTest() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("SinkPostDowngradeTest", func(c pkgupgrade.Context) {
-		c.T.Error("Induce failure")
 		e2e_sink.RunTestKafkaSink(c.T, eventing.ModeBinary, nil)
 	})
 }
