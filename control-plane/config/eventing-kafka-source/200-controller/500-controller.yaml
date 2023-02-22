@@ -21,7 +21,9 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-source-controller
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/component: kafka-source-controller
+    app.kubernetes.io/name: knative-eventing
 spec:
   selector:
     matchLabels:
@@ -31,7 +33,9 @@ spec:
       name: kafka-source-controller
       labels:
         app: kafka-source-controller
-        kafka.eventing.knative.dev/release: devel
+        app.kubernetes.io/version: devel
+        app.kubernetes.io/component: kafka-source-controller
+        app.kubernetes.io/name: knative-eventing
     spec:
       securityContext:
         runAsNonRoot: true

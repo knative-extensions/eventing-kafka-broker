@@ -19,7 +19,9 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/component: kafka-webhook-eventing
+    app.kubernetes.io/name: knative-eventing
 spec:
   selector:
     matchLabels:
@@ -28,7 +30,9 @@ spec:
     metadata:
       labels:
         app: kafka-webhook-eventing
-        kafka.eventing.knative.dev/release: devel
+        app.kubernetes.io/version: devel
+        app.kubernetes.io/component: kafka-webhook-eventing
+        app.kubernetes.io/name: knative-eventing
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
@@ -120,7 +124,9 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/component: kafka-webhook-eventing
+    app.kubernetes.io/name: knative-eventing
 spec:
   ports:
     - name: https-webhook

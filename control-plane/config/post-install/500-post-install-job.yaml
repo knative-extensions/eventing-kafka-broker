@@ -19,7 +19,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-controller-post-install
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 10
@@ -27,7 +27,7 @@ spec:
     metadata:
       labels:
         app: kafka-controller-post-install
-        kafka.eventing.knative.dev/release: devel
+        app.kubernetes.io/version: devel
       annotations:
         sidecar.istio.io/inject: "false"
     spec:

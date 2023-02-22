@@ -19,7 +19,7 @@ kind: ClusterRole
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 rules:
   # For watching logging configuration and getting certs.
   - apiGroups:

@@ -20,6 +20,6 @@ metadata:
   name: kafka-channel-config
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 data:
   bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"

@@ -17,7 +17,7 @@ metadata:
   name: config-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
   annotations:
     knative.dev/example-checksum: "6ce544b6"
 data:
