@@ -131,6 +131,20 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
         - pods
       verbs:
         - get
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: null
+    name: test-role
+    namespace: {{.Namespace}}
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: test-role
+  subjects:
+    - kind: ServiceAccount
+      name: test-sa
+      namespace: not-to-be-overridden
 `,
 				}),
 			},
@@ -197,6 +211,12 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 						Verbs:     []string{"get"},
 					})),
 					WithNamespacedBrokerNamespaceAsOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t, NewRoleBinding(BrokerNamespace, "test-role",
+					WithRoleBindingSubjectServiceAccount("not-to-be-overridden", "test-sa"),
+					WithRoleBindingClusterRoleRef("test-role")),
+					WithNamespacedBrokerOwnerRef,
 					WithNamespacedLabel,
 				),
 				NewConfigMapWithBinaryData(BrokerNamespace, env.ContractConfigMapName, nil,

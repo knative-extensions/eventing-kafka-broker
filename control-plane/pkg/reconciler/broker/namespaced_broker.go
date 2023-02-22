@@ -38,6 +38,7 @@ import (
 	rbaclisters "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/utils/pointer"
 
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -96,6 +97,21 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 	}
 
 	br := r.createReconcilerForBrokerInstance(broker)
+
+	statusConditionManager := base.StatusConditionManager{
+		Object:     broker,
+		SetAddress: broker.Status.SetAddress,
+		Env:        r.Env,
+		Recorder:   controller.GetEventRecorder(ctx),
+	}
+
+	// Get contract config map. Do this in advance, otherwise
+	// the dataplane pods that need volume mounts to the contract configmap
+	// will get stuck and will never be ready.
+	_, err := br.GetOrCreateDataPlaneConfigMap(ctx)
+	if err != nil {
+		return statusConditionManager.FailedToGetConfigMap(err)
+	}
 
 	event := r.reconcileDataPlane(ctx, broker)
 	if event != nil {
@@ -244,11 +260,65 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 // getManifest returns the manifest that is transformed from the BaseDataPlaneManifest with the changes
 // for the given broker
 func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing.Broker) (mf.Manifest, error) {
+	// Get the namespace of the broker in advance as we will need it later. Fail early if the namespace cannot be fetched.
 	namespace, err := r.NamespaceLister.Get(broker.Namespace)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("failed to get namespace of the broker: %w", err)
 	}
 
+	// Get the transformed manifest from the system namespace.
+	manifest, err := r.getManifestFromSystemNamespace(broker)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to get manifest from system namespace: %w", err)
+	}
+
+	// Get the manifest from additional resources.
+	// This is a manifest that is not part of the base manifest, but is added by the user.
+	// Not all transformations are good for the additional resources, so we apply them separately.
+	// One specific example is that we don't want to use Manifestival's namespace injection for the additional resources.
+	// Because, it touches e.g. the subjects' namespace of the ClusterRoleBindings, which is not desired.
+	manifestFromAdditionalResources, err := r.getManifestFromAdditionalResources(ctx, broker)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to get manifest from additional resources: %w", err)
+	}
+
+	manifest = manifest.Append(manifestFromAdditionalResources)
+
+	// this transformation is always applied to the all resources; doesn't matter if they are from the base manifest or additional resources
+	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
+	}
+
+	// Set the namespace as owner ref to cluster-scoped resources. We delete them manually, but as a safety net we set
+	// the namespace as owner ref so that even when cluster scoped resources cannot be deleted, they will be garbage
+	// collected when the namespace is deleted.
+	// this transformation is always applied to the all resources; doesn't matter if they are from the base manifest or additional resources
+	manifest, err = manifest.Transform(appendNamespaceAsOwnerRefsToClusterScoped(namespace))
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to set namespace as owner ref to cluster-scoped resources: %w", err)
+	}
+
+	// this transformation is always applied to the all resources; doesn't matter if they are from the base manifest or additional resources
+	manifest, err = manifest.Transform(setLabel)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("unable to set label: %w", err)
+	}
+
+	logger := logging.FromContext(ctx).Desugar()
+
+	for _, res := range manifest.Resources() {
+		logger.Debug("Resource",
+			zap.String("gvk", res.GroupVersionKind().String()),
+			zap.String("resource.name", res.GetName()),
+			zap.String("resource.namespace", res.GetNamespace()),
+		)
+	}
+
+	return manifest, nil
+}
+
+func (r *NamespacedReconciler) getManifestFromSystemNamespace(broker *eventing.Broker) (mf.Manifest, error) {
 	var resources []unstructured.Unstructured
 
 	additionalConfigMaps, err := r.configMapsFromSystemNamespace(broker)
@@ -281,12 +351,6 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 	}
 	resources = append(resources, additionalRoleBindings...)
 
-	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName, broker.Namespace)
-	if err != nil {
-		return mf.Manifest{}, err
-	}
-	resources = append(resources, additionalResources...)
-
 	manifest, err := mf.ManifestFrom(mf.Slice(resources), mf.UseClient(r.ManifestivalClient))
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to load dataplane manifest: %w", err)
@@ -297,40 +361,20 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", broker.Namespace, err)
 	}
 
-	manifest, err = manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
-	if err != nil {
-		return mf.Manifest{}, fmt.Errorf("unable to append owner ref: %w", err)
-	}
-
-	// Set the namespace as owner ref to cluster-scoped resources. We delete them manually, but as a safety net we set
-	// the namespace as owner ref so that even when cluster scoped resources cannot be deleted, they will be garbage
-	// collected when the namespace is deleted.
-	manifest, err = manifest.Transform(appendNamespaceAsOwnerRefsToClusterScoped(namespace))
-	if err != nil {
-		return mf.Manifest{}, fmt.Errorf("unable to set namespace as owner ref to cluster-scoped resources: %w", err)
-	}
-
 	manifest, err = manifest.Transform(filterMetadata)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to filter metadata: %w", err)
 	}
 
-	manifest, err = manifest.Transform(setLabel)
-	if err != nil {
-		return mf.Manifest{}, fmt.Errorf("unable to set label: %w", err)
-	}
-
-	logger := logging.FromContext(ctx).Desugar()
-
-	for _, res := range manifest.Resources() {
-		logger.Debug("Resource",
-			zap.String("gvk", res.GroupVersionKind().String()),
-			zap.String("resource.name", res.GetName()),
-			zap.String("resource.namespace", res.GetNamespace()),
-		)
-	}
-
 	return manifest, nil
+}
+
+func (r *NamespacedReconciler) getManifestFromAdditionalResources(ctx context.Context, broker *eventing.Broker) (mf.Manifest, error) {
+	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName, broker.Namespace)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	return mf.ManifestFrom(mf.Slice(additionalResources), mf.UseClient(r.ManifestivalClient))
 }
 
 func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
@@ -624,6 +668,9 @@ func filterMetadata(u *unstructured.Unstructured) error {
 
 func setLabel(u *unstructured.Unstructured) error {
 	labels := u.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
 	labels[kafka.NamespacedBrokerDataplaneLabelKey] = kafka.NamespacedBrokerDataplaneLabelValue
 	u.SetLabels(labels)
 	return nil
