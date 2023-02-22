@@ -23,6 +23,9 @@ import (
 	"log"
 	"testing"
 
+	reconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 	"knative.dev/pkg/test/zipkin"
 )
@@ -33,5 +36,18 @@ func TestUpgrades(t *testing.T) {
 	// place that cleans it up. If an individual test calls this instead, then it will break other
 	// tests that need the tracing in place.
 	defer zipkin.CleanupZipkinTracingSetup(log.Printf)
+
+	pods := []string{
+		reconciler.BrokerReceiverLabel,
+		reconciler.BrokerDispatcherLabel,
+		reconciler.ChannelReceiverLabel,
+		reconciler.ChannelDispatcherLabel,
+		reconciler.SinkReceiverLabel,
+		reconciler.SourceDispatcherLabel,
+	}
+
+	canceler := testlib.ExportLogStreamOnError(t, testlib.SystemLogsDir, system.Namespace(), pods...)
+	defer canceler()
+
 	suite.Execute(pkgupgrade.Configuration{T: t})
 }
