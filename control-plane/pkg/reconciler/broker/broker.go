@@ -545,9 +545,6 @@ func rebuildCMFromStatusAnnotations(br *eventing.Broker) *corev1.ConfigMap {
 			Name:      br.Spec.Config.Name,
 		},
 	}
-	if len(br.Status.Annotations) == 0 {
-		return nil
-	}
 	for k, v := range br.Status.Annotations {
 		if cm.Data == nil {
 			cm.Data = make(map[string]string, len(br.Status.Annotations))
