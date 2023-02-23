@@ -19,10 +19,12 @@ readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 export KO_FLAGS="${KO_FLAGS:-}"
 
-source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
-source $(pwd)/hack/data-plane.sh
-source $(pwd)/hack/control-plane.sh
-source $(pwd)/hack/artifacts-env.sh
+repo_root_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..
+
+source "${repo_root_dir}"/vendor/knative.dev/hack/e2e-tests.sh
+source "${repo_root_dir}"/hack/data-plane.sh
+source "${repo_root_dir}"/hack/control-plane.sh
+source "${repo_root_dir}"/hack/artifacts-env.sh
 
 # If gcloud is not available make it a no-op, not an error.
 which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }

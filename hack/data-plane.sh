@@ -17,7 +17,7 @@
 # variables used:
 # - KO_DOCKER_REPO (required)
 
-source "$(pwd)"/hack/label.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/label.sh
 
 readonly DATA_PLANE_DIR=data-plane
 readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
