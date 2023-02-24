@@ -504,7 +504,7 @@ func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker
 		return cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
 	}
 	if apierrors.IsNotFound(getCmError) {
-		// will at least return an empty CM
+		// will return nil if there are no status annotations
 		cm = rebuildCMFromStatusAnnotations(broker)
 		if cm == nil {
 			return cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
@@ -542,14 +542,14 @@ func storeConfigMapAsStatusAnnotation(broker *eventing.Broker, cm *corev1.Config
 
 // Creates the Broker ConfigMap from the status annotation, if any present
 func rebuildCMFromStatusAnnotations(br *eventing.Broker) *corev1.ConfigMap {
+	if len(br.Status.Annotations) == 0 {
+		return nil
+	}
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: br.Spec.Config.Namespace,
 			Name:      br.Spec.Config.Name,
 		},
-	}
-	if len(br.Status.Annotations) == 0 {
-		return nil
 	}
 	for k, v := range br.Status.Annotations {
 		if cm.Data == nil {
