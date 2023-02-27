@@ -45,6 +45,7 @@ func NewGlobalEnvironment(ctx context.Context, initializers ...func()) GlobalEnv
 		c:                initializeImageStores(ctx),
 		instanceID:       uuid.New().String(),
 		initializers:     initializers,
+		teardownOnFail:   *teardownOnFail,
 	}
 }
 
@@ -59,6 +60,7 @@ type MagicGlobalEnvironment struct {
 	instanceID       string
 	initializers     []func()
 	initializersOnce sync.Once
+	teardownOnFail   bool
 }
 
 type MagicEnvironment struct {
@@ -81,6 +83,8 @@ type MagicEnvironment struct {
 	// imagePullSecretNamespace/imagePullSecretName: An optional secret to add to service account of new namespaces
 	imagePullSecretName      string
 	imagePullSecretNamespace string
+
+	teardownOnFail bool
 }
 
 const (
@@ -113,7 +117,7 @@ func (mr *MagicEnvironment) Finish() {
 	if mr.milestones != nil {
 		mr.milestones.Finished(result)
 	}
-	if err := mr.DeleteNamespaceIfNeeded(); err != nil {
+	if err := mr.DeleteNamespaceIfNeeded(result); err != nil {
 		if mr.milestones != nil {
 			mr.milestones.Exception(NamespaceDeleteErrorReason,
 				"failed to delete namespace %q, %v", mr.namespace, err)
@@ -162,10 +166,11 @@ func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context,
 	namespace := feature.MakeK8sNamePrefix(feature.AppendRandomString("test"))
 
 	env := &MagicEnvironment{
-		c:            mr.c,
-		l:            mr.RequirementLevel,
-		s:            mr.FeatureState,
-		featureMatch: mr.FeatureMatch,
+		c:              mr.c,
+		l:              mr.RequirementLevel,
+		s:              mr.FeatureState,
+		featureMatch:   mr.FeatureMatch,
+		teardownOnFail: mr.teardownOnFail,
 
 		namespace:                namespace,
 		imagePullSecretName:      "kn-test-image-pull-secret",
@@ -324,12 +329,15 @@ func (mr *MagicEnvironment) Test(ctx context.Context, originalT *testing.T, f *f
 
 			// Special case for teardown timing
 			if timing == feature.Teardown {
-				// Prepend logging steps to the teardown phase when a previous timing failed.
 				if skip {
-					steps = append(mr.loggingSteps(), steps...)
+					if mr.teardownOnFail {
+						// Prepend logging steps to the teardown phase when a previous timing failed.
+						steps = append(mr.loggingSteps(), steps...)
+					} else {
+						// When not doing teardown only execute logging steps.
+						steps = mr.loggingSteps()
+					}
 				}
-
-				// Teardown steps are executed always, no matter their level and state
 				skip = false
 			}
 
