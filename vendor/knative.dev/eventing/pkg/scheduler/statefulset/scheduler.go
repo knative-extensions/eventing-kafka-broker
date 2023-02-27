@@ -38,11 +38,12 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+
 	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
 	"knative.dev/eventing/pkg/scheduler/factory"
 	st "knative.dev/eventing/pkg/scheduler/state"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 
 	_ "knative.dev/eventing/pkg/scheduler/plugins/core/availabilitynodepriority"
 	_ "knative.dev/eventing/pkg/scheduler/plugins/core/availabilityzonepriority"
@@ -56,7 +57,40 @@ import (
 	_ "knative.dev/eventing/pkg/scheduler/plugins/kafka/nomaxresourcecount"
 )
 
+type Config struct {
+	StatefulSetNamespace string `json:"statefulSetNamespace"`
+	StatefulSetName      string `json:"statefulSetName"`
+
+	// PodCapacity max capacity for each StatefulSet's pod.
+	PodCapacity int32 `json:"podCapacity"`
+	// Autoscaler refresh period
+	RefreshPeriod time.Duration `json:"refreshPeriod"`
+
+	SchedulerPolicy scheduler.SchedulerPolicyType `json:"schedulerPolicy"`
+	SchedPolicy     *scheduler.SchedulerPolicy    `json:"schedPolicy"`
+	DeschedPolicy   *scheduler.SchedulerPolicy    `json:"deschedPolicy"`
+
+	Evictor scheduler.Evictor `json:"-"`
+
+	VPodLister scheduler.VPodLister     `json:"-"`
+	NodeLister corev1listers.NodeLister `json:"-"`
+}
+
+func New(ctx context.Context, cfg *Config) (scheduler.Scheduler, error) {
+
+	podInformer := podinformer.Get(ctx)
+	podLister := podInformer.Lister().Pods(cfg.StatefulSetNamespace)
+
+	stateAccessor := st.NewStateBuilder(ctx, cfg.StatefulSetNamespace, cfg.StatefulSetName, cfg.VPodLister, cfg.PodCapacity, cfg.SchedulerPolicy, cfg.SchedPolicy, cfg.DeschedPolicy, podLister, cfg.NodeLister)
+	autoscaler := newAutoscaler(ctx, cfg, stateAccessor)
+
+	go autoscaler.Start(ctx)
+
+	return newStatefulSetScheduler(ctx, cfg, stateAccessor, autoscaler, podLister), nil
+}
+
 // NewScheduler creates a new scheduler with pod autoscaling enabled.
+// Deprecated: Use New
 func NewScheduler(ctx context.Context,
 	namespace, name string,
 	lister scheduler.VPodLister,
@@ -68,28 +102,35 @@ func NewScheduler(ctx context.Context,
 	schedPolicy *scheduler.SchedulerPolicy,
 	deschedPolicy *scheduler.SchedulerPolicy) scheduler.Scheduler {
 
-	podInformer := podinformer.Get(ctx)
-	podLister := podInformer.Lister().Pods(namespace)
+	cfg := &Config{
+		StatefulSetNamespace: namespace,
+		StatefulSetName:      name,
+		PodCapacity:          capacity,
+		RefreshPeriod:        refreshPeriod,
+		SchedulerPolicy:      schedulerPolicy,
+		SchedPolicy:          schedPolicy,
+		DeschedPolicy:        deschedPolicy,
+		Evictor:              evictor,
+		VPodLister:           lister,
+		NodeLister:           nodeLister,
+	}
 
-	stateAccessor := st.NewStateBuilder(ctx, namespace, name, lister, capacity, schedulerPolicy, schedPolicy, deschedPolicy, podLister, nodeLister)
-	autoscaler := NewAutoscaler(ctx, namespace, name, lister, stateAccessor, evictor, refreshPeriod, capacity)
-
-	go autoscaler.Start(ctx)
-
-	return NewStatefulSetScheduler(ctx, namespace, name, lister, stateAccessor, autoscaler, podLister)
+	s, _ := New(ctx, cfg)
+	return s
 }
 
 // StatefulSetScheduler is a scheduler placing VPod into statefulset-managed set of pods
 type StatefulSetScheduler struct {
-	ctx               context.Context
-	logger            *zap.SugaredLogger
-	statefulSetName   string
-	statefulSetClient clientappsv1.StatefulSetInterface
-	podLister         corev1listers.PodNamespaceLister
-	vpodLister        scheduler.VPodLister
-	lock              sync.Locker
-	stateAccessor     st.StateAccessor
-	autoscaler        Autoscaler
+	ctx                  context.Context
+	logger               *zap.SugaredLogger
+	statefulSetName      string
+	statefulSetNamespace string
+	statefulSetClient    clientappsv1.StatefulSetInterface
+	podLister            corev1listers.PodNamespaceLister
+	vpodLister           scheduler.VPodLister
+	lock                 sync.Locker
+	stateAccessor        st.StateAccessor
+	autoscaler           Autoscaler
 
 	// replicas is the (cached) number of statefulset replicas.
 	replicas int32
@@ -104,30 +145,31 @@ type StatefulSetScheduler struct {
 	reserved map[types.NamespacedName]map[string]int32
 }
 
-func NewStatefulSetScheduler(ctx context.Context,
-	namespace, name string,
-	lister scheduler.VPodLister,
+func newStatefulSetScheduler(ctx context.Context,
+	cfg *Config,
 	stateAccessor st.StateAccessor,
-	autoscaler Autoscaler, podlister corev1listers.PodNamespaceLister) scheduler.Scheduler {
+	autoscaler Autoscaler,
+	podlister corev1listers.PodNamespaceLister) scheduler.Scheduler {
 
 	scheduler := &StatefulSetScheduler{
-		ctx:               ctx,
-		logger:            logging.FromContext(ctx),
-		statefulSetName:   name,
-		statefulSetClient: kubeclient.Get(ctx).AppsV1().StatefulSets(namespace),
-		podLister:         podlister,
-		vpodLister:        lister,
-		pending:           make(map[types.NamespacedName]int32),
-		lock:              new(sync.Mutex),
-		stateAccessor:     stateAccessor,
-		reserved:          make(map[types.NamespacedName]map[string]int32),
-		autoscaler:        autoscaler,
+		ctx:                  ctx,
+		logger:               logging.FromContext(ctx),
+		statefulSetNamespace: cfg.StatefulSetNamespace,
+		statefulSetName:      cfg.StatefulSetName,
+		statefulSetClient:    kubeclient.Get(ctx).AppsV1().StatefulSets(cfg.StatefulSetNamespace),
+		podLister:            podlister,
+		vpodLister:           cfg.VPodLister,
+		pending:              make(map[types.NamespacedName]int32),
+		lock:                 new(sync.Mutex),
+		stateAccessor:        stateAccessor,
+		reserved:             make(map[types.NamespacedName]map[string]int32),
+		autoscaler:           autoscaler,
 	}
 
 	// Monitor our statefulset
 	statefulsetInformer := statefulsetinformer.Get(ctx)
 	statefulsetInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(namespace, name),
+		FilterFunc: controller.FilterWithNameAndNamespace(cfg.StatefulSetNamespace, cfg.StatefulSetName),
 		Handler:    controller.HandleAll(scheduler.updateStatefulset),
 	})
 
@@ -164,7 +206,7 @@ func (s *StatefulSetScheduler) Schedule(vpod scheduler.VPod) ([]duckv1alpha1.Pla
 
 func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1.Placement, error) {
 	logger := s.logger.With("key", vpod.GetKey())
-	logger.Info("scheduling")
+	logger.Infow("scheduling", zap.Any("pending", toJSONable(s.pending)))
 
 	// Get the current placements state
 	// Quite an expensive operation but safe and simple.
@@ -174,9 +216,19 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 		return nil, err
 	}
 
-	placements := vpod.GetPlacements()
-	existingPlacements := placements
+	existingPlacements := vpod.GetPlacements()
 	var left int32
+
+	// Remove unschedulable pods from placements
+	var placements []duckv1alpha1.Placement
+	if len(existingPlacements) > 0 {
+		placements = make([]duckv1alpha1.Placement, 0, len(existingPlacements))
+		for _, p := range existingPlacements {
+			if state.IsSchedulablePod(st.OrdinalFromPodName(p.PodName)) {
+				placements = append(placements, *p.DeepCopy())
+			}
+		}
+	}
 
 	// The scheduler when policy type is
 	// Policy: MAXFILLUP (SchedulerPolicyType == MAXFILLUP)
@@ -244,18 +296,26 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 
 		if state.SchedPolicy != nil {
 			logger.Info("reverting to previous placements")
-			s.reservePlacements(vpod, existingPlacements)                          //rebalancing doesn't care about new placements since all vreps will be re-placed
-			delete(s.pending, vpod.GetKey())                                       //rebalancing doesn't care about pending since all vreps will be re-placed
-			return existingPlacements, controller.NewRequeueAfter(5 * time.Second) //requeue to wait for the autoscaler to do its job
+			s.reservePlacements(vpod, existingPlacements)           // rebalancing doesn't care about new placements since all vreps will be re-placed
+			delete(s.pending, vpod.GetKey())                        // rebalancing doesn't care about pending since all vreps will be re-placed
+			return existingPlacements, s.notEnoughPodReplicas(left) // requeue to wait for the autoscaler to do its job
 		}
 
-		return placements, controller.NewRequeueAfter(5 * time.Second) //requeue to wait for the autoscaler to do its job
+		return placements, s.notEnoughPodReplicas(left)
 	}
 
 	logger.Infow("scheduling successful", zap.Any("placement", placements))
 	delete(s.pending, vpod.GetKey())
 
 	return placements, nil
+}
+
+func toJSONable(pending map[types.NamespacedName]int32) map[string]int32 {
+	r := make(map[string]int32, len(pending))
+	for k, v := range pending {
+		r[k.String()] = v
+	}
+	return r
 }
 
 func (s *StatefulSetScheduler) rebalanceReplicasWithPolicy(vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) ([]duckv1alpha1.Placement, int32) {
@@ -706,4 +766,16 @@ func (s *StatefulSetScheduler) makeZeroPlacements(vpod scheduler.VPod, placement
 	// This is necessary to make sure State() zeroes out initial pod/node/zone spread and
 	// free capacity when there are existing placements for a vpod
 	s.reservePlacements(vpod, newPlacements)
+}
+
+// newNotEnoughPodReplicas returns an error explaining what is the problem, what are the actions we're taking
+// to try to fix it (retry), wrapping a controller.requeueKeyError which signals to ReconcileKind to requeue the
+// object after a given delay.
+func (s *StatefulSetScheduler) notEnoughPodReplicas(left int32) error {
+	// Wrap controller.requeueKeyError error to wait for the autoscaler to do its job.
+	return fmt.Errorf("insufficient running pods replicas for StatefulSet %s/%s to schedule resource replicas (left: %d): retry %w",
+		s.statefulSetNamespace, s.statefulSetName,
+		left,
+		controller.NewRequeueAfter(5*time.Second),
+	)
 }
