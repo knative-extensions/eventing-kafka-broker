@@ -72,7 +72,7 @@ func SetupBrokerAuth(bootstrapServer string, authSecretOptions ...manifest.CfgFn
 
 	f.Setup("Create broker config", brokerconfigmap.Install(brokerConfigName,
 		brokerconfigmap.WithNumPartitions(3),
-		brokerconfigmap.WithReplicationFactor(1),
+		brokerconfigmap.WithReplicationFactor(3),
 		brokerconfigmap.WithBootstrapServer(bootstrapServer),
 		brokerconfigmap.WithAuthSecret(authSecretName)))
 
