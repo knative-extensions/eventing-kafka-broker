@@ -19,7 +19,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -35,7 +35,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 subjects:
   - kind: ServiceAccount
     name: kafka-controller

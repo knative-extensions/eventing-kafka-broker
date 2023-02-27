@@ -18,7 +18,7 @@ metadata:
   name: config-kafka-autoscaler
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 data:
     class: "keda.autoscaling.knative.dev"
     min-scale: "0"

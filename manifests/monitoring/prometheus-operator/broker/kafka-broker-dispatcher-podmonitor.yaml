@@ -19,7 +19,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-dispatcher
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 spec:
   selector:
     matchLabels:

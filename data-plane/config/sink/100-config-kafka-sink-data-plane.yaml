@@ -17,7 +17,7 @@ metadata:
   name: config-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
   annotations:
     knative.dev/example-checksum: "a8ce4acb"
 data:

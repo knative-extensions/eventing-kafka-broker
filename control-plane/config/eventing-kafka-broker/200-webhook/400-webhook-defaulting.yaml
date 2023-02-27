@@ -17,7 +17,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: defaulting.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 webhooks:
   - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:

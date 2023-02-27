@@ -17,7 +17,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-storage-version-migrator
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 rules:
   # Storage version upgrader needs to be able to patch CRDs.
   - apiGroups:

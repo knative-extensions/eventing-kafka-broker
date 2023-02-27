@@ -21,7 +21,9 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-dispatcher
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/component: kafka-channel-dispatcher
+    app.kubernetes.io/name: knative-eventing
 spec:
   serviceName: kafka-channel-dispatcher
   podManagementPolicy: "Parallel"
@@ -33,8 +35,10 @@ spec:
       name: kafka-channel-dispatcher
       labels:
         app: kafka-channel-dispatcher
-        app.kubernetes.io/component: kafka-dispatcher
-        kafka.eventing.knative.dev/release: devel
+        app.kubernetes.io/version: devel
+        app.kubernetes.io/component: kafka-channel-dispatcher
+        app.kubernetes.io/name: knative-eventing
+        app.kubernetes.io/kind: kafka-dispatcher
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:

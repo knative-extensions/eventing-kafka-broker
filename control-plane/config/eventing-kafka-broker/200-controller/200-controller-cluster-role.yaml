@@ -19,7 +19,7 @@ kind: ClusterRole
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 rules:
   - apiGroups:
       - ""
