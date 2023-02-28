@@ -1350,7 +1350,6 @@ knative.dev/eventing/test/rekt/resources/subscription
 knative.dev/eventing/test/rekt/resources/svc
 knative.dev/eventing/test/rekt/resources/trigger
 knative.dev/eventing/test/test_images
-knative.dev/eventing/test/test_images/event-flaker
 knative.dev/eventing/test/test_images/event-sender
 knative.dev/eventing/test/test_images/heartbeats
 knative.dev/eventing/test/test_images/performance
