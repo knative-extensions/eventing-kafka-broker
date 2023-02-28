@@ -33,7 +33,7 @@ webhooks:
     matchPolicy: Equivalent
     namespaceSelector:
       matchLabels:
-        app.kubernetes.io/name: knative-eventing
+        kubernetes.io/metadata.name: knative-eventing
     objectSelector:
       matchLabels:
         app.kubernetes.io/kind: kafka-dispatcher
