@@ -17,31 +17,28 @@
  * limitations under the License.
  */
 
-package e2e_broker
+package e2e_new
 
 import (
-	"context"
 	"testing"
 
-	"knative.dev/eventing/test/e2e/helpers"
-
-	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
-	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	"knative.dev/eventing/test/rekt/features/broker"
+	"knative.dev/pkg/system"
+	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/k8s"
+	"knative.dev/reconciler-test/pkg/knative"
 )
 
-func TestEventTransformationForTriggerV1BrokerV1(t *testing.T) {
-	runTest(t, "v1", "v1")
-}
+func TestEventTransformationForTrigger(t *testing.T) {
+	t.Parallel()
 
-func runTest(t *testing.T, brokerVersion string, triggerVersion string) {
-	pkgtesting.RunMultiple(t, func(t *testing.T) {
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
 
-		helpers.EventTransformationForTriggerTestHelper(
-			context.Background(),
-			t,
-			brokerVersion,
-			triggerVersion,
-			testbroker.Creator,
-		)
-	})
+	env.TestSet(ctx, t, broker.BrokerWorkFlowWithTransformation())
 }
