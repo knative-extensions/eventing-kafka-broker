@@ -277,7 +277,7 @@ func (r *NamespacedReconciler) getManifest(ctx context.Context, broker *eventing
 	// Not all transformations are good for the additional resources, so we apply them separately.
 	// One specific example is that we don't want to use Manifestival's namespace injection for the additional resources.
 	// Because, it touches e.g. the subjects' namespace of the ClusterRoleBindings, which is not desired.
-	manifestFromAdditionalResources, err := r.getManifestFromAdditionalResources(ctx, broker)
+	manifestFromAdditionalResources, err := r.getManifestFromAdditionalResources(broker)
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to get manifest from additional resources: %w", err)
 	}
@@ -369,7 +369,7 @@ func (r *NamespacedReconciler) getManifestFromSystemNamespace(broker *eventing.B
 	return manifest, nil
 }
 
-func (r *NamespacedReconciler) getManifestFromAdditionalResources(ctx context.Context, broker *eventing.Broker) (mf.Manifest, error) {
+func (r *NamespacedReconciler) getManifestFromAdditionalResources(broker *eventing.Broker) (mf.Manifest, error) {
 	additionalResources, err := r.resourcesFromConfigMap(NamespacedBrokerAdditionalResourcesConfigMapName, broker.Namespace)
 	if err != nil {
 		return mf.Manifest{}, err
