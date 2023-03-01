@@ -39,10 +39,10 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/gofuzz v1.2.0
 	github.com/kedacore/keda/v2 v2.8.1
-	knative.dev/eventing v0.36.5
-	knative.dev/hack v0.0.0-20230217131352-f2f3107be156
+	knative.dev/eventing v0.36.1-0.20230228094553-c5847a9d6d1b
+	knative.dev/hack v0.0.0-20230228173453-3de51aff69a3
 	knative.dev/pkg v0.0.0-20230224190030-645afb2d5dad
-	knative.dev/reconciler-test v0.0.0-20230223145336-9b63f8408409
+	knative.dev/reconciler-test v0.0.0-20230227121134-83f751282b88
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 

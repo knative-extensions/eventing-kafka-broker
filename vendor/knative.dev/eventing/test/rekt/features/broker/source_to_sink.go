@@ -17,20 +17,16 @@ limitations under the License.
 package broker
 
 import (
-	"context"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/delivery"
-	"knative.dev/eventing/test/rekt/resources/flaker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 
 	. "github.com/cloudevents/sdk-go/v2/test"
@@ -50,7 +46,7 @@ func SourceToSink(brokerName string) *feature.Feature {
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver))
 
 	// Point the Trigger subscriber to the sink svc.
-	cfg := []manifest.CfgFn{trigger.WithSubscriber(svc.AsKReference(sink), "")}
+	cfg := []manifest.CfgFn{trigger.WithSubscriber(service.AsKReference(sink), "")}
 
 	// Install the trigger
 	f.Setup("install trigger", trigger.Install(via, brokerName, cfg...))
@@ -86,7 +82,7 @@ func SourceToSinkWithDLQ() *feature.Feature {
 
 	f.Setup("install dead letter sink service", eventshub.Install(dls, eventshub.StartReceiver))
 
-	brokerConfig := append(broker.WithEnvConfig(), delivery.WithDeadLetterSink(svc.AsKReference(dls), ""))
+	brokerConfig := append(broker.WithEnvConfig(), delivery.WithDeadLetterSink(service.AsKReference(dls), ""))
 	f.Setup("install broker", broker.Install(brokerName, brokerConfig...))
 	f.Setup("Broker is ready", broker.IsReady(brokerName))
 	f.Setup("install trigger", trigger.Install(triggerName, brokerName, trigger.WithSubscriber(nil, "bad://uri")))
@@ -117,7 +113,6 @@ func SourceToSinkWithDLQ() *feature.Feature {
 func SourceToSinkWithFlakyDLQ(brokerName string) *feature.Feature {
 	source := feature.MakeRandomK8sName("source")
 	sink := feature.MakeRandomK8sName("sink")
-	flake := feature.MakeRandomK8sName("flake")
 	dlq := feature.MakeRandomK8sName("dlq")
 	via := feature.MakeRandomK8sName("via")
 
@@ -125,16 +120,10 @@ func SourceToSinkWithFlakyDLQ(brokerName string) *feature.Feature {
 
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver))
 
-	f.Setup("install flake", func(ctx context.Context, t feature.T) {
-		env := environment.FromContext(ctx)
-		u := fmt.Sprintf("%s.%s.svc.cluster.local", sink, env.Namespace()) // HACK HACK HACK, could replace with SinkBinding.
-		flaker.Install(flake, u)(ctx, t)
-	})
-
 	f.Setup("install dlq", eventshub.Install(dlq, eventshub.StartReceiver))
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver, eventshub.DropFirstN(2)))
-	f.Setup("update broker with DLQ", broker.Install(brokerName, broker.WithDeadLetterSink(svc.AsKReference(dlq), "")))
-	f.Setup("install trigger", trigger.Install(via, brokerName, trigger.WithSubscriber(svc.AsKReference(sink), "")))
+	f.Setup("update broker with DLQ", broker.Install(brokerName, broker.WithDeadLetterSink(service.AsKReference(dlq), "")))
+	f.Setup("install trigger", trigger.Install(via, brokerName, trigger.WithSubscriber(service.AsKReference(sink), "")))
 	f.Setup("trigger goes ready", trigger.IsReady(via))
 	f.Setup("broker goes ready", broker.IsReady(via))
 
