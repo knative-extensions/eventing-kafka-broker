@@ -38,7 +38,6 @@ import (
 	rbaclisters "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/utils/pointer"
 
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -97,21 +96,6 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 	}
 
 	br := r.createReconcilerForBrokerInstance(broker)
-
-	statusConditionManager := base.StatusConditionManager{
-		Object:     broker,
-		SetAddress: broker.Status.SetAddress,
-		Env:        r.Env,
-		Recorder:   controller.GetEventRecorder(ctx),
-	}
-
-	// Get contract config map. Do this in advance, otherwise
-	// the dataplane pods that need volume mounts to the contract configmap
-	// will get stuck and will never be ready.
-	_, err := br.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfigMap(err)
-	}
 
 	event := r.reconcileDataPlane(ctx, broker)
 	if event != nil {
