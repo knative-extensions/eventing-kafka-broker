@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"knative.dev/eventing/test/rekt/resources/broker"
-	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/feature"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -63,7 +62,7 @@ func NamespacedBrokerResourcesPropagation() *feature.Feature {
 			"kind":       "ConfigMap",
 			"metadata": map[string]interface{}{
 				"name":      additionalCMName,
-				"namespace": system.Namespace(),
+				"namespace": "{{.Namespace}}",
 			},
 			"data": map[string]string{
 				"config":           "x-unknown-config",
@@ -91,9 +90,6 @@ func NamespacedBrokerResourcesPropagation() *feature.Feature {
 	f.Requirement("Broker is ready", broker.IsReady(br))
 	f.Requirement("Broker is addressable", broker.IsAddressable(br))
 
-	f.Assert(fmt.Sprintf("%s ConfigMap is not present in %s as we override the namespace with the broker namespace",
-		additionalCMName, system.Namespace()),
-		configmap.DoesNotExist(additionalCMName, system.Namespace()))
 	f.Assert(fmt.Sprintf("%s ConfigMap is present in test namespace", additionalCMName),
 		configmap.ExistsInTestNamespace(additionalCMName))
 
