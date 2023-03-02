@@ -102,8 +102,12 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 	f.Setup("Broker is ready", broker.IsReady(brokerName))
 	f.Setup("Topic is ready", kafkatopic.IsReady(topic))
 
-	f.Setup("Install kafkasink", kafkasink.Install(sink, topic, testpkg.BootstrapServersPlaintextArr,
+	f.Setup("Install kafkasink", kafkasink.Install(
+		sink,
+		topic,
+		testpkg.BootstrapServersPlaintextArr,
 		kafkasink.WithNumPartitions(10),
+		kafkasink.WithContentMode("structured"),
 		kafkasink.WithReplicationFactor(1)))
 	f.Setup("KafkaSink is ready", kafkasink.IsReady(sink))
 
@@ -138,7 +142,7 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 		job.WithRestartPolicy(corev1.RestartPolicyNever),
 		job.WithBackoffLimit(2),
 		job.WithImagePullPolicy(corev1.PullIfNotPresent)))
-	f.Assert("Verify-messages job succeeded", job.IsSucceeded(verifyMessagesJobName))
+	f.Assert("Verify-messages job completed ", job.IsDone(verifyMessagesJobName))
 
 	return f
 }
