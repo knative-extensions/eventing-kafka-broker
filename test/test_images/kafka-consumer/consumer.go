@@ -101,7 +101,7 @@ func main() {
 		log.Println("Remaining", set)
 	}()
 
-	for set.Len() == 0 {
+	for set.Len() > 0 {
 		select {
 		case err := <-exitError:
 			log.Fatal("Failed to consume", err)
