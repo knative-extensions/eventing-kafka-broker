@@ -60,6 +60,8 @@ readonly REPLICAS=${REPLICAS:-1}
 # This is mainly used by the test automation via prow.
 readonly SCALE_CHAOSDUCK_TO_ZERO="${SCALE_CHAOSDUCK_TO_ZERO:-0}"
 
+export BROKER_TEMPLATES="${repo_root_dir}"/test/e2e_new/templates/kafka-broker
+
 export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
 
