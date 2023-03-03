@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 source $(dirname $0)/e2e-common.sh
+export BROKER_TEMPLATES=./templates/kafka-broker
 
 if ! ${SKIP_INITIALIZE}; then
   initialize $@ --skip-istio-addon --min-nodes=4 --max-nodes=4
