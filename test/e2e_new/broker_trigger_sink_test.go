@@ -39,8 +39,6 @@ import (
 	           +--------+
 */
 func TestBrokerTriggersSink(t *testing.T) {
-	t.Skip("Skipping due to https://github.com/knative-sandbox/eventing-kafka-broker/issues/2951")
-
 	// Run Test In Parallel With Others
 	t.Parallel()
 
