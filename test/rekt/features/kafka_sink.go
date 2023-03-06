@@ -37,7 +37,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 )
@@ -59,7 +58,6 @@ const (
 func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Feature {
 
 	brokerName := feature.MakeRandomK8sName("broker")
-	brokerConfig := feature.MakeRandomK8sName("brokercfg")
 	trigger1Name := feature.MakeRandomK8sName("trigger-1")
 	trigger2Name := feature.MakeRandomK8sName("trigger-2")
 	sink := feature.MakeRandomK8sName("sink")
@@ -87,18 +85,7 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 
 	f := feature.NewFeatureNamed("Trigger with KafkaSink")
 
-	f.Setup("Create broker config", brokerconfigmap.Install(
-		brokerConfig,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(testpkg.NumPartitions),
-		brokerconfigmap.WithReplicationFactor(testpkg.ReplicationFactor),
-	))
-
-	f.Setup("Install broker", broker.Install(brokerName,
-		append(
-			broker.WithEnvConfig(),
-			broker.WithConfig(brokerConfig))...,
-	))
+	f.Setup("Install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
 	f.Setup("Broker is ready", broker.IsReady(brokerName))
 	f.Setup("Topic is ready", kafkatopic.IsReady(topic))
 
