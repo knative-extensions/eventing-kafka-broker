@@ -61,6 +61,8 @@ readonly REPLICAS=${REPLICAS:-1}
 readonly SCALE_CHAOSDUCK_TO_ZERO="${SCALE_CHAOSDUCK_TO_ZERO:-0}"
 
 export BROKER_TEMPLATES="${repo_root_dir}"/test/e2e_new/templates/kafka-broker
+export CHANNEL_GROUP_KIND=KafkaChannel.messaging.knative.dev
+export CHANNEL_VERSION=v1beta1
 
 export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
