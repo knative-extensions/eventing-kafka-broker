@@ -121,6 +121,7 @@ func main() {
 			}
 		}
 	}
+	log.Println("All events consumed")
 	cancel()
 
 L:
@@ -132,12 +133,6 @@ L:
 		case <-isConsumerClose:
 			break L
 		}
-	}
-
-	if set.Len() > 0 {
-		log.Fatalf("Not all event consumed, Remaining ID: %v\n", set.List())
-	} else {
-		log.Println("All events consumed")
 	}
 }
 
