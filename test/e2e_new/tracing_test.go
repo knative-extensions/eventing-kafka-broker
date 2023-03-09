@@ -267,7 +267,8 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 		brokerName,
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerAName))
+	f.Setup("trigger a is ready", trigger.IsReady(triggerAName))
+	f.Setup("trigger b is ready", trigger.IsReady(triggerBName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
