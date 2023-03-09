@@ -87,9 +87,24 @@ type MagicEnvironment struct {
 	teardownOnFail bool
 }
 
+var (
+	_ Environment = &MagicEnvironment{}
+)
+
 const (
 	NamespaceDeleteErrorReason = "NamespaceDeleteError"
 )
+
+type parallelKey struct{}
+
+func withParallel(ctx context.Context) context.Context {
+	return context.WithValue(ctx, parallelKey{}, true)
+}
+
+func isParallel(ctx context.Context) bool {
+	v := ctx.Value(parallelKey{})
+	return v != nil && v.(bool)
+}
 
 func (mr *MagicEnvironment) Reference(ref ...corev1.ObjectReference) {
 	mr.refsMu.Lock()
@@ -163,7 +178,7 @@ func WithEmitter(emitter milestone.Emitter) EnvOpts {
 }
 
 func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context, Environment) {
-	namespace := feature.MakeK8sNamePrefix(feature.AppendRandomString("test"))
+	opts = append([]EnvOpts{inNamespace()}, opts...)
 
 	env := &MagicEnvironment{
 		c:              mr.c,
@@ -172,7 +187,6 @@ func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context,
 		featureMatch:   mr.FeatureMatch,
 		teardownOnFail: mr.teardownOnFail,
 
-		namespace:                namespace,
 		imagePullSecretName:      "kn-test-image-pull-secret",
 		imagePullSecretNamespace: "default",
 	}
@@ -197,12 +211,12 @@ func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context,
 		}
 	})
 
-	eventEmitter, err := milestone.NewMilestoneEmitterFromEnv(mr.instanceID, namespace)
+	eventEmitter, err := milestone.NewMilestoneEmitterFromEnv(mr.instanceID, env.namespace)
 	if err != nil {
 		// This is just an FYI error, don't block the test run.
 		logging.FromContext(ctx).Error("failed to create the milestone event sender", zap.Error(err))
 	}
-	logEmitter := milestone.NewLogEmitter(ctx, namespace)
+	logEmitter := milestone.NewLogEmitter(ctx, env.namespace)
 
 	if env.milestones == nil {
 		env.milestones = milestone.Compose(eventEmitter, logEmitter)
@@ -223,6 +237,16 @@ func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context,
 	})
 
 	return ctx, env
+}
+
+func inNamespace() EnvOpts {
+	return func(ctx context.Context, env Environment) (context.Context, error) {
+		ns := getNamespace(ctx)
+		if ns == "" {
+			ns = feature.MakeK8sNamePrefix(feature.AppendRandomString("test"))
+		}
+		return InNamespace(ns)(ctx, env)
+	}
 }
 
 func (mr *MagicEnvironment) TemplateConfig(base map[string]interface{}) map[string]interface{} {
@@ -292,6 +316,21 @@ func (mr *MagicEnvironment) Prerequisite(ctx context.Context, t *testing.T, f *f
 // Test will create a new store.KVStore and set it on the feature and then
 // apply it to the Context.
 func (mr *MagicEnvironment) Test(ctx context.Context, originalT *testing.T, f *feature.Feature) {
+	mr.test(ctx, originalT, f)
+}
+
+// ParallelTest implements Environment.ParallelTest.
+// It is similar to Test with the addition of running the feature in parallel
+func (mr *MagicEnvironment) ParallelTest(ctx context.Context, originalT *testing.T, f *feature.Feature) {
+	mr.test(withParallel(ctx), originalT, f)
+}
+
+// Test implements Environment.Test.
+// In the MagicEnvironment implementation, the Store that is inside of the
+// Feature will be assigned to the context. If no Store is set on Feature,
+// Test will create a new store.KVStore and set it on the feature and then
+// apply it to the Context.
+func (mr *MagicEnvironment) test(ctx context.Context, originalT *testing.T, f *feature.Feature) {
 	originalT.Helper() // Helper marks the calling function as a test helper function.
 
 	log := logging.FromContext(ctx)
@@ -323,6 +362,10 @@ func (mr *MagicEnvironment) Test(ctx context.Context, originalT *testing.T, f *f
 	skip := false
 
 	originalT.Run(f.Name, func(t *testing.T) {
+
+		if isParallel(ctx) {
+			t.Parallel()
+		}
 
 		for _, timing := range feature.Timings() {
 			steps := feature.Steps(stepsByTiming[timing])
@@ -383,6 +426,15 @@ func (mr *MagicEnvironment) shouldFail(s *feature.Step) bool {
 
 // TestSet implements Environment.TestSet
 func (mr *MagicEnvironment) TestSet(ctx context.Context, t *testing.T, fs *feature.FeatureSet) {
+	mr.testSet(ctx, t, fs)
+}
+
+// ParallelTestSet implements Environment.ParallelTestSet
+func (mr *MagicEnvironment) ParallelTestSet(ctx context.Context, t *testing.T, fs *feature.FeatureSet) {
+	mr.testSet(withParallel(ctx), t, fs)
+}
+
+func (mr *MagicEnvironment) testSet(ctx context.Context, t *testing.T, fs *feature.FeatureSet) {
 	t.Helper() // Helper marks the calling function as a test helper function
 
 	mr.milestones.TestSetStarted(fs.Name, t)
