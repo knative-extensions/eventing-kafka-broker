@@ -34,15 +34,7 @@ else
   echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
 fi
 
-if [ "${BROKER_CLASS}" == "KafkaNamespaced" ]; then
-  # if flag exists, only test tests that are relevant to namespaced KafkaBroker
-  echo "BROKER_CLASS is set to 'KafkaNamespaced'. Only running the relevant tests."
-  go_test_e2e -timeout=1h ./test/e2e_broker/... || fail_test "E2E suite failed (directory: ./e2e_broker/...)"
-  success
-fi
-
 go_test_e2e -timeout=1h ./test/e2e/...        || fail_test "E2E suite failed (directory: ./e2e/...)"
-go_test_e2e -timeout=1h ./test/e2e_broker/... || fail_test "E2E suite failed (directory: ./e2e_broker/...)"
 go_test_e2e -timeout=1h ./test/e2e_sink/...   || fail_test "E2E suite failed (directory: ./e2e_sink/...)"
 go_test_e2e -timeout=1h ./test/e2e_source/... || fail_test "E2E suite failed (directory: ./e2e_source/...)"
 
