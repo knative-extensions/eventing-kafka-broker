@@ -7378,20 +7378,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-apiVersion: coordination.k8s.io/v1
-kind: Lease
-metadata:
-  name: strimzi-cluster-operator
-  labels:
-    app: strimzi
-spec:
-  acquireTime: "1970-01-01T00:00:01.000000Z"
-  holderIdentity: ""
-  leaseDurationSeconds: 15
-  leaseTransitions: 0
-  renewTime: "1970-01-01T00:00:01.000000Z"
-
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -9515,7 +9501,7 @@ spec:
             name: strimzi-cluster-operator
       containers:
         - name: strimzi-cluster-operator
-          image: quay.io/strimzi/operator:0.33.0
+          image: quay.io/strimzi/operator:0.33.1
           ports:
             - containerPort: 8080
               name: http
@@ -9536,53 +9522,53 @@ spec:
             - name: STRIMZI_OPERATION_TIMEOUT_MS
               value: "300000"
             - name: STRIMZI_DEFAULT_TLS_SIDECAR_ENTITY_OPERATOR_IMAGE
-              value: quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+              value: quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_DEFAULT_KAFKA_EXPORTER_IMAGE
-              value: quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+              value: quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_DEFAULT_CRUISE_CONTROL_IMAGE
-              value: quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+              value: quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_KAFKA_IMAGES
               value: |
-                3.2.0=quay.io/strimzi/kafka:0.33.0-kafka-3.2.0
-                3.2.1=quay.io/strimzi/kafka:0.33.0-kafka-3.2.1
-                3.2.3=quay.io/strimzi/kafka:0.33.0-kafka-3.2.3
-                3.3.1=quay.io/strimzi/kafka:0.33.0-kafka-3.3.1
-                3.3.2=quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+                3.2.0=quay.io/strimzi/kafka:0.33.1-kafka-3.2.0
+                3.2.1=quay.io/strimzi/kafka:0.33.1-kafka-3.2.1
+                3.2.3=quay.io/strimzi/kafka:0.33.1-kafka-3.2.3
+                3.3.1=quay.io/strimzi/kafka:0.33.1-kafka-3.3.1
+                3.3.2=quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_KAFKA_CONNECT_IMAGES
               value: |
-                3.2.0=quay.io/strimzi/kafka:0.33.0-kafka-3.2.0
-                3.2.1=quay.io/strimzi/kafka:0.33.0-kafka-3.2.1
-                3.2.3=quay.io/strimzi/kafka:0.33.0-kafka-3.2.3
-                3.3.1=quay.io/strimzi/kafka:0.33.0-kafka-3.3.1
-                3.3.2=quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+                3.2.0=quay.io/strimzi/kafka:0.33.1-kafka-3.2.0
+                3.2.1=quay.io/strimzi/kafka:0.33.1-kafka-3.2.1
+                3.2.3=quay.io/strimzi/kafka:0.33.1-kafka-3.2.3
+                3.3.1=quay.io/strimzi/kafka:0.33.1-kafka-3.3.1
+                3.3.2=quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_KAFKA_MIRROR_MAKER_IMAGES
               value: |
-                3.2.0=quay.io/strimzi/kafka:0.33.0-kafka-3.2.0
-                3.2.1=quay.io/strimzi/kafka:0.33.0-kafka-3.2.1
-                3.2.3=quay.io/strimzi/kafka:0.33.0-kafka-3.2.3
-                3.3.1=quay.io/strimzi/kafka:0.33.0-kafka-3.3.1
-                3.3.2=quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+                3.2.0=quay.io/strimzi/kafka:0.33.1-kafka-3.2.0
+                3.2.1=quay.io/strimzi/kafka:0.33.1-kafka-3.2.1
+                3.2.3=quay.io/strimzi/kafka:0.33.1-kafka-3.2.3
+                3.3.1=quay.io/strimzi/kafka:0.33.1-kafka-3.3.1
+                3.3.2=quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_KAFKA_MIRROR_MAKER_2_IMAGES
               value: |
-                3.2.0=quay.io/strimzi/kafka:0.33.0-kafka-3.2.0
-                3.2.1=quay.io/strimzi/kafka:0.33.0-kafka-3.2.1
-                3.2.3=quay.io/strimzi/kafka:0.33.0-kafka-3.2.3
-                3.3.1=quay.io/strimzi/kafka:0.33.0-kafka-3.3.1
-                3.3.2=quay.io/strimzi/kafka:0.33.0-kafka-3.3.2
+                3.2.0=quay.io/strimzi/kafka:0.33.1-kafka-3.2.0
+                3.2.1=quay.io/strimzi/kafka:0.33.1-kafka-3.2.1
+                3.2.3=quay.io/strimzi/kafka:0.33.1-kafka-3.2.3
+                3.3.1=quay.io/strimzi/kafka:0.33.1-kafka-3.3.1
+                3.3.2=quay.io/strimzi/kafka:0.33.1-kafka-3.3.2
             - name: STRIMZI_DEFAULT_TOPIC_OPERATOR_IMAGE
-              value: quay.io/strimzi/operator:0.33.0
+              value: quay.io/strimzi/operator:0.33.1
             - name: STRIMZI_DEFAULT_USER_OPERATOR_IMAGE
-              value: quay.io/strimzi/operator:0.33.0
+              value: quay.io/strimzi/operator:0.33.1
             - name: STRIMZI_DEFAULT_KAFKA_INIT_IMAGE
-              value: quay.io/strimzi/operator:0.33.0
+              value: quay.io/strimzi/operator:0.33.1
             - name: STRIMZI_DEFAULT_KAFKA_BRIDGE_IMAGE
               value: quay.io/strimzi/kafka-bridge:0.24.0
             - name: STRIMZI_DEFAULT_JMXTRANS_IMAGE
-              value: quay.io/strimzi/jmxtrans:0.33.0
+              value: quay.io/strimzi/jmxtrans:0.33.1
             - name: STRIMZI_DEFAULT_KANIKO_EXECUTOR_IMAGE
-              value: quay.io/strimzi/kaniko-executor:0.33.0
+              value: quay.io/strimzi/kaniko-executor:0.33.1
             - name: STRIMZI_DEFAULT_MAVEN_BUILDER
-              value: quay.io/strimzi/maven-builder:0.33.0
+              value: quay.io/strimzi/maven-builder:0.33.1
             - name: STRIMZI_OPERATOR_NAMESPACE
               valueFrom:
                 fieldRef:

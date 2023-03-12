@@ -19,7 +19,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 spec:
   endpoints:
     - port: http-metrics

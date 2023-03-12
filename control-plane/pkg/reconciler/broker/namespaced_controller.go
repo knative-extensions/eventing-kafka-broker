@@ -19,6 +19,9 @@ package broker
 import (
 	"context"
 	"net/http"
+	"time"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
 	"github.com/Shopify/sarama"
 	mfclient "github.com/manifestival/client-go-client"
@@ -46,6 +49,7 @@ import (
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
+	namespaceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/namespace"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
@@ -89,15 +93,18 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			DispatcherLabel:              base.BrokerDispatcherLabel,
 			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceAccountLister:       serviceaccountinformer.Get(ctx).Lister(),
-		ServiceLister:              serviceinformer.Get(ctx).Lister(),
-		ClusterRoleBindingLister:   clusterrolebindinginformer.Get(ctx).Lister(),
-		DeploymentLister:           deploymentinformer.Get(ctx).Lister(),
-		Env:                        env,
-		Counter:                    counter.NewExpiringCounter(ctx),
-		ManifestivalClient:         mfc,
+		NewKafkaClusterAdminClient:         sarama.NewClusterAdmin,
+		NamespaceLister:                    namespaceinformer.Get(ctx).Lister(),
+		ConfigMapLister:                    configmapInformer.Lister(),
+		ServiceAccountLister:               serviceaccountinformer.Get(ctx).Lister(),
+		ServiceLister:                      serviceinformer.Get(ctx).Lister(),
+		ClusterRoleBindingLister:           clusterrolebindinginformer.Get(ctx).Lister(),
+		DeploymentLister:                   deploymentinformer.Get(ctx).Lister(),
+		BrokerLister:                       brokerinformer.Get(ctx).Lister(),
+		Env:                                env,
+		Counter:                            counter.NewExpiringCounter(ctx),
+		ManifestivalClient:                 mfc,
+		DataplaneLifecycleLocksByNamespace: util.NewExpiringLockMap[string](ctx, time.Minute*30),
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {

@@ -21,7 +21,7 @@ import (
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
@@ -41,7 +41,8 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 	saslSecretName := "strimzi-sasl-secret"
 
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
-	f.Setup("install a service", svc.Install(sink, "app", "rekt"))
+	f.Setup("install a service", service.Install(sink,
+		service.WithSelectors(map[string]string{"app": "rekt"})))
 	f.Setup("install a KafkaSource", kafkasource.Install(name,
 		kafkasource.WithSink(&duckv1.KReference{Kind: "Service", Name: sink, APIVersion: "v1"}, ""),
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),

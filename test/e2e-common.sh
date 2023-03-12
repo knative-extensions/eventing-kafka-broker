@@ -19,10 +19,12 @@ readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 export KO_FLAGS="${KO_FLAGS:-}"
 
-source $(pwd)/vendor/knative.dev/hack/e2e-tests.sh
-source $(pwd)/hack/data-plane.sh
-source $(pwd)/hack/control-plane.sh
-source $(pwd)/hack/artifacts-env.sh
+repo_root_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..
+
+source "${repo_root_dir}"/vendor/knative.dev/hack/e2e-tests.sh
+source "${repo_root_dir}"/hack/data-plane.sh
+source "${repo_root_dir}"/hack/control-plane.sh
+source "${repo_root_dir}"/hack/artifacts-env.sh
 
 # If gcloud is not available make it a no-op, not an error.
 which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
@@ -57,6 +59,10 @@ readonly REPLICAS=${REPLICAS:-1}
 # Whether to turn chaosduck off (via deployment scaling).
 # This is mainly used by the test automation via prow.
 readonly SCALE_CHAOSDUCK_TO_ZERO="${SCALE_CHAOSDUCK_TO_ZERO:-0}"
+
+export BROKER_TEMPLATES="${repo_root_dir}"/test/e2e_new/templates/kafka-broker
+export CHANNEL_GROUP_KIND=KafkaChannel.messaging.knative.dev
+export CHANNEL_VERSION=v1beta1
 
 export SYSTEM_NAMESPACE="knative-eventing"
 export CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}

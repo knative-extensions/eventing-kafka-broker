@@ -28,9 +28,6 @@ import (
 	_ "knative.dev/pkg/apiextensions/storageversion/cmd/migrate"
 
 	// Test images from eventing
-	_ "knative.dev/eventing/test/test_images/event-flaker"
-	_ "knative.dev/eventing/test/test_images/event-library"
-	_ "knative.dev/eventing/test/test_images/event-library/kodata/events"
 	_ "knative.dev/eventing/test/test_images/event-sender"
 	_ "knative.dev/eventing/test/test_images/heartbeats"
 	_ "knative.dev/eventing/test/test_images/performance"

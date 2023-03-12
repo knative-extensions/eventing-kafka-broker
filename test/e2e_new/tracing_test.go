@@ -25,9 +25,7 @@ import (
 	"testing"
 	"time"
 
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/openzipkin/zipkin-go/model"
@@ -43,7 +41,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
@@ -72,23 +70,14 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 	sinkName := feature.MakeRandomK8sName("sink")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-ordered")
 	ev.SetSource(sourceName)
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
-
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(configName),
+		broker.WithEnvConfig()...,
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -100,7 +89,7 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithAnnotations(map[string]interface{}{
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
@@ -208,22 +197,13 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 	sinkName := feature.MakeRandomK8sName("sink")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-unordered")
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
-
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(configName),
+		broker.WithEnvConfig()...,
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
@@ -235,7 +215,7 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -262,23 +242,14 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 	triggerAName := feature.MakeRandomK8sName("trigger-a")
 	triggerBName := feature.MakeRandomK8sName("trigger-b")
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 	ev.SetID("full-event-unordered")
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
-
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(configName),
-	))
+		broker.WithEnvConfig()...),
+	)
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
@@ -289,14 +260,15 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 	f.Setup("install trigger a", trigger.Install(
 		triggerAName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("install trigger b", trigger.Install(
 		triggerBName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerAName))
+	f.Setup("trigger a is ready", trigger.IsReady(triggerAName))
+	f.Setup("trigger b is ready", trigger.IsReady(triggerBName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,

@@ -131,6 +131,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 						NetSpec: &ks.Spec.KafkaAuthSpec.Net,
 					},
 					Delivery: &internalscg.DeliverySpec{
+						InitialOffset: ks.Spec.InitialOffset,
 						DeliverySpec: &eventingduck.DeliverySpec{
 							Retry:         pointer.Int32(10),
 							BackoffPolicy: &backoffPolicy,

@@ -40,7 +40,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 )
 
 func TestDeadLetterSinkExtensions(t *testing.T) {
@@ -89,7 +89,7 @@ func SubscriberUnreachable() *feature.Feature {
 		triggerName,
 		brokerName,
 		trigger.WithSubscriber(nil, "http://fake.svc.cluster.local"),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -146,8 +146,8 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -160,7 +160,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 	f.Assert("knativeerrordest & knativeerrorcode added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
-			sinkAddress, _ := svc.Address(ctx, sinkName)
+			sinkAddress, _ := service.Address(ctx, sinkName)
 			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
 		},
 
@@ -207,8 +207,8 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -221,7 +221,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
-			sinkAddress, _ := svc.Address(ctx, sinkName)
+			sinkAddress, _ := service.Address(ctx, sinkName)
 			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
@@ -271,8 +271,8 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -285,7 +285,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	f.Assert("knativeerrordest, knativeerrorcode, truncated knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
-			sinkAddress, _ := svc.Address(ctx, sinkName)
+			sinkAddress, _ := service.Address(ctx, sinkName)
 			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
@@ -334,8 +334,8 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -348,7 +348,7 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
-			sinkAddress, _ := svc.Address(ctx, sinkName)
+			sinkAddress, _ := service.Address(ctx, sinkName)
 			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
@@ -398,8 +398,8 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -412,7 +412,7 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata and custom extension header added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
-			sinkAddress, _ := svc.Address(ctx, sinkName)
+			sinkAddress, _ := service.Address(ctx, sinkName)
 			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {

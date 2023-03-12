@@ -22,18 +22,23 @@ import (
 	"fmt"
 	"strings"
 
+	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
+	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-
+	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
@@ -52,7 +57,8 @@ func SetupKafkaSources(prefix string, n int) *feature.Feature {
 	sink := "sink"
 	f := feature.NewFeatureNamed("KafkaSources")
 
-	f.Setup("install a sink", svc.Install(sink, "app", "rekt"))
+	f.Setup("install a sink", service.Install(sink,
+		service.WithSelectors(map[string]string{"app": "rekt"})))
 
 	for i := 0; i < n; i++ {
 		topicName := feature.MakeRandomK8sName("topic") // A k8s name is also a valid topic name.
@@ -155,12 +161,13 @@ func ScaleKafkaSource() *feature.Feature {
 	topicName := feature.MakeRandomK8sName("scale-topic")
 	sink := feature.MakeRandomK8sName("sink")
 
-	f.Setup("install a sink", svc.Install(sink, "app", "rekt"))
+	f.Setup("install a sink", service.Install(sink,
+		service.WithSelectors(map[string]string{"app": "rekt"})))
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("scale kafkasource", kafkasource.Install(source,
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topicName}),
-		kafkasource.WithSink(svc.AsKReference(sink), ""),
+		kafkasource.WithSink(service.AsKReference(sink), ""),
 		kafkasource.WithAnnotations(map[string]string{
 			// Disable autoscaling for this KafkaSource since we want to have the expected replicas
 			// in the status reflected without the autoscaler intervention.
@@ -174,4 +181,70 @@ func ScaleKafkaSource() *feature.Feature {
 	f.Assert("kafkasource is scaled", kafkasource.VerifyScale(source, replicas))
 
 	return f
+}
+
+func KafkaSourceInitialOffsetEarliest(count int, topic string) *feature.Feature {
+
+	f := feature.NewFeatureNamed("KafkaSource initial offset earliest")
+
+	sink := feature.MakeRandomK8sName("sink")
+	source := feature.MakeRandomK8sName("source")
+
+	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver))
+
+	f.Setup("install kafkasource", kafkasource.Install(
+		source,
+		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithInitialOffset(sources.OffsetEarliest),
+		kafkasource.WithSink(service.AsKReference(sink), ""),
+	))
+	f.Setup("KafkaSource is ready", kafkasource.IsReady(source))
+
+	f.Requirement("consumergroup has earliest offset set", compareConsumerGroup(
+		source,
+		func(group *internalscg.ConsumerGroup) error {
+			got := group.Spec.Template.Spec.Delivery.InitialOffset
+			if got != sources.OffsetEarliest {
+				return fmt.Errorf("expected consumergroup to have offset %s set, got %s", sources.OffsetEarliest, got)
+			}
+			return nil
+		},
+	))
+
+	for i := 1; i <= count; i++ {
+		f.Assert(fmt.Sprintf("received event with sequence %d", i),
+			assert.OnStore(sink).
+				MatchEvent(cetest.HasExtension("sequence", fmt.Sprintf("%d", i))).
+				AtLeast(1),
+		)
+	}
+
+	return f
+}
+
+func compareConsumerGroup(source string, cmp func(*internalscg.ConsumerGroup) error) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		ns := environment.FromContext(ctx).Namespace()
+
+		ks, err := sourcesclient.Get(ctx).
+			SourcesV1beta1().
+			KafkaSources(ns).
+			Get(ctx, source, metav1.GetOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		InternalsClient := consumergroupclient.Get(ctx)
+		cg, err := InternalsClient.InternalV1alpha1().
+			ConsumerGroups(ns).
+			Get(ctx, string(ks.UID), metav1.GetOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := cmp(cg); err != nil {
+			t.Error(err)
+		}
+	}
 }

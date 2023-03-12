@@ -19,7 +19,6 @@ metadata:
   namespace: knative-eventing
   labels:
     app: test-kafka-channel-cm-watcher
-    kafka.eventing.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -30,7 +29,6 @@ spec:
       name: test-kafka-channel-cm-watcher
       labels:
         app: test-kafka-channel-cm-watcher
-        kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
         runAsNonRoot: true

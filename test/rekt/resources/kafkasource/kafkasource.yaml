@@ -33,6 +33,9 @@ spec:
   {{ if .consumerGroup }}
   consumerGroup: {{ .consumerGroup }}
   {{ end }}
+  {{ if .initialOffset }}
+  initialOffset: {{ .initialOffset }}
+  {{ end }}
   {{ if .consumers }}
   consumers: {{ .consumers }}
   {{ end }}

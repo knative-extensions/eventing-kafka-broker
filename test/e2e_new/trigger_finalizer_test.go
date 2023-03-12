@@ -35,7 +35,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	triggerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
@@ -68,7 +68,7 @@ func triggerNoFinalizerOnBrokerNotFound() *feature.Feature {
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 	f.Setup("install trigger", trigger.Install(triggerName, brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("set trigger name", triggerfeatures.SetTriggerName(triggerName))
 
@@ -87,7 +87,7 @@ func unknownBrokerClass(brokerClass string) *feature.Feature {
 	f.Setup("Install Broker", broker.Install(brokerName, broker.WithBrokerClass(brokerClass)))
 	f.Setup("Install events hub", eventshub.Install(sink, eventshub.StartReceiver))
 	f.Setup("Install Trigger", trigger.Install(triggerName, brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sink), ""),
+		trigger.WithSubscriber(service.AsKReference(sink), ""),
 	))
 	f.Setup("set trigger name", triggerfeatures.SetTriggerName(triggerName))
 
