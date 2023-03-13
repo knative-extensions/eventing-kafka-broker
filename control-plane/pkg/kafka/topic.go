@@ -32,7 +32,9 @@ const (
 	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
 	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
 	DefaultTopicRetentionMs                   = "default.topic.retention.ms"
-	BootstrapServersConfigMapKey              = "bootstrap.servers"
+	DefaultTopicCleanupPolicy                 = "default.topic.cleanup.policy"
+
+	BootstrapServersConfigMapKey = "bootstrap.servers"
 
 	GroupIDConfigMapKey = "group.id"
 
@@ -58,6 +60,8 @@ func TopicConfigFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*TopicC
 	logger.Debug("topic config from configmap",
 		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
 		zap.Int16("replicationFactor", config.TopicDetail.ReplicationFactor),
+		zap.Any("retentionMs", config.TopicDetail.ConfigEntries["retention.ms"]),
+		zap.Any("cleanupPolicy", config.TopicDetail.ConfigEntries["cleanup.policy"]),
 		zap.Any("bootstrapServers", config.BootstrapServers),
 	)
 
@@ -90,19 +94,22 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 	var replicationFactor int32
 	var bootstrapServers string
 	var retentionMs string
+	var cleanupPolicy string
 
 	if err := configmap.Parse(cm.Data,
 		configmap.AsInt32(DefaultTopicNumPartitionConfigMapKey, &topicDetail.NumPartitions),
 		configmap.AsInt32(DefaultTopicReplicationFactorConfigMapKey, &replicationFactor),
 		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
 		configmap.AsString(DefaultTopicRetentionMs, &retentionMs),
+		configmap.AsString(DefaultTopicCleanupPolicy, &cleanupPolicy),
 	); err != nil {
 		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
 	topicDetail.ConfigEntries = map[string]*string{
-		"retention.ms": &retentionMs,
+		"retention.ms":   &retentionMs,
+		"cleanup.policy": &cleanupPolicy,
 	}
 
 	config := &TopicConfig{
@@ -115,17 +122,18 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 func validateTopicConfig(config *TopicConfig) error {
 	retentionMsStr := config.TopicDetail.ConfigEntries["retention.ms"]
 	retentionMs, err := strconv.ParseInt(*retentionMsStr, 10, 64)
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
 
-	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 || retentionMs < -1 {
+	cleanupPolicyStr := config.TopicDetail.ConfigEntries["cleanup.policy"]
+	isValidCleanupPolicy := *cleanupPolicyStr == "delete" || *cleanupPolicyStr == "compact" || *cleanupPolicyStr == "compact,delete" || *cleanupPolicyStr == "delete,compact"
+
+	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 || err != nil || retentionMs < -1 || !isValidCleanupPolicy {
 		return fmt.Errorf(
-			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s - retentionMs: %d",
+			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s - retentionMs: %s - cleanupPolicy: %s",
 			config.TopicDetail.NumPartitions,
 			config.TopicDetail.ReplicationFactor,
 			config.BootstrapServers,
-			retentionMs,
+			*retentionMsStr,
+			*cleanupPolicyStr,
 		)
 	}
 	return nil
