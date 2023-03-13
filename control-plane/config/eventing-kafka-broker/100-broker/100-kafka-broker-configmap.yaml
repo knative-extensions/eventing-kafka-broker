@@ -24,4 +24,5 @@ metadata:
 data:
   default.topic.partitions: "10"
   default.topic.replication.factor: "3"
+  default.topic.retention.ms: "604800000" # default 7 days
   bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"

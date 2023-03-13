@@ -18,6 +18,7 @@ package kafka
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -30,6 +31,7 @@ import (
 const (
 	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
 	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
+	DefaultTopicRetentionMs                   = "default.topic.retention.ms"
 	BootstrapServersConfigMapKey              = "bootstrap.servers"
 
 	GroupIDConfigMapKey = "group.id"
@@ -87,17 +89,21 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 
 	var replicationFactor int32
 	var bootstrapServers string
+	var retentionMs string
 
-	err := configmap.Parse(cm.Data,
+	if err := configmap.Parse(cm.Data,
 		configmap.AsInt32(DefaultTopicNumPartitionConfigMapKey, &topicDetail.NumPartitions),
 		configmap.AsInt32(DefaultTopicReplicationFactorConfigMapKey, &replicationFactor),
 		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
-	)
-	if err != nil {
+		configmap.AsString(DefaultTopicRetentionMs, &retentionMs),
+	); err != nil {
 		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
+	topicDetail.ConfigEntries = map[string]*string{
+		"retention.ms": &retentionMs,
+	}
 
 	config := &TopicConfig{
 		TopicDetail:      topicDetail,
@@ -107,12 +113,19 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 }
 
 func validateTopicConfig(config *TopicConfig) error {
-	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 {
+	retentionMsStr := config.TopicDetail.ConfigEntries["retention.ms"]
+	retentionMs, err := strconv.ParseInt(*retentionMsStr, 10, 64)
+	if err != nil {
+		return fmt.Errorf("%s", err)
+	}
+
+	if config.TopicDetail.NumPartitions <= 0 || config.TopicDetail.ReplicationFactor <= 0 || len(config.BootstrapServers) == 0 || retentionMs < -1 {
 		return fmt.Errorf(
-			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s",
+			"invalid configuration - numPartitions: %d - replicationFactor: %d - bootstrapServers: %s - retentionMs: %d",
 			config.TopicDetail.NumPartitions,
 			config.TopicDetail.ReplicationFactor,
 			config.BootstrapServers,
+			retentionMs,
 		)
 	}
 	return nil
