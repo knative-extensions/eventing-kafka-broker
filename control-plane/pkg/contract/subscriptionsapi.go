@@ -96,7 +96,7 @@ func newAllFilter(filters []v1.SubscriptionsAPIFilter) *DialectedFilter {
 // newAnyFilter converts the SubscriptionsAPIFilter into the any dialect of the
 // DialectedFilter as defined in CloudEvents Subscriptions API.
 //
-// All filter evaluates to true when all nested filters evaluate to true.
+// Any filter evaluates to true when at least one nested filters evaluate to true.
 //
 // See "CNCF CloudEvents Subscriptions API" > "3.2.4.1 Filters Dialects"
 // https://github.com/cloudevents/spec/blob/main/subscriptions/spec.md#any-filter-dialect
@@ -162,7 +162,7 @@ func FromSubscriptionFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 		filters = append(filters, newAllFilter(f.All))
 	}
 	if len(f.Any) > 0 {
-		filters = append(filters, newAnyFilter(f.All))
+		filters = append(filters, newAnyFilter(f.Any))
 	}
 	if f.Not != nil {
 		filters = append(filters, newNotFilter(*f.Not))
