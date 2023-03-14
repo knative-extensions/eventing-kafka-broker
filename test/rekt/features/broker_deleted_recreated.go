@@ -21,6 +21,8 @@ import (
 	kafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/bogus_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
+	"knative.dev/eventing/pkg/apis/eventing"
+	"knative.dev/reconciler-test/pkg/manifest"
 
 	"knative.dev/pkg/system"
 
@@ -39,12 +41,15 @@ import (
 func BrokerConfigmapCreated(configName string) *feature.Feature {
 	f := feature.NewFeatureNamed("broker configmap created")
 
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
+	opts := []manifest.CfgFn{
 		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
-	))
+	}
+	if broker.EnvCfg.BrokerClass == eventing.MTChannelBrokerClassValue {
+		opts = []manifest.CfgFn{brokerconfigmap.WithKafkaChannelMTBroker()}
+	}
+	f.Setup("create broker config", brokerconfigmap.Install(configName, opts...))
 
 	return f
 }

@@ -20,7 +20,6 @@
 package e2e_new
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -31,10 +30,7 @@ import (
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/pkg/test/zipkin"
 
-	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/reconciler-test/pkg/environment"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
 // global is the singleton instance of GlobalEnvironment. It is used to parse
@@ -44,11 +40,6 @@ var global environment.GlobalEnvironment
 
 // TestMain is the first entry point for `go test`.
 func TestMain(m *testing.M) {
-	// Force the broker class to be configured properly
-	if broker.EnvCfg.BrokerClass != kafka.BrokerClass && broker.EnvCfg.BrokerClass != kafka.NamespacedBrokerClass {
-		panic(fmt.Errorf("KafkaBroker class '%s' is unknown. Specify 'BROKER_CLASS' env var", broker.EnvCfg.BrokerClass))
-	}
-
 	global = environment.NewStandardGlobalEnvironment()
 
 	// Run the tests.
