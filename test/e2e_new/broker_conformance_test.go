@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package conformance
+package e2e_new
 
 import (
 	"testing"
