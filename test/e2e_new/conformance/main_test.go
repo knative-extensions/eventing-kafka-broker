@@ -20,7 +20,6 @@
 package conformance
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -31,34 +30,16 @@ import (
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/pkg/test/zipkin"
 
-	"knative.dev/eventing/pkg/apis/eventing"
-	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/reconciler-test/pkg/environment"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )
 
-// global is the singleton instance of GlobalEnvironment. It is used to parse
-// the testing config for the test run. The config will specify the cluster
-// config as well as the parsing level and state flags.
 var global environment.GlobalEnvironment
 
-// TestMain is the first entry point for `go test`.
+// TestMain in the conformance package allows running the tests
+// against any Broker class.
 func TestMain(m *testing.M) {
-	// Force the broker class to be configured properly
-	if broker.EnvCfg.BrokerClass != kafka.BrokerClass &&
-		broker.EnvCfg.BrokerClass != kafka.NamespacedBrokerClass &&
-		broker.EnvCfg.BrokerClass != eventing.MTChannelBrokerClassValue {
-		panic(fmt.Errorf("KafkaBroker class '%s' is unknown. Specify 'BROKER_CLASS' env var", broker.EnvCfg.BrokerClass))
-	}
-
 	global = environment.NewStandardGlobalEnvironment()
-
-	// Run the tests.
 	os.Exit(func() int {
-		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
-		// place that cleans it up. If an individual test calls this instead, then it will break other
-		// tests that need the tracing in place.
 		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
 		return m.Run()
 	}())
