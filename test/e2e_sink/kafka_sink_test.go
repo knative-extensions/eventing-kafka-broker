@@ -30,7 +30,7 @@ import (
 )
 
 func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
-	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, nil, func(kss *eventingv1alpha1.KafkaSinkSpec) error {
+	RunTestKafkaSink(t, eventingv1alpha1.ModeBinary, nil, func(kss *eventingv1alpha1.KafkaSinkSpec) error {
 		kss.ContentMode = pointer.String("")
 		return nil
 	})
