@@ -24,12 +24,9 @@ import (
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"knative.dev/reconciler-test/pkg/manifest"
-
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
 
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/test/rekt/features/broker"
@@ -49,11 +46,13 @@ func TestBrokerConformance(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	configName := feature.MakeRandomK8sName("kafka-broker-config")
+	opts := b.WithEnvConfig()
 
-	env.Prerequisite(ctx, t, BrokerCreateConfigMap(configName))
-
-	opts := append(b.WithEnvConfig(), b.WithConfig(configName))
+	if b.EnvCfg.BrokerClass == eventing.MTChannelBrokerClassValue {
+		configName := feature.MakeRandomK8sName("kafka-broker-config")
+		opts = append(opts, b.WithConfig(configName))
+		env.Prerequisite(ctx, t, BrokerCreateConfigMap(configName))
+	}
 
 	brokerName := feature.MakeRandomK8sName("broker")
 
@@ -66,16 +65,9 @@ func TestBrokerConformance(t *testing.T) {
 func BrokerCreateConfigMap(configName string) *feature.Feature {
 	f := feature.NewFeature()
 
-	opts := []manifest.CfgFn{
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(2),
-		brokerconfigmap.WithReplicationFactor(3),
-	}
-	if b.EnvCfg.BrokerClass == eventing.MTChannelBrokerClassValue {
-		opts = []manifest.CfgFn{brokerconfigmap.WithKafkaChannelMTBroker()}
-	}
-
-	f.Setup("create broker config", brokerconfigmap.Install(configName, opts...))
+	f.Setup("create broker config", brokerconfigmap.Install(configName,
+		brokerconfigmap.WithKafkaChannelMTBroker(),
+	))
 
 	return f
 }
