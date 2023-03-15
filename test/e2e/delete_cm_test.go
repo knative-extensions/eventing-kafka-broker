@@ -60,7 +60,6 @@ func TestDeleteSinkConfigMap(t *testing.T) {
 		NumPartitions:     pointer.Int32(10),
 		ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
 		BootstrapServers:  testingpkg.BootstrapServersPlaintextArr,
-		
 	}
 
 	createFunc := sink.CreatorV1Alpha1(clientSet, kss)
