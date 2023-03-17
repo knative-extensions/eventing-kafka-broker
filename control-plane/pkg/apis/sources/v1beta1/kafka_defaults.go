@@ -71,4 +71,5 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 	}
 
 	k.Spec.Sink.SetDefaults(ctx)
+	k.Spec.Delivery.SetDefaults(ctx)
 }
