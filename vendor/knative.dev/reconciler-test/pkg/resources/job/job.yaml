@@ -54,8 +54,8 @@ spec:
         {{ if .envs }}
         env:
         {{ range $key, $value := .envs }}
-        - name: {{ $key }}
-          value: {{ $value }}
+        - name: {{ printf "%q" $key }}
+          value: {{ printf "%q" $value }}
         {{ end }}
         {{ end }}
         {{ if .containerSecurityContext }}
