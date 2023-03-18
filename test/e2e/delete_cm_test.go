@@ -76,7 +76,7 @@ func TestDeleteSinkConfigMap(t *testing.T) {
 	ids := addressable.Send(t, kafkaSink)
 
 	// Read events from the topic.
-	sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
+	sink.Verify(t, client, eventingv1alpha1.ModeBinary, kss.Topic, ids)
 
 	t.Log("Deleting ConfigMap", configMapName)
 
@@ -97,5 +97,5 @@ func TestDeleteSinkConfigMap(t *testing.T) {
 	ids = addressable.Send(t, kafkaSink)
 
 	// Read events from the topic.
-	sink.Verify(t, client, eventingv1alpha1.ModeStructured, kss.Topic, ids)
+	sink.Verify(t, client, eventingv1alpha1.ModeBinary, kss.Topic, ids)
 }
