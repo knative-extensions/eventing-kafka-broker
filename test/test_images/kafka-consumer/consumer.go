@@ -76,15 +76,24 @@ func main() {
 
 	exitError := make(chan error)
 
+	isConsumerClose := make(chan bool)
+
 	go func() {
 		for {
-			err := consumer.Consume(ctx, []string{envConfig.Topic}, handler)
-			if err == sarama.ErrClosedConsumerGroup {
+			select {
+			case <-ctx.Done():
+				log.Println("closing consumer")
+				isConsumerClose <- true
 				return
-			}
-			if err != nil {
-				exitError <- err
-				return
+			default:
+				err := consumer.Consume(ctx, []string{envConfig.Topic}, handler)
+				if err == sarama.ErrClosedConsumerGroup {
+					return
+				}
+				if err != nil {
+					exitError <- err
+					return
+				}
 			}
 		}
 	}()
@@ -101,7 +110,7 @@ func main() {
 		log.Println("Remaining", set)
 	}()
 
-	for set.Len() == 0 {
+	for set.Len() > 0 {
 		select {
 		case err := <-exitError:
 			log.Fatal("Failed to consume", err)
@@ -110,8 +119,22 @@ func main() {
 				set.Delete(e.ID())
 				log.Printf("Event matching received: %s\nRemaining: %v\n", e.ID(), set)
 			} else {
-				log.Fatalf("Failed to match event: %s\n%v\n", e.String(), set.List())
+				log.Printf("Failed to match event: %s\n%v\n", e.String(), set.List())
 			}
+		}
+	}
+
+	log.Println("All events consumed")
+	cancel()
+
+L:
+	for {
+		log.Println("Waiting to close ConsumerGroup")
+		select {
+		case ent := <-events:
+			log.Println("Received event", ent.ID())
+		case <-isConsumerClose:
+			break L
 		}
 	}
 }
@@ -145,7 +168,6 @@ func (h *handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 
 		event, err := binding.ToEvent(session.Context(), message)
 		if err != nil {
-			log.Println(err)
 			return fmt.Errorf("failed to convert message to event: %w", err)
 		}
 
