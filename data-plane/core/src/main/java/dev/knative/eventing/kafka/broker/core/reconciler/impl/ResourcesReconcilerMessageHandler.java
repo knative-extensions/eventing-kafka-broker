@@ -37,6 +37,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
   public final static String ADDRESS = "resourcesreconciler.core";
   public static final int RECONCILE_TIMEOUT = 10000;
+  public static final int RECONCILE_FAILED_RETRY_DELAY = 5000;
 
   private final Vertx vertx;
   private final ResourcesReconciler resourcesReconciler;
@@ -109,6 +110,13 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
           // If that's the case, reconcile it.
           if (last.get().getGeneration() != contract.getGeneration()) {
             reconcileLast(null);
+          } else if (r.failed()) {
+            // Retry failed reconciliations after a few seconds.
+            // We add a delay to avoid looping too much on errors.
+            vertx.setTimer(RECONCILE_FAILED_RETRY_DELAY, v -> {
+              logger.info("Retrying previously failed reconciliation");
+              reconcileLast(null);
+            });
           }
         });
     }
