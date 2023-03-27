@@ -254,6 +254,42 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
   }
 
   @Test
+  public void shouldContinueToWorkAfterResetWithOutOfOrderEventsOnANon64BitBoundary() {
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+      offsetStrategy.recordReceived(record("aaa", 0, 0));
+
+      // This loop will flag 1 bit in the BitSet of the OffsetTracker beyond a 64-bit
+      // word boundary.
+      for (int i = 0; i < (1_000_000 - 64 + 1); i++) {
+        offsetStrategy.successfullySentToSubscriber(record("aaa", 0, i));
+      }
+
+      // The rest of the BitSet until the reset threshold of 1_000_000 is set with
+      // alternating 1/0.
+      for (int i = (1_000_000 - 64 + 2); i <= 1_000_000; i += 2) {
+        offsetStrategy.successfullySentToSubscriber(record("aaa", 0, i));
+      }
+
+      // Now we need to make sure that our offset got committed.
+      try {
+        Thread.sleep(1000);
+      } catch (final InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+
+      // Now set one of the bits beyond the 1_000_000 mark, resetting the
+      // OffsetTracker.
+      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1_000_001));
+
+      // Now fill up the gaps in the BitSet of the OffsetTracker.
+      for (int i = (1_000_000 - 64 + 1); i <= 1_000_000; i += 2) {
+        offsetStrategy.successfullySentToSubscriber(record("aaa", 0, i));
+      }
+    })
+      .containsEntry(new TopicPartition("aaa", 0), 1_000_002L);
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
   public void recordReceived(final Vertx vertx) {
     final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
