@@ -293,8 +293,9 @@ public final class OffsetManager implements RecordDispatcherListener {
 
       final var prevCommittedOffsetsArr = committedOffsets.toLongArray();
       // Calculate the word index in the long array. Long size is 64.
+      final var wordSize = 64;
       final var relativeOffset = committed - initialOffset;
-      final var wordOfCommitted = (int) (relativeOffset / 64);
+      final var wordOfCommitted = (int) (relativeOffset / wordSize);
 
       // Copy from wordOfCommitted to the end: [..., wordOfCommitted, ...]
       final var newCommittedOffsetsArr = Arrays.copyOfRange(
@@ -305,7 +306,7 @@ public final class OffsetManager implements RecordDispatcherListener {
 
       // Re-create committedOffset BitSet and reset initialOffset.
       this.committedOffsets = BitSet.valueOf(newCommittedOffsetsArr);
-      this.initialOffset = committed;
+      this.initialOffset = committed - (relativeOffset % wordSize);
     }
   }
 
