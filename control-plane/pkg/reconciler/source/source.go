@@ -102,12 +102,14 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 	var deliverySpec *internalscg.DeliverySpec
 	if ks.Spec.Delivery != nil {
 		deliverySpec = &internalscg.DeliverySpec{
-			DeliverySpec: ks.Spec.Delivery.DeepCopy(),
-			Ordering:     DefaultDeliveryOrder,
+			InitialOffset: ks.Spec.InitialOffset,
+			DeliverySpec:  ks.Spec.Delivery.DeepCopy(),
+			Ordering:      DefaultDeliveryOrder,
 		}
 	} else {
 		backoffPolicy := eventingduck.BackoffPolicyExponential
 		deliverySpec = &internalscg.DeliverySpec{
+			InitialOffset: ks.Spec.InitialOffset,
 			DeliverySpec: &eventingduck.DeliverySpec{
 				Retry:         pointer.Int32(10),
 				BackoffPolicy: &backoffPolicy,
