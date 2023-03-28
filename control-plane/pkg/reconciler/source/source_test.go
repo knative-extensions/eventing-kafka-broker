@@ -272,6 +272,7 @@ func TestReconcileKind(t *testing.T) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
+						WithInitialOffset(sources.OffsetLatest),
 						WithDeliverySpec(),
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
