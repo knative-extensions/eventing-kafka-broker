@@ -50,6 +50,13 @@ func TestFromSubscriptionFilter(t *testing.T) {
 						Suffix: map[string]string{"subject": "source"},
 					},
 					{
+						Any: []v1.SubscriptionsAPIFilter{
+							{
+								Exact: map[string]string{"type": "dev.knative.kafkasrc.kafkarecord"},
+							},
+						},
+					},
+					{
 						Not: &v1.SubscriptionsAPIFilter{
 							Prefix: map[string]string{"source": "dev.knative"},
 						},
@@ -85,6 +92,21 @@ func TestFromSubscriptionFilter(t *testing.T) {
 								},
 							},
 							{
+								Filter: &DialectedFilter_Any{
+									Any: &Any{
+										Filters: []*DialectedFilter{
+											{
+												Filter: &DialectedFilter_Exact{
+													Exact: &Exact{
+														Attributes: map[string]string{"type": "dev.knative.kafkasrc.kafkarecord"},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							{
 								Filter: &DialectedFilter_Not{
 									Not: &Not{
 										Filter: &DialectedFilter{
@@ -115,7 +137,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := FromSubscriptionFilter(tc.apiFilter)
 			if cmp.Diff(got, tc.want, cmpopts.IgnoreUnexported(DialectedFilter{},
-				All{}, Prefix{}, Suffix{}, Exact{}, Not{}, CESQL{})) != "" {
+				All{}, Any{}, Prefix{}, Suffix{}, Exact{}, Not{}, CESQL{})) != "" {
 				t.Errorf("FromSubscriptionFilter() = %v, want %v", got, tc.want)
 			}
 		})

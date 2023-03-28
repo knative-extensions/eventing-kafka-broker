@@ -19,7 +19,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-channel-data-plane

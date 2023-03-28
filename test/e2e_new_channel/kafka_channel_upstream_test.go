@@ -323,3 +323,26 @@ func TestStructuredEventForChannel(t *testing.T) {
 
 	env.Test(ctx, t, channel.SingleEventWithEncoding(binding.EncodingStructured))
 }
+
+/*
+TestChannelDeadLetterSinkGenericChannel tests if the events that cannot be delivered end up in
+the dead letter sink.
+
+It uses Subscription's spec.reply as spec.subscriber.
+*/
+func TestChannelDeadLetterSinkGenericChannel(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	createSubscriberFn := func(ref *duckv1.KReference, uri string) manifest.CfgFn {
+		return subscription.WithSubscriber(ref, uri)
+	}
+	env.Test(ctx, t, channel.DeadLetterSinkGenericChannel(createSubscriberFn))
+}

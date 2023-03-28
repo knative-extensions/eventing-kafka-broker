@@ -18,7 +18,7 @@ metadata:
   name: config-tracing
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
   annotations:

@@ -35,8 +35,6 @@ if ! ${SKIP_INITIALIZE}; then
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
-export_logs_continuously
-
 set -Eeuo pipefail
 
 TIMEOUT=${TIMEOUT:-100m}

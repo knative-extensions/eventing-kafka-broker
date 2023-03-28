@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"knative.dev/pkg/logging"
+
 	"knative.dev/reconciler-test/pkg/environment"
 	eventshubrbac "knative.dev/reconciler-test/pkg/eventshub/rbac"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -78,6 +79,10 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 			"withReadiness": isReceiver,
 		}
 
+		if ic := environment.GetIstioConfig(ctx); ic.Enabled {
+			manifest.WithIstioPodAnnotations(cfg)
+		}
+
 		manifest.PodSecurityCfgFn(ctx, t)(cfg)
 
 		// Deploy
@@ -85,12 +90,7 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 			log.Fatal(err)
 		}
 
-		podref, err := k8s.PodReference(namespace, name)
-		if err != nil {
-			log.Fatal(err)
-		}
-		k8s.WaitForPodRunningOrFail(ctx, t, name)
-		k8s.WaitForReadyOrDoneOrFail(ctx, t, podref)
+		k8s.WaitForPodReadyOrSucceededOrFail(ctx, t, name)
 
 		// If the eventhubs starts an event receiver, we need to wait for the service endpoint to be synced
 		if isReceiver {

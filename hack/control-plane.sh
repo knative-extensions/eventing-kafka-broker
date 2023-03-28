@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(pwd)/hack/label.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/label.sh
 
 readonly CONTROL_PLANE_CONFIG_DIR=control-plane/config/eventing-kafka-broker
 readonly CONTROL_PLANE_POST_INSTALL_CONFIG_DIR=control-plane/config/post-install

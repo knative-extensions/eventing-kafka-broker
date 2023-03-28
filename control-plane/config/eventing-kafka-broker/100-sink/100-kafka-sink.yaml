@@ -19,7 +19,7 @@ metadata:
   labels:
     duck.knative.dev/addressable: "true"
     knative.dev/crd-install: "true"
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
 spec:
   group: eventing.knative.dev
   names:

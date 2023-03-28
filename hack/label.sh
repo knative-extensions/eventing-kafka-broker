@@ -16,5 +16,5 @@
 
 # Update release labels
 export TAG=${TAG:-$(git rev-parse HEAD)}
-echo "Updating release labels to kafka.eventing.knative.dev/release: \"${TAG}\""
-export LABEL_YAML_CMD=(sed -e "s|kafka.eventing.knative.dev/release: devel|kafka.eventing.knative.dev/release: \"${TAG}\"|")
+echo "Updating release labels to app.kubernetes.io/version: \"${TAG}\""
+export LABEL_YAML_CMD=(sed -e "s|app.kubernetes.io/version: devel|app.kubernetes.io/version: \"${TAG}\"|")

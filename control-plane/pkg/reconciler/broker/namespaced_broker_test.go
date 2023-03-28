@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/utils/pointer"
@@ -34,10 +36,12 @@ import (
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
 	"github.com/Shopify/sarama"
 	"github.com/manifestival/client-go-client"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -79,6 +83,9 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 		{
 			Name: "Reconciled normal",
 			Objects: []runtime.Object{
+				reconcilertesting.NewNamespace(BrokerNamespace, func(ns *corev1.Namespace) {
+					ns.UID = BrokerNamespaceUUID
+				}),
 				NewNamespacedBroker(
 					WithBrokerConfig(
 						KReference(BrokerConfig(bootstrapServers, 20, 5, WithConfigMapNamespace(BrokerNamespace))),
@@ -108,6 +115,38 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					WithClusterRoleBindingSubjectServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
 					WithClusterRoleBindingRoleRef("knative-kafka-broker-data-plane"),
 				),
+				NewConfigMapWithTextData(SystemNamespace, NamespacedBrokerAdditionalResourcesConfigMapName, map[string]string{
+					"resources": `
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: test-role
+    labels:
+      "knative.foo": "foo-{{.Namespace}}"
+    creationTimestamp: null
+  rules:
+    - apiGroups:
+        - "v1"
+      resources:
+        - pods
+      verbs:
+        - get
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: null
+    name: test-role
+    namespace: {{.Namespace}}
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: test-role
+  subjects:
+    - kind: ServiceAccount
+      name: test-sa
+      namespace: not-to-be-overridden
+`,
+				}),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -161,6 +200,22 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					WithRoleBindingSubjectServiceAccount(BrokerNamespace, "knative-kafka-broker-data-plane"),
 					WithRoleBindingClusterRoleRef("knative-kafka-broker-data-plane"),
 				),
+					WithNamespacedBrokerOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t, NewClusterRole("test-role",
+					WithClusterRoleLabel("knative.foo", "foo-"+BrokerNamespace),
+					WithClusterRoleRules(rbacv1.PolicyRule{
+						APIGroups: []string{"v1"},
+						Resources: []string{"pods"},
+						Verbs:     []string{"get"},
+					})),
+					WithNamespacedBrokerNamespaceAsOwnerRef,
+					WithNamespacedLabel,
+				),
+				ToManifestivalResource(t, NewRoleBinding(BrokerNamespace, "test-role",
+					WithRoleBindingSubjectServiceAccount("not-to-be-overridden", "test-sa"),
+					WithRoleBindingClusterRoleRef("test-role")),
 					WithNamespacedBrokerOwnerRef,
 					WithNamespacedLabel,
 				),
@@ -230,6 +285,9 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					),
 				},
 			},
+			// true since we're creating cluster scoped resources and namespace validation is checking if the namespace
+			// of the broker is the same with the namespace of the cluster scoped resource (which is nil)
+			SkipNamespaceValidation: true,
 		},
 	}
 
@@ -258,6 +316,9 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal",
 			Objects: []runtime.Object{
+				reconcilertesting.NewNamespace(BrokerNamespace, func(ns *corev1.Namespace) {
+					ns.UID = BrokerNamespaceUUID
+				}),
 				NewDeletedBroker(reconcilertesting.WithBrokerClass(kafka.NamespacedBrokerClass)),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
@@ -270,6 +331,41 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 					},
 					Generation: 1,
 				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				reconcilertesting.NewConfigMap(env.DataPlaneConfigConfigMapName, SystemNamespace),
+				reconcilertesting.NewConfigMap("config-tracing", SystemNamespace),
+				reconcilertesting.NewConfigMap("kafka-config-logging", SystemNamespace),
+				reconcilertesting.NewDeployment("kafka-broker-receiver", SystemNamespace),
+				reconcilertesting.NewDeployment("kafka-broker-dispatcher", SystemNamespace),
+				NewServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
+				reconcilertesting.NewService("kafka-broker-ingress", SystemNamespace),
+				NewClusterRoleBinding("knative-kafka-broker-data-plane",
+					WithClusterRoleBindingSubjectServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
+				),
+				NewConfigMapWithTextData(SystemNamespace, NamespacedBrokerAdditionalResourcesConfigMapName, map[string]string{
+					"resources": `
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: test-role
+    labels:
+      "knative.foo": "foo-{{.Namespace}}"
+    creationTimestamp: null
+  rules:
+    - apiGroups:
+        - "v1"
+      resources:
+        - pods
+      verbs:
+        - get
+`,
+				}),
+				NewClusterRole("test-role",
+					WithClusterRoleLabel("knative.foo", "foo-"+BrokerNamespace),
+					WithClusterRoleRules(rbacv1.PolicyRule{
+						APIGroups: []string{"v1"},
+						Resources: []string{"pods"},
+						Verbs:     []string{"get"},
+					})),
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
@@ -284,6 +380,18 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 						BlockOwnerDeletion: pointer.Bool(true),
 					}),
 				),
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Resource: schema.GroupVersionResource{
+							Group:    rbacv1.SchemeGroupVersion.Group,
+							Version:  rbacv1.SchemeGroupVersion.Version,
+							Resource: "clusterroles",
+						},
+					},
+					Name: "test-role",
+				},
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusNotReady),
@@ -354,8 +462,10 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 				ReceiverLabel:               base.BrokerReceiverLabel,
 				Tracker:                     &FakeTracker{},
 			},
+			NamespaceLister:          listers.GetNamespaceLister(),
 			ConfigMapLister:          listers.GetConfigMapLister(),
 			DeploymentLister:         listers.GetDeploymentLister(),
+			BrokerLister:             listers.GetBrokerLister(),
 			ServiceAccountLister:     listers.GetServiceAccountLister(),
 			ServiceLister:            listers.GetServiceLister(),
 			ClusterRoleBindingLister: listers.GetClusterRoleBindingLister(),
@@ -370,9 +480,10 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:                env,
-			Prober:             proberMock,
-			ManifestivalClient: mfcMockClient,
+			Env:                                env,
+			Prober:                             proberMock,
+			ManifestivalClient:                 mfcMockClient,
+			DataplaneLifecycleLocksByNamespace: util.NewExpiringLockMap[string](ctx, time.Minute*30),
 		}
 
 		r := brokerreconciler.NewReconciler(
@@ -404,6 +515,22 @@ func WithNamespacedBrokerOwnerRef(u *unstructured.Unstructured) {
 		UID:                BrokerUUID,
 		Controller:         pointer.Bool(false),
 		BlockOwnerDeletion: pointer.Bool(true),
+	})
+	u.SetOwnerReferences(refs)
+}
+
+func WithNamespacedBrokerNamespaceAsOwnerRef(u *unstructured.Unstructured) {
+	refs := u.GetOwnerReferences()
+	if refs == nil {
+		refs = []metav1.OwnerReference{}
+	}
+	refs = append(refs, metav1.OwnerReference{
+		APIVersion:         corev1.SchemeGroupVersion.String(),
+		Kind:               "Namespace",
+		Name:               BrokerNamespace,
+		UID:                BrokerNamespaceUUID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(false),
 	})
 	u.SetOwnerReferences(refs)
 }

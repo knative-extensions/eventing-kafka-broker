@@ -126,7 +126,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
 	if err != nil {
-		return fmt.Errorf("failed to get secret: %w", err)
+		return statusConditionManager.FailedToGetBrokerAuthSecret(err)
 	}
 	if secret != nil {
 		logger.Debug("Secret reference",

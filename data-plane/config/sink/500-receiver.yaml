@@ -21,7 +21,9 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/component: kafka-sink-receiver
+    app.kubernetes.io/name: knative-eventing
 spec:
   selector:
     matchLabels:
@@ -31,7 +33,9 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        kafka.eventing.knative.dev/release: devel
+        app.kubernetes.io/version: devel
+        app.kubernetes.io/component: kafka-sink-receiver
+        app.kubernetes.io/name: knative-eventing
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -119,7 +123,7 @@ spec:
           resources:
             requests:
               cpu: 200m
-              memory: 300Mi
+              memory: 450Mi
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -175,7 +179,9 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
+    app.kubernetes.io/component: kafka-sink-receiver
+    app.kubernetes.io/name: knative-eventing
 spec:
   selector:
     app: kafka-sink-receiver

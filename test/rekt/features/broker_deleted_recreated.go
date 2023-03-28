@@ -28,26 +28,13 @@ import (
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/configmap"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 )
-
-func BrokerConfigmapCreated(configName string) *feature.Feature {
-	f := feature.NewFeatureNamed("broker configmap created")
-
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	))
-
-	return f
-}
 
 func BrokerDeletedRecreated() *feature.Feature {
 	f := feature.NewFeatureNamed("broker deleted and recreated")
@@ -77,7 +64,7 @@ func BrokerConfigMapDeletedFirst() *feature.Feature {
 	))
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(cmName))...))
 	f.Setup("install trigger", trigger.Install(triggerName, brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sink), "")),
+		trigger.WithSubscriber(service.AsKReference(sink), "")),
 	)
 
 	f.Requirement("delete Broker ConfigMap", featuressteps.DeleteConfigMap(cmName))
@@ -137,19 +124,12 @@ func BrokerExternalTopicDoesNotExist() *feature.Feature {
 	f := feature.NewFeatureNamed("delete broker with non existing Topic")
 
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 	topicName := feature.MakeRandomK8sName("topic-does-not-exist") // A k8s name is also a valid topic name.
-
-	f.Setup("create broker config", brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-	))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		append(
 			broker.WithEnvConfig(),
-			broker.WithConfig(configName),
 			broker.WithAnnotations(
 				map[string]interface{}{
 					kafkabroker.ExternalTopicAnnotation: topicName,

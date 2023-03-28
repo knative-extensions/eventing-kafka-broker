@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: devel
+    app.kubernetes.io/version: devel
   name: config-kafka-leader-election
   namespace: knative-eventing
   annotations:

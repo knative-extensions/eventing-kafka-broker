@@ -44,12 +44,6 @@ export KO_DOCKER_REPO=docker.io/<username>
 
 _Note: replace `<username>` with your username._
 
-If you're using `KinD`, you can use its local registry by setting the variable `KO_DOCKER_REPO` to `kind.local`:
-
-```shell
-export KO_DOCKER_REPO=kind.local
-```
-
 In case you setup `KinD` via [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh), the local registry is available at `localhost:5001`:
 
 ```shell

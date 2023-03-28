@@ -31,6 +31,5 @@ func WithZipkin(ctx context.Context, env environment.Environment) (context.Conte
 		kubeclient.Get(ctx),
 		logging.FromContext(ctx).Infof,
 		knative.KnativeNamespaceFromContext(ctx))
-	zipkin.ZipkinTracingEnabled = true
 	return ctx, err
 }

@@ -22,9 +22,6 @@ package e2e_new
 import (
 	"testing"
 
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
-
 	"knative.dev/reconciler-test/pkg/environment"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
@@ -38,7 +35,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
@@ -67,16 +64,12 @@ func SendsEventWithRetries() *feature.Feature {
 	deadLetterSinkName := feature.MakeRandomK8sName("dls")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 
-	f.Setup("create broker config", createBrokerConfigForDlsTests(configName))
-
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(configName),
+		broker.WithEnvConfig()...,
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -97,8 +90,8 @@ func SendsEventWithRetries() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -131,16 +124,12 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 	deadLetterSinkName := feature.MakeRandomK8sName("dls")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 
-	f.Setup("create broker config", createBrokerConfigForDlsTests(configName))
-
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(configName),
+		broker.WithEnvConfig()...,
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -162,8 +151,8 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -196,16 +185,12 @@ func SendsEventNoRetries() *feature.Feature {
 	deadLetterSinkName := feature.MakeRandomK8sName("dls")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	brokerName := feature.MakeRandomK8sName("broker")
-	configName := feature.MakeRandomK8sName("config")
 
 	ev := cetest.FullEvent()
 
-	f.Setup("create broker config", createBrokerConfigForDlsTests(configName))
-
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(configName),
+		broker.WithEnvConfig()...,
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -224,8 +209,8 @@ func SendsEventNoRetries() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
-		trigger.WithDeadLetterSink(svc.AsKReference(deadLetterSinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
+		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
@@ -247,13 +232,4 @@ func SendsEventNoRetries() *feature.Feature {
 	)
 
 	return f
-}
-
-func createBrokerConfigForDlsTests(configName string) feature.StepFn {
-	return brokerconfigmap.Install(
-		configName,
-		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext),
-		brokerconfigmap.WithNumPartitions(1),
-		brokerconfigmap.WithReplicationFactor(1),
-	)
 }

@@ -393,6 +393,40 @@ func NewKedaSecret(ns, name string) *corev1.Secret {
 	}
 }
 
+// ClusterRoleOption enables further configuration of a ClusterRole.
+type ClusterRoleOption func(role *rbacv1.ClusterRole)
+
+func NewClusterRole(name string, cro ...ClusterRoleOption) *rbacv1.ClusterRole {
+	cr := &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+
+	for _, opt := range cro {
+		opt(cr)
+	}
+
+	return cr
+}
+
+// WithClusterRoleRules is a ClusterRoleOption that adds the given rules to the ClusterRole.
+func WithClusterRoleRules(rules ...rbacv1.PolicyRule) ClusterRoleOption {
+	return func(role *rbacv1.ClusterRole) {
+		role.Rules = append(role.Rules, rules...)
+	}
+}
+
+// WithClusterRoleLabel is a ClusterRoleOption that adds the given labels to the ClusterRole.
+func WithClusterRoleLabel(key, value string) ClusterRoleOption {
+	return func(role *rbacv1.ClusterRole) {
+		if role.Labels == nil {
+			role.Labels = make(map[string]string)
+		}
+		role.Labels[key] = value
+	}
+}
+
 func loadCerts() (ca, userKey, userCert []byte) {
 	ca, err := os.ReadFile("testdata/ca.crt")
 	if err != nil {

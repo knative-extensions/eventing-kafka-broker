@@ -38,7 +38,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/resources/svc"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
@@ -90,7 +90,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithAnnotations(map[string]interface{}{
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
@@ -148,7 +148,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
 		brokerName,
-		trigger.WithSubscriber(svc.AsKReference(sinkName), ""),
+		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithAnnotations(map[string]interface{}{
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
