@@ -235,7 +235,10 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal with delivery spec",
 			Objects: []runtime.Object{
-				NewSource(WithDeliverySpec()),
+				NewSource(
+					WithDeliverySpec(),
+					WithInitialOffset(sources.OffsetLatest),
+				),
 			},
 			Key: testKey,
 			WantCreates: []runtime.Object{
