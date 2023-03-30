@@ -76,18 +76,19 @@ func main() {
 
 	exitError := make(chan error)
 
-	isConsumerClose := make(chan bool)
+	isConsumerClosed := make(chan bool)
 
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				log.Println("closing consumer")
-				isConsumerClose <- true
+				isConsumerClosed <- true
 				return
 			default:
 				err := consumer.Consume(ctx, []string{envConfig.Topic}, handler)
 				if err == sarama.ErrClosedConsumerGroup {
+					isConsumerClosed <- true
 					return
 				}
 				if err != nil {
@@ -127,14 +128,13 @@ func main() {
 	log.Println("All events consumed")
 	cancel()
 
-L:
 	for {
 		log.Println("Waiting to close ConsumerGroup")
 		select {
 		case ent := <-events:
 			log.Println("Received event", ent.ID())
-		case <-isConsumerClose:
-			break L
+		case <-isConsumerClosed:
+			return
 		}
 	}
 }
