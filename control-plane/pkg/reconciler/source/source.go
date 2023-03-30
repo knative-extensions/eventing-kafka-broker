@@ -99,8 +99,26 @@ func GetLabels(name string) map[string]string {
 }
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
-
-	backoffPolicy := eventingduck.BackoffPolicyExponential
+	var deliverySpec *internalscg.DeliverySpec
+	if ks.Spec.Delivery != nil {
+		deliverySpec = &internalscg.DeliverySpec{
+			InitialOffset: ks.Spec.InitialOffset,
+			DeliverySpec:  ks.Spec.Delivery.DeepCopy(),
+			Ordering:      DefaultDeliveryOrder,
+		}
+	} else {
+		backoffPolicy := eventingduck.BackoffPolicyExponential
+		deliverySpec = &internalscg.DeliverySpec{
+			InitialOffset: ks.Spec.InitialOffset,
+			DeliverySpec: &eventingduck.DeliverySpec{
+				Retry:         pointer.Int32(10),
+				BackoffPolicy: &backoffPolicy,
+				BackoffDelay:  pointer.String("PT0.3S"),
+				Timeout:       pointer.String("PT600S"),
+			},
+			Ordering: DefaultDeliveryOrder,
+		}
+	}
 
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -130,16 +148,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 					Auth: &internalscg.Auth{
 						NetSpec: &ks.Spec.KafkaAuthSpec.Net,
 					},
-					Delivery: &internalscg.DeliverySpec{
-						InitialOffset: ks.Spec.InitialOffset,
-						DeliverySpec: &eventingduck.DeliverySpec{
-							Retry:         pointer.Int32(10),
-							BackoffPolicy: &backoffPolicy,
-							BackoffDelay:  pointer.String("PT0.3S"),
-							Timeout:       pointer.String("PT600S"),
-						},
-						Ordering: DefaultDeliveryOrder,
-					},
+					Delivery:   deliverySpec,
 					Subscriber: ks.Spec.Sink,
 					Reply:      &internalscg.ReplyStrategy{NoReply: &internalscg.NoReply{Enabled: true}},
 				},

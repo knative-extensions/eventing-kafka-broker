@@ -233,6 +233,58 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
+			Name: "Reconciled normal with delivery spec",
+			Objects: []runtime.Object{
+				NewSource(
+					WithDeliverySpec(),
+					WithInitialOffset(sources.OffsetLatest),
+				),
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								internals.Ordered,
+								NewConsumerTimeout(SourceDeliverySpecTimeout),
+								NewConsumerRetry(SourceDeliverySpecRetry),
+								NewConsumerBackoffDelay(SourceDeliverySpecBackoffDelay),
+								NewConsumerBackoffPolicy(SourceDeliverySpecBackoffPolicy),
+								NewConsumerSpecDeliveryDeadLetterSink(),
+								ConsumerInitialOffset(sources.OffsetLatest),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithInitialOffset(sources.OffsetLatest),
+						WithDeliverySpec(),
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+						StatusSourceSelector(),
+					),
+				},
+			},
+		},
+		{
 			Name: "Reconciled normal, key type label",
 			Objects: []runtime.Object{
 				NewSource(WithKeyType("int")),
