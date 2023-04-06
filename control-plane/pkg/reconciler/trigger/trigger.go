@@ -36,6 +36,7 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -70,6 +71,8 @@ type Reconciler struct {
 	BrokerClass string
 
 	DataPlaneConfigMapLabeler base.ConfigMapOption
+
+	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -305,9 +308,14 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 	trigger.Status.SubscriberURI = destination
 
+	groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	if !ok {
+		return nil, fmt.Errorf("trigger.Status.Annotations[%s] not set", kafka.GroupIdAnnotation)
+	}
+
 	egress := &contract.Egress{
 		Destination:   destination.String(),
-		ConsumerGroup: string(trigger.UID),
+		ConsumerGroup: groupId,
 		Uid:           string(trigger.UID),
 		Reference: &contract.Reference{
 			Uuid:      string(trigger.GetUID()),
@@ -391,7 +399,6 @@ func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *e
 	if !ok {
 		return false, nil
 	}
-	groupID := string(trigger.UID)
 
 	namespace := broker.GetNamespace()
 	if broker.Spec.Config.Namespace != "" {
@@ -435,6 +442,28 @@ func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *e
 	}
 	if !isPresentAndValid {
 		return false, fmt.Errorf("topic %s is invalid", topicName)
+	}
+
+	// Existing Triggers might not yet have this annotation
+	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	if !ok {
+		// Check if a consumer group exists with the old naming convention
+		groupID = string(trigger.UID)
+
+		valid, err := kafka.AreConsumerGroupsPresentAndValid(kafkaClusterAdmin, groupID)
+		if err != nil {
+			return false, fmt.Errorf("unable to query for existing consumergroup: %w", err)
+		}
+
+		// No existing consumer groups, use new naming
+		if !valid {
+			groupID, err = r.KafkaFeatureFlags.ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
+			if err != nil {
+				return false, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
+			}
+		}
+
+		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
 	}
 
 	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {

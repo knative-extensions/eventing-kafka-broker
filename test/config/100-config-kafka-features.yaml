@@ -7,3 +7,4 @@ data:
   dispatcher.rate-limiter: "enabled"
   dispatcher.ordered-executor-metrics: "enabled"
   controller.autoscaler: "enabled"
+  triggers.consumergroup.template: "knative-trigger-{{ .Namespace }}-{{ .Name }}"
