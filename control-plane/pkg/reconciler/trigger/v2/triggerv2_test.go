@@ -852,6 +852,65 @@ func TestReconcileKind(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled reusing old consumergroup naming",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
+					ConsumerGroupReady,
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupNamespace(triggerNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+						WithConsumerGroupLabels(ConsumerTriggerLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(BrokerTopics[0]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerBootstrapServersConfig(bootstrapServers),
+							),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
+							ConsumerFilters(NewConsumerSpecFilters()),
+							ConsumerReply(ConsumerTopicReply()),
+						)),
+						ConsumerGroupReady,
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						reconcilertesting.WithTriggerDependencyReady(),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
 	}
 
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
