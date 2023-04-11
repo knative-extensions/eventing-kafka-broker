@@ -31,6 +31,7 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -69,6 +70,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		InternalsClient:     consumergroupclient.Get(ctx),
 		SecretLister:        secretinformer.Get(ctx).Lister(),
 		KubeClient:          kubeclient.Get(ctx),
+		KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
