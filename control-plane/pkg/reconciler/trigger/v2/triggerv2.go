@@ -75,6 +75,10 @@ type Reconciler struct {
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
+	if trigger.Status.Annotations == nil {
+		trigger.Status.Annotations = make(map[string]string, 0)
+	}
+
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
 		trigger.Status.MarkBrokerFailed("Failed to get broker", "%v", err)
