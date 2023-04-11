@@ -127,6 +127,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -183,6 +184,13 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 							Name:       BrokerTopic(),
 							IsInternal: false,
 							Partitions: []*sarama.PartitionMetadata{{}},
+						},
+					},
+					ExpectedConsumerGroups: []string{"e7185016-5d98-4b54-84e8-3b1cd4acc6b5"},
+					ExpectedGroupDescriptionOnDescribeConsumerGroups: []*sarama.GroupDescription{
+						{
+							GroupId: "e7185016-5d98-4b54-84e8-3b1cd4acc6b5",
+							State:   "Stable",
 						},
 					},
 					T: t,

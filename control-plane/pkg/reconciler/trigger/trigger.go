@@ -100,6 +100,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		Configs:  r.Env,
 		Recorder: controller.GetEventRecorder(ctx),
 	}
+	if trigger.Status.Annotations == nil {
+		trigger.Status.Annotations = make(map[string]string, 0)
+	}
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -141,7 +144,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return nil
 	}
 
-	if ok, err := r.reconcileInitialOffset(ctx, broker, trigger); err != nil {
+	if ok, err := r.reconcileConsumerGroup(ctx, broker, trigger); err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	} else if !ok {
 		return statusConditionManager.failedToResolveTriggerConfig(fmt.Errorf("missing broker status annotations, waiting"))
@@ -382,18 +385,7 @@ func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, stri
 	return brokerClass == r.BrokerClass, brokerClass
 }
 
-func (r *Reconciler) reconcileInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
-	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
-	if err != nil {
-		return false, err
-	}
-	if isLatest {
-		return r.reconcileLatestInitialOffset(ctx, broker, trigger)
-	}
-	return true, nil
-}
-
-func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
+func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
 	// Existing Brokers might not yet have this annotation
 	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {
@@ -436,14 +428,6 @@ func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *e
 	}
 	defer kafkaClusterAdmin.Close()
 
-	isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
-	if err != nil {
-		return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
-	}
-	if !isPresentAndValid {
-		return false, fmt.Errorf("topic %s is invalid", topicName)
-	}
-
 	// Existing Triggers might not yet have this annotation
 	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
 	if !ok {
@@ -466,8 +450,24 @@ func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *e
 		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
 	}
 
-	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
-		return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
+	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
+	if err != nil {
+		return false, err
+	}
+	if isLatest {
+		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
+		if err != nil {
+			return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
+		}
+		if !isPresentAndValid {
+			return false, fmt.Errorf("topic %s is invalid", topicName)
+		}
+
+		if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
+			return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
+		}
+
+		return true, nil
 	}
 
 	return true, nil
