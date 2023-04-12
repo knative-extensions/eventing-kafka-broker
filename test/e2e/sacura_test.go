@@ -37,6 +37,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/pointer"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
@@ -160,7 +161,9 @@ func getKafkaTriggerConsumerGroup(ctx context.Context, c *eventingclientset.Clie
 	return func(t *testing.T) string {
 		trigger, err := c.EventingV1().Triggers(ns).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
 		require.Nil(t, err, "Failed to get trigger %s/%s: %v", ns, sacuraTriggerName)
-		return string(trigger.UID)
+		groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+		require.True(t, ok, "Group ID annotation not set on trigger")
+		return groupId
 	}
 }
 
