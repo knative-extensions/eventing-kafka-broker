@@ -1,5 +1,5 @@
 diff --git a/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go b/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go
-index b50fcf8f..b18fe8fa 100644
+index 3ab33d9bf..027b43d97 100644
 --- a/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go
 +++ b/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go
 @@ -90,8 +90,8 @@ func NewAdmissionController(
