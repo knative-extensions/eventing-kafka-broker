@@ -27,6 +27,7 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -88,6 +89,7 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		// override
 		BrokerClass:                kafka.NamespacedBrokerClass,
 		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,
+		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		NewKafkaClient:             r.NewKafkaClient,
 		InitOffsetsFunc:            r.InitOffsetsFunc,
