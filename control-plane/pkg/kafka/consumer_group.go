@@ -53,8 +53,11 @@ func AreConsumerGroupsPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, con
 
 	for _, t := range consumerGroups {
 		d, ok := descriptionByConsumerGroup[t]
-		if !ok || !isValidSingleConsumerGroup(d) {
-			return false, InvalidOrNotPresentConsumerGroup{ConsumerGroup: t}
+		if !ok {
+			return false, fmt.Errorf("kafka did not respond with consumer group metadata")
+		}
+		if !isValidSingleConsumerGroup(d) {
+			return false, nil
 		}
 	}
 	return true, nil
@@ -70,12 +73,4 @@ func isValidSingleConsumerGroup(metadata *sarama.GroupDescription) bool {
 	}
 
 	return true
-}
-
-type InvalidOrNotPresentConsumerGroup struct {
-	ConsumerGroup string
-}
-
-func (it InvalidOrNotPresentConsumerGroup) Error() string {
-	return fmt.Sprintf("invalid consumergroup %s", it.ConsumerGroup)
 }

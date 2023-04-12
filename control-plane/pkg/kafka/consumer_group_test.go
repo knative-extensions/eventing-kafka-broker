@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama"
-	"github.com/stretchr/testify/require"
 
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 )
@@ -47,7 +46,7 @@ func TestNewClusterAdminClientFuncIsConsumerGroupPresent(t *testing.T) {
 			},
 			consumerGroups: []string{"consumer-group-name-1"},
 			want:           false,
-			wantErr:        true,
+			wantErr:        false,
 		},
 		{
 			name: "consumergroup exists (empty)",
@@ -94,10 +93,4 @@ func TestNewClusterAdminClientFuncIsConsumerGroupPresent(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestInvalidOrNotPresentConsumerGroup(t *testing.T) {
-	err := &InvalidOrNotPresentConsumerGroup{ConsumerGroup: "groupname"}
-
-	require.Contains(t, err.Error(), err.ConsumerGroup)
 }
