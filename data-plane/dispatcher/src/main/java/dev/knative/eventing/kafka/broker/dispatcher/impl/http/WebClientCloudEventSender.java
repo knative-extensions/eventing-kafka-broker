@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
@@ -29,6 +30,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+
+import org.apache.kafka.common.Metric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +40,9 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -57,6 +63,9 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private final AtomicBoolean closed = new AtomicBoolean(false);
   private final AtomicInteger inFlightRequests = new AtomicInteger(0);
 
+  private final MeterRegistry meterRegistry;
+  private final Tags noResponseResourceTags;
+  
   /**
    * All args constructor.
    *
@@ -130,13 +139,36 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       cause -> {
         if (cause instanceof ResponseFailureException) {
           final var response = ((ResponseFailureException) cause).getResponse();
+
+          Tags tags;
+          if (response == null) {
+            tags = this.noResponseResourceTags;
+          } else {
+            tags = this.consumerVerticleContext.getTags().and(
+              Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
+              Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode()))
+            );
+          }
+
           if (isRetryableStatusCode(response.statusCode()) && retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
+
+            Metrics
+            .eventCount(tags)
+            .register(meterRegistry)
+            .increment();
+      
             return retry(retryCounter, event);
           }
           return Future.failedFuture(cause);
         }
 
         if (retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
+
+          Metrics
+          .eventCount(this.consumerVerticleContext.getTags())
+          .register(meterRegistry)
+          .increment();          
+
           return retry(retryCounter, event);
         }
 
