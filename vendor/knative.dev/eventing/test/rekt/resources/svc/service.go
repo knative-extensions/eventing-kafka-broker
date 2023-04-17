@@ -17,37 +17,72 @@ limitations under the License.
 package svc
 
 import (
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"context"
+	"embed"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/tracker"
 	"knative.dev/reconciler-test/pkg/feature"
-	"knative.dev/reconciler-test/pkg/resources/service"
+	"knative.dev/reconciler-test/pkg/k8s"
+	"knative.dev/reconciler-test/pkg/manifest"
+	"knative.dev/reconciler-test/resources/svc"
 )
 
-// Deprecated, use reconciler-test/pkg/resources/service
-var Gvr = service.GVR
+//go:embed *.yaml
+var yaml embed.FS
+
+// Deprecated, use reconciler-test/resources/svc
+func Gvr() schema.GroupVersionResource {
+	return schema.GroupVersionResource{Group: "", Version: "v1", Resource: "services"}
+}
 
 // Install will create a Service resource mapping :80 to :8080 on the provided
 // selector for pods.
-// Deprecated, use reconciler-test/pkg/resources/service
+// Deprecated, use reconciler-test/resources/svc
 func Install(name, selectorKey, selectorValue string) feature.StepFn {
-	return service.Install(name,
-		service.WithSelectors(map[string]string{selectorKey: selectorValue}),
-		service.WithPorts([]v1.ServicePort{{
-			Port:       80,
-			TargetPort: intstr.FromInt(8080),
-		}}))
+	cfg := map[string]interface{}{
+		"name":          name,
+		"selectorKey":   selectorKey,
+		"selectorValue": selectorValue,
+	}
+
+	return func(ctx context.Context, t feature.T) {
+		if _, err := manifest.InstallYamlFS(ctx, yaml, cfg); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 // AsRef returns a KRef for a Service without namespace.
-// Deprecated, use reconciler-test/pkg/resources/service
-var AsRef = service.AsKReference
+// Deprecated, use reconciler-test/resources/svc
+func AsRef(name string) *duckv1.KReference {
+	return &duckv1.KReference{
+		Kind:       "Service",
+		Name:       name,
+		APIVersion: "v1",
+	}
+}
 
-// Deprecated, use reconciler-test/pkg/resources/service
-var AsTrackerReference = service.AsTrackerReference
+// Deprecated, use reconciler-test/resources/svc
+func AsTrackerReference(name string) *tracker.Reference {
+	return &tracker.Reference{
+		Kind:       "Service",
+		Name:       name,
+		APIVersion: "v1",
+	}
+}
 
-// Deprecated, use reconciler-test/pkg/resources/service
-var AsDestinationRef = service.AsDestinationRef
+// Deprecated, use reconciler-test/resources/svc
+func AsDestinationRef(name string) *duckv1.Destination {
+	return &duckv1.Destination{
+		Ref: AsRef(name),
+	}
+}
 
 // Address
-// Deprecated, use reconciler-test/pkg/resources/service
-var Address = service.Address
+// Deprecated, use reconciler-test/resources/svc
+func Address(ctx context.Context, name string) (*apis.URL, error) {
+	return k8s.Address(ctx, svc.GVR(), name)
+}
