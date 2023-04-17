@@ -53,11 +53,8 @@ func MakeChannelServiceName(name string) string {
 // pointing to the specified service in a namespace.
 func ExternalService(namespace, service string) ServiceOption {
 	return func(svc *corev1.Service) error {
-		// TODO this overrides the current serviceSpec. Is this correct?
-		svc.Spec = corev1.ServiceSpec{
-			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: network.GetServiceHostname(service, namespace),
-		}
+		svc.Spec.Type = corev1.ServiceTypeExternalName
+		svc.Spec.ExternalName = network.GetServiceHostname(service, namespace)
 		return nil
 	}
 }
