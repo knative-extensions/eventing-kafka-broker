@@ -44,6 +44,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/system"
 
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
@@ -131,7 +132,24 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	consumerGroupInformer := consumergroup.Get(ctx)
 
-	impl := cgreconciler.NewImpl(ctx, r)
+	impl := cgreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{
+			PromoteFunc: func(bkt reconciler.Bucket) {
+				for _, value := range schedulers {
+					if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+						ss.Promote(bkt, nil)
+					}
+				}
+			},
+			DemoteFunc: func(bkt reconciler.Bucket) {
+				for _, value := range schedulers {
+					if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+						ss.Demote(bkt)
+					}
+				}
+			},
+		}
+	})
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
