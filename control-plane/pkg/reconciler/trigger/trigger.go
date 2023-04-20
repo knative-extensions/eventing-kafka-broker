@@ -36,6 +36,7 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -71,6 +72,8 @@ type Reconciler struct {
 
 	DataPlaneConfigMapLabeler base.ConfigMapOption
 
+	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
+
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
@@ -96,6 +99,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		Trigger:  trigger,
 		Configs:  r.Env,
 		Recorder: controller.GetEventRecorder(ctx),
+	}
+	if trigger.Status.Annotations == nil {
+		trigger.Status.Annotations = make(map[string]string, 0)
 	}
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
@@ -138,7 +144,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return nil
 	}
 
-	if ok, err := r.reconcileInitialOffset(ctx, broker, trigger); err != nil {
+	if ok, err := r.reconcileConsumerGroup(ctx, broker, trigger); err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	} else if !ok {
 		return statusConditionManager.failedToResolveTriggerConfig(fmt.Errorf("missing broker status annotations, waiting"))
@@ -305,9 +311,14 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 	trigger.Status.SubscriberURI = destination
 
+	groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	if !ok {
+		return nil, fmt.Errorf("trigger.Status.Annotations[%s] not set", kafka.GroupIdAnnotation)
+	}
+
 	egress := &contract.Egress{
 		Destination:   destination.String(),
-		ConsumerGroup: string(trigger.UID),
+		ConsumerGroup: groupId,
 		Uid:           string(trigger.UID),
 		Reference: &contract.Reference{
 			Uuid:      string(trigger.GetUID()),
@@ -374,24 +385,12 @@ func (r *Reconciler) hasRelevantBrokerClass(broker *eventing.Broker) (bool, stri
 	return brokerClass == r.BrokerClass, brokerClass
 }
 
-func (r *Reconciler) reconcileInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
-	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
-	if err != nil {
-		return false, err
-	}
-	if isLatest {
-		return r.reconcileLatestInitialOffset(ctx, broker, trigger)
-	}
-	return true, nil
-}
-
-func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
+func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (bool, error) {
 	// Existing Brokers might not yet have this annotation
 	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {
 		return false, nil
 	}
-	groupID := string(trigger.UID)
 
 	namespace := broker.GetNamespace()
 	if broker.Spec.Config.Namespace != "" {
@@ -429,16 +428,46 @@ func (r *Reconciler) reconcileLatestInitialOffset(ctx context.Context, broker *e
 	}
 	defer kafkaClusterAdmin.Close()
 
-	isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
-	if err != nil {
-		return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
-	}
-	if !isPresentAndValid {
-		return false, fmt.Errorf("topic %s is invalid", topicName)
+	// Existing Triggers might not yet have this annotation
+	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	if !ok {
+		// Check if a consumer group exists with the old naming convention
+		groupID = string(trigger.UID)
+
+		valid, err := kafka.AreConsumerGroupsPresentAndValid(kafkaClusterAdmin, groupID)
+		if err != nil {
+			return false, fmt.Errorf("unable to query for existing consumergroup: %w", err)
+		}
+
+		// No existing consumer groups, use new naming
+		if !valid {
+			groupID, err = r.KafkaFeatureFlags.ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
+			if err != nil {
+				return false, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
+			}
+		}
+
+		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
 	}
 
-	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
-		return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
+	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
+	if err != nil {
+		return false, err
+	}
+	if isLatest {
+		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
+		if err != nil {
+			return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
+		}
+		if !isPresentAndValid {
+			return false, fmt.Errorf("topic %s is invalid", topicName)
+		}
+
+		if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
+			return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
+		}
+
+		return true, nil
 	}
 
 	return true, nil

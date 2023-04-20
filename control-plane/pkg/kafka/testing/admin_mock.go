@@ -49,6 +49,11 @@ type MockKafkaClusterAdmin struct {
 	ExpectedErrorOnDescribeTopics          error
 	ExpectedTopicsMetadataOnDescribeTopics []*sarama.TopicMetadata
 
+	// DescribeConsumerGroups
+	ExpectedConsumerGroups                           []string
+	ExpectedErrorOnDescribeConsumerGroups            error
+	ExpectedGroupDescriptionOnDescribeConsumerGroups []*sarama.GroupDescription
+
 	ErrorOnDeleteConsumerGroup error
 
 	T *testing.T
@@ -164,7 +169,11 @@ func (m *MockKafkaClusterAdmin) ListConsumerGroups() (map[string]string, error) 
 }
 
 func (m *MockKafkaClusterAdmin) DescribeConsumerGroups(groups []string) ([]*sarama.GroupDescription, error) {
-	panic("implement me")
+	if !sets.NewString(m.ExpectedConsumerGroups...).HasAll(groups...) {
+		m.T.Errorf("unexpected consumer groups %v, expected %v", groups, m.ExpectedConsumerGroups)
+	}
+
+	return m.ExpectedGroupDescriptionOnDescribeConsumerGroups, m.ExpectedErrorOnDescribeTopics
 }
 
 func (m *MockKafkaClusterAdmin) ListConsumerGroupOffsets(group string, topicPartitions map[string][]int32) (*sarama.OffsetFetchResponse, error) {
