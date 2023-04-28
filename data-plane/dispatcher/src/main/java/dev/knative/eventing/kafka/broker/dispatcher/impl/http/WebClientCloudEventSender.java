@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
@@ -23,6 +24,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -68,9 +71,11 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   public WebClientCloudEventSender(final Vertx vertx,
                                    final WebClient client,
                                    final String target,
-                                   final ConsumerVerticleContext consumerVerticleContext) {
+                                   final ConsumerVerticleContext consumerVerticleContext,
+                                   final Tags additionalTags) {
     Objects.requireNonNull(vertx);
     Objects.requireNonNull(client, "provide client");
+    Objects.requireNonNull(additionalTags, "provide additional tags");
     if (target == null || target.equals("")) {
       throw new IllegalArgumentException("provide a target");
     }
@@ -83,6 +88,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     this.target = target;
     this.consumerVerticleContext = consumerVerticleContext;
     this.retryPolicyFunc = computeRetryPolicy(consumerVerticleContext.getEgressConfig());
+
+    Metrics.
+      eventDispatchInFlightCount(additionalTags.and(consumerVerticleContext.getTags()), this.inFlightRequests::get)
+      .register(consumerVerticleContext.getMetricsRegistry());
   }
 
   public Future<HttpResponse<Buffer>> send(final CloudEvent event) {

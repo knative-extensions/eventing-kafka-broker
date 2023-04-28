@@ -24,6 +24,7 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.micrometer.core.instrument.search.Search;
@@ -108,6 +109,12 @@ public class Metrics {
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#eventDispatchInFlightCount(io.micrometer.core.instrument.Tags, Supplier)
+   */
+  public static final String EVENT_DISPATCH_IN_FLIGHT_REQUESTS_LATENCY = "event_dispatch_in_flight_count";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
    */
   public static final String EVENT_PROCESSING_LATENCY = "event_processing_latencies";
@@ -141,9 +148,13 @@ public class Metrics {
     public static final String RESOURCE_NAME = "name";
     public static final String RESOURCE_NAMESPACE = "namespace_name";
     public static final String CONSUMER_NAME = "consumer_name";
-
+    public static final String SENDER_CONTEXT = "sender_context";
     public static final String PARTITION_ID = "partition";
     public static final String TOPIC_ID = "topic";
+
+    public static io.micrometer.core.instrument.Tags senderContext(final String value) {
+      return io.micrometer.core.instrument.Tags.of(SENDER_CONTEXT, value);
+    }
   }
 
   /**
@@ -316,6 +327,15 @@ public class Metrics {
       .tags(tags)
       .baseUnit(BaseUnits.MILLISECONDS)
       .serviceLevelObjectives(LATENCY_SLOs);
+  }
+
+  public static Gauge.Builder<Supplier<Number>> eventDispatchInFlightCount(final io.micrometer.core.instrument.Tags tags,
+                                                                           final Supplier<Number> supplier) {
+    return Gauge
+      .builder(EVENT_DISPATCH_IN_FLIGHT_REQUESTS_LATENCY, supplier)
+      .description("Number of events currently dispatched to a destination waiting to be processed")
+      .tags(tags)
+      .baseUnit(Units.DIMENSIONLESS);
   }
 
   public static DistributionSummary.Builder eventProcessingLatency(final io.micrometer.core.instrument.Tags tags) {
