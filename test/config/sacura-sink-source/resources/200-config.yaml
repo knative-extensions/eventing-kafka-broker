@@ -26,9 +26,9 @@ data:
       keepAlive: true
     receiver:
       port: 8080
-      timeout: 30m
+      timeout: 25m # timeout in seconds = frequency * (duration in seconds) / (topic partitions) * (maxSleepDuration in seconds)
       maxDuplicatesPercentage: 0.1
       fault:
         minSleepDuration: 4s
         maxSleepDuration: 5s
-    duration: 3m
+    duration: 10m
