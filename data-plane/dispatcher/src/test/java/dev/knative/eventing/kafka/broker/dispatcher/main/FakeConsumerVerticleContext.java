@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -28,6 +29,7 @@ public class FakeConsumerVerticleContext {
     return new ConsumerVerticleContext()
       .withProducerConfigs(new HashMap<>())
       .withConsumerConfigs(new HashMap<>())
+      .withMeterRegistry(Metrics.getRegistry())
       .withResource(CoreObjects.resource1(), CoreObjects.egress1());
   }
 
@@ -37,6 +39,7 @@ public class FakeConsumerVerticleContext {
       .withConsumerConfigs(new HashMap<>())
       .withAuthProvider(AuthProvider.noAuth())
       .withWebClientOptions(new WebClientOptions())
+      .withMeterRegistry(Metrics.getRegistry())
       .withResource(resource, egress);
   }
 }

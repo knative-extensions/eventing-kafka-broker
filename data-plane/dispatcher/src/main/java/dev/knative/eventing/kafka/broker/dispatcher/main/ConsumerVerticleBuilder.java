@@ -192,8 +192,10 @@ public class ConsumerVerticleBuilder {
       case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
       case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
       case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
-      case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
-      case ALL -> new AllFilter(filter.getAll().getFiltersList().stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
+      case ANY ->
+        new AnyFilter(filter.getAny().getFiltersList().stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
+      case ALL ->
+        new AllFilter(filter.getAll().getFiltersList().stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
       case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
       default -> Filter.noop();
     };
@@ -205,7 +207,8 @@ public class ConsumerVerticleBuilder {
         vertx,
         WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
         consumerVerticleContext.getEgress().getReplyUrl(),
-        consumerVerticleContext
+        consumerVerticleContext,
+        Metrics.Tags.senderContext("reply")
       ));
     }
 
@@ -224,7 +227,8 @@ public class ConsumerVerticleBuilder {
       vertx,
       WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
       consumerVerticleContext.getEgress().getDestination(),
-      consumerVerticleContext
+      consumerVerticleContext,
+      Metrics.Tags.senderContext("subscriber")
     );
   }
 
@@ -240,7 +244,8 @@ public class ConsumerVerticleBuilder {
         vertx,
         WebClient.create(vertx, webClientOptions),
         consumerVerticleContext.getEgressConfig().getDeadLetter(),
-        consumerVerticleContext
+        consumerVerticleContext,
+        Metrics.Tags.senderContext("deadlettersink")
       );
     }
 

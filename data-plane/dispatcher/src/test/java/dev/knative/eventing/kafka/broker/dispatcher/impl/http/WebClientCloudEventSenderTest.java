@@ -16,12 +16,18 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.core.builder.CloudEventBuilder;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -52,6 +58,12 @@ import static org.mockito.Mockito.verify;
 @DisabledIfEnvironmentVariable(named = "SKIP_SLOW_TESTS", matches = "true")
 public class WebClientCloudEventSenderTest {
 
+  static {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+      .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+      .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+  }
+
   @Test
   public void shouldWebClient(final Vertx vertx, final VertxTestContext context) {
     final var webClient = mock(WebClient.class);
@@ -59,7 +71,8 @@ public class WebClientCloudEventSenderTest {
 
     final var consumerRecordSender = new WebClientCloudEventSender(
       vertx, webClient, "http://localhost:12345",
-      FakeConsumerVerticleContext.get()
+      FakeConsumerVerticleContext.get(),
+      Tags.empty()
     );
 
     consumerRecordSender.close()
@@ -116,7 +129,8 @@ public class WebClientCloudEventSenderTest {
               .build()
           )
           .build()
-      )
+      ),
+      Tags.empty()
     );
 
     final var success = new AtomicBoolean(false);
@@ -134,7 +148,7 @@ public class WebClientCloudEventSenderTest {
 
     sender.close().onSuccess(v -> context.completeNow());
   }
-  
+
   @Test
   @Timeout(value = 20000)
   public void shouldNotRetry(final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
@@ -178,7 +192,8 @@ public class WebClientCloudEventSenderTest {
               .build()
           )
           .build()
-      )
+      ),
+      Tags.empty()
     );
 
     final var success = new AtomicBoolean(true);
@@ -243,7 +258,8 @@ public class WebClientCloudEventSenderTest {
               .build()
           )
           .build()
-      )
+      ),
+      Tags.empty()
     );
 
     final var success = new AtomicBoolean(true);
@@ -302,7 +318,8 @@ public class WebClientCloudEventSenderTest {
               .build()
           )
           .build()
-      )
+      ),
+      Tags.empty()
     );
 
     final var success = new AtomicBoolean(true);
@@ -368,7 +385,8 @@ public class WebClientCloudEventSenderTest {
               .build()
           )
           .build()
-      )
+      ),
+      Tags.empty()
     );
 
     final var success = new AtomicBoolean(true);
