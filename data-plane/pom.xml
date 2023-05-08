@@ -59,7 +59,7 @@
     <fabric8.kubernetes.version>6.0.0</fabric8.kubernetes.version>
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
-    <jib.version>3.2.1</jib.version>
+    <jib.version>3.3.1</jib.version>
     <quarkus.version>2.13.7.Final</quarkus.version>
   </properties>
 
