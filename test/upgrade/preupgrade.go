@@ -17,11 +17,10 @@
 package upgrade
 
 import (
-	pkgupgrade "knative.dev/pkg/test/upgrade"
-
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_sink"
+	pkgupgrade "knative.dev/pkg/test/upgrade"
 )
 
 // BrokerPreUpgradeTest tests broker basic operations before upgrade.
