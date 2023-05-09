@@ -21,11 +21,15 @@ import (
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"knative.dev/eventing-kafka-broker/test/e2e_source/helpers"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg"
 	testbroker "knative.dev/eventing-kafka-broker/test/pkg/broker"
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	eventinghelpers "knative.dev/eventing/test/e2e/helpers"
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/system"
+	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/k8s"
+	"knative.dev/reconciler-test/pkg/knative"
 )
 
 var (
@@ -58,10 +62,17 @@ func runChannelSmokeTest(t *testing.T) {
 	}
 }
 
-func runSourceSmokeTest(t *testing.T) {
-	helpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool {
-		return auth == "plain" && (testCase == "structured" || testCase == "binary")
-	})
+func runSourceSmokeTest(glob environment.GlobalEnvironment, t *testing.T) {
+	ctx, env := glob.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceStructuredEvent())
+	env.Test(ctx, t, features.KafkaSourceBinaryEvent())
 }
 
 type smokeTestCase struct {

@@ -39,6 +39,9 @@ spec:
   {{ if .consumers }}
   consumers: {{ .consumers }}
   {{ end }}
+  {{ if .ordering }}
+  ordering: {{ .ordering }}
+  {{ end }}
   {{ if .topics }}
   topics:
     {{ range $value := .topics }}
@@ -49,7 +52,7 @@ spec:
   net:
     {{ if .tls }}
     tls:
-      enable: true
+      enable: {{ .tls.enable }}
       {{ if .tls.cert }}
       cert:
         secretKeyRef:
@@ -71,7 +74,7 @@ spec:
     {{ end }}
     {{ if .sasl }}
     sasl:
-      enable: true
+      enable: {{ .sasl.enable }}
       {{ if .sasl.user }}
       user:
         secretKeyRef:

@@ -120,6 +120,13 @@ func WithConsumers(consumers int32) manifest.CfgFn {
 	}
 }
 
+// WithOrdering adds ordering a KafkaSource spec.
+func WithOrdering(ordering string) manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		cfg["ordering"] = ordering
+	}
+}
+
 // WithAnnotations adds annotation to a KafkaSource metadata.
 func WithAnnotations(annotations map[string]string) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
@@ -162,6 +169,19 @@ func WithTLSEnabled() manifest.CfgFn {
 		if _, ok := cfg["tls"]; !ok {
 			cfg["tls"] = map[string]interface{}{}
 		}
+		tls := cfg["tls"].(map[string]interface{})
+		tls["enable"] = true
+	}
+}
+
+// WithTLSDisabled disables TLS to a KafkaSource spec.
+func WithTLSDisabled() manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		if _, ok := cfg["tls"]; !ok {
+			cfg["tls"] = map[string]interface{}{}
+		}
+		tls := cfg["tls"].(map[string]interface{})
+		tls["enable"] = false
 	}
 }
 
@@ -219,6 +239,19 @@ func WithSASLEnabled() manifest.CfgFn {
 		if _, ok := cfg["sasl"]; !ok {
 			cfg["sasl"] = map[string]interface{}{}
 		}
+		tls := cfg["sasl"].(map[string]interface{})
+		tls["enable"] = true
+	}
+}
+
+// WithSASLDisabled disables SASL to a KafkaSource spec.
+func WithSASLDisabled() manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		if _, ok := cfg["sasl"]; !ok {
+			cfg["sasl"] = map[string]interface{}{}
+		}
+		tls := cfg["sasl"].(map[string]interface{})
+		tls["enable"] = false
 	}
 }
 

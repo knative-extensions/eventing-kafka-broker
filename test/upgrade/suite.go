@@ -18,12 +18,13 @@ package upgrade
 
 import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+	"knative.dev/reconciler-test/pkg/environment"
 
 	"knative.dev/eventing-kafka-broker/test/upgrade/installation"
 )
 
 // Suite defines the whole upgrade test suite for Eventing Kafka.
-func Suite() pkgupgrade.Suite {
+func Suite(glob environment.GlobalEnvironment) pkgupgrade.Suite {
 	return pkgupgrade.Suite{
 		Tests: pkgupgrade.Tests{
 			PreUpgrade: []pkgupgrade.Operation{
@@ -31,21 +32,21 @@ func Suite() pkgupgrade.Suite {
 				NamespacedBrokerPreUpgradeTest(),
 				ChannelPreUpgradeTest(),
 				SinkPreUpgradeTest(),
-				SourcePreUpgradeTest(),
+				SourcePreUpgradeTest(glob),
 			},
 			PostUpgrade: []pkgupgrade.Operation{
 				BrokerPostUpgradeTest(),
 				NamespacedBrokerPostUpgradeTest(),
 				ChannelPostUpgradeTest(),
 				SinkPostUpgradeTest(),
-				SourcePostUpgradeTest(),
+				SourcePostUpgradeTest(glob),
 			},
 			PostDowngrade: []pkgupgrade.Operation{
 				BrokerPostDowngradeTest(),
 				NamespacedBrokerPostDowngradeTest(),
 				ChannelPostDowngradeTest(),
 				SinkPostDowngradeTest(),
-				SourcePostDowngradeTest(),
+				SourcePostDowngradeTest(glob),
 			},
 			Continual: ContinualTests(),
 		},
