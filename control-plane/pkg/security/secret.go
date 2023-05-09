@@ -173,26 +173,20 @@ func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 			}
 
 			if !skipClientAuth {
-				userKeyCert, ok := data[UserKey]
+				userKeyCert, ok := firstNonEmptyValueOf(data, UserKey, "tls.key")
 				if !ok {
-					userKeyCert, ok = data["tls.key"]
-					if !ok {
-						return fmt.Errorf(
-							`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
-							protocol, UserKey, UserSkip,
-						)
-					}
+					return fmt.Errorf(
+						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
+						protocol, UserKey, UserSkip,
+					)
 				}
 
-				userCert, ok := data[UserCertificate]
+				userCert, ok := firstNonEmptyValueOf(data, UserCertificate, "tls.crt")
 				if !ok {
-					userCert, ok = data["tls.crt"]
-					if !ok {
-						return fmt.Errorf(
-							`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
-							protocol, UserCertificate, UserSkip,
-						)
-					}
+					return fmt.Errorf(
+						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
+						protocol, UserCertificate, UserSkip,
+					)
 				}
 
 				tlsCert, err := tls.X509KeyPair(userCert, userKeyCert)
@@ -225,4 +219,12 @@ func skipClientAuthCheck(data map[string][]byte) (bool, error) {
 		return false, fmt.Errorf("failed to parse client auth flag (key: %s): %w", UserSkip, err)
 	}
 	return enabled, nil
+}
+
+func firstNonEmptyValueOf(data map[string][]byte, keys ...string) ([]byte, bool) {
+	userKeyOrCert, ok := data[keys[0]]
+	if !ok {
+		userKeyOrCert, ok = data[keys[1]]
+	}
+	return userKeyOrCert, ok
 }
