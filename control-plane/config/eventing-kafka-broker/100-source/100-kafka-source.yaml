@@ -40,6 +40,14 @@ spec:
           #
           # see issue: https://github.com/knative/serving/issues/912
           x-kubernetes-preserve-unknown-fields: true
+          properties:
+            spec:
+              description: 'Spec defines the desired state of the Kafka Source.'
+              type: object
+              properties:
+                ordering:
+                  description: 'The type of the consumer verticle to consume the messages. Either ordered or unordered.'
+                  type: string
       subresources:
         status: {}
         scale:
