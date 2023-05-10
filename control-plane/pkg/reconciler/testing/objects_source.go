@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
@@ -177,6 +178,13 @@ func WithInitialOffset(offset sources.Offset) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		s := obj.(*sources.KafkaSource)
 		s.Spec.InitialOffset = offset
+	}
+}
+
+func WithOrdering(ordering eventing.DeliveryOrdering) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Ordering = ordering
 	}
 }
 
