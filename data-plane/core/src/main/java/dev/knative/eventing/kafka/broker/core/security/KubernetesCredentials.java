@@ -103,9 +103,12 @@ class KubernetesCredentials implements Credentials {
       return null;
     }
     if (userCertificate == null) {
-      final var keystore = secret.getData().get(USER_CERTIFICATE_KEY);
+      var keystore = secret.getData().get(USER_CERTIFICATE_KEY);
       if (keystore == null) {
-        return null;
+        keystore = secret.getData().get("tls.crt");
+        if (keystore == null) {
+          return null;
+        }
       }
       this.userCertificate = new String(Base64.getDecoder().decode(keystore));
     }
@@ -118,15 +121,17 @@ class KubernetesCredentials implements Credentials {
       return null;
     }
     if (userKey == null) {
-      final var userKey = secret.getData().get(USER_KEY_KEY);
+      var userKey = secret.getData().get(USER_KEY_KEY);
       if (userKey == null) {
-        return null;
+        userKey = secret.getData().get("tls.key");
+        if (userKey == null) {
+          return null;
+        }
       }
       this.userKey = new String(Base64.getDecoder().decode(userKey));
     }
     return userKey;
   }
-
 
   @Override
   public SecurityProtocol securityProtocol() {
