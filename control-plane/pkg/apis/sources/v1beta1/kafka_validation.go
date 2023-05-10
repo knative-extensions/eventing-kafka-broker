@@ -21,8 +21,6 @@ import (
 
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmp"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 )
 
 // Validate ensures KafkaSource is properly configured.
@@ -54,11 +52,6 @@ func (kss *KafkaSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(apis.ErrInvalidValue(kss.InitialOffset, "initialOffset"))
 	}
 
-	switch kss.Ordering {
-	case eventing.Unordered, eventing.Ordered:
-	default:
-		errs = errs.Also(apis.ErrInvalidValue(kss.Ordering, "ordering"))
-	}
 	return errs
 }
 
