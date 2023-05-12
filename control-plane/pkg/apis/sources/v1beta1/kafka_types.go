@@ -84,6 +84,8 @@ type KafkaSourceSpec struct {
 	Delivery *eventingduckv1.DeliverySpec `json:"delivery,omitempty"`
 
 	// Ordering is the type of the consumer verticle.
+	// Should be ordered or unordered.
+	// By default, it is ordered.
 	// +optional
 	Ordering eventing.DeliveryOrdering `json:"ordering,omitempty"`
 
