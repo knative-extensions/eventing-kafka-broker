@@ -392,12 +392,14 @@ public class Metrics {
   public static io.micrometer.core.instrument.Tags resourceRefTags(final DataPlaneContract.Reference ref) {
     return io.micrometer.core.instrument.Tags.of(
       Tag.of(Metrics.Tags.RESOURCE_NAME, ref.getName()),
-      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace())
+    );
   }
 
   public static io.micrometer.core.instrument.Tags egressRefTags(final DataPlaneContract.Reference ref) {
     return io.micrometer.core.instrument.Tags.of(
       Tag.of(Metrics.Tags.CONSUMER_NAME, ref.getName()),
-      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace())
+    );
   }
 }
