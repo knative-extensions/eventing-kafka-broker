@@ -205,7 +205,8 @@ public class ConsumerVerticleBuilder {
         vertx,
         WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
         consumerVerticleContext.getEgress().getReplyUrl(),
-        consumerVerticleContext
+        consumerVerticleContext,
+        consumerVerticleContext.getMetricsRegistry()
       ));
     }
 
@@ -224,7 +225,8 @@ public class ConsumerVerticleBuilder {
       vertx,
       WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
       consumerVerticleContext.getEgress().getDestination(),
-      consumerVerticleContext
+      consumerVerticleContext,
+      consumerVerticleContext.getMetricsRegistry()
     );
   }
 
@@ -240,7 +242,8 @@ public class ConsumerVerticleBuilder {
         vertx,
         WebClient.create(vertx, webClientOptions),
         consumerVerticleContext.getEgressConfig().getDeadLetter(),
-        consumerVerticleContext
+        consumerVerticleContext,
+        consumerVerticleContext.getMetricsRegistry()
       );
     }
 

@@ -66,6 +66,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private final MeterRegistry meterRegistry;
   private final Tags noResponseResourceTags;
   
+  private static final Tag NO_RESPONSE_CODE_CLASS_TAG = Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx");
   /**
    * All args constructor.
    *
@@ -77,7 +78,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   public WebClientCloudEventSender(final Vertx vertx,
                                    final WebClient client,
                                    final String target,
-                                   final ConsumerVerticleContext consumerVerticleContext) {
+                                   final ConsumerVerticleContext consumerVerticleContext,
+                                   final MeterRegistry meterRegistry) {
     Objects.requireNonNull(vertx);
     Objects.requireNonNull(client, "provide client");
     if (target == null || target.equals("")) {
@@ -92,6 +94,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     this.target = target;
     this.consumerVerticleContext = consumerVerticleContext;
     this.retryPolicyFunc = computeRetryPolicy(consumerVerticleContext.getEgressConfig());
+    this.noResponseResourceTags = this.consumerVerticleContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
+    this.meterRegistry = meterRegistry;
   }
 
   public Future<HttpResponse<Buffer>> send(final CloudEvent event) {
@@ -146,38 +150,29 @@ public final class WebClientCloudEventSender implements CloudEventSender {
           } else {
             tags = this.consumerVerticleContext.getTags().and(
               Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
-              Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode()))
-            );
+              Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())));
           }
 
           if (isRetryableStatusCode(response.statusCode()) && retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
-
-            Metrics
-            .eventCount(tags)
-            .register(meterRegistry)
-            .increment();
-      
-            return retry(retryCounter, event);
+              return retry(retryCounter, event, tags);
           }
           return Future.failedFuture(cause);
         }
 
         if (retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
-
-          Metrics
-          .eventCount(this.consumerVerticleContext.getTags())
-          .register(meterRegistry)
-          .increment();          
-
-          return retry(retryCounter, event);
+          return retry(retryCounter, event, this.consumerVerticleContext.getTags());
         }
 
         return Future.failedFuture(cause);
-      }
-    );
+      });
   }
 
-  private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event) {
+  private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event, Tags tags) {
+
+    Metrics
+    .eventCount(tags)
+    .register(meterRegistry)
+    .increment();
     Promise<HttpResponse<Buffer>> r = Promise.promise();
     final var delay = retryPolicyFunc.apply(retryCounter + 1);
     vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));

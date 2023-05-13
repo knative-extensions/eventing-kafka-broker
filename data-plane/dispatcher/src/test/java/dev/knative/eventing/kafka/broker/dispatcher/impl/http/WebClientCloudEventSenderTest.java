@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Vertx;
@@ -59,7 +60,8 @@ public class WebClientCloudEventSenderTest {
 
     final var consumerRecordSender = new WebClientCloudEventSender(
       vertx, webClient, "http://localhost:12345",
-      FakeConsumerVerticleContext.get()
+      FakeConsumerVerticleContext.get(),
+      FakeConsumerVerticleContext.get().getMetricsRegistry()
     );
 
     consumerRecordSender.close()
@@ -100,23 +102,26 @@ public class WebClientCloudEventSenderTest {
       .toCompletableFuture()
       .get();
 
+    ConsumerVerticleContext consumerVerticleContext = FakeConsumerVerticleContext.get(
+    FakeConsumerVerticleContext.get().getResource(),
+    DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+      .setEgressConfig(
+        DataPlaneContract.EgressConfig.newBuilder()
+          .setBackoffDelay(100L)
+          .setTimeout(1000L)
+          .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+          .setRetry(retry)
+          .build()
+      )
+      .build()
+    );
+    
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      FakeConsumerVerticleContext.get(
-        FakeConsumerVerticleContext.get().getResource(),
-        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
-          .setEgressConfig(
-            DataPlaneContract.EgressConfig.newBuilder()
-              .setBackoffDelay(100L)
-              .setTimeout(1000L)
-              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-              .setRetry(retry)
-              .build()
-          )
-          .build()
-      )
+      consumerVerticleContext,
+      consumerVerticleContext.getMetricsRegistry()
     );
 
     final var success = new AtomicBoolean(false);
@@ -162,23 +167,26 @@ public class WebClientCloudEventSenderTest {
       .toCompletableFuture()
       .get();
 
+    ConsumerVerticleContext consumerVerticleContext = FakeConsumerVerticleContext.get(
+      FakeConsumerVerticleContext.get().getResource(),
+      DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+        .setEgressConfig(
+          DataPlaneContract.EgressConfig.newBuilder()
+            .setBackoffDelay(100L)
+            .setTimeout(1000L)
+            .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+            .setRetry(retry)
+            .build()
+        )
+        .build()
+      );
+
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      FakeConsumerVerticleContext.get(
-        FakeConsumerVerticleContext.get().getResource(),
-        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
-          .setEgressConfig(
-            DataPlaneContract.EgressConfig.newBuilder()
-              .setBackoffDelay(100L)
-              .setTimeout(1000L)
-              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-              .setRetry(retry)
-              .build()
-          )
-          .build()
-      )
+      consumerVerticleContext,
+      consumerVerticleContext.getMetricsRegistry()
     );
 
     final var success = new AtomicBoolean(true);
@@ -227,23 +235,26 @@ public class WebClientCloudEventSenderTest {
       .toCompletableFuture()
       .get();
 
+    ConsumerVerticleContext consumerVerticleContext = FakeConsumerVerticleContext.get(
+      FakeConsumerVerticleContext.get().getResource(),
+      DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+        .setEgressConfig(
+          DataPlaneContract.EgressConfig.newBuilder()
+            .setBackoffDelay(100L)
+            .setTimeout(1000L)
+            .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+            .setRetry(retry)
+            .build()
+        )
+        .build()
+      );
+
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      FakeConsumerVerticleContext.get(
-        FakeConsumerVerticleContext.get().getResource(),
-        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
-          .setEgressConfig(
-            DataPlaneContract.EgressConfig.newBuilder()
-              .setBackoffDelay(100L)
-              .setTimeout(100L)
-              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-              .setRetry(retry)
-              .build()
-          )
-          .build()
-      )
+      consumerVerticleContext,
+      consumerVerticleContext.getMetricsRegistry()
     );
 
     final var success = new AtomicBoolean(true);
@@ -286,23 +297,26 @@ public class WebClientCloudEventSenderTest {
       .toCompletableFuture()
       .get();
 
+    ConsumerVerticleContext consumerVerticleContext = FakeConsumerVerticleContext.get(
+      FakeConsumerVerticleContext.get().getResource(),
+      DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+        .setEgressConfig(
+          DataPlaneContract.EgressConfig.newBuilder()
+            .setBackoffDelay(100L)
+            .setTimeout(1000L)
+            .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+            .setRetry(retry)
+            .build()
+        )
+        .build()
+      );
+
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      FakeConsumerVerticleContext.get(
-        FakeConsumerVerticleContext.get().getResource(),
-        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
-          .setEgressConfig(
-            DataPlaneContract.EgressConfig.newBuilder()
-              .setBackoffDelay(100L)
-              .setTimeout(100L)
-              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-              .setRetry(retry)
-              .build()
-          )
-          .build()
-      )
+      consumerVerticleContext,
+      consumerVerticleContext.getMetricsRegistry()
     );
 
     final var success = new AtomicBoolean(true);
@@ -352,23 +366,26 @@ public class WebClientCloudEventSenderTest {
       .toCompletableFuture()
       .get();
 
+    ConsumerVerticleContext consumerVerticleContext = FakeConsumerVerticleContext.get(
+      FakeConsumerVerticleContext.get().getResource(),
+      DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
+        .setEgressConfig(
+          DataPlaneContract.EgressConfig.newBuilder()
+            .setBackoffDelay(100L)
+            .setTimeout(1000L)
+            .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+            .setRetry(retry)
+            .build()
+        )
+        .build()
+      );
+
     final var sender = new WebClientCloudEventSender(
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      FakeConsumerVerticleContext.get(
-        FakeConsumerVerticleContext.get().getResource(),
-        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
-          .setEgressConfig(
-            DataPlaneContract.EgressConfig.newBuilder()
-              .setBackoffDelay(100L)
-              .setTimeout(100L)
-              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-              .setRetry(retry)
-              .build()
-          )
-          .build()
-      )
+      consumerVerticleContext,
+      consumerVerticleContext.getMetricsRegistry()
     );
 
     final var success = new AtomicBoolean(true);

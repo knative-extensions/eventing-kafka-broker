@@ -108,9 +108,9 @@ public class Metrics {
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
-   * @see Metrics#eventDispatchRetry(io.micrometer.core.instrument.Tags)
+   * @see Metrics#eventDispatchRetryCount(io.micrometer.core.instrument.Tags)
    */
-  public static final String EVENT_DISPATCH_RETRY = "event_dispatch_retries";
+  public static final String EVENT_DISPATCH_RETRY = "event_dispatch_retry_count";
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
@@ -171,29 +171,30 @@ public class Metrics {
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     final var options = new MicrometerMetricsOptions()
+      .setEnabled(true)
+      .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
+      .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
+      .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
+      // NAMED_POOL allocates a lot, so disable it.
+      // See https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
+      .addDisabledMetricsCategory(MetricsDomain.NAMED_POOLS)
+      .setMetricsNaming(MetricsNaming.v4Names())
+      .setRegistryName(METRICS_REGISTRY_NAME)
+      .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
+      .setMicrometerRegistry(registry)
+      .setPrometheusOptions(new VertxPrometheusOptions()
+        .setEmbeddedServerOptions(new HttpServerOptions()
+          .setPort(metricsConfigs.getMetricsPort())
+          .setTracingPolicy(TracingPolicy.IGNORE)
+          .setSsl(pemKeyCertOptions != null)
+          .setPemKeyCertOptions(pemKeyCertOptions)
+          .setHost(host)
+        )
+        .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
+        .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
+        .setStartEmbeddedServer(true)
         .setEnabled(true)
-        .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
-        .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
-        .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
-        // NAMED_POOL allocates a lot, so disable it.
-        // See
-        // https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
-        .addDisabledMetricsCategory(MetricsDomain.NAMED_POOLS)
-        .setMetricsNaming(MetricsNaming.v4Names())
-        .setRegistryName(METRICS_REGISTRY_NAME)
-        .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
-        .setMicrometerRegistry(registry)
-        .setPrometheusOptions(new VertxPrometheusOptions()
-            .setEmbeddedServerOptions(new HttpServerOptions()
-                .setPort(metricsConfigs.getMetricsPort())
-                .setTracingPolicy(TracingPolicy.IGNORE)
-                .setSsl(pemKeyCertOptions != null)
-                .setPemKeyCertOptions(pemKeyCertOptions)
-                .setHost(host))
-            .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
-            .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
-            .setStartEmbeddedServer(true)
-            .setEnabled(true));
+      );
 
     if (!metricsConfigs.isMetricsHTTPClientEnabled()) {
       options.addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT);
@@ -268,8 +269,7 @@ public class Metrics {
         };
 
       } catch (final RejectedExecutionException ex) {
-        // if this task cannot be accepted for execution when the executor has been
-        // shutdown.
+        // if this task cannot be accepted for execution when the executor has been shutdown.
         logger.warn("Failed to bind metrics for Kafka client", ex);
       }
     }
@@ -297,87 +297,87 @@ public class Metrics {
 
   public static Counter.Builder eventCount(final io.micrometer.core.instrument.Tags tags) {
     return Counter
-        .builder(EVENTS_COUNT)
-        .description("Number of events received")
-        .tags(tags)
-        .baseUnit(Metrics.Units.DIMENSIONLESS);
+      .builder(EVENTS_COUNT)
+      .description("Number of events received")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 
   public static Collection<Meter> searchResourceMeters(final MeterRegistry registry,
       final DataPlaneContract.Reference ref) {
     return Search.in(registry)
-        .tags(resourceRefTags(ref))
-        .meters();
+      .tags(resourceRefTags(ref))
+      .meters();
   }
 
   public static Collection<Meter> searchEgressMeters(final MeterRegistry registry,
       final DataPlaneContract.Reference ref) {
     return Search.in(registry)
-        .tags(egressRefTags(ref))
-        .meters();
+      .tags(egressRefTags(ref))
+      .meters();
   }
 
   public static DistributionSummary.Builder eventDispatchLatency(final io.micrometer.core.instrument.Tags tags) {
     return DistributionSummary
-        .builder(EVENT_DISPATCH_LATENCY)
-        .description("The time spent dispatching an event to Kafka")
-        .tags(tags)
-        .baseUnit(BaseUnits.MILLISECONDS)
-        .serviceLevelObjectives(LATENCY_SLOs);
+      .builder(EVENT_DISPATCH_LATENCY)
+      .description("The time spent dispatching an event to Kafka")
+      .tags(tags)
+      .baseUnit(BaseUnits.MILLISECONDS)
+      .serviceLevelObjectives(LATENCY_SLOs);
   }
 
   public static DistributionSummary.Builder eventProcessingLatency(final io.micrometer.core.instrument.Tags tags) {
     return DistributionSummary
-        .builder(EVENT_PROCESSING_LATENCY)
-        .description("The time spent processing an event")
-        .tags(tags)
-        .baseUnit(BaseUnits.MILLISECONDS)
-        .serviceLevelObjectives(LATENCY_SLOs);
+      .builder(EVENT_PROCESSING_LATENCY)
+      .description("The time spent processing an event")
+      .tags(tags)
+      .baseUnit(BaseUnits.MILLISECONDS)
+      .serviceLevelObjectives(LATENCY_SLOs);
   }
 
-  public static Counter.Builder eventDispatchRetry(final io.micrometer.core.instrument.Tags tags) {
+  public static Counter.Builder eventDispatchRetryCount(final io.micrometer.core.instrument.Tags tags) {
     return Counter
-        .builder(EVENT_DISPATCH_RETRY)
-        .description("Number of retries for dispatch operations")
-        .tags(tags)
-        .baseUnit(Metrics.Units.DIMENSIONLESS);
+      .builder(EVENT_DISPATCH_RETRY)
+      .description("Number of retries for dispatch operations")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 
   public static Counter.Builder discardedEventCount(final io.micrometer.core.instrument.Tags tags) {
     return Counter
-        .builder(DISCARDED_EVENTS_COUNT)
-        .description("Number of invalid events discarded")
-        .tags(tags)
-        .baseUnit(Metrics.Units.DIMENSIONLESS);
+      .builder(DISCARDED_EVENTS_COUNT)
+      .description("Number of invalid events discarded")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 
   public static DistributionSummary.Builder executorQueueLatency(final io.micrometer.core.instrument.Tags tags) {
     return DistributionSummary
-        .builder(EXECUTOR_QUEUE_LATENCY)
-        .description("The time an event spends in an executor queue")
-        .tags(tags)
-        .baseUnit(BaseUnits.MILLISECONDS)
-        .serviceLevelObjectives(LATENCY_SLOs);
+      .builder(EXECUTOR_QUEUE_LATENCY)
+      .description("The time an event spends in an executor queue")
+      .tags(tags)
+      .baseUnit(BaseUnits.MILLISECONDS)
+      .serviceLevelObjectives(LATENCY_SLOs);
   }
 
   public static Gauge.Builder<Supplier<Number>> queueLength(final io.micrometer.core.instrument.Tags tags,
-      final Supplier<Number> queueSize) {
+                                                            final Supplier<Number> queueSize) {
     return Gauge
-        .builder(QUEUE_LENGTH, queueSize)
-        .description("Number of events in executor queue per partition")
-        .tags(tags)
-        .baseUnit(Metrics.Units.DIMENSIONLESS);
+      .builder(QUEUE_LENGTH, queueSize)
+      .description("Number of events in executor queue per partition")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 
   public static io.micrometer.core.instrument.Tags resourceRefTags(final DataPlaneContract.Reference ref) {
     return io.micrometer.core.instrument.Tags.of(
-        Tag.of(Metrics.Tags.RESOURCE_NAME, ref.getName()),
-        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
+      Tag.of(Metrics.Tags.RESOURCE_NAME, ref.getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
   }
 
   public static io.micrometer.core.instrument.Tags egressRefTags(final DataPlaneContract.Reference ref) {
     return io.micrometer.core.instrument.Tags.of(
-        Tag.of(Metrics.Tags.CONSUMER_NAME, ref.getName()),
-        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
+      Tag.of(Metrics.Tags.CONSUMER_NAME, ref.getName()),
+      Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
   }
 }
