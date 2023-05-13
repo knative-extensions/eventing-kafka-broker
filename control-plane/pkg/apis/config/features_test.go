@@ -19,8 +19,10 @@ package config
 import (
 	"context"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	cm "knative.dev/pkg/configmap/testing"
 	_ "knative.dev/pkg/system/testing"
@@ -55,6 +57,9 @@ func TestGetFlags(t *testing.T) {
 	require.True(t, flags.IsDispatcherRateLimiterEnabled())
 	require.True(t, flags.IsDispatcherOrderedExecutorMetricsEnabled())
 	require.True(t, flags.IsControllerAutoscalerEnabled())
+	require.True(t, flags.IsControllerAutoscalerEnabled())
+	require.Len(t, flags.features.TriggersConsumerGroupTemplate.Tree.Root.Nodes, 4)
+	require.Equal(t, flags.features.TriggersConsumerGroupTemplate.Name(), "triggers.consumergroup.template")
 }
 
 func TestStoreLoadWithConfigMap(t *testing.T) {
@@ -69,6 +74,7 @@ func TestStoreLoadWithConfigMap(t *testing.T) {
 	require.Equal(t, expected.IsDispatcherRateLimiterEnabled(), have.IsDispatcherRateLimiterEnabled())
 	require.Equal(t, expected.IsDispatcherOrderedExecutorMetricsEnabled(), have.IsDispatcherOrderedExecutorMetricsEnabled())
 	require.Equal(t, expected.IsControllerAutoscalerEnabled(), have.IsControllerAutoscalerEnabled())
+	require.Equal(t, expected.features.TriggersConsumerGroupTemplate.Name(), have.features.TriggersConsumerGroupTemplate.Name())
 }
 
 func TestStoreLoadWithContext(t *testing.T) {
@@ -77,4 +83,35 @@ func TestStoreLoadWithContext(t *testing.T) {
 	require.False(t, have.IsDispatcherRateLimiterEnabled())
 	require.False(t, have.IsDispatcherOrderedExecutorMetricsEnabled())
 	require.False(t, have.IsControllerAutoscalerEnabled())
+	require.Equal(t, have.features.TriggersConsumerGroupTemplate.Name(), "triggers.consumergroup.template")
+}
+
+func TestExecuteTriggersConsumerGroupTemplateDefault(t *testing.T) {
+	nc := DefaultFeaturesConfig()
+	result, err := nc.ExecuteTriggersConsumerGroupTemplate(v1.ObjectMeta{
+		Name:      "trigger",
+		Namespace: "namespace",
+		UID:       "138ac0ec-2694-4747-900d-45be3da5c9a9",
+	})
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, result, "knative-trigger-namespace-trigger")
+}
+
+func TestExecuteTriggersConsumerGroupTemplateOverride(t *testing.T) {
+	nc := DefaultFeaturesConfig()
+	nc.features.TriggersConsumerGroupTemplate, _ = template.New("custom-template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+
+	result, err := nc.ExecuteTriggersConsumerGroupTemplate(v1.ObjectMeta{
+		Name:      "trigger",
+		Namespace: "namespace",
+		UID:       "138ac0ec-2694-4747-900d-45be3da5c9a9",
+	})
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, result, "knative-trigger-namespace-trigger-138ac0ec-2694-4747-900d-45be3da5c9a9")
 }

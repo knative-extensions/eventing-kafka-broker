@@ -114,7 +114,7 @@ spec:
     spec:
       containers:
       - name: single-heartbeat
-        image: ko://knative.dev/eventing/test/test_images/heartbeats
+        image: ko://knative.dev/eventing/cmd/heartbeats
         args:
         - --period=1
         env:

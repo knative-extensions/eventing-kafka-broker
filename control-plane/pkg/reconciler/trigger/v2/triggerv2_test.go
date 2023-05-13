@@ -22,8 +22,11 @@ import (
 	"testing"
 
 	"k8s.io/utils/pointer"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -57,6 +60,8 @@ const (
 	triggerNamespace = "test-namespace"
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
+
+	consumerGroupId = "knative-trigger-test-namespace-test-trigger"
 )
 
 var DefaultEnv = &config.Env{
@@ -100,7 +105,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -109,7 +114,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(bootstrapServers),
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
 						ConsumerFilters(NewConsumerSpecFilters()),
@@ -124,6 +129,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 					),
@@ -147,7 +153,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -155,7 +161,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(
@@ -177,6 +183,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 					),
@@ -199,7 +206,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -207,7 +214,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -223,6 +230,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered)),
@@ -246,7 +254,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -254,7 +262,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -270,6 +278,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered)),
@@ -326,7 +335,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -339,7 +348,7 @@ func TestReconcileKind(t *testing.T) {
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewConsumerGroup(
-						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupName(consumerGroupId),
 						WithConsumerGroupNamespace(triggerNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -347,7 +356,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(BrokerTopics[0]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerGroupIdConfig(consumerGroupId),
 								ConsumerBootstrapServersConfig(bootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -365,6 +374,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyReady(),
 						withDeadLetterSinkURI(""),
 					),
@@ -386,7 +396,7 @@ func TestReconcileKind(t *testing.T) {
 					WithAutoscalingAnnotationsTrigger(),
 				),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -399,7 +409,7 @@ func TestReconcileKind(t *testing.T) {
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewConsumerGroup(
-						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupName(consumerGroupId),
 						WithConsumerGroupNamespace(triggerNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -408,7 +418,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(BrokerTopics[0]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerGroupIdConfig(consumerGroupId),
 								ConsumerBootstrapServersConfig(bootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -426,6 +436,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyReady(),
 						withDeadLetterSinkURI(""),
 						WithAutoscalingAnnotationsTrigger(),
@@ -446,7 +457,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -458,7 +469,7 @@ func TestReconcileKind(t *testing.T) {
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewConsumerGroup(
-						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupName(consumerGroupId),
 						WithConsumerGroupNamespace(triggerNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -466,7 +477,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(BrokerTopics[0]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerGroupIdConfig(consumerGroupId),
 								ConsumerBootstrapServersConfig(bootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -483,6 +494,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 					),
@@ -503,7 +515,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -511,7 +523,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
@@ -532,7 +544,7 @@ func TestReconcileKind(t *testing.T) {
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewConsumerGroup(
-						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupName(consumerGroupId),
 						WithConsumerGroupNamespace(triggerNamespace),
 						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -540,7 +552,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(BrokerTopics[0]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerGroupIdConfig(consumerGroupId),
 								ConsumerBootstrapServersConfig(bootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -565,6 +577,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 					),
@@ -584,7 +597,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -593,7 +606,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -612,6 +625,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyReady(),
 						withDeadLetterSinkURI(""),
 					),
@@ -631,7 +645,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -640,7 +654,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -658,6 +672,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(""),
 					),
@@ -677,7 +692,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -686,7 +701,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -705,6 +720,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyFailed("failed", "failed"),
 						withDeadLetterSinkURI(""),
 					),
@@ -724,7 +740,7 @@ func TestReconcileKind(t *testing.T) {
 				),
 				newTrigger(),
 				NewConsumerGroup(
-					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupName(consumerGroupId),
 					WithConsumerGroupNamespace(triggerNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
@@ -732,7 +748,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(BrokerTopics[0]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(TriggerUUID),
+							ConsumerGroupIdConfig(consumerGroupId),
 							ConsumerBootstrapServersConfig(bootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
@@ -751,6 +767,7 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(consumerGroupId),
 						reconcilertesting.WithTriggerDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready"),
 						withDeadLetterSinkURI(url.String()),
 					),
@@ -835,6 +852,65 @@ func TestReconcileKind(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled reusing old consumergroup naming",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+				newTrigger(),
+				NewConsumerGroup(
+					WithConsumerGroupName(TriggerUUID),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
+					ConsumerGroupReady,
+				),
+			},
+			Key:         testKey,
+			WantCreates: []runtime.Object{},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewConsumerGroup(
+						WithConsumerGroupName(TriggerUUID),
+						WithConsumerGroupNamespace(triggerNamespace),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+						WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+						WithConsumerGroupLabels(ConsumerTriggerLabel),
+						ConsumerGroupConsumerSpec(NewConsumerSpec(
+							ConsumerTopics(BrokerTopics[0]),
+							ConsumerConfigs(
+								ConsumerGroupIdConfig(TriggerUUID),
+								ConsumerBootstrapServersConfig(bootstrapServers),
+							),
+							ConsumerDelivery(NewConsumerSpecDelivery(internals.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
+							ConsumerFilters(NewConsumerSpecFilters()),
+							ConsumerReply(ConsumerTopicReply()),
+						)),
+						ConsumerGroupReady,
+					),
+				},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						reconcilertesting.WithTriggerDependencyReady(),
+						withDeadLetterSinkURI(""),
+					),
+				},
+			},
+		},
 	}
 
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
@@ -849,6 +925,7 @@ func TestReconcileKind(t *testing.T) {
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			SecretLister:        listers.GetSecretLister(),
 			KubeClient:          kubeclient.Get(ctx),
+			KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
 		}
 
 		return triggerreconciler.NewReconciler(
@@ -893,5 +970,14 @@ func withTriggerSubscriberResolvedSucceeded() func(*eventing.Trigger) {
 		t.GetConditionSet().Manage(&t.Status).MarkTrue(
 			eventing.TriggerConditionSubscriberResolved,
 		)
+	}
+}
+
+func withTriggerStatusGroupIdAnnotation(groupId string) func(*eventing.Trigger) {
+	return func(t *eventing.Trigger) {
+		if t.Status.Annotations == nil {
+			t.Status.Annotations = make(map[string]string, 1)
+		}
+		t.Status.Annotations[kafka.GroupIdAnnotation] = groupId
 	}
 }

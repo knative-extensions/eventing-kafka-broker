@@ -17,11 +17,15 @@
 package config
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"sync"
+	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/logging"
@@ -35,11 +39,18 @@ type features struct {
 	DispatcherRateLimiter            feature.Flag
 	DispatcherOrderedExecutorMetrics feature.Flag
 	ControllerAutoscaler             feature.Flag
+	TriggersConsumerGroupTemplate    *template.Template
 }
 
 type KafkaFeatureFlags struct {
 	features features
 	m        sync.RWMutex
+}
+
+var DefaultTriggersConsumerGroupTemplate *template.Template
+
+func init() {
+	DefaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
@@ -48,6 +59,7 @@ func DefaultFeaturesConfig() *KafkaFeatureFlags {
 			DispatcherRateLimiter:            feature.Disabled,
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
 			ControllerAutoscaler:             feature.Disabled,
+			TriggersConsumerGroupTemplate:    DefaultTriggersConsumerGroupTemplate,
 		},
 	}
 }
@@ -59,6 +71,7 @@ func newFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) 
 		asFlag("dispatcher.rate-limiter", &nc.features.DispatcherRateLimiter),
 		asFlag("dispatcher.ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
 		asFlag("controller.autoscaler", &nc.features.ControllerAutoscaler),
+		asTemplate("triggers.consumergroup.template", nc.features.TriggersConsumerGroupTemplate),
 	)
 	return nc, err
 }
@@ -79,6 +92,16 @@ func (f *KafkaFeatureFlags) IsDispatcherOrderedExecutorMetricsEnabled() bool {
 
 func (f *KafkaFeatureFlags) IsControllerAutoscalerEnabled() bool {
 	return f.features.ControllerAutoscaler == feature.Enabled
+}
+
+func (f *KafkaFeatureFlags) ExecuteTriggersConsumerGroupTemplate(triggerMetadata v1.ObjectMeta) (string, error) {
+	var result bytes.Buffer
+	err := f.features.TriggersConsumerGroupTemplate.Execute(&result, triggerMetadata)
+	if err != nil {
+		return "", fmt.Errorf("unable to execute triggers consumergroup template: %w", err)
+	}
+
+	return result.String(), nil
 }
 
 // Store is a typed wrapper around configmap.Untyped store to handle our configmaps.
@@ -144,6 +167,21 @@ func asFlag(key string, target *feature.Flag) configmap.ParseFunc {
 					return nil
 				}
 			}
+		}
+		return nil
+	}
+}
+
+// asTemplate parses the value at key as a go text template into the target, if it exists.
+func asTemplate(key string, target *template.Template) configmap.ParseFunc {
+	return func(data map[string]string) error {
+		if raw, ok := data[key]; ok {
+			tmlp, err := template.New(key).Parse(raw)
+			if err != nil {
+				return err
+			}
+
+			*target = *tmlp
 		}
 		return nil
 	}

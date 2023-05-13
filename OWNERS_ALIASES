@@ -23,10 +23,8 @@ aliases:
   discovery-approvers:
   - lberk
   docs-wg-leads:
-  - abrennan89
   - snneji
   docs-writers:
-  - abrennan89
   - csantanapr
   - psschwei
   - snneji
@@ -183,13 +181,17 @@ aliases:
   - kvmware
   - lance
   - nainaz
+  - pierDipi
+  - pradnyavmw
   - psschwei
   - salaboy
   - upodroid
   - zroubalik
   knative-release-leads:
-  - evankanderson
-  - psschwei
+  - dsimansk
+  - kvmware
+  - pierDipi
+  - pradnyavmw
   knative-robots:
   - knative-automation
   - knative-prow-releaser-robot
@@ -242,11 +244,14 @@ aliases:
   - psschwei
   - rhuss
   security-wg-leads:
+  - davidhadas
   - evankanderson
   security-writers:
+  - davidhadas
   - evankanderson
   serving-approvers:
   - nak3
+  - skonto
   serving-reviewers:
   - KauzClay
   - carlisia
@@ -267,6 +272,7 @@ aliases:
   - dprotaso
   - nak3
   - psschwei
+  - skonto
   steering-committee:
   - csantanapr
   - itsmurugappan
@@ -280,8 +286,6 @@ aliases:
   - psschwei
   - zroubalik
   ux-wg-leads:
-  - abrennan89
   - snneji
   ux-writers:
-  - abrennan89
   - snneji

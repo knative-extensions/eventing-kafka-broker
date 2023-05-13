@@ -18,8 +18,10 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Shopify/sarama"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 )
 
@@ -29,3 +31,46 @@ type InitOffsetsFunc func(ctx context.Context, kafkaClient sarama.Client, kafkaA
 var (
 	_ InitOffsetsFunc = offset.InitOffsets
 )
+
+const (
+	GroupIdAnnotation = "group.id"
+)
+
+func AreConsumerGroupsPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, consumerGroups ...string) (bool, error) {
+	if len(consumerGroups) == 0 {
+		return false, fmt.Errorf("expected at least one consumergroup, got 0")
+	}
+
+	consumerGroupDescription, err := kafkaClusterAdmin.DescribeConsumerGroups(consumerGroups)
+	if err != nil {
+		return false, fmt.Errorf("failed to describe consumer groups %v: %w", consumerGroups, err)
+	}
+
+	descriptionByConsumerGroup := make(map[string]*sarama.GroupDescription, len(consumerGroupDescription))
+	for _, d := range consumerGroupDescription {
+		descriptionByConsumerGroup[d.GroupId] = d
+	}
+
+	for _, t := range consumerGroups {
+		d, ok := descriptionByConsumerGroup[t]
+		if !ok {
+			return false, fmt.Errorf("kafka did not respond with consumer group metadata")
+		}
+		if !isValidSingleConsumerGroup(d) {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func isValidSingleConsumerGroup(metadata *sarama.GroupDescription) bool {
+	if metadata == nil {
+		return false
+	}
+
+	if metadata.State == "Dead" {
+		return false
+	}
+
+	return true
+}

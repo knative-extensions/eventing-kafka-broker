@@ -28,7 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
@@ -36,6 +35,9 @@ import (
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
+
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -67,10 +69,15 @@ type Reconciler struct {
 	InternalsClient     internalsclient.Interface
 	SecretLister        corelisters.SecretLister
 	KubeClient          kubernetes.Interface
+	KafkaFeatureFlags   *apisconfig.KafkaFeatureFlags
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
+
+	if trigger.Status.Annotations == nil {
+		trigger.Status.Annotations = make(map[string]string, 0)
+	}
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -146,9 +153,31 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 	bootstrapServers := broker.Status.Annotations[kafka.BootstrapServersConfigMapKey]
 	topicName := broker.Status.Annotations[kafka.TopicAnnotation]
 
+	// Existing Triggers might not yet have this annotation
+	groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	if !ok {
+		groupId = string(trigger.UID)
+
+		// Check if a consumer group exists with the old naming convention
+		_, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID))
+		if err != nil && !apierrors.IsNotFound(err) {
+			return nil, err
+		}
+
+		// No existing consumer groups, use new naming
+		if apierrors.IsNotFound(err) {
+			groupId, err = r.KafkaFeatureFlags.ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
+			if err != nil {
+				return nil, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
+			}
+		}
+
+		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupId
+	}
+
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      string(trigger.UID),
+			Name:      groupId,
 			Namespace: trigger.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(trigger),
@@ -167,7 +196,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 				Spec: internalscg.ConsumerSpec{
 					Topics: []string{topicName},
 					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
-						"group.id":          string(trigger.UID),
+						"group.id":          groupId,
 						"bootstrap.servers": bootstrapServers,
 					}},
 					Delivery: &internalscg.DeliverySpec{
@@ -200,7 +229,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		}
 	}
 
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID)) //Get by consumer group name
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(groupId) //Get by consumer group name
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}

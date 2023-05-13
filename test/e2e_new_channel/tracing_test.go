@@ -29,7 +29,6 @@ import (
 	tracinghelper "knative.dev/eventing/test/conformance/helpers/tracing"
 	"knative.dev/eventing/test/rekt/resources/channel_impl"
 	"knative.dev/eventing/test/rekt/resources/subscription"
-	"knative.dev/eventing/test/rekt/resources/svc"
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -38,6 +37,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
+	"knative.dev/reconciler-test/pkg/resources/service"
 
 	"knative.dev/eventing-kafka-broker/test/pkg/tracing"
 )
@@ -72,7 +72,7 @@ func eventWithTraceExported() *feature.Feature {
 	f.Setup("install channel", channel_impl.Install(channelName))
 	f.Setup("install subscription", subscription.Install(subName,
 		subscription.WithChannel(channel_impl.AsRef(channelName)),
-		subscription.WithSubscriber(svc.AsRef(sinkName), ""),
+		subscription.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 
 	f.Setup("subscription is ready", subscription.IsReady(subName))
