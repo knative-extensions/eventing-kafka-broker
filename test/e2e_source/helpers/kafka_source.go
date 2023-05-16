@@ -23,8 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
@@ -36,6 +34,7 @@ import (
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
 	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
 )
@@ -383,6 +382,7 @@ func testKafkaSource(t *testing.T,
 		contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
 			auth.bootStrapServer,
 			kafkaTopicName,
+			sourcesv1beta1.Ordered,
 			resources.ServiceRef(recordEventPodName),
 			contribresources.WithNameV1Beta1(kafkaSourceName),
 			contribresources.WithConsumerGroupV1Beta1(consumerGroup),
