@@ -162,8 +162,14 @@ func (h *handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 
 		log.Println("received a message", message.ReadEncoding())
 
+		headers := ""
+		for key, val := range message.Headers {
+			headers = headers + key + " = " + string(val[:]) + "\n"
+		}
+		log.Println("headers : ", headers)
+
 		if message.ReadEncoding() != h.encoding {
-			return fmt.Errorf("message received with different encoding: want %s got %s", h.encoding.String(), message.ReadEncoding().String())
+			log.Fatalf("message received with different encoding: want %s got %s", h.encoding.String(), message.ReadEncoding().String())
 		}
 
 		event, err := binding.ToEvent(session.Context(), message)
