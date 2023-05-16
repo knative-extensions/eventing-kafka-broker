@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	"context"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmp"
