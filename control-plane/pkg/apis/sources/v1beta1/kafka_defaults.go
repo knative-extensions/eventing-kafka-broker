@@ -18,14 +18,14 @@ package v1beta1
 
 import (
 	"context"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"strconv"
 
 	"github.com/google/uuid"
 	"k8s.io/utils/pointer"
-	"knative.dev/pkg/apis"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/config"
+	"knative.dev/pkg/apis"
 )
 
 const (
