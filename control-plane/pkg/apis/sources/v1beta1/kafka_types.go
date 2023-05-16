@@ -87,7 +87,7 @@ type KafkaSourceSpec struct {
 	// Should be ordered or unordered.
 	// By default, it is ordered.
 	// +optional
-	Ordering eventing.DeliveryOrdering `json:"ordering,omitempty"`
+	Ordering *eventing.DeliveryOrdering `json:"ordering,omitempty"`
 
 	// inherits duck/v1 SourceSpec, which currently provides:
 	// * Sink - a reference to an object that will resolve to a domain name or

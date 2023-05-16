@@ -184,7 +184,7 @@ func WithInitialOffset(offset sources.Offset) KRShapedOption {
 func WithOrdering(ordering eventing.DeliveryOrdering) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		s := obj.(*sources.KafkaSource)
-		s.Spec.Ordering = ordering
+		s.Spec.Ordering = &ordering
 	}
 }
 
