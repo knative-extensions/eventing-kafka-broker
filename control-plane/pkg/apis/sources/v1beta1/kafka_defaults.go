@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	"context"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -52,6 +53,11 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 
 	if k.Spec.InitialOffset == "" {
 		k.Spec.InitialOffset = OffsetLatest
+	}
+
+	if k.Spec.Ordering == nil {
+		deliveryOrdering := eventing.Ordered
+		k.Spec.Ordering = &deliveryOrdering
 	}
 
 	kafkaConfig := config.FromContextOrDefaults(ctx)
