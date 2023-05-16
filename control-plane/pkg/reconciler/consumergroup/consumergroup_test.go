@@ -42,8 +42,8 @@ import (
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
@@ -1253,7 +1253,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
 						)),
 						ConsumerVReplicas(1),
@@ -1271,7 +1271,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
 							ConsumerInitialOffset(sources.OffsetLatest),
 						)),
@@ -1297,7 +1297,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
 							ConsumerInitialOffset(sources.OffsetLatest),
 						)),
@@ -1321,7 +1321,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 								ConsumerGroupIdConfig("my.group.id"),
 							),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 								NewConsumerSpecDeliveryDeadLetterSink(),
 								ConsumerInitialOffset(sources.OffsetLatest),
 							)),
@@ -1342,7 +1342,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 									ConsumerGroupIdConfig("my.group.id"),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+								ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
 									ConsumerInitialOffset(sources.OffsetLatest),
 								)),

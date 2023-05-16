@@ -24,14 +24,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func TestKafka_Validate(t *testing.T) {
-	validOrdering := eventing.Ordered
-	badOrdering := eventing.DeliveryOrdering("badOrder")
+	validOrdering := Ordered
+	badOrdering := DeliveryOrdering("badOrder")
 	badInitialOffset := Offset("badbOffset")
 
 	tests := []struct {

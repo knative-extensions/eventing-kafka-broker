@@ -23,7 +23,6 @@ import (
 	"github.com/google/uuid"
 	"k8s.io/utils/pointer"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/config"
 	"knative.dev/pkg/apis"
 )
@@ -56,7 +55,7 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 	}
 
 	if k.Spec.Ordering == nil {
-		deliveryOrdering := eventing.Ordered
+		deliveryOrdering := Ordered
 		k.Spec.Ordering = &deliveryOrdering
 	}
 

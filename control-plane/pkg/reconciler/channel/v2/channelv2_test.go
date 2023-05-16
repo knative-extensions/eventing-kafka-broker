@@ -37,7 +37,7 @@ import (
 	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -431,7 +431,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
@@ -498,7 +498,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
@@ -565,7 +565,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
@@ -656,7 +656,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							),
-							ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 							ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						)),
 						ConsumerGroupReady,
@@ -704,7 +704,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 					ConsumerGroupReplicas(1),
@@ -779,7 +779,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
@@ -795,7 +795,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
 				),
@@ -860,7 +860,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
 				),
@@ -880,7 +880,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
@@ -1110,7 +1110,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerAuth(&internalscg.Auth{
 							SecretSpec: &internalscg.SecretSpec{
@@ -1210,7 +1210,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerAuth(&internalscg.Auth{
 							SecretSpec: &internalscg.SecretSpec{
@@ -1309,7 +1309,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerAuth(&internalscg.Auth{
 							SecretSpec: &internalscg.SecretSpec{
@@ -1412,7 +1412,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered)),
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 					)),
 				),
