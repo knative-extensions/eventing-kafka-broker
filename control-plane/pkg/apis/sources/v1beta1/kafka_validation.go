@@ -19,7 +19,6 @@ package v1beta1
 import (
 	"context"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmp"
 )
@@ -54,7 +53,7 @@ func (kss *KafkaSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 	}
 	if kss.Ordering != nil {
 		switch *kss.Ordering {
-		case eventing.Unordered, eventing.Ordered:
+		case Unordered, Ordered:
 		default:
 			errs = errs.Also(apis.ErrInvalidValue(*kss.Ordering, "ordering"))
 		}

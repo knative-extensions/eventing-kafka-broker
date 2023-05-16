@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -87,7 +86,7 @@ type KafkaSourceSpec struct {
 	// Should be ordered or unordered.
 	// By default, it is ordered.
 	// +optional
-	Ordering *eventing.DeliveryOrdering `json:"ordering,omitempty"`
+	Ordering *DeliveryOrdering `json:"ordering,omitempty"`
 
 	// inherits duck/v1 SourceSpec, which currently provides:
 	// * Sink - a reference to an object that will resolve to a domain name or
@@ -97,6 +96,7 @@ type KafkaSourceSpec struct {
 	duckv1.SourceSpec `json:",inline"`
 }
 
+type DeliveryOrdering string
 type Offset string
 
 const (

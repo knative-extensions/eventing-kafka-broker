@@ -31,6 +31,7 @@ import (
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
 	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
@@ -120,6 +121,12 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 		ksObj.Spec.KafkaAuthSpec.Net.SASL.Enable = test.auth.SASLEnabled
 	}
 
+	if test.ordering != defaultKafkaSource.ordering {
+		//ksObj.Spec.KafkaAuthSpec.BootstrapServers = []string{test.auth.bootStrapServer}
+		//ksObj.Spec.KafkaAuthSpec.Net.TLS.Enable = test.auth.TLSEnabled
+		//ksObj.Spec.KafkaAuthSpec.Net.SASL.Enable = test.auth.SASLEnabled
+	}
+
 	contribtestlib.UpdateKafkaSourceV1Beta1OrFail(client, ksObj)
 	waitForKafkaSourceReconcilerToReconcileSource(t, client, kafkaSourceName)
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
@@ -162,6 +169,7 @@ type updateTest struct {
 	auth      authSetup
 	topicName string
 	sinkName  string
+	ordering  eventing.DeliveryOrdering
 }
 
 var (
@@ -173,6 +181,7 @@ var (
 		},
 		topicName: "initial-topic",
 		sinkName:  "default-event-recorder",
+		ordering:  eventing.Ordered,
 	}
 )
 
@@ -249,6 +258,7 @@ func TestKafkaSourceUpdate(t *testing.T) {
 			auth:      defaultKafkaSource.auth,
 			topicName: defaultKafkaSource.topicName,
 			sinkName:  "update-event-recorder",
+			ordering:  defaultKafkaSource.ordering,
 		},
 		// "change-topic": {
 		// 	auth:      defaultKafkaSource.auth,
@@ -263,6 +273,13 @@ func TestKafkaSourceUpdate(t *testing.T) {
 			},
 			topicName: defaultKafkaSource.topicName,
 			sinkName:  defaultKafkaSource.sinkName,
+			ordering:  defaultKafkaSource.ordering,
+		},
+		"change-ordering": {
+			auth:      defaultKafkaSource.auth,
+			topicName: defaultKafkaSource.topicName,
+			sinkName:  defaultKafkaSource.sinkName,
+			ordering:  eventing.Unordered,
 		},
 	}
 
