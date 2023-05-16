@@ -23,6 +23,7 @@ package v1beta1
 
 import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 )
 
@@ -105,6 +106,11 @@ func (in *KafkaSourceSpec) DeepCopyInto(out *KafkaSourceSpec) {
 		in, out := &in.Delivery, &out.Delivery
 		*out = new(v1.DeliverySpec)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.Ordering != nil {
+		in, out := &in.Ordering, &out.Ordering
+		*out = new(eventing.DeliveryOrdering)
+		**out = **in
 	}
 	in.SourceSpec.DeepCopyInto(&out.SourceSpec)
 	return

@@ -101,9 +101,8 @@ func GetLabels(name string) map[string]string {
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 	var deliverySpec *internalscg.DeliverySpec
 	deliveryOrder := DefaultDeliveryOrder
-	switch ks.Spec.Ordering {
-	case internals.Ordered, internals.Unordered:
-		deliveryOrder = ks.Spec.Ordering
+	if ks.Spec.Ordering != nil {
+		deliveryOrder = *ks.Spec.Ordering
 	}
 	if ks.Spec.Delivery != nil {
 		deliverySpec = &internalscg.DeliverySpec{

@@ -1350,53 +1350,6 @@ func TestReconcileKind(t *testing.T) {
 				},
 			},
 		},
-		{
-			Name: "Reconciled normal - with invalid ordering for consumer verticle",
-			Objects: []runtime.Object{
-				NewSource(WithOrdering("badorder")),
-			},
-			Key: testKey,
-			WantCreates: []runtime.Object{
-				NewConsumerGroup(
-					WithConsumerGroupName(SourceUUID),
-					WithConsumerGroupNamespace(SourceNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
-					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
-					WithConsumerGroupLabels(ConsumerSourceLabel),
-					ConsumerGroupConsumerSpec(NewConsumerSpec(
-						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
-						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
-							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-						),
-						ConsumerAuth(NewConsumerSpecAuth()),
-						ConsumerDelivery(
-							NewConsumerSpecDelivery(
-								internals.Ordered,
-								NewConsumerTimeout("PT600S"),
-								NewConsumerRetry(10),
-								NewConsumerBackoffDelay("PT0.3S"),
-								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
-								ConsumerInitialOffset(sources.OffsetLatest),
-							),
-						),
-						ConsumerSubscriber(NewSourceSinkReference()),
-						ConsumerReply(ConsumerNoReply()),
-					)),
-					ConsumerGroupReplicas(1),
-				),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: NewSource(
-						WithOrdering("badorder"),
-						StatusSourceConsumerGroupUnknown(),
-						StatusSourceSinkResolved(""),
-						StatusSourceSelector(),
-					),
-				},
-			},
-		},
 	}
 
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
