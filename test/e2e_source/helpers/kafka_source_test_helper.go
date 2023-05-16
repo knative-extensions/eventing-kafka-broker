@@ -31,7 +31,6 @@ import (
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
 	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
@@ -85,6 +84,7 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 	contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
 		defaultKafkaSource.auth.bootStrapServer,
 		defaultKafkaSource.topicName+name,
+		defaultKafkaSource.ordering,
 		resources.ServiceRef(defaultKafkaSource.sinkName),
 		contribresources.WithNameV1Beta1(kafkaSourceName),
 		withAuthEnablementV1Beta1(defaultKafkaSource.auth),
@@ -122,13 +122,11 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 	}
 
 	if test.ordering != defaultKafkaSource.ordering {
-		//ksObj.Spec.KafkaAuthSpec.BootstrapServers = []string{test.auth.bootStrapServer}
-		//ksObj.Spec.KafkaAuthSpec.Net.TLS.Enable = test.auth.TLSEnabled
-		//ksObj.Spec.KafkaAuthSpec.Net.SASL.Enable = test.auth.SASLEnabled
+		ksObj.Spec.Ordering = &test.ordering
 	}
 
 	contribtestlib.UpdateKafkaSourceV1Beta1OrFail(client, ksObj)
-	waitForKafkaSourceReconcilerToReconcileSource(t, client, kafkaSourceName)
+	ksObj = waitForKafkaSourceReconcilerToReconcileSource(t, client, kafkaSourceName)
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
 	t.Logf("Send update event to kafkatopic")
@@ -142,6 +140,9 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 		originalEventTracker.AssertExact(1, recordevents.MatchEvent(matcherGen(eventSourceName, "update")))
 	}
 
+	if test.ordering != defaultKafkaSource.ordering {
+		require.Equal(t, test.ordering, *ksObj.Spec.Ordering, "the ordering of the KfakaSource should be: %+v", test.ordering)
+	}
 }
 
 func waitForKafkaSourceReconcilerToReconcileSource(t *testing.T, client *testlib.Client, kafkaSourceName string) *sourcesv1beta1.KafkaSource {
@@ -169,7 +170,7 @@ type updateTest struct {
 	auth      authSetup
 	topicName string
 	sinkName  string
-	ordering  eventing.DeliveryOrdering
+	ordering  sourcesv1beta1.DeliveryOrdering
 }
 
 var (
@@ -181,7 +182,7 @@ var (
 		},
 		topicName: "initial-topic",
 		sinkName:  "default-event-recorder",
-		ordering:  eventing.Ordered,
+		ordering:  sourcesv1beta1.Ordered,
 	}
 )
 
@@ -224,6 +225,7 @@ func TestKafkaSourceClaims(t *testing.T) {
 	contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
 		KafkaBootstrapUrlPlain,
 		topic,
+		sourcesv1beta1.Ordered,
 		resources.ServiceRef(sink),
 		contribresources.WithNameV1Beta1(kafkaSourceName),
 	))
@@ -279,7 +281,7 @@ func TestKafkaSourceUpdate(t *testing.T) {
 			auth:      defaultKafkaSource.auth,
 			topicName: defaultKafkaSource.topicName,
 			sinkName:  defaultKafkaSource.sinkName,
-			ordering:  eventing.Unordered,
+			ordering:  sourcesv1beta1.Unordered,
 		},
 	}
 
