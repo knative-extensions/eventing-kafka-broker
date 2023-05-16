@@ -100,15 +100,11 @@ func GetLabels(name string) map[string]string {
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 	var deliverySpec *internalscg.DeliverySpec
-	deliveryOrder := DefaultDeliveryOrder
-	if ks.Spec.Ordering != nil {
-		deliveryOrder = *ks.Spec.Ordering
-	}
 	if ks.Spec.Delivery != nil {
 		deliverySpec = &internalscg.DeliverySpec{
 			InitialOffset: ks.Spec.InitialOffset,
 			DeliverySpec:  ks.Spec.Delivery.DeepCopy(),
-			Ordering:      deliveryOrder,
+			Ordering:      *ks.Spec.Ordering,
 		}
 	} else {
 		backoffPolicy := eventingduck.BackoffPolicyExponential
@@ -120,7 +116,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 				BackoffDelay:  pointer.String("PT0.3S"),
 				Timeout:       pointer.String("PT600S"),
 			},
-			Ordering: deliveryOrder,
+			Ordering: *ks.Spec.Ordering,
 		}
 	}
 
