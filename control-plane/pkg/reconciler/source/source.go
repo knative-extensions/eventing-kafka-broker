@@ -35,7 +35,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
@@ -45,7 +44,7 @@ import (
 )
 
 const (
-	DefaultDeliveryOrder = internals.Ordered
+	DefaultDeliveryOrder = sources.Ordered
 
 	KafkaConditionConsumerGroup apis.ConditionType = "ConsumerGroup" //condition is registered by controller
 )
@@ -100,11 +99,15 @@ func GetLabels(name string) map[string]string {
 
 func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 	var deliverySpec *internalscg.DeliverySpec
+	deliveryOrder := DefaultDeliveryOrder
+	if ks.Spec.Ordering != nil {
+		deliveryOrder = *ks.Spec.Ordering
+	}
 	if ks.Spec.Delivery != nil {
 		deliverySpec = &internalscg.DeliverySpec{
 			InitialOffset: ks.Spec.InitialOffset,
 			DeliverySpec:  ks.Spec.Delivery.DeepCopy(),
-			Ordering:      DefaultDeliveryOrder,
+			Ordering:      deliveryOrder,
 		}
 	} else {
 		backoffPolicy := eventingduck.BackoffPolicyExponential
@@ -116,7 +119,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 				BackoffDelay:  pointer.String("PT0.3S"),
 				Timeout:       pointer.String("PT600S"),
 			},
-			Ordering: DefaultDeliveryOrder,
+			Ordering: deliveryOrder,
 		}
 	}
 

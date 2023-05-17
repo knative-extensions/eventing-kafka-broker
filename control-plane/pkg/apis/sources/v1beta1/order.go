@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package eventing
+package v1beta1
 
 import (
 	"context"
@@ -42,8 +42,6 @@ var (
 
 	deliveryOrdersString = strings.Join(deliveryOrders.List(), ",")
 )
-
-type DeliveryOrdering string
 
 func (d DeliveryOrdering) Validate(context.Context) *apis.FieldError {
 	if !deliveryOrders.Has(string(d)) {

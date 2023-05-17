@@ -82,6 +82,12 @@ type KafkaSourceSpec struct {
 	// +optional
 	Delivery *eventingduckv1.DeliverySpec `json:"delivery,omitempty"`
 
+	// Ordering is the type of the consumer verticle.
+	// Should be ordered or unordered.
+	// By default, it is ordered.
+	// +optional
+	Ordering *DeliveryOrdering `json:"ordering,omitempty"`
+
 	// inherits duck/v1 SourceSpec, which currently provides:
 	// * Sink - a reference to an object that will resolve to a domain name or
 	//   a URI directly to use as the sink.
@@ -90,6 +96,7 @@ type KafkaSourceSpec struct {
 	duckv1.SourceSpec `json:",inline"`
 }
 
+type DeliveryOrdering string
 type Offset string
 
 const (

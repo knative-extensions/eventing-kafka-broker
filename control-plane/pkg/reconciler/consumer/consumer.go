@@ -34,6 +34,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -251,9 +252,9 @@ func reconcileDeliveryOrder(c *kafkainternals.Consumer) contract.DeliveryOrder {
 		return contract.DeliveryOrder_UNORDERED
 	}
 	switch c.Spec.Delivery.Ordering {
-	case eventing.Ordered:
+	case kafkasource.Ordered:
 		return contract.DeliveryOrder_ORDERED
-	case eventing.Unordered:
+	case kafkasource.Unordered:
 		return contract.DeliveryOrder_UNORDERED
 	}
 	return contract.DeliveryOrder_UNORDERED

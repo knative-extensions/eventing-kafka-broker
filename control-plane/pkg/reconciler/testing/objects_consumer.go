@@ -32,7 +32,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
@@ -114,7 +113,7 @@ func ConsumerUID(uid string) ConsumerOption {
 
 type DeliverySpecOption func(spec *kafkainternals.DeliverySpec)
 
-func NewConsumerSpecDelivery(order internals.DeliveryOrdering, options ...DeliverySpecOption) *kafkainternals.DeliverySpec {
+func NewConsumerSpecDelivery(order sources.DeliveryOrdering, options ...DeliverySpecOption) *kafkainternals.DeliverySpec {
 	d := &kafkainternals.DeliverySpec{
 		Ordering: order,
 	}

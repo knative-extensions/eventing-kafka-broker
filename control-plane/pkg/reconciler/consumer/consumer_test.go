@@ -35,8 +35,8 @@ import (
 	"knative.dev/pkg/tracker"
 
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -382,7 +382,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							ConsumerGroupIdConfig(SourceConsumerGroup),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
 							NewConsumerRetry(10),
 							NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
@@ -468,7 +468,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
 									ConsumerGroupIdConfig(SourceConsumerGroup),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery(internals.Ordered,
+								ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
 									NewConsumerRetry(10),
 									NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
