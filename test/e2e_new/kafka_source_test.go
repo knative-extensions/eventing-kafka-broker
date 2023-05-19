@@ -193,6 +193,7 @@ func TestKafkaSourceUpdate(t *testing.T) {
 	// First, send an arbitrary event to Kafka and let KafkaSource
 	// forward the event to the sink.
 	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink))
+
 	// Second, use the same KafkaSource, update it, send a new event to
 	// Kafka (through the same KafkaSink using same Kafka Topic). And verify that
 	// the new event is delivered properly.

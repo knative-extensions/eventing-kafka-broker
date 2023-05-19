@@ -109,10 +109,9 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 		},
 	}
 
-	authName := "plain"
-	for testcase, test := range tests {
+	for name, test := range tests {
 		test := test
-		name := testcase + "_" + authName
+		name := name
 		for _, version := range []string{"v1beta1"} {
 			testName := name + "-" + version
 			t.Run(testName, func(t *testing.T) {
