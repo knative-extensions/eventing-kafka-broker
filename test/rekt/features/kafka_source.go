@@ -502,10 +502,10 @@ func KafkaSourceTLS(kafkaSource, kafkaSink string) *feature.Feature {
 	return KafkaSourceFeature("KafkaSourceTLS",
 		kafkaSourceConfig{
 			authMech:   TLSMech,
-			sourceName: feature.MakeRandomK8sName("kafkaSource"),
+			sourceName: kafkaSource,
 		},
 		kafkaSinkConfig{
-			sinkName: feature.MakeRandomK8sName("kafkaSink"),
+			sinkName: kafkaSink,
 		},
 		senderOptions,
 		matcher,
