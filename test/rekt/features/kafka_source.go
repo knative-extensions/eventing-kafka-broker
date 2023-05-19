@@ -68,8 +68,9 @@ const (
 )
 
 type kafkaSourceUpdate struct {
-	auth authSetup
-	sink string
+	auth     authSetup
+	sink     string
+	ordering sourcesv1beta1.DeliveryOrdering
 }
 
 type authSetup struct {
@@ -317,6 +318,7 @@ func KafkaSourceFeature(name string,
 	kafkaSourceOpts := []manifest.CfgFn{
 		kafkasource.WithSink(service.AsKReference(receiver), ""),
 		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithOrdering(string(sourcesv1beta1.Ordered)),
 	}
 	if len(kafkaSourceCfg.ceExtensions) != 0 {
 		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithExtensions(kafkaSourceCfg.ceExtensions))
@@ -545,7 +547,8 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource string, kafkaSink string) *feat
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
 	update := kafkaSourceUpdate{
-		sink: receiver,
+		sink:     receiver,
+		ordering: sourcesv1beta1.Unordered,
 		auth: authSetup{
 			bootstrapServers: testingpkg.BootstrapServersPlaintextArr,
 			TLSEnabled:       false,
@@ -587,6 +590,7 @@ func ModifyKafkaSource(kafkaSourceName string, update kafkaSourceUpdate) feature
 		ksObj.Spec.KafkaAuthSpec.BootstrapServers = update.auth.bootstrapServers
 		ksObj.Spec.KafkaAuthSpec.Net.TLS.Enable = update.auth.TLSEnabled
 		ksObj.Spec.KafkaAuthSpec.Net.SASL.Enable = update.auth.SASLEnabled
+		ksObj.Spec.Ordering = &update.ordering
 
 		err = updateKafkaSource(ctx, ksObj)
 		if err != nil {

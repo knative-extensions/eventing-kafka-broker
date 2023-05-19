@@ -39,6 +39,9 @@ spec:
   {{ if .consumers }}
   consumers: {{ .consumers }}
   {{ end }}
+  {{ if .ordering }}
+  ordering: {{ .ordering }}
+  {{ end }}
   {{ if .topics }}
   topics:
     {{ range $value := .topics }}

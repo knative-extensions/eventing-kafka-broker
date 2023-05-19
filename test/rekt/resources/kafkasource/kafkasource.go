@@ -120,6 +120,13 @@ func WithConsumers(consumers int32) manifest.CfgFn {
 	}
 }
 
+// WithOrdering adds ordering a KafkaSource spec.
+func WithOrdering(ordering string) manifest.CfgFn {
+	return func(cfg map[string]interface{}) {
+		cfg["ordering"] = ordering
+	}
+}
+
 // WithAnnotations adds annotation to a KafkaSource metadata.
 func WithAnnotations(annotations map[string]string) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
