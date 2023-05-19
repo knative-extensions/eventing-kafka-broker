@@ -1,6 +1,3 @@
-//go:build upgrade
-// +build upgrade
-
 /*
  * Copyright 2021 The Knative Authors
  *
@@ -65,8 +62,8 @@ func runChannelSmokeTest(t *testing.T) {
 	}
 }
 
-func runSourceSmokeTest(t *testing.T) {
-	ctx, env := global.Environment(
+func runSourceSmokeTest(glob environment.GlobalEnvironment, t *testing.T) {
+	ctx, env := glob.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,

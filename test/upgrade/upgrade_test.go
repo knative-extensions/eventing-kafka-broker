@@ -29,7 +29,7 @@ import (
 )
 
 func TestUpgrades(t *testing.T) {
-	suite := Suite()
+	suite := Suite(global)
 
 	pods := []string{
 		reconciler.BrokerReceiverLabel,
