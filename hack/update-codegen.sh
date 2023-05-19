@@ -84,3 +84,10 @@ if ! ${GITHUB_ACTIONS:-false}; then
 fi
 
 ${REPO_ROOT_DIR}/hack/update-deps.sh
+
+cert_manager_installer="${REPO_ROOT_DIR}/vendor/knative.dev/eventing/hack/update-cert-manager.sh"
+
+chmod +x "${cert_manager_installer}"
+
+"${cert_manager_installer}"
+
