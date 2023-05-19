@@ -282,9 +282,9 @@ func compareConsumerGroup(source string, cmp func(*internalscg.ConsumerGroup) er
 }
 
 type kafkaSourceConfig struct {
-	sourceName   string
-	authMech     string
-	ceExtensions map[string]string
+	sourceName string
+	authMech   string
+	opts       []manifest.CfgFn
 }
 
 type kafkaSinkConfig struct {
@@ -318,11 +318,8 @@ func KafkaSourceFeature(name string,
 	kafkaSourceOpts := []manifest.CfgFn{
 		kafkasource.WithSink(service.AsKReference(receiver), ""),
 		kafkasource.WithTopics([]string{topic}),
-		kafkasource.WithOrdering(string(sourcesv1beta1.Ordered)),
 	}
-	if len(kafkaSourceCfg.ceExtensions) != 0 {
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithExtensions(kafkaSourceCfg.ceExtensions))
-	}
+	kafkaSourceOpts = append(kafkaSourceOpts, kafkaSourceCfg.opts...)
 
 	switch kafkaSourceCfg.authMech {
 	case TLSMech:
@@ -465,10 +462,6 @@ func KafkaSourceWithExtensions() *feature.Feature {
 			"id":          "A234-1234-1234",
 		})),
 	}
-	kafkaSourceExtensions := map[string]string{
-		"comexampleextension1": "value",
-		"comexampleothervalue": "5",
-	}
 	matcher := AllOf(
 		HasSpecVersion(cloudevents.VersionV1),
 		HasType("com.github.pull.create"),
@@ -479,9 +472,13 @@ func KafkaSourceWithExtensions() *feature.Feature {
 
 	return KafkaSourceFeature("KafkaSourceWithExtensions",
 		kafkaSourceConfig{
-			authMech:     PlainMech,
-			sourceName:   feature.MakeRandomK8sName("kafkaSource"),
-			ceExtensions: kafkaSourceExtensions,
+			authMech:   PlainMech,
+			sourceName: feature.MakeRandomK8sName("kafkaSource"),
+			opts: []manifest.CfgFn{
+				kafkasource.WithExtensions(map[string]string{
+					"comexampleextension1": "value",
+					"comexampleothervalue": "5",
+				})},
 		},
 		kafkaSinkConfig{
 			sinkName: feature.MakeRandomK8sName("kafkaSink"),
@@ -503,6 +500,7 @@ func KafkaSourceTLS(kafkaSource, kafkaSink string) *feature.Feature {
 		kafkaSourceConfig{
 			authMech:   TLSMech,
 			sourceName: kafkaSource,
+			opts:       []manifest.CfgFn{kafkasource.WithOrdering(string(sourcesv1beta1.Ordered))},
 		},
 		kafkaSinkConfig{
 			sinkName: kafkaSink,
