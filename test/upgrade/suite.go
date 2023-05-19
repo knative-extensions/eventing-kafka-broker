@@ -1,3 +1,6 @@
+//go:build upgrade
+// +build upgrade
+
 /*
  * Copyright 2021 The Knative Authors
  *
