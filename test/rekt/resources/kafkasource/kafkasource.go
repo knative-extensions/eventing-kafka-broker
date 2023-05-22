@@ -169,13 +169,19 @@ func WithTLSEnabled() manifest.CfgFn {
 		if _, ok := cfg["tls"]; !ok {
 			cfg["tls"] = map[string]interface{}{}
 		}
+		tls := cfg["tls"].(map[string]interface{})
+		tls["enable"] = true
 	}
 }
 
 // WithTLSDisabled disables TLS to a KafkaSource spec.
 func WithTLSDisabled() manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
-		delete(cfg, "tls")
+		if _, ok := cfg["tls"]; !ok {
+			cfg["tls"] = map[string]interface{}{}
+		}
+		tls := cfg["tls"].(map[string]interface{})
+		tls["enable"] = false
 	}
 }
 
@@ -233,13 +239,19 @@ func WithSASLEnabled() manifest.CfgFn {
 		if _, ok := cfg["sasl"]; !ok {
 			cfg["sasl"] = map[string]interface{}{}
 		}
+		tls := cfg["sasl"].(map[string]interface{})
+		tls["enable"] = true
 	}
 }
 
 // WithSASLDisabled disables SASL to a KafkaSource spec.
 func WithSASLDisabled() manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
-		delete(cfg, "sasl")
+		if _, ok := cfg["sasl"]; !ok {
+			cfg["sasl"] = map[string]interface{}{}
+		}
+		tls := cfg["sasl"].(map[string]interface{})
+		tls["enable"] = false
 	}
 }
 

@@ -52,7 +52,7 @@ spec:
   net:
     {{ if .tls }}
     tls:
-      enable: true
+      enable: {{ .tls.enable }}
       {{ if .tls.cert }}
       cert:
         secretKeyRef:
@@ -74,7 +74,7 @@ spec:
     {{ end }}
     {{ if .sasl }}
     sasl:
-      enable: true
+      enable: {{ .sasl.enable }}
       {{ if .sasl.user }}
       user:
         secretKeyRef:
