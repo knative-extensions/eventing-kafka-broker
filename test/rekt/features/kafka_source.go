@@ -64,18 +64,6 @@ const (
 	PlainMech      = "plain"
 )
 
-type kafkaSourceUpdate struct {
-	auth     authSetup
-	sink     string
-	ordering sourcesv1beta1.DeliveryOrdering
-}
-
-type authSetup struct {
-	bootstrapServers []string
-	SASLEnabled      bool
-	TLSEnabled       bool
-}
-
 func SetupAndCleanupKafkaSources(prefix string, n int) *feature.Feature {
 	f := SetupKafkaSources(prefix, n)
 	f.Teardown("cleanup resources", f.DeleteResources)
