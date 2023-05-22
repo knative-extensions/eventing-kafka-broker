@@ -20,12 +20,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"knative.dev/eventing-kafka-broker/test/upgrade"
 )
 
 func TestSuite(t *testing.T) {
-	s := upgrade.Suite()
+	s := upgrade.Suite(nil) // Global environment not required
 	assert.NotEmpty(t, s.Tests.Continual)
 	assert.NotEmpty(t, s.Tests.PostDowngrade)
 	assert.NotEmpty(t, s.Tests.PreUpgrade)

@@ -37,9 +37,6 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 	name := feature.MakeRandomK8sName("source")
 	sink := feature.MakeRandomK8sName("sink")
 
-	tlsSecretName := "strimzi-tls-secret"
-	saslSecretName := "strimzi-sasl-secret"
-
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("install a service", service.Install(sink,
 		service.WithSelectors(map[string]string{"app": "rekt"})))

@@ -18,6 +18,7 @@ package upgrade
 
 import (
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+	"knative.dev/reconciler-test/pkg/environment"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -57,9 +58,9 @@ func SinkPostDowngradeTest() pkgupgrade.Operation {
 }
 
 // SourcePostDowngradeTest tests source operations after downgrade.
-func SourcePostDowngradeTest() pkgupgrade.Operation {
+func SourcePostDowngradeTest(glob environment.GlobalEnvironment) pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("SourcePostDowngradeTest",
 		func(c pkgupgrade.Context) {
-			runSourceSmokeTest(c.T)
+			runSourceSmokeTest(glob, c.T)
 		})
 }

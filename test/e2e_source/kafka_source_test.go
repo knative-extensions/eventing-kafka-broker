@@ -27,12 +27,8 @@ import (
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
-func TestKafkaSourceUpdate(t *testing.T) {
-	testingpkg.RunMultiple(t, helpers.TestKafkaSourceUpdate)
-}
-
-func TestKafkaSourceAssureIsOperational(t *testing.T) {
+func TestKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 	testingpkg.RunMultiple(t, func(t *testing.T) {
-		helpers.AssureKafkaSourceIsOperational(t, func(auth, testCase, version string) bool { return true })
+		helpers.AssureKafkaSourceConsumesMsgNoEvent(t)
 	})
 }
