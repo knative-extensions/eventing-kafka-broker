@@ -278,7 +278,7 @@ type kafkaSinkConfig struct {
 	opts     []manifest.CfgFn
 }
 
-func KafkaSourceFeature(name string,
+func kafkaSourceFeature(name string,
 	kafkaSourceCfg kafkaSourceConfig,
 	kafkaSinkCfg kafkaSinkConfig,
 	senderOpts []eventshub.EventsHubOption,
@@ -388,7 +388,7 @@ func KafkaSourceBinaryEvent() *feature.Feature {
 		HasExtension("comexampleothervalue", "5"),
 	)
 
-	return KafkaSourceFeature("KafkaSourceBinaryEvent",
+	return kafkaSourceFeature("KafkaSourceBinaryEvent",
 		kafkaSourceConfig{
 			authMech: PlainMech,
 		},
@@ -430,7 +430,7 @@ func KafkaSourceStructuredEvent() *feature.Feature {
 		HasExtension("comexampleothervalue", "5"),
 	)
 
-	return KafkaSourceFeature("KafkaSourceStructuredEvent",
+	return kafkaSourceFeature("KafkaSourceStructuredEvent",
 		kafkaSourceConfig{
 			authMech: PlainMech,
 		},
@@ -460,7 +460,7 @@ func KafkaSourceWithExtensions() *feature.Feature {
 		HasExtension("comexampleothervalue", "5"),
 	)
 
-	return KafkaSourceFeature("KafkaSourceWithExtensions",
+	return kafkaSourceFeature("KafkaSourceWithExtensions",
 		kafkaSourceConfig{
 			authMech: PlainMech,
 			opts: []manifest.CfgFn{
@@ -484,7 +484,7 @@ func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
 	}
 	matcher := HasData(e.Data())
 
-	return KafkaSourceFeature("KafkaSourceTLS",
+	return kafkaSourceFeature("KafkaSourceTLS",
 		kafkaSourceConfig{
 			authMech:   TLSMech,
 			topic:      topic,
@@ -506,7 +506,7 @@ func KafkaSourceSASL() *feature.Feature {
 	}
 	matcher := HasData(e.Data())
 
-	return KafkaSourceFeature("KafkaSourceSASL",
+	return kafkaSourceFeature("KafkaSourceSASL",
 		kafkaSourceConfig{
 			authMech: SASLMech,
 		},
