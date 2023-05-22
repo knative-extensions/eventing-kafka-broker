@@ -20,22 +20,16 @@
 package upgrade
 
 import (
-	"log"
 	"testing"
 
 	reconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
-	"knative.dev/pkg/test/zipkin"
 )
 
 func TestUpgrades(t *testing.T) {
-	suite := Suite()
-	// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
-	// place that cleans it up. If an individual test calls this instead, then it will break other
-	// tests that need the tracing in place.
-	defer zipkin.CleanupZipkinTracingSetup(log.Printf)
+	suite := Suite(global)
 
 	pods := []string{
 		reconciler.BrokerReceiverLabel,

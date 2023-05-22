@@ -22,13 +22,12 @@ package e2e_new
 import (
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-
-	"knative.dev/eventing-kafka-broker/test/rekt/features"
 )
 
 func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
@@ -40,6 +39,7 @@ func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -55,6 +55,7 @@ func TestKafkaSourceDeletedFromContractConfigMaps(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 	t.Cleanup(env.Finish)
@@ -73,6 +74,7 @@ func TestKafkaSourceScale(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 	t.Cleanup(env.Finish)
@@ -88,6 +90,7 @@ func TestKafkaSourceInitialOffsetEarliest(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -95,4 +98,112 @@ func TestKafkaSourceInitialOffsetEarliest(t *testing.T) {
 
 	env.Test(ctx, t, features.SetupKafkaTopicWithEvents(2, topic))
 	env.Test(ctx, t, features.KafkaSourceInitialOffsetEarliest(2, topic))
+}
+
+func TestKafkaSourceBinaryEvent(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceBinaryEvent())
+}
+
+func TestKafkaSourceStructuredEvent(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceStructuredEvent())
+}
+
+func TestKafkaSourceWithExtensions(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceWithExtensions())
+}
+
+func TestKafkaSourceTLS(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	kafkaSource := feature.MakeRandomK8sName("kafkaSource")
+	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	topic := feature.MakeRandomK8sName("topic")
+
+	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink, topic))
+}
+
+func TestKafkaSourceSASL(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceSASL())
+}
+
+func TestKafkaSourceUpdate(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	kafkaSource := feature.MakeRandomK8sName("kafkaSource")
+	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	topic := feature.MakeRandomK8sName("topic")
+
+	// First, send an arbitrary event to Kafka and let KafkaSource
+	// forward the event to the sink.
+	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink, topic))
+
+	// Second, use the same KafkaSource, update it, send a new event to
+	// Kafka (through the same KafkaSink using same Kafka Topic). And verify that
+	// the new event is delivered properly.
+	env.Test(ctx, t, features.KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic))
 }

@@ -27,9 +27,6 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	"github.com/davecgh/go-spew/spew"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,10 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
-
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-
-	kafkaclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 )
 
 const (
@@ -144,84 +137,6 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	}
 }
 
-func MustPublishKafkaMessageViaBinding(client *testlib.Client, selector map[string]string, topic string, key string, headers map[string]string, value string) {
-	cgName := topic + "-" + key
-
-	kvlist := make([]string, 0, len(headers))
-	for k, v := range headers {
-		kvlist = append(kvlist, k+":"+v)
-	}
-
-	job := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cgName + "-producer",
-			Namespace: client.Namespace,
-			Labels:    selector,
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Name:  cgName + "-producer-container",
-						Image: pkgtest.ImagePath("kafka-publisher"),
-						Env: []corev1.EnvVar{{
-							Name:  "KAFKA_TOPIC",
-							Value: topic,
-						}, {
-							Name:  "KAFKA_KEY",
-							Value: key,
-						}, {
-							Name:  "KAFKA_HEADERS",
-							Value: strings.Join(kvlist, ","),
-						}, {
-							Name:  "KAFKA_VALUE",
-							Value: value,
-						}},
-					}},
-					RestartPolicy: corev1.RestartPolicyNever,
-				},
-			},
-		},
-	}
-
-	pkgtest.CleanupOnInterrupt(func() {
-		client.Kube.BatchV1().Jobs(job.Namespace).Delete(context.Background(), job.Name, metav1.DeleteOptions{})
-	}, client.T.Logf)
-	job, err := client.Kube.BatchV1().Jobs(job.Namespace).Create(context.Background(), job, metav1.CreateOptions{})
-	if err != nil {
-		client.T.Fatalf("Error creating Job: %v", err)
-	}
-
-	// Dump the state of the Job after it's been created so that we can
-	// see the effects of the binding for debugging.
-	client.T.Log("", "job", spew.Sprint(job))
-
-	defer func() {
-		err := client.Kube.BatchV1().Jobs(job.Namespace).Delete(context.Background(), job.Name, metav1.DeleteOptions{})
-		if err != nil {
-			client.T.Errorf("Error cleaning up Job %s", job.Name)
-		}
-	}()
-
-	// Wait for the Job to report a successful execution.
-	waitErr := wait.PollImmediate(1*time.Second, 2*time.Minute, func() (bool, error) {
-		js, err := client.Kube.BatchV1().Jobs(job.Namespace).Get(context.Background(), job.Name, metav1.GetOptions{})
-		if apierrs.IsNotFound(err) {
-			return false, nil
-		} else if err != nil {
-			return true, err
-		}
-
-		client.T.Logf("Active=%d, Failed=%d, Succeeded=%d", js.Status.Active, js.Status.Failed, js.Status.Succeeded)
-
-		// Check for successful completions.
-		return js.Status.Succeeded > 0, nil
-	})
-	if waitErr != nil {
-		client.T.Fatalf("Error waiting for Job to complete successfully: %v", waitErr)
-	}
-}
-
 func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topicName string, partitions int) {
 	obj := unstructured.Unstructured{
 		Object: map[string]interface{}{
@@ -250,116 +165,6 @@ func MustCreateTopic(client *testlib.Client, clusterName, clusterNamespace, topi
 	if err := WaitForKafkaResourceReady(context.Background(), client, clusterNamespace, topicName, topicGVR); err != nil {
 		client.T.Fatalf("Error while creating the topic %s: %v", topicName, err)
 	}
-}
-
-func MustCreateKafkaUserForTopic(client *testlib.Client, clusterName, clusterNamespace, authenticationType, userName, topicName string) {
-	obj := unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": userGVR.GroupVersion().String(),
-			"kind":       "KafkaUser",
-			"metadata": map[string]interface{}{
-				"name": userName,
-				"labels": map[string]interface{}{
-					"strimzi.io/cluster": clusterName,
-				},
-			},
-			"spec": map[string]interface{}{
-				"authentication": map[string]interface{}{
-					"type": authenticationType,
-				},
-				"authorization": map[string]interface{}{
-					"type": "simple",
-					"acls": []interface{}{
-						// For the consumer
-						map[string]interface{}{
-							"operation": "Read",
-							"resource": map[string]interface{}{
-								"type": "topic",
-								"name": topicName,
-							},
-						},
-						// For the producer
-						map[string]interface{}{
-							"operation": "Write",
-							"resource": map[string]interface{}{
-								"type": "topic",
-								"name": topicName,
-							},
-						},
-						// Generic operation for describing a topic
-						map[string]interface{}{
-							"operation": "Describe",
-							"resource": map[string]interface{}{
-								"type": "topic",
-								"name": topicName,
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	_, err := client.Dynamic.Resource(userGVR).Namespace(clusterNamespace).Create(context.Background(), &obj, metav1.CreateOptions{})
-	if err != nil {
-		client.T.Fatalf("Error while creating the user %s for topic %s: %v", userName, topicName, err)
-	}
-	client.Tracker.Add(userGVR.Group, userGVR.Version, userGVR.Resource, clusterNamespace, topicName)
-
-	// Wait for the user to be ready
-	if err := WaitForKafkaResourceReady(context.Background(), client, clusterNamespace, topicName, userGVR); err != nil {
-		client.T.Fatalf("Error while creating the user %s for topic %s: %v", userName, topicName, err)
-	}
-}
-
-// CheckKafkaSourceState waits for specified kafka source resource state
-// On timeout reports error
-func CheckKafkaSourceState(ctx context.Context, c *testlib.Client, name string, inState func(ks *sourcesv1beta1.KafkaSource) (bool, error)) error {
-	kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
-	if err != nil {
-		return err
-	}
-	kSources := kafkaSourceClientSet.SourcesV1beta1().KafkaSources(c.Namespace)
-	var lastState *sourcesv1beta1.KafkaSource
-	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
-		var err error
-		lastState, err = kSources.Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			return true, err
-		}
-		return inState(lastState)
-	})
-	if waitErr != nil {
-		return fmt.Errorf("kafkasource %q is not in desired state, got: %+v: %w", name, lastState, waitErr)
-	}
-	return nil
-}
-
-// CheckRADeployment waits for desired state of receiver adapter
-// On timeout reports error
-func CheckRADeployment(ctx context.Context, c *testlib.Client, name string, inState func(deps *appsv1.DeploymentList) (bool, error)) error {
-	listOptions := metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", "eventing.knative.dev/sourceName", name),
-	}
-	kDeps := c.Kube.AppsV1().Deployments(c.Namespace)
-	var lastState *appsv1.DeploymentList
-	waitErr := wait.PollImmediate(interval, timeout, func() (bool, error) {
-		var err error
-		lastState, err = kDeps.List(ctx, listOptions)
-		if err != nil {
-			return true, err
-		}
-		return inState(lastState)
-	})
-	if waitErr != nil {
-		return fmt.Errorf("receiver adapter deployments %q is not in desired state, got: %+v: %w", name, lastState, waitErr)
-	}
-	return nil
-}
-
-// Deprecated: Use WaitForKafkaResourceReady instead.
-func WaitForTopicReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {
-	return WaitForKafkaResourceReady(ctx, client, namespace, name, gvr)
 }
 
 func WaitForKafkaResourceReady(ctx context.Context, client *testlib.Client, namespace, name string, gvr schema.GroupVersionResource) error {

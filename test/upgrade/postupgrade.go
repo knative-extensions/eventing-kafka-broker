@@ -29,6 +29,7 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+	"knative.dev/reconciler-test/pkg/environment"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -83,10 +84,10 @@ func SinkPostUpgradeTest() pkgupgrade.Operation {
 }
 
 // SourcePostUpgradeTest tests source operations after upgrade.
-func SourcePostUpgradeTest() pkgupgrade.Operation {
+func SourcePostUpgradeTest(glob environment.GlobalEnvironment) pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("SourcePostUpgradeTest",
 		func(c pkgupgrade.Context) {
-			runSourceSmokeTest(c.T)
+			runSourceSmokeTest(glob, c.T)
 		})
 }
 

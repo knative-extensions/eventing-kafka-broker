@@ -22,16 +22,24 @@ import (
 	"fmt"
 	"strings"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	. "github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
+	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/knative"
+	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -45,6 +53,14 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
+)
+
+const (
+	saslSecretName = "strimzi-sasl-secret"
+	tlsSecretName  = "strimzi-tls-secret"
+	SASLMech       = "sasl"
+	TLSMech        = "tls"
+	PlainMech      = "plain"
 )
 
 func SetupAndCleanupKafkaSources(prefix string, n int) *feature.Feature {
@@ -247,4 +263,297 @@ func compareConsumerGroup(source string, cmp func(*internalscg.ConsumerGroup) er
 			t.Error(err)
 		}
 	}
+}
+
+type kafkaSourceConfig struct {
+	sourceName string
+	authMech   string
+	topic      string
+	opts       []manifest.CfgFn
+}
+
+type kafkaSinkConfig struct {
+	sinkName string
+	opts     []manifest.CfgFn
+}
+
+func kafkaSourceFeature(name string,
+	kafkaSourceCfg kafkaSourceConfig,
+	kafkaSinkCfg kafkaSinkConfig,
+	senderOpts []eventshub.EventsHubOption,
+	matcher cetest.EventMatcher) *feature.Feature {
+
+	f := feature.NewFeatureNamed(name)
+
+	if kafkaSourceCfg.topic == "" {
+		kafkaSourceCfg.topic = feature.MakeRandomK8sName("topic")
+	}
+
+	if kafkaSinkCfg.sinkName == "" {
+		kafkaSinkCfg.sinkName = feature.MakeRandomK8sName("kafkaSink")
+	}
+
+	if kafkaSourceCfg.sourceName == "" {
+		kafkaSourceCfg.sourceName = feature.MakeRandomK8sName("kafkaSource")
+	}
+
+	receiver := feature.MakeRandomK8sName("eventshub-receiver")
+	sender := feature.MakeRandomK8sName("eventshub-sender")
+
+	f.Setup("install kafka topic", kafkatopic.Install(kafkaSourceCfg.topic))
+	f.Setup("topic is ready", kafkatopic.IsReady(kafkaSourceCfg.topic))
+
+	// Binary content mode is default for Kafka Sink.
+	f.Setup("install kafkasink", kafkasink.Install(kafkaSinkCfg.sinkName, kafkaSourceCfg.topic,
+		testpkg.BootstrapServersPlaintextArr,
+		kafkaSinkCfg.opts...))
+	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSinkCfg.sinkName))
+
+	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
+
+	kafkaSourceOpts := []manifest.CfgFn{
+		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		kafkasource.WithTopics([]string{kafkaSourceCfg.topic}),
+	}
+	kafkaSourceOpts = append(kafkaSourceOpts, kafkaSourceCfg.opts...)
+
+	switch kafkaSourceCfg.authMech {
+	case TLSMech:
+		f.Setup("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), tlsSecretName))
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslArr),
+			kafkasource.WithTLSCACert(tlsSecretName, "ca.crt"),
+			kafkasource.WithTLSCert(tlsSecretName, "user.crt"),
+			kafkasource.WithTLSKey(tlsSecretName, "user.key"),
+			kafkasource.WithTLSEnabled(),
+			kafkasource.WithTLSCACert(tlsSecretName, "ca.crt"),
+		)
+	case SASLMech:
+		f.Setup("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), saslSecretName))
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),
+			kafkasource.WithSASLEnabled(),
+			kafkasource.WithSASLUser(saslSecretName, "user"),
+			kafkasource.WithSASLPassword(saslSecretName, "password"),
+			kafkasource.WithSASLType(saslSecretName, "saslType"),
+			kafkasource.WithTLSEnabled(),
+			kafkasource.WithTLSCACert(saslSecretName, "ca.crt"),
+		)
+	default:
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr))
+	}
+
+	f.Setup("install kafka source", kafkasource.Install(kafkaSourceCfg.sourceName, kafkaSourceOpts...))
+	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSourceCfg.sourceName))
+
+	options := []eventshub.EventsHubOption{
+		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSinkCfg.sinkName),
+	}
+	options = append(options, senderOpts...)
+	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
+
+	f.Assert("eventshub receiver gets event", matchEvent(receiver, matcher))
+
+	return f
+}
+
+func matchEvent(sink string, matcher EventMatcher) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		assert.OnStore(sink).MatchEvent(matcher).AtLeast(1)(ctx, t)
+	}
+}
+
+func KafkaSourceBinaryEvent() *feature.Feature {
+	senderOptions := []eventshub.EventsHubOption{
+		eventshub.InputHeader("ce-specversion", cloudevents.VersionV1),
+		eventshub.InputHeader("ce-type", "com.github.pull.create"),
+		eventshub.InputHeader("ce-source", "github.com/cloudevents/spec/pull"),
+		eventshub.InputHeader("ce-subject", "123"),
+		eventshub.InputHeader("ce-id", "A234-1234-1234"),
+		eventshub.InputHeader("content-type", "application/json"),
+		eventshub.InputHeader("ce-comexampleextension1", "value"),
+		eventshub.InputHeader("ce-comexampleothervalue", "5"),
+		eventshub.InputBody(marshalJSON(map[string]string{
+			"hello": "Francesco",
+		})),
+	}
+	matcher := AllOf(
+		HasSpecVersion(cloudevents.VersionV1),
+		HasType("com.github.pull.create"),
+		HasSource("github.com/cloudevents/spec/pull"),
+		HasSubject("123"),
+		HasId("A234-1234-1234"),
+		HasDataContentType("application/json"),
+		HasData([]byte(`{"hello":"Francesco"}`)),
+		HasExtension("comexampleextension1", "value"),
+		HasExtension("comexampleothervalue", "5"),
+	)
+
+	return kafkaSourceFeature("KafkaSourceBinaryEvent",
+		kafkaSourceConfig{
+			authMech: PlainMech,
+		},
+		kafkaSinkConfig{},
+		senderOptions,
+		matcher,
+	)
+}
+
+func KafkaSourceStructuredEvent() *feature.Feature {
+	eventTime, _ := cetypes.ParseTime("2018-04-05T17:31:00Z")
+	senderOptions := []eventshub.EventsHubOption{
+		eventshub.InputHeader("content-type", "application/cloudevents+json"),
+		eventshub.InputBody(marshalJSON(map[string]interface{}{
+			"specversion":     cloudevents.VersionV1,
+			"type":            "com.github.pull.create",
+			"source":          "https://github.com/cloudevents/spec/pull",
+			"subject":         "123",
+			"id":              "A234-1234-1234",
+			"time":            "2018-04-05T17:31:00Z",
+			"datacontenttype": "application/json",
+			"data": map[string]string{
+				"hello": "Francesco",
+			},
+			"comexampleextension1": "value",
+			"comexampleothervalue": 5,
+		})),
+	}
+	matcher := AllOf(
+		HasSpecVersion(cloudevents.VersionV1),
+		HasType("com.github.pull.create"),
+		HasSource("https://github.com/cloudevents/spec/pull"),
+		HasSubject("123"),
+		HasId("A234-1234-1234"),
+		HasTime(eventTime),
+		HasDataContentType("application/json"),
+		HasData([]byte(`{"hello":"Francesco"}`)),
+		HasExtension("comexampleextension1", "value"),
+		HasExtension("comexampleothervalue", "5"),
+	)
+
+	return kafkaSourceFeature("KafkaSourceStructuredEvent",
+		kafkaSourceConfig{
+			authMech: PlainMech,
+		},
+		kafkaSinkConfig{
+			opts: []manifest.CfgFn{kafkasink.WithContentMode("structured")},
+		},
+		senderOptions,
+		matcher,
+	)
+}
+
+func KafkaSourceWithExtensions() *feature.Feature {
+	senderOptions := []eventshub.EventsHubOption{
+		eventshub.InputHeader("content-type", "application/cloudevents+json"),
+		eventshub.InputBody(marshalJSON(map[string]interface{}{
+			"specversion": cloudevents.VersionV1,
+			"type":        "com.github.pull.create",
+			"source":      "https://github.com/cloudevents/spec/pull",
+			"id":          "A234-1234-1234",
+		})),
+	}
+	matcher := AllOf(
+		HasSpecVersion(cloudevents.VersionV1),
+		HasType("com.github.pull.create"),
+		HasSource("https://github.com/cloudevents/spec/pull"),
+		HasExtension("comexampleextension1", "value"),
+		HasExtension("comexampleothervalue", "5"),
+	)
+
+	return kafkaSourceFeature("KafkaSourceWithExtensions",
+		kafkaSourceConfig{
+			authMech: PlainMech,
+			opts: []manifest.CfgFn{
+				kafkasource.WithExtensions(map[string]string{
+					"comexampleextension1": "value",
+					"comexampleothervalue": "5",
+				})},
+		},
+		kafkaSinkConfig{
+			opts: []manifest.CfgFn{kafkasink.WithContentMode("structured")},
+		},
+		senderOptions,
+		matcher,
+	)
+}
+
+func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
+	e := cetest.FullEvent()
+	senderOptions := []eventshub.EventsHubOption{
+		eventshub.InputEvent(e),
+	}
+	matcher := HasData(e.Data())
+
+	return kafkaSourceFeature("KafkaSourceTLS",
+		kafkaSourceConfig{
+			authMech:   TLSMech,
+			topic:      topic,
+			sourceName: kafkaSource,
+		},
+		kafkaSinkConfig{
+			sinkName: kafkaSink,
+		},
+		senderOptions,
+		matcher,
+	)
+}
+
+func KafkaSourceSASL() *feature.Feature {
+	e := cetest.FullEvent()
+	senderOptions := []eventshub.EventsHubOption{
+		eventshub.InputEvent(e),
+	}
+	matcher := HasData(e.Data())
+
+	return kafkaSourceFeature("KafkaSourceSASL",
+		kafkaSourceConfig{
+			authMech: SASLMech,
+		},
+		kafkaSinkConfig{},
+		senderOptions,
+		matcher,
+	)
+}
+
+func marshalJSON(val interface{}) string {
+	data, _ := json.Marshal(val)
+	return string(data)
+}
+
+func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feature.Feature {
+
+	f := feature.NewFeatureNamed("KafkaSourceWithEventAfterUpdate")
+
+	receiver := feature.MakeRandomK8sName("eventshub-receiver")
+	sender := feature.MakeRandomK8sName("eventshub-sender")
+
+	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
+
+	kafkaSourceUpdateOpts := []manifest.CfgFn{
+		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		// Keep the original topic.
+		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithTLSDisabled(),
+		kafkasource.WithSASLDisabled(),
+	}
+
+	f.Setup("update kafka source", kafkasource.Install(kafkaSource, kafkaSourceUpdateOpts...))
+	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+
+	e := cetest.FullEvent()
+
+	options := []eventshub.EventsHubOption{
+		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
+		eventshub.InputEvent(e),
+	}
+
+	f.Requirement("install eventshub sender for kafka sink", eventshub.Install(sender, options...))
+
+	matcher := AllOf(
+		HasData(e.Data()),
+		HasTime(e.Time()),
+	)
+	f.Assert("sink receives event", matchEvent(receiver, matcher))
+
+	return f
 }
