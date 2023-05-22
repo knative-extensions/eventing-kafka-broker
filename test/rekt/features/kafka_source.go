@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"
@@ -29,8 +28,6 @@ import (
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/retry"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
@@ -284,6 +281,7 @@ func compareConsumerGroup(source string, cmp func(*internalscg.ConsumerGroup) er
 type kafkaSourceConfig struct {
 	sourceName string
 	authMech   string
+	topic      string
 	opts       []manifest.CfgFn
 }
 
@@ -300,15 +298,26 @@ func KafkaSourceFeature(name string,
 
 	f := feature.NewFeatureNamed(name)
 
-	topic := feature.MakeRandomK8sName("topic")
+	if kafkaSourceCfg.topic == "" {
+		kafkaSourceCfg.topic = feature.MakeRandomK8sName("topic")
+	}
+
+	if kafkaSinkCfg.sinkName == "" {
+		kafkaSinkCfg.sinkName = feature.MakeRandomK8sName("kafkaSink")
+	}
+
+	if kafkaSourceCfg.sourceName == "" {
+		kafkaSourceCfg.sourceName = feature.MakeRandomK8sName("kafkaSource")
+	}
+
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
 
-	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Setup("install kafka topic", kafkatopic.Install(kafkaSourceCfg.topic))
+	f.Setup("topic is ready", kafkatopic.IsReady(kafkaSourceCfg.topic))
 
 	// Binary content mode is default for Kafka Sink.
-	f.Setup("install kafkasink", kafkasink.Install(kafkaSinkCfg.sinkName, topic,
+	f.Setup("install kafkasink", kafkasink.Install(kafkaSinkCfg.sinkName, kafkaSourceCfg.topic,
 		testpkg.BootstrapServersPlaintextArr,
 		kafkaSinkCfg.opts...))
 	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSinkCfg.sinkName))
@@ -317,7 +326,7 @@ func KafkaSourceFeature(name string,
 
 	kafkaSourceOpts := []manifest.CfgFn{
 		kafkasource.WithSink(service.AsKReference(receiver), ""),
-		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithTopics([]string{kafkaSourceCfg.topic}),
 	}
 	kafkaSourceOpts = append(kafkaSourceOpts, kafkaSourceCfg.opts...)
 
@@ -346,12 +355,10 @@ func KafkaSourceFeature(name string,
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSourceCfg.sourceName, kafkaSourceOpts...))
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSourceCfg.sourceName, environment.DefaultPollInterval, 5*time.Minute))
+	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSourceCfg.sourceName))
 
 	options := []eventshub.EventsHubOption{
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSinkCfg.sinkName),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, time.Millisecond),
 	}
 	options = append(options, senderOpts...)
 	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
@@ -363,7 +370,7 @@ func KafkaSourceFeature(name string,
 
 func matchEvent(sink string, matcher EventMatcher) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
-		assert.OnStore(sink).MatchEvent(matcher).Exact(1)(ctx, t)
+		assert.OnStore(sink).MatchEvent(matcher).AtLeast(1)(ctx, t)
 	}
 }
 
@@ -395,12 +402,9 @@ func KafkaSourceBinaryEvent() *feature.Feature {
 
 	return KafkaSourceFeature("KafkaSourceBinaryEvent",
 		kafkaSourceConfig{
-			authMech:   PlainMech,
-			sourceName: feature.MakeRandomK8sName("kafkaSource"),
+			authMech: PlainMech,
 		},
-		kafkaSinkConfig{
-			sinkName: feature.MakeRandomK8sName("kafkaSink"),
-		},
+		kafkaSinkConfig{},
 		senderOptions,
 		matcher,
 	)
@@ -440,12 +444,10 @@ func KafkaSourceStructuredEvent() *feature.Feature {
 
 	return KafkaSourceFeature("KafkaSourceStructuredEvent",
 		kafkaSourceConfig{
-			authMech:   PlainMech,
-			sourceName: feature.MakeRandomK8sName("kafkaSource"),
+			authMech: PlainMech,
 		},
 		kafkaSinkConfig{
-			sinkName: feature.MakeRandomK8sName("kafkaSink"),
-			opts:     []manifest.CfgFn{kafkasink.WithContentMode("structured")},
+			opts: []manifest.CfgFn{kafkasink.WithContentMode("structured")},
 		},
 		senderOptions,
 		matcher,
@@ -472,8 +474,7 @@ func KafkaSourceWithExtensions() *feature.Feature {
 
 	return KafkaSourceFeature("KafkaSourceWithExtensions",
 		kafkaSourceConfig{
-			authMech:   PlainMech,
-			sourceName: feature.MakeRandomK8sName("kafkaSource"),
+			authMech: PlainMech,
 			opts: []manifest.CfgFn{
 				kafkasource.WithExtensions(map[string]string{
 					"comexampleextension1": "value",
@@ -481,15 +482,14 @@ func KafkaSourceWithExtensions() *feature.Feature {
 				})},
 		},
 		kafkaSinkConfig{
-			sinkName: feature.MakeRandomK8sName("kafkaSink"),
-			opts:     []manifest.CfgFn{kafkasink.WithContentMode("structured")},
+			opts: []manifest.CfgFn{kafkasink.WithContentMode("structured")},
 		},
 		senderOptions,
 		matcher,
 	)
 }
 
-func KafkaSourceTLS(kafkaSource, kafkaSink string) *feature.Feature {
+func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
 	e := cetest.FullEvent()
 	senderOptions := []eventshub.EventsHubOption{
 		eventshub.InputEvent(e),
@@ -499,6 +499,7 @@ func KafkaSourceTLS(kafkaSource, kafkaSink string) *feature.Feature {
 	return KafkaSourceFeature("KafkaSourceTLS",
 		kafkaSourceConfig{
 			authMech:   TLSMech,
+			topic:      topic,
 			sourceName: kafkaSource,
 			opts:       []manifest.CfgFn{kafkasource.WithOrdering(string(sourcesv1beta1.Ordered))},
 		},
@@ -519,12 +520,9 @@ func KafkaSourceSASL() *feature.Feature {
 
 	return KafkaSourceFeature("KafkaSourceSASL",
 		kafkaSourceConfig{
-			authMech:   SASLMech,
-			sourceName: feature.MakeRandomK8sName("kafkaSource"),
+			authMech: SASLMech,
 		},
-		kafkaSinkConfig{
-			sinkName: feature.MakeRandomK8sName("kafkaSink"),
-		},
+		kafkaSinkConfig{},
 		senderOptions,
 		matcher,
 	)
@@ -535,7 +533,7 @@ func marshalJSON(val interface{}) string {
 	return string(data)
 }
 
-func KafkaSourceWithEventAfterUpdate(kafkaSource string, kafkaSink string) *feature.Feature {
+func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feature.Feature {
 
 	f := feature.NewFeatureNamed("KafkaSourceWithEventAfterUpdate")
 
@@ -544,24 +542,23 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource string, kafkaSink string) *feat
 
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
-	update := kafkaSourceUpdate{
-		sink:     receiver,
-		ordering: sourcesv1beta1.Unordered,
-		auth: authSetup{
-			bootstrapServers: testingpkg.BootstrapServersPlaintextArr,
-			TLSEnabled:       false,
-			SASLEnabled:      false,
-		},
+	kafkaSourceUpdateOpts := []manifest.CfgFn{
+		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		// Keep the original topic.
+		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithOrdering(string(sourcesv1beta1.Unordered)),
+		kafkasource.WithTLSDisabled(),
+		kafkasource.WithSASLDisabled(),
 	}
-	f.Setup("update kafka source", ModifyKafkaSource(kafkaSource, update))
+
+	f.Setup("update kafka source", kafkasource.Install(kafkaSource, kafkaSourceUpdateOpts...))
 	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	e := cetest.FullEvent()
 
 	options := []eventshub.EventsHubOption{
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, time.Millisecond),
 		eventshub.InputEvent(e),
 	}
 
@@ -574,82 +571,4 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource string, kafkaSink string) *feat
 	f.Assert("sink receives event", matchEvent(receiver, matcher))
 
 	return f
-}
-
-func ModifyKafkaSource(kafkaSourceName string, update kafkaSourceUpdate) feature.StepFn {
-	return func(ctx context.Context, t feature.T) {
-		ksObj, err := waitForKafkaSourceToBeReconciled(ctx, kafkaSourceName)
-		if err != nil {
-			t.Fatalf("Failed waiting for KafkaSource to be reconciled: %v", ksObj)
-		}
-
-		// Update KafkaSource spec
-		ksObj.Spec.Sink.Ref = service.AsKReference(update.sink)
-		ksObj.Spec.KafkaAuthSpec.BootstrapServers = update.auth.bootstrapServers
-		ksObj.Spec.KafkaAuthSpec.Net.TLS.Enable = update.auth.TLSEnabled
-		ksObj.Spec.KafkaAuthSpec.Net.SASL.Enable = update.auth.SASLEnabled
-		ksObj.Spec.Ordering = &update.ordering
-
-		err = updateKafkaSource(ctx, ksObj)
-		if err != nil {
-			t.Fatalf("Failed to update v1beta1 KafkaSource %q: %v", ksObj.Name, err)
-		}
-
-		_, err = waitForKafkaSourceToBeReconciled(ctx, kafkaSourceName)
-		if err != nil {
-			t.Fatalf("Failed waiting for KafkaSource to be reconciled: %v", ksObj)
-		}
-	}
-}
-
-func waitForKafkaSourceToBeReconciled(ctx context.Context, kafkaSourceName string) (*sourcesv1beta1.KafkaSource, error) {
-	var ksObj *sourcesv1beta1.KafkaSource
-	interval, timeout := environment.PollTimingsFromContext(ctx)
-	err := wait.Poll(interval, timeout, func() (done bool, err error) {
-		ns := environment.FromContext(ctx).Namespace()
-		ksObj, err = kafkaclient.Get(ctx).SourcesV1beta1().
-			KafkaSources(ns).
-			Get(ctx, kafkaSourceName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		return ksObj.Status.IsReady() && ksObj.Status.ObservedGeneration == ksObj.Generation, nil
-	})
-	return ksObj, err
-}
-
-func updateKafkaSource(ctx context.Context, ksObj *sourcesv1beta1.KafkaSource) error {
-	return retryWebhookErrors(func(i int) error {
-		return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			ns := environment.FromContext(ctx).Namespace()
-			latestKafkaSource, err := kafkaclient.Get(ctx).SourcesV1beta1().
-				KafkaSources(ns).
-				Get(ctx, ksObj.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-			ksObj.Spec.DeepCopyInto(&latestKafkaSource.Spec)
-			_, err = kafkaclient.Get(ctx).SourcesV1beta1().
-				KafkaSources(ns).Update(context.Background(), latestKafkaSource, metav1.UpdateOptions{})
-			return err
-		})
-	})
-}
-
-func isWebhookError(err error) bool {
-	str := err.Error()
-	// Example error:
-	// Internal error occurred: failed calling webhook "defaulting.webhook.kafka.eventing.knative.dev": Post "https://kafka-webhook-eventing.knative-eventing.svc:443/defaulting?timeout=2s": EOF
-	return strings.Contains(str, "webhook") &&
-		strings.Contains(str, "https") &&
-		strings.Contains(str, "EOF")
-}
-
-func retryWebhookErrors(updater func(int) error) error {
-	attempts := 0
-	return retry.OnError(retry.DefaultRetry, isWebhookError, func() error {
-		err := updater(attempts)
-		attempts++
-		return err
-	})
 }

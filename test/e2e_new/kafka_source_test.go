@@ -108,6 +108,7 @@ func TestKafkaSourceBinaryEvent(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -122,6 +123,7 @@ func TestKafkaSourceStructuredEvent(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -136,6 +138,7 @@ func TestKafkaSourceWithExtensions(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -151,13 +154,15 @@ func TestKafkaSourceTLS(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
 	kafkaSource := feature.MakeRandomK8sName("kafkaSource")
 	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	topic := feature.MakeRandomK8sName("topic")
 
-	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink))
+	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink, topic))
 }
 
 func TestKafkaSourceSASL(t *testing.T) {
@@ -169,6 +174,7 @@ func TestKafkaSourceSASL(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
@@ -184,18 +190,20 @@ func TestKafkaSourceUpdate(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
 
 	kafkaSource := feature.MakeRandomK8sName("kafkaSource")
 	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	topic := feature.MakeRandomK8sName("topic")
 
 	// First, send an arbitrary event to Kafka and let KafkaSource
 	// forward the event to the sink.
-	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink))
+	env.Test(ctx, t, features.KafkaSourceTLS(kafkaSource, kafkaSink, topic))
 
 	// Second, use the same KafkaSource, update it, send a new event to
 	// Kafka (through the same KafkaSink using same Kafka Topic). And verify that
 	// the new event is delivered properly.
-	env.Test(ctx, t, features.KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink))
+	env.Test(ctx, t, features.KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic))
 }
