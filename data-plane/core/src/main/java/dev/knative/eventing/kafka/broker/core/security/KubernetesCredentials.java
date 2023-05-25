@@ -103,13 +103,7 @@ class KubernetesCredentials implements Credentials {
       return null;
     }
     if (userCertificate == null) {
-      var keystore = secret.getData().get(USER_CERTIFICATE_KEY);
-      if (keystore == null) {
-        keystore = secret.getData().get("tls.crt");
-        if (keystore == null) {
-          return null;
-        }
-      }
+      var keystore = this.firstNonEmptyValueOf(USER_CERTIFICATE_KEY, "tls.crt");
       this.userCertificate = new String(Base64.getDecoder().decode(keystore));
     }
     return userCertificate;
@@ -121,13 +115,7 @@ class KubernetesCredentials implements Credentials {
       return null;
     }
     if (userKey == null) {
-      var userKey = secret.getData().get(USER_KEY_KEY);
-      if (userKey == null) {
-        userKey = secret.getData().get("tls.key");
-        if (userKey == null) {
-          return null;
-        }
-      }
+      var userKey = this.firstNonEmptyValueOf(USER_KEY_KEY, "tls.key");
       this.userKey = new String(Base64.getDecoder().decode(userKey));
     }
     return userKey;
@@ -201,5 +189,16 @@ class KubernetesCredentials implements Credentials {
       this.SASLPassword = new String(Base64.getDecoder().decode(SASLPassword));
     }
     return this.SASLPassword;
+  }
+
+  private String firstNonEmptyValueOf(String keyOrCrt, String tlsKeyOrTlsCrt) {
+    var userKeyOrUserCrt = secret.getData().get(keyOrCrt);
+    if (userKeyOrUserCrt == null) {
+      userKeyOrUserCrt = secret.getData().get(tlsKeyOrTlsCrt);
+      if (userKeyOrUserCrt == null) {
+        return null;
+      }
+    }
+    return userKeyOrUserCrt;
   }
 }
