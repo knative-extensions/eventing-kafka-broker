@@ -104,6 +104,9 @@ class KubernetesCredentials implements Credentials {
     }
     if (userCertificate == null) {
       var keystore = this.firstNonEmptyValueOf(USER_CERTIFICATE_KEY, "tls.crt");
+      if (keystore == null) {
+        return null;
+      }
       this.userCertificate = new String(Base64.getDecoder().decode(keystore));
     }
     return userCertificate;
@@ -116,6 +119,9 @@ class KubernetesCredentials implements Credentials {
     }
     if (userKey == null) {
       var userKey = this.firstNonEmptyValueOf(USER_KEY_KEY, "tls.key");
+      if (userKey == null) {
+        return null;
+      }
       this.userKey = new String(Base64.getDecoder().decode(userKey));
     }
     return userKey;
