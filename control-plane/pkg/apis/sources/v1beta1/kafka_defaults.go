@@ -22,9 +22,9 @@ import (
 
 	"github.com/google/uuid"
 	"k8s.io/utils/pointer"
-	"knative.dev/pkg/apis"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/config"
+	"knative.dev/pkg/apis"
 )
 
 const (
@@ -52,6 +52,11 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 
 	if k.Spec.InitialOffset == "" {
 		k.Spec.InitialOffset = OffsetLatest
+	}
+
+	if k.Spec.Ordering == nil {
+		deliveryOrdering := Ordered
+		k.Spec.Ordering = &deliveryOrdering
 	}
 
 	kafkaConfig := config.FromContextOrDefaults(ctx)

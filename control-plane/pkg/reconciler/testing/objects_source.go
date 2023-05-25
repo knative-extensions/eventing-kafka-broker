@@ -180,6 +180,13 @@ func WithInitialOffset(offset sources.Offset) KRShapedOption {
 	}
 }
 
+func WithOrdering(ordering sources.DeliveryOrdering) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Ordering = &ordering
+	}
+}
+
 func SourceDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

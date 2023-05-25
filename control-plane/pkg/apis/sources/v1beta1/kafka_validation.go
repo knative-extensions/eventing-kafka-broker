@@ -51,6 +51,13 @@ func (kss *KafkaSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 	default:
 		errs = errs.Also(apis.ErrInvalidValue(kss.InitialOffset, "initialOffset"))
 	}
+	if kss.Ordering != nil {
+		switch *kss.Ordering {
+		case Unordered, Ordered:
+		default:
+			errs = errs.Also(apis.ErrInvalidValue(*kss.Ordering, "ordering"))
+		}
+	}
 
 	return errs
 }

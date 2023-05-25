@@ -106,6 +106,11 @@ func (in *KafkaSourceSpec) DeepCopyInto(out *KafkaSourceSpec) {
 		*out = new(v1.DeliverySpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Ordering != nil {
+		in, out := &in.Ordering, &out.Ordering
+		*out = new(DeliveryOrdering)
+		**out = **in
+	}
 	in.SourceSpec.DeepCopyInto(&out.SourceSpec)
 	return
 }

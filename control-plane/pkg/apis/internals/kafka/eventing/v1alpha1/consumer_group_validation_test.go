@@ -22,7 +22,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/apis"
@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	DefaultDeliveryOrder = internals.Ordered
+	DefaultDeliveryOrder = kafkasource.Ordered
 )
 
 func TestConsumerGroup_Validate(t *testing.T) {

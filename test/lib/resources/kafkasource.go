@@ -47,7 +47,7 @@ func WithExtensionsV1Beta1(extensions map[string]string) KafkaSourceV1Beta1Optio
 	}
 }
 
-func KafkaSourceV1Beta1(bootstrapServer string, topicName string, ref *corev1.ObjectReference, options ...KafkaSourceV1Beta1Option) *kafkasourcev1beta1.KafkaSource {
+func KafkaSourceV1Beta1(bootstrapServer string, topicName string, ordering kafkasourcev1beta1.DeliveryOrdering, ref *corev1.ObjectReference, options ...KafkaSourceV1Beta1Option) *kafkasourcev1beta1.KafkaSource {
 	source := &kafkasourcev1beta1.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-kafka-source",
@@ -58,6 +58,7 @@ func KafkaSourceV1Beta1(bootstrapServer string, topicName string, ref *corev1.Ob
 			},
 			Topics:        []string{topicName},
 			ConsumerGroup: "test-consumer-group",
+			Ordering:      &ordering,
 			SourceSpec: duckv1.SourceSpec{
 				Sink: duckv1.Destination{
 					Ref: &duckv1.KReference{

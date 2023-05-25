@@ -36,7 +36,6 @@ import (
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -114,7 +113,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -160,7 +159,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -207,7 +206,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -257,7 +256,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout(SourceDeliverySpecTimeout),
 								NewConsumerRetry(SourceDeliverySpecRetry),
 								NewConsumerBackoffDelay(SourceDeliverySpecBackoffDelay),
@@ -307,7 +306,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -436,7 +435,7 @@ func TestReconcileKind(t *testing.T) {
 						}),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -549,7 +548,7 @@ func TestReconcileKind(t *testing.T) {
 						}),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -599,7 +598,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -652,7 +651,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -699,7 +698,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -732,7 +731,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerAuth(NewConsumerSpecAuth()),
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
-									internals.Ordered,
+									sources.Ordered,
 									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT0.3S"),
@@ -792,7 +791,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerAuth(NewConsumerSpecAuth()),
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
-									internals.Ordered,
+									sources.Ordered,
 									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT0.3S"),
@@ -852,7 +851,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerAuth(NewConsumerSpecAuth()),
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
-									internals.Ordered,
+									sources.Ordered,
 									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT0.3S"),
@@ -911,7 +910,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerAuth(NewConsumerSpecAuth()),
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
-									internals.Ordered,
+									sources.Ordered,
 									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT0.3S"),
@@ -957,7 +956,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -1003,7 +1002,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -1048,7 +1047,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -1094,7 +1093,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -1142,7 +1141,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -1176,7 +1175,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerAuth(NewConsumerSpecAuth()),
 							ConsumerDelivery(
 								NewConsumerSpecDelivery(
-									internals.Ordered,
+									sources.Ordered,
 									NewConsumerTimeout("PT600S"),
 									NewConsumerRetry(10),
 									NewConsumerBackoffDelay("PT0.3S"),
@@ -1224,7 +1223,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerAuth(NewConsumerSpecAuth()),
 						ConsumerDelivery(
 							NewConsumerSpecDelivery(
-								internals.Ordered,
+								sources.Ordered,
 								NewConsumerTimeout("PT600S"),
 								NewConsumerRetry(10),
 								NewConsumerBackoffDelay("PT0.3S"),
@@ -1251,6 +1250,100 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceConsumerGroupReplicas(1),
+						StatusSourceSelector(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with unordered consumer verticle",
+			Objects: []runtime.Object{
+				NewSource(WithOrdering(sources.Unordered)),
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								sources.Unordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT0.3S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								ConsumerInitialOffset(sources.OffsetLatest),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithOrdering(sources.Unordered),
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+						StatusSourceSelector(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - with ordered consumer verticle",
+			Objects: []runtime.Object{
+				NewSource(WithOrdering(sources.Ordered)),
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				NewConsumerGroup(
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								sources.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT0.3S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								ConsumerInitialOffset(sources.OffsetLatest),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						WithOrdering(sources.Ordered),
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
 					),
 				},
