@@ -18,9 +18,11 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -28,11 +30,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Execution(value = ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
@@ -314,5 +323,59 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
     shouldNeverCommit(consumer);
     shouldNeverPause(consumer);
     verify(eventsSentCounter, never()).increment();
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testFailedCommitRetry(final Vertx vertx) {
+    final var counter = new AtomicInteger(0);
+    final Counter eventsSentCounter = mock(Counter.class);
+
+    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
+    when(consumer.commit((Map<io.vertx.kafka.client.common.TopicPartition, OffsetAndMetadata>) any())).then(invocationOnMock -> {
+      if (counter.incrementAndGet() == 1) {
+        return Future.failedFuture(new RuntimeException());
+      }
+      return Future.succeededFuture();
+    });
+
+    final var r = record("aaa", 0, 0);
+
+    OffsetManager strategy = new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L);
+    strategy.recordReceived(r);
+    strategy.successfullySentToSubscriber(r);
+
+    final var offset = strategy.
+      getOffsetTrackers().
+      get(new io.vertx.kafka.client.common.TopicPartition(r.topic(), r.partition()));
+
+    await()
+      .timeout(Duration.ofSeconds(1))
+      .untilAsserted(() -> assertThat(offset.getCommitted()).isEqualTo(1));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testAlwaysFailedCommit(final Vertx vertx) {
+    final var counter = new AtomicInteger(0);
+    final Counter eventsSentCounter = mock(Counter.class);
+
+    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
+    when(consumer.commit((Map<io.vertx.kafka.client.common.TopicPartition, OffsetAndMetadata>) any()))
+      .then(invocationOnMock -> Future.failedFuture(new RuntimeException()));
+
+    final var r = record("aaa", 0, 0);
+
+    OffsetManager strategy = new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L);
+    strategy.recordReceived(r);
+    strategy.successfullySentToSubscriber(r);
+
+    final var offset = strategy.
+      getOffsetTrackers().
+      get(new io.vertx.kafka.client.common.TopicPartition(r.topic(), r.partition()));
+
+    await()
+      .timeout(Duration.ofSeconds(1))
+      .untilAsserted(() -> assertThat(offset.getCommitted()).isEqualTo(0));
   }
 }
