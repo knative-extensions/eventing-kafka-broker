@@ -34,6 +34,8 @@ const (
 
 	UserCertificate = "user.crt"
 	UserKey         = "user.key"
+	TlsKey          = "tls.key"
+	TlsCertificate  = "tls.crt"
 	UserSkip        = "user.skip" // default: false
 
 	SaslMechanismKey = "sasl.mechanism"
@@ -173,7 +175,7 @@ func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 			}
 
 			if !skipClientAuth {
-				userKeyCert, ok := firstNonEmptyValueOf(data, UserKey, "tls.key")
+				userKeyCert, ok := firstNonEmptyValueOf(data, UserKey, TlsKey)
 				if !ok {
 					return fmt.Errorf(
 						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
@@ -181,7 +183,7 @@ func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 					)
 				}
 
-				userCert, ok := firstNonEmptyValueOf(data, UserCertificate, "tls.crt")
+				userCert, ok := firstNonEmptyValueOf(data, UserCertificate, TlsCertificate)
 				if !ok {
 					return fmt.Errorf(
 						`[protocol %s] required user key (key: %s) - use "%s: true" to disable client auth`,
