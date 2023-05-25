@@ -198,7 +198,7 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 			ca := kedav1alpha1.AuthSecretTargetRef{Parameter: "ca", Name: secret.Name, Key: security.CaCertificateKey}
 			secretTargetRefs = append(secretTargetRefs, ca)
 
-			if secret.Type == "kubernetes.io/tls" {
+			if secret.Data["tls.crt"] != nil && secret.Data["tls.key"] != nil {
 				cert := kedav1alpha1.AuthSecretTargetRef{Parameter: "cert", Name: secret.Name, Key: "tls.crt"}
 				secretTargetRefs = append(secretTargetRefs, cert)
 
