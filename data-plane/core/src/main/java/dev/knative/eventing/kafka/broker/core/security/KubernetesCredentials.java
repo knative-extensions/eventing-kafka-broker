@@ -34,6 +34,9 @@ class KubernetesCredentials implements Credentials {
   static final String USER_CERTIFICATE_KEY = "user.crt";
   static final String USER_KEY_KEY = "user.key";
   static final String USER_SKIP_KEY = "user.skip";
+  static final String TLS_CRT = "tls.crt";
+  static final String TLS_KEY = "tls.key";
+
 
   static final String USERNAME_KEY = "user";
   static final String PASSWORD_KEY = "password";
@@ -103,7 +106,7 @@ class KubernetesCredentials implements Credentials {
       return null;
     }
     if (userCertificate == null) {
-      var keystore = this.firstNonEmptyValueOf(USER_CERTIFICATE_KEY, "tls.crt");
+      var keystore = this.firstNonEmptyValueOf(USER_CERTIFICATE_KEY, TLS_CRT);
       if (keystore == null) {
         return null;
       }
@@ -118,7 +121,7 @@ class KubernetesCredentials implements Credentials {
       return null;
     }
     if (userKey == null) {
-      var userKey = this.firstNonEmptyValueOf(USER_KEY_KEY, "tls.key");
+      var userKey = this.firstNonEmptyValueOf(USER_KEY_KEY, TLS_KEY);
       if (userKey == null) {
         return null;
       }
