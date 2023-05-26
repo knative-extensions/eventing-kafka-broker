@@ -155,8 +155,6 @@ public final class OffsetManager implements RecordDispatcherListener {
   private synchronized Future<Void> commit(final TopicPartition topicPartition, final OffsetTracker tracker) {
     long newOffset = tracker.offsetToCommit();
     if (newOffset > tracker.getCommitted()) {
-      // Reset the state
-      tracker.setCommitted(newOffset);
 
       logger.debug("Committing offset for {} offset {}",
         keyValue("topicPartition", topicPartition),
@@ -165,6 +163,9 @@ public final class OffsetManager implements RecordDispatcherListener {
       // Execute the actual commit
       return consumer.commit(Map.of(topicPartition, new OffsetAndMetadata(newOffset, "")))
         .onSuccess(ignored -> {
+          // Reset the state
+          tracker.setCommitted(newOffset);
+
           if (onCommit != null) {
             onCommit.accept((int) newOffset);
           }
@@ -219,7 +220,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * This offset tracker keeps track of the committed records for a
    * single partition.
    */
-  private static class OffsetTracker {
+  static class OffsetTracker {
 
     /*
      * We use a BitSet as a replacement for an array of booleans.
@@ -313,5 +314,10 @@ public final class OffsetManager implements RecordDispatcherListener {
   private static void logPartitions(final String context,
                                     final Set<TopicPartition> tps) {
     logger.info("Partitions " + context + " {}", keyValue("partitions", tps));
+  }
+
+  /* Visible for testing */
+  Map<TopicPartition, OffsetTracker> getOffsetTrackers() {
+    return offsetTrackers;
   }
 }
