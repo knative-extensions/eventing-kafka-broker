@@ -68,6 +68,8 @@
     <module>core</module>
     <module>receiver</module>
     <module>dispatcher</module>
+    <module>receiver-vertx</module>
+    <module>dispatcher-vertx</module>
   </modules>
 
   <profiles>
@@ -435,6 +437,9 @@
                 </platform>
               </platforms>
             </from>
+            <jvmFlags>
+              <jvmFlag>--enable-preview</jvmFlag>
+            </jvmFlags>
           </configuration>
         </plugin>
         <plugin>
