@@ -272,6 +272,55 @@ func TestSSLNoClientAuthInvalidFlag(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestSSLWithTlsKeyAndCrt(t *testing.T) {
+	ca, tlsKey, tlsCert := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"tls.key":  tlsKey,
+		"tls.crt":  tlsCert,
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.TLS.Enable)
+	assert.Greater(t, len(config.Net.TLS.Config.Certificates), 0)
+	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
+}
+
+func TestSSLWithOnlyTlsKey(t *testing.T) {
+	ca, tlsKey, _ := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"tls.key":  tlsKey,
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
+func TestSSLWithOnlyTlsCert(t *testing.T) {
+	ca, _, tlsCert := loadCerts(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"tls.crt":  tlsCert,
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
 func TestSASLPLainSSL(t *testing.T) {
 	ca, userKey, userCert := loadCerts(t)
 
