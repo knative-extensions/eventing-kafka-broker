@@ -224,9 +224,10 @@ func skipClientAuthCheck(data map[string][]byte) (bool, error) {
 }
 
 func firstNonEmptyValueOf(data map[string][]byte, keys ...string) ([]byte, bool) {
-	userKeyOrCert, ok := data[keys[0]]
-	if !ok {
-		userKeyOrCert, ok = data[keys[1]]
+	for _, key := range keys {
+		if v, ok := data[key]; ok {
+			return v, ok
+		}
 	}
-	return userKeyOrCert, ok
+	return nil, false
 }
