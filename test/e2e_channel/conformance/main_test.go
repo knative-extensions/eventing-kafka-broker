@@ -20,15 +20,17 @@
 package conformance
 
 import (
+	"flag"
 	"log"
 	"os"
 	"testing"
 
-	e2echannel "knative.dev/eventing-kafka-broker/test/e2e_channel"
 	eventingTest "knative.dev/eventing/test"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/test/zipkin"
+
+	e2echannel "knative.dev/eventing-kafka-broker/test/e2e_channel"
 )
 
 var channelTestRunner testlib.ComponentsTestRunner
@@ -41,6 +43,7 @@ func TestMain(m *testing.M) {
 			ComponentFeatureMap: e2echannel.ChannelFeatureMap,
 			ComponentsToTest:    eventingTest.EventingFlags.Channels,
 		}
+		flag.Parse()
 
 		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
 		// place that cleans it up. If an individual test calls this instead, then it will break other

@@ -20,6 +20,7 @@
 package e2e_channel
 
 import (
+	"flag"
 	"os"
 	"testing"
 
@@ -37,6 +38,8 @@ func TestMain(m *testing.M) {
 		ComponentFeatureMap: ChannelFeatureMap,
 		ComponentsToTest:    eventingTest.EventingFlags.Channels,
 	}
+	flag.Parse()
+
 	os.Exit(func() int {
 		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
 
