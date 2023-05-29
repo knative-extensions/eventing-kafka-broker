@@ -29,34 +29,17 @@
   <name>receiver-vertx</name>
 
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>19</java.version>
-  </properties>
-
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>receiver</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
-  <build>
+  <!-- <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>${maven.compiler.plugin.version}</version>
-      <configuration>
-        <source>${java.version}</source>
-        <target>${java.version}</target>
-          <compilerArgs>
-            <arg>--enable-preview</arg>
-          </compilerArgs>
-      </configuration>
-      </plugin>
+
     </plugins>
-  </build>
+  </build> -->
 </project>
