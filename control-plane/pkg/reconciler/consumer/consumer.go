@@ -137,7 +137,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
 	}
-	c.Status.SubscriberURI = destination.URL
+	c.Status.SubscriberURI = destinationAddr.URL
 
 	egressConfig := &contract.EgressConfig{}
 	if c.Spec.Delivery != nil {
@@ -152,7 +152,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 
 	egress := &contract.Egress{
 		ConsumerGroup: c.Spec.Configs.Configs["group.id"],
-		Destination:   destination.URL.String(),
+		Destination:   destinationAddr.URL.String(),
 		ReplyStrategy: nil, // Reply will be added by reconcileReplyStrategy
 		Filter:        reconcileFilters(c),
 		Uid:           string(c.UID),
