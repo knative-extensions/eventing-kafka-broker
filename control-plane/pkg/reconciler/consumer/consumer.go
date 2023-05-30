@@ -133,7 +133,7 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 }
 
 func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainternals.Consumer) (*contract.Egress, error) {
-	destination, err := r.Resolver.AddressableFromDestinationV1(ctx, c.Spec.Subscriber, c)
+	destinationAddr, err := r.Resolver.AddressableFromDestinationV1(ctx, c.Spec.Subscriber, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
 	}
