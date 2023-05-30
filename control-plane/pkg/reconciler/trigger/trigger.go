@@ -317,7 +317,7 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 
 	egress := &contract.Egress{
-		Destination:   destination.String(),
+		Destination:   destination.URL.String(),
 		ConsumerGroup: groupId,
 		Uid:           string(trigger.UID),
 		Reference: &contract.Reference{

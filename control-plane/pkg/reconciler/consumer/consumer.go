@@ -152,7 +152,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 
 	egress := &contract.Egress{
 		ConsumerGroup: c.Spec.Configs.Configs["group.id"],
-		Destination:   destination.String(),
+		Destination:   destination.URL.String(),
 		ReplyStrategy: nil, // Reply will be added by reconcileReplyStrategy
 		Filter:        reconcileFilters(c),
 		Uid:           string(c.UID),
