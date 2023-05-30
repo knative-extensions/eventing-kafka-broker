@@ -437,9 +437,6 @@
                 </platform>
               </platforms>
             </from>
-            <jvmFlags>
-              <jvmFlag>--enable-preview</jvmFlag>
-            </jvmFlags>
           </configuration>
         </plugin>
         <plugin>
