@@ -30,3 +30,11 @@ func Address(host string, object metav1.Object) *url.URL {
 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
 	}
 }
+
+func AddressTLS(host string, object metav1.Object) *url.URL {
+	return &url.URL{
+		Scheme: "https",
+		Host:   host,
+		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
+	}
+}
