@@ -30,10 +30,13 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -56,6 +59,14 @@ const (
 
 	// ConsumerConfigKey is the key for Kafka Broker consumer configurations
 	ConsumerConfigKey = "config-kafka-broker-consumer.properties"
+
+	// brokerIngressTLSSecretName is the TLS Secret Name for the Cert-Manager resource
+	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
+
+	// caCertsSecretKey is the name of the CA Cert in the secret
+	caCertsSecretKey = "ca.crt"
+
+	brokerIngressName = "kafka-broker-ingress"
 )
 
 type Reconciler struct {
@@ -226,7 +237,34 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
-	address := receiver.Address(ingressHost, broker)
+
+	transportEncryptionFlags := feature.FromContext(ctx)
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.HTTPAddress(ingressHost, broker)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		broker.Status.Address = &httpAddress
+		broker.Status.Addresses = []pkgduckv1.Addressable{httpAddress, httpsAddress}
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		broker.Status.Address = &httpsAddress
+		broker.Status.Addresses = []pkgduckv1.Addressable{httpsAddress}
+	} else {
+		httpAddress := receiver.HTTPAddress(ingressHost, broker)
+		broker.Status.Address = &httpAddress
+		broker.Status.Addresses = []pkgduckv1.Addressable{httpAddress}
+	}
+
+	address := broker.Status.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -239,7 +277,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	statusConditionManager.Addressable(address)
+	//statusConditionManager.Addressable(address)
+	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
+	statusConditionManager.ProbesStatusReady()
 
 	return nil
 }
@@ -640,4 +680,16 @@ func containsFinalizerSecret(secret *corev1.Secret, finalizer string) bool {
 
 func finalizerSecret(object metav1.Object) string {
 	return fmt.Sprintf("%s/%s", "kafka.eventing", object.GetUID())
+}
+
+func (r *Reconciler) getCaCerts() (string, error) {
+	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(brokerIngressTLSSecretName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), brokerIngressTLSSecretName, err)
+	}
+	caCerts, ok := secret.Data[caCertsSecretKey]
+	if !ok {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), brokerIngressTLSSecretName, caCertsSecretKey)
+	}
+	return string(caCerts), nil
 }
