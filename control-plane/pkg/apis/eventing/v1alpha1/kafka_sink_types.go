@@ -127,6 +127,7 @@ type KafkaSinkStatus struct {
 
 	// Kafka Sink is Addressable.
 	duckv1.AddressStatus
+	// Address duckv1.Addressable `json:"address,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
