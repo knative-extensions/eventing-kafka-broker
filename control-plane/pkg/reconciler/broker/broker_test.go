@@ -2732,6 +2732,73 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled normal - TLS strict",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					BrokerConfigMapAnnotations(),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
+						},
+					},
+					Generation: 1,
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+				makeTLSSecret(),
+			},
+			Key:     testKey,
+			WantErr: false,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Strict,
+			}),
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerTopicReady,
+						StatusBrokerConfigParsed,
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerDLSResolved(ServiceURL),
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(BrokerName, BrokerNamespace),
+								CACerts: pointer.String(testCaCerts),
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name:    pointer.String("https"),
+							URL:     httpsURL(BrokerName, BrokerNamespace),
+							CACerts: pointer.String(testCaCerts),
+						}),
+					),
+				},
+			},
+		},
 	}
 
 	for i := range table {
