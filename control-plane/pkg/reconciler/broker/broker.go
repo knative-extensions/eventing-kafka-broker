@@ -65,8 +65,6 @@ const (
 
 	// caCertsSecretKey is the name of the CA Cert in the secret
 	caCertsSecretKey = "ca.crt"
-
-	brokerIngressName = "kafka-broker-ingress"
 )
 
 type Reconciler struct {
