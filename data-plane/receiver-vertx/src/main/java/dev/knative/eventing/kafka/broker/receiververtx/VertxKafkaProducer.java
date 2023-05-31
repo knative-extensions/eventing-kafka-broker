@@ -15,8 +15,62 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx;
 
-public class VertxKafkaProducer {
-    public static void main(String[] args) {
-        System.out.println("Hello Vertx KafkaProducer!");
+import java.util.Properties;
+
+import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
+
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
+
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import io.vertx.core.Vertx;
+
+import org.apache.kafka.clients.producer.RecordMetadata;
+
+public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
+
+    KafkaProducer<K, V> producer;
+    
+    public VertxKafkaProducer(Vertx v, Properties config) {
+        producer = KafkaProducer.create(v, config);
     }
+
+    @Override
+    public Future<RecordMetadata> send(ProducerRecord<K,V> record) {
+        Future<io.vertx.kafka.client.producer.RecordMetadata> future = this.producer.send(
+                KafkaProducerRecord.create(record.topic(), record.value()));
+
+        // Convert Vert.x Kafka RecordMetadata to Apache Kafka RecordMetadata
+        Promise<RecordMetadata> apachePromise = Promise.promise();
+
+        future.onSuccess(vertxRecordMetadata -> {
+            RecordMetadata apacheRecordMetadata = new RecordMetadata(
+                new TopicPartition(record.topic(), vertxRecordMetadata.getPartition()),
+                    vertxRecordMetadata.getOffset(),0,vertxRecordMetadata.getTimestamp(),-1,-1
+            );
+            apachePromise.complete(apacheRecordMetadata);
+        });
+        future.onFailure(apachePromise::fail);
+        return apachePromise.future();
+    }
+
+    @Override
+    public Future<Void> close() {
+        return producer.close();
+    }
+
+    @Override
+    public Future<Void> flush() {
+        return producer.flush();
+    }
+
+    @Override
+    public Producer<K,V> unwrap() {
+        return producer.unwrap();
+    }
+    
 }
