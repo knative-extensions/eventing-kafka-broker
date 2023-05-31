@@ -165,6 +165,24 @@ func WithBrokerConfig(reference *duckv1.KReference) func(*eventing.Broker) {
 	}
 }
 
+func WithBrokerAddress(address duckv1.Addressable) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		broker.Status.Address = &address
+	}
+}
+
+func WithBrokerAddresses(addresses []duckv1.Addressable) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		broker.Status.Addresses = addresses
+	}
+}
+
+func WithBrokerAddessable() reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(eventing.BrokerConditionAddressable)
+	}
+}
+
 func WithExternalTopic(topic string) func(*eventing.Broker) {
 	return func(broker *eventing.Broker) {
 		annotations := broker.GetAnnotations()
