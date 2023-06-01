@@ -39,11 +39,12 @@ func TestMain(m *testing.M) {
 
 	os.Exit(func() int {
 		eventingTest.InitializeEventingFlags()
+		flag.Parse()
+
 		channelTestRunner = testlib.ComponentsTestRunner{
 			ComponentFeatureMap: e2echannel.ChannelFeatureMap,
 			ComponentsToTest:    eventingTest.EventingFlags.Channels,
 		}
-		flag.Parse()
 
 		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
 		// place that cleans it up. If an individual test calls this instead, then it will break other

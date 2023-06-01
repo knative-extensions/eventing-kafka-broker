@@ -34,11 +34,12 @@ var channelTestRunner testlib.ComponentsTestRunner
 func TestMain(m *testing.M) {
 
 	eventingTest.InitializeEventingFlags()
+	flag.Parse()
+
 	channelTestRunner = testlib.ComponentsTestRunner{
 		ComponentFeatureMap: ChannelFeatureMap,
 		ComponentsToTest:    eventingTest.EventingFlags.Channels,
 	}
-	flag.Parse()
 
 	os.Exit(func() int {
 		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
