@@ -3,7 +3,7 @@ Lists of 216 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.11 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.11 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.8.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
-     (Apache License 2.0) native-linux-x86_64 (com.aayushatharva.brotli4j:native-linux-x86_64:1.8.0 - https://github.com/hyperxpro/Brotli4j/natives/native-linux-x86_64)
+     (Apache License 2.0) native-linux-aarch64 (com.aayushatharva.brotli4j:native-linux-aarch64:1.8.0 - https://github.com/hyperxpro/Brotli4j/natives/native-linux-aarch64)
      (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.13.4 - http://github.com/FasterXML/jackson)
      (The Apache Software License, Version 2.0) Jackson-core (com.fasterxml.jackson.core:jackson-core:2.13.4 - https://github.com/FasterXML/jackson-core)
      (The Apache Software License, Version 2.0) jackson-databind (com.fasterxml.jackson.core:jackson-databind:2.13.4.2 - http://github.com/FasterXML/jackson)
