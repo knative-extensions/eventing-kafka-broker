@@ -28,10 +28,15 @@ import (
 	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
+
+	"knative.dev/eventing/pkg/apis/feature"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -44,11 +49,16 @@ import (
 const (
 	ExternalTopicOwner   = "external"
 	ControllerTopicOwner = "kafkasink-controller"
+	caCertsSecretKey = "ca.crt"
+	// brokerIngressTLSSecretName is the TLS Secret Name for the Cert-Manager resource
+	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
 )
 
 type Reconciler struct {
 	*base.Reconciler
 	*config.Env
+
+	Resolver *resolver.URIResolver
 
 	ConfigMapLister corelisters.ConfigMapLister
 
@@ -243,6 +253,48 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 	statusConditionManager.Addressable(address)
 
+	transportEncryptionFlags := feature.FromContext(ctx)
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		ks.Status.Addresses = []pkgduckv1.Addressable{httpsAddress, httpAddress}
+		ks.Status.Address = &httpAddress
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+
+		ks.Status.Addresses = []pkgduckv1.Addressable{httpsAddress}
+		ks.Status.Address = &httpsAddress
+	} else {
+		// Disabled mode:
+		// Unchange
+		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+
+		ks.Status.Addresses = []pkgduckv1.Addressable{httpAddress}
+		ks.Status.Address = &httpAddress
+	}
+
+
+	// Leo: This is in the reference PR, but I don't know what does it do. 
+	//b.GetConditionSet().Manage(b.GetStatus()).MarkTrue(eventingv1.BrokerConditionAddressable)
+
 	return nil
 }
 
@@ -359,4 +411,16 @@ func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
 		},
 		BootstrapServers: kss.BootstrapServers,
 	}
+}
+
+func (r *Reconciler) getCaCerts() (string, error) {
+	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(brokerIngressTLSSecretName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), brokerIngressTLSSecretName, err)
+	}
+	caCerts, ok := secret.Data[caCertsSecretKey]
+	if !ok {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), brokerIngressTLSSecretName, caCertsSecretKey)
+	}
+	return string(caCerts), nil
 }

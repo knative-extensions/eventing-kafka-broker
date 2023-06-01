@@ -19,7 +19,9 @@ package receiver
 import (
 	"fmt"
 	"net/url"
-
+	"k8s.io/utils/pointer"
+	"knative.dev/pkg/apis"
+	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,10 +33,32 @@ func Address(host string, object metav1.Object) *url.URL {
 	}
 }
 
-func AddressTLS(host string, object metav1.Object) *url.URL {
-	return &url.URL{
-		Scheme: "https",
-		Host:   host,
-		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
+// func AddressTLS(host string, object metav1.Object, caCerts string) *url.URL {
+// 	return &url.URL{
+// 		Scheme: "https",
+// 		Host:   host,
+// 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
+// 		caCerts: caCerts,
+// 	}
+// }
+
+
+// HTTPAddress returns the addressable
+func HTTPAddress(host string, object metav1.Object) pkgduckv1.Addressable {
+	httpAddress := pkgduckv1.Addressable{
+		Name: pointer.String("http"),
+		URL:  apis.HTTP(host),
 	}
+	httpAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
+	return httpAddress
+}
+
+func HTTPSAddress(host string, object metav1.Object, caCerts string) pkgduckv1.Addressable {
+	httpsAddress := pkgduckv1.Addressable{
+		Name:    pointer.String("https"),
+		URL:     apis.HTTPS(host),
+		CACerts: pointer.String(caCerts),
+	}
+	httpsAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
+	return httpsAddress
 }
