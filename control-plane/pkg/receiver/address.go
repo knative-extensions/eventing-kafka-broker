@@ -33,6 +33,7 @@ func Address(host string, object metav1.Object) *url.URL {
 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
 	}
 }
+
 func HTTPAddress(host string, object metav1.Object) pkgduckv1.Addressable {
 	httpAddress := pkgduckv1.Addressable{
 		Name: pointer.String("http"),
