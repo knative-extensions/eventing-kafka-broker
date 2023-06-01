@@ -18,6 +18,9 @@ package prober
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"net/http"
 	"sync"
 	"time"
 
@@ -55,6 +58,21 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		IPsLister: IPsLister,
 		port:      port,
 	}
+}
+
+func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) Prober {
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM([]byte(*caCerts))
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		},
+	}
+
+	return NewAsync(ctx, client, port, IPsLister, enqueue)
 }
 
 func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
