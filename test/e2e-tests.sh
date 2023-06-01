@@ -29,8 +29,8 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
 fi
 
 if [[ -z "${BROKER_CLASS}" ]]; then
-  BROKER_CLASS=KafkaBroker
-  echo "BROKER_CLASS is not defined, falling back to the default BROKER_CLASS=KafkaBroker. Override this with the 'BROKER_CLASS' env var."
+  export BROKER_CLASS=Kafka
+  echo "BROKER_CLASS is not defined, falling back to the default BROKER_CLASS=Kafka. Override this with the 'BROKER_CLASS' env var."
 fi
 
 echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
