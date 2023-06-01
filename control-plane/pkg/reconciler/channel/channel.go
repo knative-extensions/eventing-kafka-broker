@@ -19,15 +19,18 @@ package channel
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
+	"knative.dev/eventing/pkg/apis/feature"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/network"
+	"knative.dev/pkg/system"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/multierr"
@@ -41,6 +44,7 @@ import (
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
+	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -64,6 +68,8 @@ const (
 	TopicPrefix                  = "knative-messaging-kafka"
 	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
 	NewChannelIngressServiceName = "kafka-channel-ingress"
+	kafkaChannelTLSSecretName    = "kafka-channel-ingress-server-tls" //nolint:gosec // This is not a hardcoded credential
+	caCertsSecretKey             = "ca.crt"
 )
 
 type Reconciler struct {
@@ -286,7 +292,41 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
-	address, _ := url.Parse(fmt.Sprintf("http://%s.%s.svc.%s", channelService.Name, channelService.Namespace, network.GetClusterDomainName()))
+	transportEncryptionFlags := feature.FromContext(ctx)
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := r.httpAddress(channelService)
+		httpsAddress := r.httpsAddress(caCerts, channelService)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		channel.Status.Addresses = []pkgduckv1.Addressable{httpsAddress, httpAddress}
+		channel.Status.Address = &httpAddress
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpsAddress := r.httpsAddress(caCerts, channelService)
+		channel.Status.Addresses = []pkgduckv1.Addressable{httpsAddress}
+		channel.Status.Address = &httpsAddress
+	} else {
+		httpAddress := r.httpAddress(channelService)
+		channel.Status.Address = &httpAddress
+	}
+
+	address := channel.Status.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -668,6 +708,38 @@ func (r *Reconciler) getSubscriptionName(channel *messagingv1beta1.KafkaChannel,
 	}
 
 	return "", apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
+}
+
+func (r *Reconciler) getCaCerts() (string, error) {
+	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(kafkaChannelTLSSecretName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
+	}
+	caCerts, ok := secret.Data[caCertsSecretKey]
+	if !ok {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), kafkaChannelTLSSecretName, caCertsSecretKey)
+	}
+	return string(caCerts), nil
+}
+
+func (r *Reconciler) httpAddress(channel *corev1.Service) pkgduckv1.Addressable {
+	// http address uses path-based routing
+	httpAddress := pkgduckv1.Addressable{
+		Name: pointer.String("http"),
+		URL:  apis.HTTP(network.GetServiceHostname(channel.Name, channel.Namespace)),
+	}
+	return httpAddress
+}
+
+func (r *Reconciler) httpsAddress(caCerts string, channel *corev1.Service) pkgduckv1.Addressable {
+	// https address uses path-based routing
+	httpsAddress := pkgduckv1.Addressable{
+		Name:    pointer.String("https"),
+		URL:     apis.HTTPS(network.GetServiceHostname(NewChannelIngressServiceName, r.SystemNamespace)),
+		CACerts: pointer.String(caCerts),
+	}
+	httpsAddress.URL.Path = fmt.Sprintf("/%s/%s", channel.Namespace, channel.Name)
+	return httpsAddress
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
