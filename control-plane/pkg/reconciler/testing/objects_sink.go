@@ -174,3 +174,24 @@ func SinkContentMode(cm string) KRShapedOption {
 		ks.Spec.ContentMode = &cm
 	}
 }
+
+
+func WithSinkAddress(address duckv1.Addressable) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.Status.Address = &address
+	}
+}
+
+func WithSinkAddresses(addresses []duckv1.Addressable) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.Status.Addresses = addresses
+	}
+}
+func WithSinkAddessable() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(base.ConditionAddressable)
+	}
+}
