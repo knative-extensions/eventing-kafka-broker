@@ -118,8 +118,11 @@ message Egress {
   string destinationCACerts = 15;
 
   oneof replyStrategy {
+    // Send the response to an url
+    string replyUrl = 3;
+
     // Sends message to reply url with the CA Cert provided
-    replyUrlAndCert reply = 3;
+    replyUrlAndCert reply = 16;
 
     // Send the response to a Kafka topic
     Empty replyToOriginalTopic = 4;
