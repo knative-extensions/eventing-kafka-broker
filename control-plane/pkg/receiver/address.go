@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func Address(host string, object metav1.Object) *url.URL {
@@ -34,8 +34,8 @@ func Address(host string, object metav1.Object) *url.URL {
 	}
 }
 
-func HTTPAddress(host string, object metav1.Object) pkgduckv1.Addressable {
-	httpAddress := pkgduckv1.Addressable{
+func HTTPAddress(host string, object metav1.Object) duckv1.Addressable {
+	httpAddress := duckv1.Addressable{
 		Name: pointer.String("http"),
 		URL:  apis.HTTP(host),
 	}
@@ -43,8 +43,8 @@ func HTTPAddress(host string, object metav1.Object) pkgduckv1.Addressable {
 	return httpAddress
 }
 
-func HTTPSAddress(host string, object metav1.Object, caCerts string) pkgduckv1.Addressable {
-	httpsAddress := pkgduckv1.Addressable{
+func HTTPSAddress(host string, object metav1.Object, caCerts string) duckv1.Addressable {
+	httpsAddress := duckv1.Addressable{
 		Name:    pointer.String("https"),
 		URL:     apis.HTTPS(host),
 		CACerts: pointer.String(caCerts),

@@ -402,16 +402,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerProbeFailed(prober.StatusNotReady),
 						BrokerConfigMapAnnotations(),
-						WithBrokerAddresses([]duckv1.Addressable{
-							{
-								Name: pointer.String("http"),
-								URL:  brokerAddress,
-							},
-						}),
-						WithBrokerAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  brokerAddress,
-						}),
 						WithTopicStatusAnnotation(BrokerTopic()),
 					),
 				},
@@ -476,16 +466,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerProbeFailed(prober.StatusUnknown),
-						WithBrokerAddresses([]duckv1.Addressable{
-							{
-								Name: pointer.String("http"),
-								URL:  brokerAddress,
-							},
-						}),
-						WithBrokerAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  brokerAddress,
-						}),
 					),
 				},
 			},

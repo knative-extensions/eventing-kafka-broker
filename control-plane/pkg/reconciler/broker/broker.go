@@ -237,6 +237,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
 
 	transportEncryptionFlags := feature.FromContext(ctx)
+	var statusAddress *pkgduckv1.Addressable
+	var statusAddresses []pkgduckv1.Addressable
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
@@ -245,8 +247,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 		httpAddress := receiver.HTTPAddress(ingressHost, broker)
 		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
-		broker.Status.Address = &httpAddress
-		broker.Status.Addresses = []pkgduckv1.Addressable{httpAddress, httpsAddress}
+		statusAddress = &httpAddress
+		statusAddresses = []pkgduckv1.Addressable{httpAddress, httpsAddress}
 	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
@@ -254,15 +256,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		}
 
 		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
-		broker.Status.Address = &httpsAddress
-		broker.Status.Addresses = []pkgduckv1.Addressable{httpsAddress}
+		statusAddress = &httpsAddress
+		statusAddresses = []pkgduckv1.Addressable{httpsAddress}
 	} else {
 		httpAddress := receiver.HTTPAddress(ingressHost, broker)
-		broker.Status.Address = &httpAddress
-		broker.Status.Addresses = []pkgduckv1.Addressable{httpAddress}
+		statusAddress = &httpAddress
+		statusAddresses = []pkgduckv1.Addressable{httpAddress}
 	}
 
-	address := broker.Status.Address.URL.URL()
+	address := statusAddress.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -275,7 +277,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	//statusConditionManager.Addressable(address)
+	broker.Status.Address = statusAddress
+	broker.Status.Addresses = statusAddresses
 	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
 	statusConditionManager.ProbesStatusReady()
 
