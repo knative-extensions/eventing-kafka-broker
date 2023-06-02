@@ -121,15 +121,15 @@ message Egress {
     // Send the response to an url
     string replyUrl = 3;
 
-    // Sends message to reply url with the CA Cert provided
-    replyUrlAndCert reply = 16;
-
     // Send the response to a Kafka topic
     Empty replyToOriginalTopic = 4;
 
     // Discard response.
     Empty discardReply = 9;
   }
+      
+  //replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+  string replyUrlCACerts = 16;
 
   // A filter for performing exact match against Cloud Events attributes
   Filter filter = 5;
@@ -171,14 +171,6 @@ message EgressFeatureFlags {
   bool enableRateLimiter = 1;
   // Enable newMetrics
   bool enableOrderedExecutorMetrics = 2;
-}
-
-message replyUrlAndCert {
-  // Send the response to an url
-  string replyUrl = 3;
-  
-  //replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-  string replyUrlCACerts = 16;
 }
 
 // CloudEvent content mode

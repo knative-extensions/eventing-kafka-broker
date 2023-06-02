@@ -10444,33 +10444,6 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * Sends message to reply url with the CA Cert provided
-     * </pre>
-     *
-     * <code>.replyUrlAndCert reply = 16;</code>
-     * @return Whether the reply field is set.
-     */
-    boolean hasReply();
-    /**
-     * <pre>
-     * Sends message to reply url with the CA Cert provided
-     * </pre>
-     *
-     * <code>.replyUrlAndCert reply = 16;</code>
-     * @return The reply.
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert getReply();
-    /**
-     * <pre>
-     * Sends message to reply url with the CA Cert provided
-     * </pre>
-     *
-     * <code>.replyUrlAndCert reply = 16;</code>
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder getReplyOrBuilder();
-
-    /**
-     * <pre>
      * Send the response to a Kafka topic
      * </pre>
      *
@@ -10522,6 +10495,26 @@ public final class DataPlaneContract {
      * <code>.Empty discardReply = 9;</code>
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder();
+
+    /**
+     * <pre>
+     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+     * </pre>
+     *
+     * <code>string replyUrlCACerts = 16;</code>
+     * @return The replyUrlCACerts.
+     */
+    java.lang.String getReplyUrlCACerts();
+    /**
+     * <pre>
+     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+     * </pre>
+     *
+     * <code>string replyUrlCACerts = 16;</code>
+     * @return The bytes for replyUrlCACerts.
+     */
+    com.google.protobuf.ByteString
+        getReplyUrlCACertsBytes();
 
     /**
      * <pre>
@@ -10777,6 +10770,7 @@ public final class DataPlaneContract {
       consumerGroup_ = "";
       destination_ = "";
       destinationCACerts_ = "";
+      replyUrlCACerts_ = "";
       uid_ = "";
       deliveryOrder_ = 0;
       keyType_ = 0;
@@ -10951,17 +10945,9 @@ public final class DataPlaneContract {
               break;
             }
             case 130: {
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder subBuilder = null;
-              if (replyStrategyCase_ == 16) {
-                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_).toBuilder();
-              }
-              replyStrategy_ =
-                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_);
-                replyStrategy_ = subBuilder.buildPartial();
-              }
-              replyStrategyCase_ = 16;
+              java.lang.String s = input.readStringRequireUtf8();
+
+              replyUrlCACerts_ = s;
               break;
             }
             default: {
@@ -11005,7 +10991,6 @@ public final class DataPlaneContract {
         implements com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       REPLYURL(3),
-      REPLY(16),
       REPLYTOORIGINALTOPIC(4),
       DISCARDREPLY(9),
       REPLYSTRATEGY_NOT_SET(0);
@@ -11026,7 +11011,6 @@ public final class DataPlaneContract {
       public static ReplyStrategyCase forNumber(int value) {
         switch (value) {
           case 3: return REPLYURL;
-          case 16: return REPLY;
           case 4: return REPLYTOORIGINALTOPIC;
           case 9: return DISCARDREPLY;
           case 0: return REPLYSTRATEGY_NOT_SET;
@@ -11235,49 +11219,6 @@ public final class DataPlaneContract {
       }
     }
 
-    public static final int REPLY_FIELD_NUMBER = 16;
-    /**
-     * <pre>
-     * Sends message to reply url with the CA Cert provided
-     * </pre>
-     *
-     * <code>.replyUrlAndCert reply = 16;</code>
-     * @return Whether the reply field is set.
-     */
-    @java.lang.Override
-    public boolean hasReply() {
-      return replyStrategyCase_ == 16;
-    }
-    /**
-     * <pre>
-     * Sends message to reply url with the CA Cert provided
-     * </pre>
-     *
-     * <code>.replyUrlAndCert reply = 16;</code>
-     * @return The reply.
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert getReply() {
-      if (replyStrategyCase_ == 16) {
-         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_;
-      }
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-    }
-    /**
-     * <pre>
-     * Sends message to reply url with the CA Cert provided
-     * </pre>
-     *
-     * <code>.replyUrlAndCert reply = 16;</code>
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder getReplyOrBuilder() {
-      if (replyStrategyCase_ == 16) {
-         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_;
-      }
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-    }
-
     public static final int REPLYTOORIGINALTOPIC_FIELD_NUMBER = 4;
     /**
      * <pre>
@@ -11362,6 +11303,52 @@ public final class DataPlaneContract {
          return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
       }
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+
+    public static final int REPLYURLCACERTS_FIELD_NUMBER = 16;
+    private volatile java.lang.Object replyUrlCACerts_;
+    /**
+     * <pre>
+     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+     * </pre>
+     *
+     * <code>string replyUrlCACerts = 16;</code>
+     * @return The replyUrlCACerts.
+     */
+    @java.lang.Override
+    public java.lang.String getReplyUrlCACerts() {
+      java.lang.Object ref = replyUrlCACerts_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        replyUrlCACerts_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+     * </pre>
+     *
+     * <code>string replyUrlCACerts = 16;</code>
+     * @return The bytes for replyUrlCACerts.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getReplyUrlCACertsBytes() {
+      java.lang.Object ref = replyUrlCACerts_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        replyUrlCACerts_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int FILTER_FIELD_NUMBER = 5;
@@ -11766,8 +11753,8 @@ public final class DataPlaneContract {
       if (!getDestinationCACertsBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 15, destinationCACerts_);
       }
-      if (replyStrategyCase_ == 16) {
-        output.writeMessage(16, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_);
+      if (!getReplyUrlCACertsBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 16, replyUrlCACerts_);
       }
       unknownFields.writeTo(output);
     }
@@ -11833,9 +11820,8 @@ public final class DataPlaneContract {
       if (!getDestinationCACertsBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(15, destinationCACerts_);
       }
-      if (replyStrategyCase_ == 16) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(16, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_);
+      if (!getReplyUrlCACertsBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, replyUrlCACerts_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -11858,6 +11844,8 @@ public final class DataPlaneContract {
           .equals(other.getDestination())) return false;
       if (!getDestinationCACerts()
           .equals(other.getDestinationCACerts())) return false;
+      if (!getReplyUrlCACerts()
+          .equals(other.getReplyUrlCACerts())) return false;
       if (hasFilter() != other.hasFilter()) return false;
       if (hasFilter()) {
         if (!getFilter()
@@ -11892,10 +11880,6 @@ public final class DataPlaneContract {
           if (!getReplyUrl()
               .equals(other.getReplyUrl())) return false;
           break;
-        case 16:
-          if (!getReply()
-              .equals(other.getReply())) return false;
-          break;
         case 4:
           if (!getReplyToOriginalTopic()
               .equals(other.getReplyToOriginalTopic())) return false;
@@ -11924,6 +11908,8 @@ public final class DataPlaneContract {
       hash = (53 * hash) + getDestination().hashCode();
       hash = (37 * hash) + DESTINATIONCACERTS_FIELD_NUMBER;
       hash = (53 * hash) + getDestinationCACerts().hashCode();
+      hash = (37 * hash) + REPLYURLCACERTS_FIELD_NUMBER;
+      hash = (53 * hash) + getReplyUrlCACerts().hashCode();
       if (hasFilter()) {
         hash = (37 * hash) + FILTER_FIELD_NUMBER;
         hash = (53 * hash) + getFilter().hashCode();
@@ -11956,10 +11942,6 @@ public final class DataPlaneContract {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
           hash = (53 * hash) + getReplyUrl().hashCode();
-          break;
-        case 16:
-          hash = (37 * hash) + REPLY_FIELD_NUMBER;
-          hash = (53 * hash) + getReply().hashCode();
           break;
         case 4:
           hash = (37 * hash) + REPLYTOORIGINALTOPIC_FIELD_NUMBER;
@@ -12112,6 +12094,8 @@ public final class DataPlaneContract {
 
         destinationCACerts_ = "";
 
+        replyUrlCACerts_ = "";
+
         if (filterBuilder_ == null) {
           filter_ = null;
         } else {
@@ -12185,13 +12169,6 @@ public final class DataPlaneContract {
         if (replyStrategyCase_ == 3) {
           result.replyStrategy_ = replyStrategy_;
         }
-        if (replyStrategyCase_ == 16) {
-          if (replyBuilder_ == null) {
-            result.replyStrategy_ = replyStrategy_;
-          } else {
-            result.replyStrategy_ = replyBuilder_.build();
-          }
-        }
         if (replyStrategyCase_ == 4) {
           if (replyToOriginalTopicBuilder_ == null) {
             result.replyStrategy_ = replyStrategy_;
@@ -12206,6 +12183,7 @@ public final class DataPlaneContract {
             result.replyStrategy_ = discardReplyBuilder_.build();
           }
         }
+        result.replyUrlCACerts_ = replyUrlCACerts_;
         if (filterBuilder_ == null) {
           result.filter_ = filter_;
         } else {
@@ -12300,6 +12278,10 @@ public final class DataPlaneContract {
           destinationCACerts_ = other.destinationCACerts_;
           onChanged();
         }
+        if (!other.getReplyUrlCACerts().isEmpty()) {
+          replyUrlCACerts_ = other.replyUrlCACerts_;
+          onChanged();
+        }
         if (other.hasFilter()) {
           mergeFilter(other.getFilter());
         }
@@ -12356,10 +12338,6 @@ public final class DataPlaneContract {
             replyStrategyCase_ = 3;
             replyStrategy_ = other.replyStrategy_;
             onChanged();
-            break;
-          }
-          case REPLY: {
-            mergeReply(other.getReply());
             break;
           }
           case REPLYTOORIGINALTOPIC: {
@@ -12817,183 +12795,6 @@ public final class DataPlaneContract {
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder> replyBuilder_;
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       * @return Whether the reply field is set.
-       */
-      @java.lang.Override
-      public boolean hasReply() {
-        return replyStrategyCase_ == 16;
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       * @return The reply.
-       */
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert getReply() {
-        if (replyBuilder_ == null) {
-          if (replyStrategyCase_ == 16) {
-            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_;
-          }
-          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-        } else {
-          if (replyStrategyCase_ == 16) {
-            return replyBuilder_.getMessage();
-          }
-          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-        }
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      public Builder setReply(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert value) {
-        if (replyBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          replyStrategy_ = value;
-          onChanged();
-        } else {
-          replyBuilder_.setMessage(value);
-        }
-        replyStrategyCase_ = 16;
-        return this;
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      public Builder setReply(
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder builderForValue) {
-        if (replyBuilder_ == null) {
-          replyStrategy_ = builderForValue.build();
-          onChanged();
-        } else {
-          replyBuilder_.setMessage(builderForValue.build());
-        }
-        replyStrategyCase_ = 16;
-        return this;
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      public Builder mergeReply(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert value) {
-        if (replyBuilder_ == null) {
-          if (replyStrategyCase_ == 16 &&
-              replyStrategy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance()) {
-            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_)
-                .mergeFrom(value).buildPartial();
-          } else {
-            replyStrategy_ = value;
-          }
-          onChanged();
-        } else {
-          if (replyStrategyCase_ == 16) {
-            replyBuilder_.mergeFrom(value);
-          }
-          replyBuilder_.setMessage(value);
-        }
-        replyStrategyCase_ = 16;
-        return this;
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      public Builder clearReply() {
-        if (replyBuilder_ == null) {
-          if (replyStrategyCase_ == 16) {
-            replyStrategyCase_ = 0;
-            replyStrategy_ = null;
-            onChanged();
-          }
-        } else {
-          if (replyStrategyCase_ == 16) {
-            replyStrategyCase_ = 0;
-            replyStrategy_ = null;
-          }
-          replyBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder getReplyBuilder() {
-        return getReplyFieldBuilder().getBuilder();
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder getReplyOrBuilder() {
-        if ((replyStrategyCase_ == 16) && (replyBuilder_ != null)) {
-          return replyBuilder_.getMessageOrBuilder();
-        } else {
-          if (replyStrategyCase_ == 16) {
-            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_;
-          }
-          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-        }
-      }
-      /**
-       * <pre>
-       * Sends message to reply url with the CA Cert provided
-       * </pre>
-       *
-       * <code>.replyUrlAndCert reply = 16;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder> 
-          getReplyFieldBuilder() {
-        if (replyBuilder_ == null) {
-          if (!(replyStrategyCase_ == 16)) {
-            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-          }
-          replyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder>(
-                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) replyStrategy_,
-                  getParentForChildren(),
-                  isClean());
-          replyStrategy_ = null;
-        }
-        replyStrategyCase_ = 16;
-        onChanged();;
-        return replyBuilder_;
-      }
-
-      private com.google.protobuf.SingleFieldBuilderV3<
           dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> replyToOriginalTopicBuilder_;
       /**
        * <pre>
@@ -13345,6 +13146,102 @@ public final class DataPlaneContract {
         replyStrategyCase_ = 9;
         onChanged();;
         return discardReplyBuilder_;
+      }
+
+      private java.lang.Object replyUrlCACerts_ = "";
+      /**
+       * <pre>
+       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+       * </pre>
+       *
+       * <code>string replyUrlCACerts = 16;</code>
+       * @return The replyUrlCACerts.
+       */
+      public java.lang.String getReplyUrlCACerts() {
+        java.lang.Object ref = replyUrlCACerts_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          replyUrlCACerts_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+       * </pre>
+       *
+       * <code>string replyUrlCACerts = 16;</code>
+       * @return The bytes for replyUrlCACerts.
+       */
+      public com.google.protobuf.ByteString
+          getReplyUrlCACertsBytes() {
+        java.lang.Object ref = replyUrlCACerts_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          replyUrlCACerts_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+       * </pre>
+       *
+       * <code>string replyUrlCACerts = 16;</code>
+       * @param value The replyUrlCACerts to set.
+       * @return This builder for chaining.
+       */
+      public Builder setReplyUrlCACerts(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        replyUrlCACerts_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+       * </pre>
+       *
+       * <code>string replyUrlCACerts = 16;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearReplyUrlCACerts() {
+        
+        replyUrlCACerts_ = getDefaultInstance().getReplyUrlCACerts();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+       * </pre>
+       *
+       * <code>string replyUrlCACerts = 16;</code>
+       * @param value The bytes for replyUrlCACerts to set.
+       * @return This builder for chaining.
+       */
+      public Builder setReplyUrlCACertsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        replyUrlCACerts_ = value;
+        onChanged();
+        return this;
       }
 
       private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter filter_;
@@ -15259,796 +15156,6 @@ public final class DataPlaneContract {
 
     @java.lang.Override
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface replyUrlAndCertOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:replyUrlAndCert)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <pre>
-     * Send the response to an url
-     * </pre>
-     *
-     * <code>string replyUrl = 3;</code>
-     * @return The replyUrl.
-     */
-    java.lang.String getReplyUrl();
-    /**
-     * <pre>
-     * Send the response to an url
-     * </pre>
-     *
-     * <code>string replyUrl = 3;</code>
-     * @return The bytes for replyUrl.
-     */
-    com.google.protobuf.ByteString
-        getReplyUrlBytes();
-
-    /**
-     * <pre>
-     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-     * </pre>
-     *
-     * <code>string replyUrlCACerts = 16;</code>
-     * @return The replyUrlCACerts.
-     */
-    java.lang.String getReplyUrlCACerts();
-    /**
-     * <pre>
-     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-     * </pre>
-     *
-     * <code>string replyUrlCACerts = 16;</code>
-     * @return The bytes for replyUrlCACerts.
-     */
-    com.google.protobuf.ByteString
-        getReplyUrlCACertsBytes();
-  }
-  /**
-   * Protobuf type {@code replyUrlAndCert}
-   */
-  public static final class replyUrlAndCert extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:replyUrlAndCert)
-      replyUrlAndCertOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use replyUrlAndCert.newBuilder() to construct.
-    private replyUrlAndCert(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private replyUrlAndCert() {
-      replyUrl_ = "";
-      replyUrlCACerts_ = "";
-    }
-
-    @java.lang.Override
-    @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
-      return new replyUrlAndCert();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private replyUrlAndCert(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              replyUrl_ = s;
-              break;
-            }
-            case 130: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              replyUrlCACerts_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_replyUrlAndCert_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_replyUrlAndCert_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder.class);
-    }
-
-    public static final int REPLYURL_FIELD_NUMBER = 3;
-    private volatile java.lang.Object replyUrl_;
-    /**
-     * <pre>
-     * Send the response to an url
-     * </pre>
-     *
-     * <code>string replyUrl = 3;</code>
-     * @return The replyUrl.
-     */
-    @java.lang.Override
-    public java.lang.String getReplyUrl() {
-      java.lang.Object ref = replyUrl_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        replyUrl_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * Send the response to an url
-     * </pre>
-     *
-     * <code>string replyUrl = 3;</code>
-     * @return The bytes for replyUrl.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getReplyUrlBytes() {
-      java.lang.Object ref = replyUrl_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        replyUrl_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int REPLYURLCACERTS_FIELD_NUMBER = 16;
-    private volatile java.lang.Object replyUrlCACerts_;
-    /**
-     * <pre>
-     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-     * </pre>
-     *
-     * <code>string replyUrlCACerts = 16;</code>
-     * @return The replyUrlCACerts.
-     */
-    @java.lang.Override
-    public java.lang.String getReplyUrlCACerts() {
-      java.lang.Object ref = replyUrlCACerts_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        replyUrlCACerts_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-     * </pre>
-     *
-     * <code>string replyUrlCACerts = 16;</code>
-     * @return The bytes for replyUrlCACerts.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getReplyUrlCACertsBytes() {
-      java.lang.Object ref = replyUrlCACerts_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        replyUrlCACerts_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (!getReplyUrlBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, replyUrl_);
-      }
-      if (!getReplyUrlCACertsBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 16, replyUrlCACerts_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (!getReplyUrlBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, replyUrl_);
-      }
-      if (!getReplyUrlCACertsBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, replyUrlCACerts_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert)) {
-        return super.equals(obj);
-      }
-      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) obj;
-
-      if (!getReplyUrl()
-          .equals(other.getReplyUrl())) return false;
-      if (!getReplyUrlCACerts()
-          .equals(other.getReplyUrlCACerts())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
-      hash = (53 * hash) + getReplyUrl().hashCode();
-      hash = (37 * hash) + REPLYURLCACERTS_FIELD_NUMBER;
-      hash = (53 * hash) + getReplyUrlCACerts().hashCode();
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code replyUrlAndCert}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:replyUrlAndCert)
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCertOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_replyUrlAndCert_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_replyUrlAndCert_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.Builder.class);
-      }
-
-      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        replyUrl_ = "";
-
-        replyUrlCACerts_ = "";
-
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_replyUrlAndCert_descriptor;
-      }
-
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert getDefaultInstanceForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert build() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert buildPartial() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert(this);
-        result.replyUrl_ = replyUrl_;
-        result.replyUrlCACerts_ = replyUrlCACerts_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) {
-          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert other) {
-        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert.getDefaultInstance()) return this;
-        if (!other.getReplyUrl().isEmpty()) {
-          replyUrl_ = other.replyUrl_;
-          onChanged();
-        }
-        if (!other.getReplyUrlCACerts().isEmpty()) {
-          replyUrlCACerts_ = other.replyUrlCACerts_;
-          onChanged();
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-
-      private java.lang.Object replyUrl_ = "";
-      /**
-       * <pre>
-       * Send the response to an url
-       * </pre>
-       *
-       * <code>string replyUrl = 3;</code>
-       * @return The replyUrl.
-       */
-      public java.lang.String getReplyUrl() {
-        java.lang.Object ref = replyUrl_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          replyUrl_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * Send the response to an url
-       * </pre>
-       *
-       * <code>string replyUrl = 3;</code>
-       * @return The bytes for replyUrl.
-       */
-      public com.google.protobuf.ByteString
-          getReplyUrlBytes() {
-        java.lang.Object ref = replyUrl_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          replyUrl_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * Send the response to an url
-       * </pre>
-       *
-       * <code>string replyUrl = 3;</code>
-       * @param value The replyUrl to set.
-       * @return This builder for chaining.
-       */
-      public Builder setReplyUrl(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        replyUrl_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Send the response to an url
-       * </pre>
-       *
-       * <code>string replyUrl = 3;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearReplyUrl() {
-        
-        replyUrl_ = getDefaultInstance().getReplyUrl();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Send the response to an url
-       * </pre>
-       *
-       * <code>string replyUrl = 3;</code>
-       * @param value The bytes for replyUrl to set.
-       * @return This builder for chaining.
-       */
-      public Builder setReplyUrlBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        replyUrl_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.lang.Object replyUrlCACerts_ = "";
-      /**
-       * <pre>
-       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-       * </pre>
-       *
-       * <code>string replyUrlCACerts = 16;</code>
-       * @return The replyUrlCACerts.
-       */
-      public java.lang.String getReplyUrlCACerts() {
-        java.lang.Object ref = replyUrlCACerts_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          replyUrlCACerts_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-       * </pre>
-       *
-       * <code>string replyUrlCACerts = 16;</code>
-       * @return The bytes for replyUrlCACerts.
-       */
-      public com.google.protobuf.ByteString
-          getReplyUrlCACertsBytes() {
-        java.lang.Object ref = replyUrlCACerts_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          replyUrlCACerts_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-       * </pre>
-       *
-       * <code>string replyUrlCACerts = 16;</code>
-       * @param value The replyUrlCACerts to set.
-       * @return This builder for chaining.
-       */
-      public Builder setReplyUrlCACerts(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        replyUrlCACerts_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-       * </pre>
-       *
-       * <code>string replyUrlCACerts = 16;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearReplyUrlCACerts() {
-        
-        replyUrlCACerts_ = getDefaultInstance().getReplyUrlCACerts();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       *replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
-       * </pre>
-       *
-       * <code>string replyUrlCACerts = 16;</code>
-       * @param value The bytes for replyUrlCACerts to set.
-       * @return This builder for chaining.
-       */
-      public Builder setReplyUrlCACertsBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        replyUrlCACerts_ = value;
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:replyUrlAndCert)
-    }
-
-    // @@protoc_insertion_point(class_scope:replyUrlAndCert)
-    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert();
-    }
-
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    private static final com.google.protobuf.Parser<replyUrlAndCert>
-        PARSER = new com.google.protobuf.AbstractParser<replyUrlAndCert>() {
-      @java.lang.Override
-      public replyUrlAndCert parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new replyUrlAndCert(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<replyUrlAndCert> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<replyUrlAndCert> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.replyUrlAndCert getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -26885,11 +25992,6 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_EgressFeatureFlags_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_replyUrlAndCert_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_replyUrlAndCert_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Ingress_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -26966,60 +26068,58 @@ public final class DataPlaneContract {
       "\001\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021d" +
       "eadLetterCACerts\030\006 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n" +
       "\rbackoffPolicy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014" +
-      "backoffDelay\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\365\003\n\006" +
+      "backoffDelay\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\353\003\n\006" +
       "Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destina" +
       "tion\030\002 \001(\t\022\032\n\022destinationCACerts\030\017 \001(\t\022\022" +
-      "\n\010replyUrl\030\003 \001(\tH\000\022!\n\005reply\030\020 \001(\0132\020.repl" +
-      "yUrlAndCertH\000\022&\n\024replyToOriginalTopic\030\004 " +
-      "\001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006.Em" +
-      "ptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 " +
-      "\001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConfig" +
-      "\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrder\022" +
-      "\031\n\007keyType\030\n \001(\0162\010.KeyType\022\035\n\treference\030" +
-      "\013 \001(\0132\n.Reference\022)\n\017dialectedFilter\030\014 \003" +
-      "(\0132\020.DialectedFilter\022\021\n\tvReplicas\030\r \001(\005\022" +
-      ")\n\014featureFlags\030\016 \001(\0132\023.EgressFeatureFla" +
-      "gsB\017\n\rreplyStrategy\"U\n\022EgressFeatureFlag" +
-      "s\022\031\n\021enableRateLimiter\030\001 \001(\010\022$\n\034enableOr" +
-      "deredExecutorMetrics\030\002 \001(\010\"<\n\017replyUrlAn" +
-      "dCert\022\020\n\010replyUrl\030\003 \001(\t\022\027\n\017replyUrlCACer" +
-      "ts\030\020 \001(\t\"H\n\007Ingress\022!\n\013contentMode\030\001 \001(\016" +
-      "2\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001" +
-      "(\t\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespa" +
-      "ce\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"" +
-      "`\n\017SecretReference\022\035\n\treference\030\001 \001(\0132\n." +
-      "Reference\022.\n\022keyFieldReferences\030\002 \003(\0132\022." +
-      "KeyFieldReference\"C\n\021KeyFieldReference\022\021" +
-      "\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.Secre" +
-      "tField\"Y\n\024MultiSecretReference\022\033\n\010protoc" +
-      "ol\030\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132" +
-      "\020.SecretReference\"\202\001\n\023CloudEventOverride" +
-      "s\0228\n\nextensions\030\001 \003(\0132$.CloudEventOverri" +
-      "des.ExtensionsEntry\0321\n\017ExtensionsEntry\022\013" +
-      "\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resou" +
-      "rce\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020boot" +
-      "strapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.In" +
-      "gress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConf" +
-      "ig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentA" +
-      "uth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132" +
-      "\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025" +
-      ".MultiSecretReferenceH\000\0221\n\023cloudEventOve" +
-      "rrides\030\n \001(\0132\024.CloudEventOverrides\022\035\n\tre" +
-      "ference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Con" +
-      "tract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002" +
-      " \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expo" +
-      "nential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r" +
-      "\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n" +
-      "\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tBy" +
-      "teArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\n" +
-      "STRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECH" +
-      "ANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USE" +
-      "R_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Proto" +
-      "col\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007" +
-      "\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eve" +
-      "nting.kafka.broker.contractB\021DataPlaneCo" +
-      "ntractZ\032control-plane/pkg/contractb\006prot" +
-      "o3"
+      "\n\010replyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTop" +
+      "ic\030\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\013" +
+      "2\006.EmptyH\000\022\027\n\017replyUrlCACerts\030\020 \001(\t\022\027\n\006f" +
+      "ilter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egr" +
+      "essConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdelive" +
+      "ryOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType" +
+      "\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Re" +
+      "ference\022)\n\017dialectedFilter\030\014 \003(\0132\020.Diale" +
+      "ctedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014feature" +
+      "Flags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rrepl" +
+      "yStrategy\"U\n\022EgressFeatureFlags\022\031\n\021enabl" +
+      "eRateLimiter\030\001 \001(\010\022$\n\034enableOrderedExecu" +
+      "torMetrics\030\002 \001(\010\"H\n\007Ingress\022!\n\013contentMo" +
+      "de\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004" +
+      "host\030\003 \001(\t\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n" +
+      "\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007versio" +
+      "n\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference\030" +
+      "\001 \001(\0132\n.Reference\022.\n\022keyFieldReferences\030" +
+      "\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRef" +
+      "erence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\016" +
+      "2\014.SecretField\"Y\n\024MultiSecretReference\022\033" +
+      "\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreference" +
+      "s\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEvent" +
+      "Overrides\0228\n\nextensions\030\001 \003(\0132$.CloudEve" +
+      "ntOverrides.ExtensionsEntry\0321\n\017Extension" +
+      "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350" +
+      "\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t" +
+      "\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 " +
+      "\001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Eg" +
+      "ressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n" +
+      "\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecre" +
+      "t\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret" +
+      "\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloud" +
+      "EventOverrides\030\n \001(\0132\024.CloudEventOverrid" +
+      "es\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Aut" +
+      "h\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tres" +
+      "ources\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy" +
+      "\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDeliver" +
+      "yOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007Ke" +
+      "yType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double" +
+      "\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINA" +
+      "RY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016S" +
+      "ASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020" +
+      "\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*" +
+      "D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAIN" +
+      "TEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.kna" +
+      "tive.eventing.kafka.broker.contractB\021Dat" +
+      "aPlaneContractZ\032control-plane/pkg/contra" +
+      "ctb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -27120,51 +26220,45 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "DestinationCACerts", "ReplyUrl", "Reply", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "VReplicas", "FeatureFlags", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "DestinationCACerts", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "ReplyUrlCACerts", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "KeyType", "Reference", "DialectedFilter", "VReplicas", "FeatureFlags", "ReplyStrategy", });
     internal_static_EgressFeatureFlags_descriptor =
       getDescriptor().getMessageTypes().get(12);
     internal_static_EgressFeatureFlags_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressFeatureFlags_descriptor,
         new java.lang.String[] { "EnableRateLimiter", "EnableOrderedExecutorMetrics", });
-    internal_static_replyUrlAndCert_descriptor =
-      getDescriptor().getMessageTypes().get(13);
-    internal_static_replyUrlAndCert_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_replyUrlAndCert_descriptor,
-        new java.lang.String[] { "ReplyUrl", "ReplyUrlCACerts", });
     internal_static_Ingress_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_Ingress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ingress_descriptor,
         new java.lang.String[] { "ContentMode", "Path", "Host", });
     internal_static_Reference_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_Reference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Reference_descriptor,
         new java.lang.String[] { "Uuid", "Namespace", "Name", "Version", });
     internal_static_SecretReference_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_SecretReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SecretReference_descriptor,
         new java.lang.String[] { "Reference", "KeyFieldReferences", });
     internal_static_KeyFieldReference_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_KeyFieldReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_KeyFieldReference_descriptor,
         new java.lang.String[] { "SecretKey", "Field", });
     internal_static_MultiSecretReference_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_MultiSecretReference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_MultiSecretReference_descriptor,
         new java.lang.String[] { "Protocol", "References", });
     internal_static_CloudEventOverrides_descriptor =
-      getDescriptor().getMessageTypes().get(19);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_CloudEventOverrides_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_CloudEventOverrides_descriptor,
@@ -27176,13 +26270,13 @@ public final class DataPlaneContract {
         internal_static_CloudEventOverrides_ExtensionsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_Resource_descriptor =
-      getDescriptor().getMessageTypes().get(20);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
         new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "MultiAuthSecret", "CloudEventOverrides", "Reference", "Auth", });
     internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(21);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_Contract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Contract_descriptor,

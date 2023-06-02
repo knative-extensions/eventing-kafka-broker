@@ -278,14 +278,11 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 		if err != nil {
 			return fmt.Errorf("failed to resolve reply destination: %w", err)
 		}
-		reply := &contract.ReplyUrlAndCert{
+		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
 			ReplyUrl: destination.URL.String(),
 		}
 		if destination.CACerts != nil {
-			reply.ReplyUrlCACerts = *destination.CACerts
-		}
-		egress.ReplyStrategy = &contract.Egress_Reply{
-			Reply: reply,
+			egress.ReplyUrlCACerts = *destination.CACerts
 		}
 		return nil
 	}
