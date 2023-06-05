@@ -277,10 +277,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
+	statusConditionManager.ProbesStatusReady()
+	
 	broker.Status.Address = statusAddress
 	broker.Status.Addresses = statusAddresses
 	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
-	statusConditionManager.ProbesStatusReady()
 
 	return nil
 }
