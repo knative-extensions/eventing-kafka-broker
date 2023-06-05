@@ -18,9 +18,11 @@ package prober
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -35,6 +37,33 @@ import (
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 )
 
+var (
+	certPem = `-----BEGIN CERTIFICATE-----
+MIIB0zCCAX2gAwIBAgIJAI/M7BYjwB+uMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
+aWRnaXRzIFB0eSBMdGQwHhcNMTIwOTEyMjE1MjAyWhcNMTUwOTEyMjE1MjAyWjBF
+MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
+ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANLJ
+hPHhITqQbPklG3ibCVxwGMRfp/v4XqhfdQHdcVfHap6NQ5Wok/4xIA+ui35/MmNa
+rtNuC+BdZ1tMuVCPFZcCAwEAAaNQME4wHQYDVR0OBBYEFJvKs8RfJaXTH08W+SGv
+zQyKn0H8MB8GA1UdIwQYMBaAFJvKs8RfJaXTH08W+SGvzQyKn0H8MAwGA1UdEwQF
+MAMBAf8wDQYJKoZIhvcNAQEFBQADQQBJlffJHybjDGxRMqaRmDhX0+6v02TUKZsW
+r5QuVbpQhH6u+0UgcW0jp9QwpxoPTLTWGXEWBBBurxFwiCBhkQ+V
+-----END CERTIFICATE-----
+`
+
+	keyPEM = testingKey(`-----BEGIN RSA TESTING KEY-----
+MIIBOwIBAAJBANLJhPHhITqQbPklG3ibCVxwGMRfp/v4XqhfdQHdcVfHap6NQ5Wo
+k/4xIA+ui35/MmNartNuC+BdZ1tMuVCPFZcCAwEAAQJAEJ2N+zsR0Xn8/Q6twa4G
+6OB1M1WO+k+ztnX/1SvNeWu8D6GImtupLTYgjZcHufykj09jiHmjHx8u8ZZB/o1N
+MQIhAPW+eyZo7ay3lMz1V01WVjNKK9QSn1MJlb06h/LuYv9FAiEA25WPedKgVyCW
+SmUwbPw8fnTcpqDWE3yTO3vKcebqMSsCIBF3UmVue8YU3jybC3NxuXq3wNm34R8T
+xVLHwDXh/6NJAiEAl2oHGGLz64BuAfjKrqwz7qMYr9HCLIe/YsoWq/olzScCIQDi
+D2lWusoe2/nEqfDVVWGWlyJ7yOmqaVm/iNUN9B2N2g==
+-----END RSA TESTING KEY-----
+`)
+)
+
 func TestAsyncProber(t *testing.T) {
 	t.Parallel()
 
@@ -47,6 +76,7 @@ func TestAsyncProber(t *testing.T) {
 		wantStatus          Status
 		wantRequeueCountMin int
 		wantRequestCountMin int
+		useTLS              bool
 	}{
 		{
 			name:               "no pods",
@@ -59,6 +89,7 @@ func TestAsyncProber(t *testing.T) {
 			responseStatusCode:  http.StatusOK,
 			wantStatus:          StatusNotReady,
 			wantRequeueCountMin: 0,
+			useTLS:              false,
 		},
 		{
 			name: "single pod",
@@ -81,6 +112,7 @@ func TestAsyncProber(t *testing.T) {
 			wantStatus:          StatusReady,
 			wantRequeueCountMin: 1,
 			wantRequestCountMin: 1,
+			useTLS:              false,
 		},
 		{
 			name: "single pod - 404",
@@ -103,6 +135,30 @@ func TestAsyncProber(t *testing.T) {
 			wantStatus:          StatusNotReady,
 			wantRequeueCountMin: 1,
 			wantRequestCountMin: 1,
+			useTLS:              false,
+		},
+		{
+			name: "single pod - TLS",
+			pods: []*corev1.Pod{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "ns",
+						Name:      "p1",
+						Labels:    map[string]string{"app": "p"},
+					},
+					Status: corev1.PodStatus{PodIP: "127.0.0.1"},
+				},
+			},
+			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
+			addressable: Addressable{
+				Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
+				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			},
+			responseStatusCode:  http.StatusOK,
+			wantStatus:          StatusReady,
+			wantRequeueCountMin: 1,
+			wantRequestCountMin: 1,
+			useTLS:              true,
 		},
 	}
 
@@ -122,7 +178,16 @@ func TestAsyncProber(t *testing.T) {
 				writer.WriteHeader(tc.responseStatusCode)
 			})
 			s := httptest.NewUnstartedServer(h)
-			s.Start()
+			if tc.useTLS {
+				cert, err := tls.X509KeyPair([]byte(certPem), []byte(keyPEM))
+				require.NoError(t, err)
+				s.TLS = &tls.Config{
+					Certificates: []tls.Certificate{cert},
+				}
+				s.StartTLS()
+			} else {
+				s.Start()
+			}
 			defer s.Close()
 
 			for _, p := range tc.pods {
@@ -143,9 +208,18 @@ func TestAsyncProber(t *testing.T) {
 				}
 				return ips, nil
 			}
-			prober := NewAsync(ctx, s.Client(), u.Port(), IPsLister, func(key types.NamespacedName) {
-				wantRequeueCountMin.Dec()
-			})
+			var prober Prober
+			var err error
+			if tc.useTLS {
+				prober, err = NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
+					wantRequestCountMin.Dec()
+				}, &certPem)
+				require.NoError(t, err)
+			} else {
+				prober = NewAsync(ctx, s.Client(), u.Port(), IPsLister, func(key types.NamespacedName) {
+					wantRequeueCountMin.Dec()
+				})
+			}
 
 			probeFunc := func() bool {
 				status := prober.Probe(ctx, tc.addressable, tc.wantStatus)
@@ -157,4 +231,9 @@ func TestAsyncProber(t *testing.T) {
 			require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
 		})
 	}
+}
+
+// taken from https://go.dev/src/crypto/tls/tls_test.go#L1191
+func testingKey(s string) string {
+	return strings.ReplaceAll(s, "TESTING KEY", "PRIVATE KEY")
 }
