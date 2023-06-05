@@ -115,7 +115,7 @@ var (
 	sinkAddress = &apis.URL{
 		Scheme: "http",
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
-		Path:   fmt.Sprintf("/%s/%s", BrokerNamespace, BrokerName),
+		Path:   fmt.Sprintf("/%s/%s", SinkNamespace, SinkName),
 	}
 )
 
