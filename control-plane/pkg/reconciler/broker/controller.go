@@ -119,6 +119,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	reconciler.Tracker = impl.Tracker
 
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
+	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithName(brokerIngressTLSSecretName),
+		Handler:    controller.HandleAll(globalResync),
+	})
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
