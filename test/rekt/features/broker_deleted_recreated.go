@@ -200,10 +200,11 @@ func BrokerWithBogusConfig() *feature.Feature {
 	f := feature.NewFeatureNamed("delete broker with bogus config")
 
 	brokerName := feature.MakeRandomK8sName("broker")
+	secretName := feature.MakeRandomK8sName("sasl-secret")
 
 	f.Setup("install bogus configuration", bogus_config.Install)
 
-	f.Requirement("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), "strimzi-sasl-secret"))
+	f.Requirement("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), SASLSecretName, secretName))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
