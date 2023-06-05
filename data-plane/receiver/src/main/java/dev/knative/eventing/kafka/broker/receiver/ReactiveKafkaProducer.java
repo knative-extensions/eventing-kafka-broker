@@ -15,20 +15,26 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.clients.producer.Producer;
 
 import io.vertx.core.Future;
 
+/**
+ * Interface for a reactive Kafka producer consist with all the methods needed.
+ * 
+ * @param <K> the type of the key
+ * @param <V> the type of the value
+ */
 public interface ReactiveKafkaProducer<K, V> {
-    
+
     /**
      * Send a record to a Kafka topic
      *
      * @param record the record to send
-     * @return a future completed with the record metadata or with a failure if the record cannot be sent
+     * @return a future completed with the record metadata or with a failure if the
+     *         record cannot be sent
      */
     Future<RecordMetadata> send(ProducerRecord<K, V> record);
 
@@ -44,7 +50,7 @@ public interface ReactiveKafkaProducer<K, V> {
      * <p>
      * This method ensures all records stored in the producer buffer are actually
      * sent to the Kafka cluster.
-     * 
+     *
      * @return a future notifying when the producer is flushed
      */
     Future<Void> flush();
@@ -53,10 +59,9 @@ public interface ReactiveKafkaProducer<K, V> {
      * Wnrap the underlying Kafka producer
      * <p>
      * Use this if you want to access the Kafka producer directly.
-     * 
+     *
      * @return the instance underlying KafkaProducer
      */
     Producer<K, V> unwrap();
 
-    
 }
