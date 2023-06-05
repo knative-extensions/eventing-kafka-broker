@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
