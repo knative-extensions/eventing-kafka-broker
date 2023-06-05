@@ -18,14 +18,13 @@ package prober
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"net/http"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
+	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/logging"
 )
 
@@ -60,19 +59,20 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 	}
 }
 
-func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) Prober {
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM([]byte(*caCerts))
+func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
+	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
+	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
+	if err != nil {
+		return nil, err
+	}
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: caCertPool,
-			},
+			TLSClientConfig: tlsClientConfig,
 		},
 	}
 
-	return NewAsync(ctx, client, port, IPsLister, enqueue)
+	return NewAsync(ctx, client, port, IPsLister, enqueue), nil
 }
 
 func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
