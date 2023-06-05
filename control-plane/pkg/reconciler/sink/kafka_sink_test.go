@@ -36,10 +36,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
+	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/apis"
 
 	. "knative.dev/pkg/reconciler/testing"
 
@@ -80,7 +80,7 @@ O2dgzikq8iSy1BlRsVw=
 -----END CERTIFICATE-----
 `
 
-brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
+	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
 )
 
 const (
@@ -118,8 +118,6 @@ var (
 		Path:   fmt.Sprintf("/%s/%s", BrokerNamespace, BrokerName),
 	}
 )
-
-
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",

@@ -36,8 +36,7 @@ import (
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
+
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -45,12 +44,13 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
 	ExternalTopicOwner   = "external"
 	ControllerTopicOwner = "kafkasink-controller"
-	caCertsSecretKey = "ca.crt"
+	caCertsSecretKey     = "ca.crt"
 	// brokerIngressTLSSecretName is the TLS Secret Name for the Cert-Manager resource
 	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
 )
@@ -291,7 +291,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ks.Status.Addresses = []pkgduckv1.Addressable{httpAddress}
 		ks.Status.Address = &httpAddress
 	}
-
 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 	statusConditionManager.ProbesStatusReady()

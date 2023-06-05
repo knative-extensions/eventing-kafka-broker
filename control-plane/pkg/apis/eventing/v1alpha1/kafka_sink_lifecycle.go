@@ -21,7 +21,6 @@ import (
 	v1 "knative.dev/pkg/apis/duck/v1"
 )
 
-
 const (
 	ConditionAddressable apis.ConditionType = "Addressable"
 )

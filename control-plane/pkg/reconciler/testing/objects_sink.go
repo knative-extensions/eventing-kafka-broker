@@ -175,7 +175,6 @@ func SinkContentMode(cm string) KRShapedOption {
 	}
 }
 
-
 func WithSinkAddress(address duckv1.Addressable) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*eventing.KafkaSink)
