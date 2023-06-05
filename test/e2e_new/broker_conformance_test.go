@@ -31,6 +31,7 @@ import (
 	"knative.dev/eventing/test/rekt/features/broker"
 	b "knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 )
@@ -44,8 +45,10 @@ func TestBrokerConformance(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.Prerequisite(ctx, t, broker.GoesReady("default", b.WithEnvConfig()...))
+	brokerName := feature.MakeRandomK8sName("broker")
 
-	env.TestSet(ctx, t, broker.ControlPlaneConformance("default", b.WithEnvConfig()...))
-	env.TestSet(ctx, t, broker.DataPlaneConformance("default"))
+	env.Prerequisite(ctx, t, broker.GoesReady(brokerName, b.WithEnvConfig()...))
+
+	env.TestSet(ctx, t, broker.ControlPlaneConformance(brokerName, b.WithEnvConfig()...))
+	env.TestSet(ctx, t, broker.DataPlaneConformance(brokerName))
 }
