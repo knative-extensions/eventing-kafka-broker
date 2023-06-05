@@ -18,11 +18,12 @@ package receiver
 
 import (
 	"fmt"
+	"net/url"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
-	"net/url"
 )
 
 func Address(host string, object metav1.Object) *url.URL {
