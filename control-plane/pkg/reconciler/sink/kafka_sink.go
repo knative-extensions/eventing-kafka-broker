@@ -252,7 +252,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	statusConditionManager.Addressable(address)
+
+	statusConditionManager.ProbesStatusReady()
 
 	transportEncryptionFlags := feature.FromContext(ctx)
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
@@ -293,7 +294,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
-	statusConditionManager.ProbesStatusReady()
 
 	return nil
 }
