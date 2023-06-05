@@ -115,5 +115,10 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		DeleteFunc: reconciler.OnDeleteObserver,
 	})
 
+	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithName(brokerIngressTLSSecretName),
+		Handler:    controller.HandleAll(globalResync),
+	})
+
 	return impl
 }
