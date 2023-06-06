@@ -116,7 +116,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 	})
 
 	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithName(brokerIngressTLSSecretName),
+		FilterFunc: controller.FilterWithName(sinkIngressTLSSecretName),
 		Handler:    controller.HandleAll(globalResync),
 	})
 

@@ -43,7 +43,7 @@ func TestNewController(t *testing.T) {
 
 	secret := types.NamespacedName{
 		Namespace: system.Namespace(),
-		Name:      brokerIngressTLSSecretName,
+		Name:      sinkIngressTLSSecretName,
 	}
 
 	_ = secretinformer.Get(ctx).Informer().GetStore().Add(&corev1.Secret{
