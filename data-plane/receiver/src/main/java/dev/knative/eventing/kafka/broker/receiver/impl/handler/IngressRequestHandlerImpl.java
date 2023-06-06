@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -31,8 +30,8 @@ import io.micrometer.core.instrument.Tags;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
  * <p>
  * Instances of this class can be shared among verticles, given the {@code requestToRecordMapper} provided is shareable among verticles.
  */
-public class IngressRequestHandlerImpl implements IngressRequestHandler, IngressReconcilerListener {
+public class IngressRequestHandlerImpl implements IngressRequestHandler{
 
   static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
 
@@ -148,15 +147,15 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler, Ingress
   }
 
   private static Future<RecordMetadata> publishRecord(final IngressProducer ingress,
-                                                      final KafkaProducerRecord<String, CloudEvent> record) {
+                                                      final ProducerRecord<String, CloudEvent> record) {
     return ingress.send(record)
       .onComplete(ar -> {
         if (ar.succeeded()) {
           if (logger.isDebugEnabled()) {
             logger.debug("Record produced {} {} {} {} {}",
-              keyValue("topic", record.topic()),
-              keyValue("partition", ar.result().getPartition()),
-              keyValue("offset", ar.result().getOffset()),
+              keyValue("topic", ar.result().topic()),
+              keyValue("partition", ar.result().partition()),
+              keyValue("offset", ar.result().offset()),
               keyValue("value", record.value()),
               keyValue("headers", record.headers())
             );

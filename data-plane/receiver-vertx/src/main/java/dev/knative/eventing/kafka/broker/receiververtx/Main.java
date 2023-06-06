@@ -13,25 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiververtx;
 
-import io.cloudevents.CloudEvent;
-import io.vertx.core.Future;
-import io.vertx.core.http.HttpServerRequest;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import java.io.IOException;
 
-@FunctionalInterface
-public interface RequestToRecordMapper {
 
-  /**
-   * Map the given HTTP request to a Kafka record.
-   *
-   * @param request http request.
-   * @param topic   topic to send the event
-   * @return kafka record (record can be null).
-   */
-  Future<ProducerRecord<String, CloudEvent>> requestToRecord(
-    final HttpServerRequest request,
-    final String topic
-  );
+public class Main {
+    public static void main(String[] args) throws IOException {
+        dev.knative.eventing.kafka.broker.receiver.main.Main.start(args, new VertxProducerFactory());
+    }
 }

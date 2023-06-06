@@ -15,22 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
-import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
-import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Handler;
 import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -42,10 +37,13 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
 
   private final IngressRequestHandler ingressRequestHandler;
 
+  private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
+
   ReceiverVerticleFactory(final ReceiverEnv env,
                           final Properties producerConfigs,
                           final MeterRegistry metricsRegistry,
-                          final HttpServerOptions httpServerOptions) {
+                          final HttpServerOptions httpServerOptions,
+                          ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
     this.env = env;
     this.producerConfigs = producerConfigs;
     this.httpServerOptions = httpServerOptions;
@@ -53,6 +51,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
       StrictRequestToRecordMapper.getInstance(),
       metricsRegistry
     );
+    this.kafkaProducerFactory = kafkaProducerFactory;
   }
 
   @Override
@@ -63,7 +62,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
       v -> new IngressProducerReconcilableStore(
         AuthProvider.kubernetes(),
         producerConfigs,
-        properties -> KafkaProducer.create(v, properties)
+        properties -> kafkaProducerFactory.create(v, properties)
       ),
       this.ingressRequestHandler
     );
