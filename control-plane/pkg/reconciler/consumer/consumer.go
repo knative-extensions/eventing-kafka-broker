@@ -133,11 +133,11 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 }
 
 func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkainternals.Consumer) (*contract.Egress, error) {
-	destination, err := r.Resolver.URIFromDestinationV1(ctx, c.Spec.Subscriber, c)
+	destinationAddr, err := r.Resolver.AddressableFromDestinationV1(ctx, c.Spec.Subscriber, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
 	}
-	c.Status.SubscriberURI = destination
+	c.Status.SubscriberURI = destinationAddr.URL
 
 	egressConfig := &contract.EgressConfig{}
 	if c.Spec.Delivery != nil {
@@ -152,7 +152,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 
 	egress := &contract.Egress{
 		ConsumerGroup: c.Spec.Configs.Configs["group.id"],
-		Destination:   destination.String(),
+		Destination:   destinationAddr.URL.String(),
 		ReplyStrategy: nil, // Reply will be added by reconcileReplyStrategy
 		Filter:        reconcileFilters(c),
 		Uid:           string(c.UID),
@@ -269,12 +269,12 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 		return nil
 	}
 	if c.Spec.Reply.URLReply != nil && c.Spec.Reply.URLReply.Enabled {
-		destination, err := r.Resolver.URIFromDestinationV1(ctx, c.Spec.Reply.URLReply.Destination, c)
+		destination, err := r.Resolver.AddressableFromDestinationV1(ctx, c.Spec.Reply.URLReply.Destination, c)
 		if err != nil {
 			return fmt.Errorf("failed to resolve reply destination: %w", err)
 		}
 		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
-			ReplyUrl: destination.String(),
+			ReplyUrl: destination.URL.String(),
 		}
 		return nil
 	}

@@ -21,15 +21,8 @@ package filtered
 import (
 	context "context"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	cache "k8s.io/client-go/tools/cache"
-	kafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/informers/externalversions/eventing/v1alpha1"
-	client "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	filtered "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/factory/filtered"
-	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
@@ -37,7 +30,6 @@ import (
 
 func init() {
 	injection.Default.RegisterFilteredInformers(withInformer)
-	injection.Dynamic.RegisterDynamicInformer(withDynamicInformer)
 }
 
 // Key is used for associating the Informer inside the context.Context.
@@ -62,20 +54,6 @@ func withInformer(ctx context.Context) (context.Context, []controller.Informer) 
 	return ctx, infs
 }
 
-func withDynamicInformer(ctx context.Context) context.Context {
-	untyped := ctx.Value(filtered.LabelKey{})
-	if untyped == nil {
-		logging.FromContext(ctx).Panic(
-			"Unable to fetch labelkey from context.")
-	}
-	labelSelectors := untyped.([]string)
-	for _, selector := range labelSelectors {
-		inf := &wrapper{client: client.Get(ctx), selector: selector}
-		ctx = context.WithValue(ctx, Key{Selector: selector}, inf)
-	}
-	return ctx
-}
-
 // Get extracts the typed informer from the context.
 func Get(ctx context.Context, selector string) v1alpha1.ConsumerInformer {
 	untyped := ctx.Value(Key{Selector: selector})
@@ -84,53 +62,4 @@ func Get(ctx context.Context, selector string) v1alpha1.ConsumerInformer {
 			"Unable to fetch knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/informers/externalversions/eventing/v1alpha1.ConsumerInformer with selector %s from context.", selector)
 	}
 	return untyped.(v1alpha1.ConsumerInformer)
-}
-
-type wrapper struct {
-	client versioned.Interface
-
-	namespace string
-
-	selector string
-}
-
-var _ v1alpha1.ConsumerInformer = (*wrapper)(nil)
-var _ eventingv1alpha1.ConsumerLister = (*wrapper)(nil)
-
-func (w *wrapper) Informer() cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(nil, &kafkaeventingv1alpha1.Consumer{}, 0, nil)
-}
-
-func (w *wrapper) Lister() eventingv1alpha1.ConsumerLister {
-	return w
-}
-
-func (w *wrapper) Consumers(namespace string) eventingv1alpha1.ConsumerNamespaceLister {
-	return &wrapper{client: w.client, namespace: namespace, selector: w.selector}
-}
-
-func (w *wrapper) List(selector labels.Selector) (ret []*kafkaeventingv1alpha1.Consumer, err error) {
-	reqs, err := labels.ParseToRequirements(w.selector)
-	if err != nil {
-		return nil, err
-	}
-	selector = selector.Add(reqs...)
-	lo, err := w.client.InternalV1alpha1().Consumers(w.namespace).List(context.TODO(), v1.ListOptions{
-		LabelSelector: selector.String(),
-		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
-	})
-	if err != nil {
-		return nil, err
-	}
-	for idx := range lo.Items {
-		ret = append(ret, &lo.Items[idx])
-	}
-	return ret, nil
-}
-
-func (w *wrapper) Get(name string) (*kafkaeventingv1alpha1.Consumer, error) {
-	// TODO(mattmoor): Check that the fetched object matches the selector.
-	return w.client.InternalV1alpha1().Consumers(w.namespace).Get(context.TODO(), name, v1.GetOptions{
-		// TODO(mattmoor): Incorporate resourceVersion bounds based on staleness criteria.
-	})
 }
