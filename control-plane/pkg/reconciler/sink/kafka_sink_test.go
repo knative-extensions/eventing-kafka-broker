@@ -84,13 +84,15 @@ O2dgzikq8iSy1BlRsVw=
 -----END CERTIFICATE-----
 `
 
-	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
+	sinkIngressTLSSecretName = "kafka-sink-ingress-server-tls"
 )
 
 const (
 	finalizerName = "kafkasinks." + eventing.GroupName
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
+
+	testNamespace = "knative-testing"
 
 	wantTopicName                  = "wantTopicName"
 	wantErrorOnCreateTopic         = "wantErrorOnCreateTopic"
@@ -473,17 +475,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusTopicNotPresentErr(SinkTopic(), io.EOF),
-						WithSinkAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  sinkAddress,
-						}),
-						WithSinkAddresses([]duckv1.Addressable{
-							{
-								Name: pointer.String("http"),
-								URL:  sinkAddress,
-							},
-						}),
-						WithSinkAddessable(),
 					),
 				},
 			},
@@ -599,17 +590,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						StatusFailedToCreateTopic(SinkTopic()),
-						WithSinkAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  sinkAddress,
-						}),
-						WithSinkAddresses([]duckv1.Addressable{
-							{
-								Name: pointer.String("http"),
-								URL:  sinkAddress,
-							},
-						}),
-						WithSinkAddessable(),
+						
 					),
 				},
 			},
@@ -1127,17 +1108,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						StatusProbeFailed(prober.StatusNotReady),
-						WithSinkAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  sinkAddress,
-						}),
-						WithSinkAddresses([]duckv1.Addressable{
-							{
-								Name: pointer.String("http"),
-								URL:  sinkAddress,
-							},
-						}),
-						WithSinkAddessable(),
+						
 					),
 				},
 			},
@@ -1192,17 +1163,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						StatusProbeFailed(prober.StatusUnknown),
-						WithSinkAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  sinkAddress,
-						}),
-						WithSinkAddresses([]duckv1.Addressable{
-							{
-								Name: pointer.String("http"),
-								URL:  sinkAddress,
-							},
-						}),
-						WithSinkAddessable(),
+						
 					),
 				},
 			},
@@ -1220,6 +1181,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
+				makeTLSSecret(),
 			},
 			Key: testKey,
 			WantEvents: []string{
@@ -1267,18 +1229,22 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						}),
 						WithSinkAddresses([]duckv1.Addressable{
 							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(SinkName, SinkNamespace),
+								CACerts: pointer.String(testCaCerts),
+							},
+							{
 								Name: pointer.String("http"),
 								URL:  sinkAddress,
 							},
-							{
-								Name:    pointer.String("https"),
-								URL:     httpsURL(BrokerName, BrokerNamespace),
-								CACerts: pointer.String(testCaCerts),
-							},
+							
 						}),
 						WithSinkAddessable(),
+						
 					),
+					
 				},
+				
 			},
 		},
 		{
@@ -1291,13 +1257,14 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
+				makeTLSSecret(),
 			},
 			Key: testKey,
 			WantEvents: []string{
 				finalizerUpdatedEvent,
 			},
 			Ctx: feature.ToContext(context.Background(), feature.Flags{
-				feature.TransportEncryption: feature.Permissive,
+				feature.TransportEncryption: feature.Strict,
 			}),
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
@@ -1334,13 +1301,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusProbeSucceeded,
 						WithSinkAddress(duckv1.Addressable{
 							Name: pointer.String("https"),
-							URL:  sinkAddress,
+							URL:  httpsURL(SinkName, SinkNamespace),
 							CACerts: pointer.String(testCaCerts),
 						}),
 						WithSinkAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(BrokerName, BrokerNamespace),
+								URL:     httpsURL(SinkName, SinkNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 						}),
@@ -1771,8 +1738,8 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 func makeTLSSecret() *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: DefaultEnv.SystemNamespace,
-			Name:      brokerIngressTLSSecretName,
+			Namespace: testNamespace,
+			Name:      sinkIngressTLSSecretName,
 		},
 		Data: map[string][]byte{
 			"ca.crt": []byte(testCaCerts),

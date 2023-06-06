@@ -52,7 +52,7 @@ const (
 	ControllerTopicOwner = "kafkasink-controller"
 	caCertsSecretKey     = "ca.crt"
 	// brokerIngressTLSSecretName is the TLS Secret Name for the Cert-Manager resource
-	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
+	brokerIngressTLSSecretName = "kafka-sink-ingress-server-tls"
 )
 
 type Reconciler struct {
@@ -239,7 +239,47 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Updated receiver pod annotation")
 
-	address := receiver.Address(r.IngressHost, ks)
+	transportEncryptionFlags := feature.FromContext(ctx)
+	var addressableStatus pkgduckv1.AddressStatus
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []pkgduckv1.Addressable{httpsAddress, httpAddress}
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+
+		addressableStatus.Address = &httpsAddress
+		addressableStatus.Addresses = []pkgduckv1.Addressable{httpsAddress}
+	} else {
+		// Disabled mode:
+		// Unchange
+		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+
+		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []pkgduckv1.Addressable{httpAddress}
+	}
+
+
+	address := addressableStatus.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -255,43 +295,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	statusConditionManager.ProbesStatusReady()
 
-	transportEncryptionFlags := feature.FromContext(ctx)
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
+	ks.Status.AddressStatus.Address = addressableStatus.Address
+	ks.Status.AddressStatus.Addresses = addressableStatus.Addresses
 
-		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
-		// Permissive mode:
-		// - status.address http address with path-based routing
-		// - status.addresses:
-		//   - https address with path-based routing
-		//   - http address with path-based routing
-		ks.Status.Addresses = []pkgduckv1.Addressable{httpsAddress, httpAddress}
-		ks.Status.Address = &httpAddress
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
-		// Strict mode: (only https addresses)
-		// - status.address https address with path-based routing
-		// - status.addresses:
-		//   - https address with path-based routing
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+	
 
-		ks.Status.Addresses = []pkgduckv1.Addressable{httpsAddress}
-		ks.Status.Address = &httpsAddress
-	} else {
-		// Disabled mode:
-		// Unchange
-		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
-
-		ks.Status.Addresses = []pkgduckv1.Addressable{httpAddress}
-		ks.Status.Address = &httpAddress
-	}
 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
