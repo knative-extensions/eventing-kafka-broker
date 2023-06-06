@@ -48,11 +48,10 @@ import (
 )
 
 const (
-	ExternalTopicOwner   = "external"
-	ControllerTopicOwner = "kafkasink-controller"
-	caCertsSecretKey     = "ca.crt"
-	// brokerIngressTLSSecretName is the TLS Secret Name for the Cert-Manager resource
-	brokerIngressTLSSecretName = "kafka-sink-ingress-server-tls"
+	ExternalTopicOwner       = "external"
+	ControllerTopicOwner     = "kafkasink-controller"
+	caCertsSecretKey         = "ca.crt"
+	sinkIngressTLSSecretName = "kafka-sink-ingress-server-tls" //nolint:gosec // This is not a hardcoded credential
 )
 
 type Reconciler struct {
@@ -419,13 +418,13 @@ func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
 }
 
 func (r *Reconciler) getCaCerts() (string, error) {
-	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(brokerIngressTLSSecretName)
+	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(sinkIngressTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), brokerIngressTLSSecretName, err)
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), sinkIngressTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), brokerIngressTLSSecretName, caCertsSecretKey)
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), sinkIngressTLSSecretName, caCertsSecretKey)
 	}
 	return string(caCerts), nil
 }
