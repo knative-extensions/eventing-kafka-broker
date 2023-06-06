@@ -44,7 +44,7 @@ import (
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -292,6 +292,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
+	var addressableStatus duckv1.AddressStatus
 	transportEncryptionFlags := feature.FromContext(ctx)
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
@@ -306,8 +307,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		// - status.addresses:
 		//   - https address with path-based routing
 		//   - http address with path-based routing
-		channel.Status.Addresses = []pkgduckv1.Addressable{httpsAddress, httpAddress}
-		channel.Status.Address = &httpAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
+		addressableStatus.Address = &httpAddress
 	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
@@ -319,14 +320,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		}
 
 		httpsAddress := r.httpsAddress(caCerts, channelService)
-		channel.Status.Addresses = []pkgduckv1.Addressable{httpsAddress}
-		channel.Status.Address = &httpsAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
+		addressableStatus.Address = &httpsAddress
 	} else {
 		httpAddress := r.httpAddress(channelService)
-		channel.Status.Address = &httpAddress
+		addressableStatus.Address = &httpAddress
 	}
 
-	address := channel.Status.Address.URL.URL()
+	address := addressableStatus.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -341,8 +342,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
 	statusConditionManager.ProbesStatusReady()
+	channel.Status.Address = addressableStatus.Address
+	channel.Status.Addresses = addressableStatus.Addresses
+	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }
@@ -723,18 +726,18 @@ func (r *Reconciler) getCaCerts() (string, error) {
 	return string(caCerts), nil
 }
 
-func (r *Reconciler) httpAddress(channel *corev1.Service) pkgduckv1.Addressable {
+func (r *Reconciler) httpAddress(channel *corev1.Service) duckv1.Addressable {
 	// http address uses path-based routing
-	httpAddress := pkgduckv1.Addressable{
+	httpAddress := duckv1.Addressable{
 		Name: pointer.String("http"),
 		URL:  apis.HTTP(network.GetServiceHostname(channel.Name, channel.Namespace)),
 	}
 	return httpAddress
 }
 
-func (r *Reconciler) httpsAddress(caCerts string, channel *corev1.Service) pkgduckv1.Addressable {
+func (r *Reconciler) httpsAddress(caCerts string, channel *corev1.Service) duckv1.Addressable {
 	// https address uses path-based routing
-	httpsAddress := pkgduckv1.Addressable{
+	httpsAddress := duckv1.Addressable{
 		Name:    pointer.String("https"),
 		URL:     apis.HTTPS(network.GetServiceHostname(NewChannelIngressServiceName, r.SystemNamespace)),
 		CACerts: pointer.String(caCerts),
