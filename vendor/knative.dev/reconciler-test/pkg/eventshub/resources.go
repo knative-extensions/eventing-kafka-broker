@@ -19,8 +19,11 @@ package eventshub
 import (
 	"context"
 	"embed"
+	"fmt"
 	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/logging"
 
 	"knative.dev/reconciler-test/pkg/environment"
@@ -29,10 +32,26 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/manifest"
+	"knative.dev/reconciler-test/pkg/resources/knativeservice"
+	"knative.dev/reconciler-test/pkg/resources/secret"
+	"knative.dev/reconciler-test/pkg/resources/service"
 )
 
-//go:embed *.yaml
-var templates embed.FS
+//go:embed 102-service.yaml 103-pod.yaml
+var servicePodTemplates embed.FS
+
+//go:embed 104-forwarder.yaml
+var forwarderTemplates embed.FS
+
+//go:embed 105-certificate-service.yaml
+var serviceTLSCertificate embed.FS
+
+//go:embed 105-issuer-ca.yaml 105-certificate-ca.yaml 105-issuer-certificate.yaml
+var caTLSCertificates embed.FS
+
+const (
+	caSecretName = "eventshub-ca"
+)
 
 // Install starts a new eventshub with the provided name
 // Note: this function expects that the Environment is configured with the
@@ -70,13 +89,29 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 		// Install ServiceAccount, Role, RoleBinding
 		eventshubrbac.Install()(ctx, t)
 
-		isReceiver := strings.Contains(envs["EVENT_GENERATORS"], "receiver")
+		isReceiver := strings.Contains(envs[EventGeneratorsEnv], "receiver")
+		isEnforceTLS := strings.Contains(envs[EnforceTLS], "true")
+
+		var withForwarder bool
+		// Allow forwarder only when eventshub is receiver.
+		if isForwarder(ctx) && isReceiver {
+			withForwarder = isForwarder(ctx)
+		}
+
+		serviceName := name
+		// When forwarder is included we need to rename the eventshub service to
+		// prevent conflict with the forwarder service.
+		if withForwarder {
+			serviceName = feature.MakeRandomK8sName(name)
+		}
 
 		cfg := map[string]interface{}{
-			"name":          name,
-			"envs":          envs,
-			"image":         ImageFromContext(ctx),
-			"withReadiness": isReceiver,
+			"name":           name,
+			"serviceName":    serviceName,
+			"envs":           envs,
+			"image":          ImageFromContext(ctx),
+			"withReadiness":  isReceiver,
+			"withEnforceTLS": isEnforceTLS,
 		}
 
 		if ic := environment.GetIstioConfig(ctx); ic.Enabled {
@@ -85,8 +120,14 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 
 		manifest.PodSecurityCfgFn(ctx, t)(cfg)
 
-		// Deploy
-		if _, err := manifest.InstallYamlFS(ctx, templates, cfg); err != nil {
+		if isEnforceTLS {
+			if _, err := manifest.InstallYamlFS(ctx, serviceTLSCertificate, cfg); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		// Deploy Service/Pod
+		if _, err := manifest.InstallYamlFS(ctx, servicePodTemplates, cfg); err != nil {
 			log.Fatal(err)
 		}
 
@@ -94,8 +135,83 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 
 		// If the eventhubs starts an event receiver, we need to wait for the service endpoint to be synced
 		if isReceiver {
-			k8s.WaitForServiceEndpointsOrFail(ctx, t, name, 1)
-			k8s.WaitForServiceReadyOrFail(ctx, t, name, "/health/ready")
+			if isEnforceTLS {
+				secret.IsPresent(fmt.Sprintf("server-tls-%s", name))(ctx, t)
+			}
+
+			k8s.WaitForServiceEndpointsOrFail(ctx, t, serviceName, 1)
+			k8s.WaitForServiceReadyOrFail(ctx, t, serviceName, "/health/ready")
+		}
+
+		if withForwarder {
+			sinkURL, err := service.Address(ctx, serviceName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			// At this point env contains "receiver" so we need to override it.
+			envs[EventGeneratorsEnv] = "forwarder"
+			// No event recording desired, just logging.
+			envs[EventLogsEnv] = "logger"
+			cfg["envs"] = envs
+			cfg["sink"] = sinkURL
+
+			// Deploy Forwarder
+			if _, err := manifest.InstallYamlFS(ctx, forwarderTemplates, cfg); err != nil {
+				log.Fatal(err)
+			}
+			knativeservice.IsReady(name)
 		}
 	}
+}
+
+func WithTLS(t feature.T) environment.EnvOpts {
+	return func(ctx context.Context, env environment.Environment) (context.Context, error) {
+
+		return environment.WithPostInit(ctx, func(ctx context.Context, env environment.Environment) (context.Context, error) {
+
+			if _, err := manifest.InstallYamlFS(ctx, caTLSCertificates, nil); err != nil {
+				return ctx, fmt.Errorf("failed to install CA certificates and issuer: %w", err)
+			}
+
+			secret.IsPresent(caSecretName, secret.AssertKey("ca.crt"))(ctx, t)
+
+			caCerts, err := getCACertsFromSecret(ctx)
+			if err != nil {
+				return ctx, err
+			}
+			s := string(caCerts)
+			ctx = WithCaCerts(ctx, &s)
+
+			return ctx, nil
+		}), nil
+	}
+}
+
+type caCertsKey struct{}
+
+func WithCaCerts(ctx context.Context, caCerts *string) context.Context {
+	return context.WithValue(ctx, caCertsKey{}, caCerts)
+}
+
+func GetCaCerts(ctx context.Context) *string {
+	caCerts := ctx.Value(caCertsKey{})
+	if caCerts == nil {
+		return nil
+	}
+	return caCerts.(*string)
+}
+
+func getCACertsFromSecret(ctx context.Context) ([]byte, error) {
+	ns := environment.FromContext(ctx).Namespace()
+
+	s, err := kubeclient.Get(ctx).
+		CoreV1().
+		Secrets(ns).
+		Get(ctx, caSecretName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get eventshub CA certs secret: %w", err)
+	}
+
+	caCrt, _ := s.Data["ca.crt"]
+	return caCrt, nil
 }
