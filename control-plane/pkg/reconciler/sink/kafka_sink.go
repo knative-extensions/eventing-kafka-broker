@@ -278,7 +278,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		addressableStatus.Addresses = []pkgduckv1.Addressable{httpAddress}
 	}
 
-
 	address := addressableStatus.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
@@ -297,9 +296,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	ks.Status.AddressStatus.Address = addressableStatus.Address
 	ks.Status.AddressStatus.Addresses = addressableStatus.Addresses
-
-	
-
 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
@@ -337,7 +333,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	if err := r.DeleteResource(ctx, logger, ks.GetUID(), ct, contractConfigMap); err != nil {
 		return err
 	}
-
 
 	// ks.Status.AddressStatus.Address = &pkgduckv1.Addressable{}
 	// ks.Status.AddressStatus.Address.URL = nil

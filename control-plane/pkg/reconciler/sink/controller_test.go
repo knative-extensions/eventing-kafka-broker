@@ -31,13 +31,10 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
+	"k8s.io/apimachinery/pkg/types"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/system"
-
-	
-
 )
 
 func TestNewController(t *testing.T) {
@@ -63,8 +60,6 @@ func TestNewController(t *testing.T) {
 	controller := NewController(ctx, nil, &config.Env{
 		IngressPodPort: "8080",
 	})
-
-	
 
 	assert.NotNil(t, controller, "controller is nil")
 }

@@ -590,7 +590,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						StatusFailedToCreateTopic(SinkTopic()),
-						
 					),
 				},
 			},
@@ -1108,7 +1107,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						StatusProbeFailed(prober.StatusNotReady),
-						
 					),
 				},
 			},
@@ -1163,7 +1161,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						StatusProbeFailed(prober.StatusUnknown),
-						
 					),
 				},
 			},
@@ -1237,14 +1234,10 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 								Name: pointer.String("http"),
 								URL:  sinkAddress,
 							},
-							
 						}),
 						WithSinkAddessable(),
-						
 					),
-					
 				},
-				
 			},
 		},
 		{
@@ -1300,8 +1293,8 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
 						WithSinkAddress(duckv1.Addressable{
-							Name: pointer.String("https"),
-							URL:  httpsURL(SinkName, SinkNamespace),
+							Name:    pointer.String("https"),
+							URL:     httpsURL(SinkName, SinkNamespace),
 							CACerts: pointer.String(testCaCerts),
 						}),
 						WithSinkAddresses([]duckv1.Addressable{
@@ -1614,8 +1607,6 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
-
-		
 	}
 
 	for i := range table {
