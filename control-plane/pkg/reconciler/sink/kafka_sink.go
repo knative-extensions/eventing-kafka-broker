@@ -338,7 +338,9 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		return err
 	}
 
-	ks.Status.Address.URL = nil
+
+	// ks.Status.AddressStatus.Address = &pkgduckv1.Addressable{}
+	// ks.Status.AddressStatus.Address.URL = nil
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous
 	// reconciliation we might have failed to update one of our data plane pod annotation, so we want to anyway update
