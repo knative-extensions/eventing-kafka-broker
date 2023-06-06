@@ -727,7 +727,7 @@ func (r *Reconciler) getCaCerts() (string, error) {
 }
 
 func (r *Reconciler) httpAddress(channel *corev1.Service) duckv1.Addressable {
-	// http address uses path-based routing
+	// http address uses host-based routing
 	httpAddress := duckv1.Addressable{
 		Name: pointer.String("http"),
 		URL:  apis.HTTP(network.GetServiceHostname(channel.Name, channel.Namespace)),
