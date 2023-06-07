@@ -36,7 +36,6 @@ import (
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -684,13 +683,13 @@ func finalizerSecret(object metav1.Object) string {
 }
 
 func (r *Reconciler) getCaCerts() (string, error) {
-	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(brokerIngressTLSSecretName)
+	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(brokerIngressTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), brokerIngressTLSSecretName, err)
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), brokerIngressTLSSecretName, caCertsSecretKey)
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, brokerIngressTLSSecretName, caCertsSecretKey)
 	}
 	return string(caCerts), nil
 }
