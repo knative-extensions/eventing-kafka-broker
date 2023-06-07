@@ -1728,7 +1728,7 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 func makeTLSSecret() *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: system.Namespace(),
+			Namespace: DefaultEnv.SystemNamespace,
 			Name:      sinkIngressTLSSecretName,
 		},
 		Data: map[string][]byte{
