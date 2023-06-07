@@ -26,6 +26,7 @@ import (
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -91,8 +92,6 @@ const (
 	finalizerName = "kafkasinks." + eventing.GroupName
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
-
-	testNamespace = "knative-testing"
 
 	wantTopicName                  = "wantTopicName"
 	wantErrorOnCreateTopic         = "wantErrorOnCreateTopic"
@@ -1729,7 +1728,7 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 func makeTLSSecret() *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: testNamespace,
+			Namespace: system.Namespace(),
 			Name:      sinkIngressTLSSecretName,
 		},
 		Data: map[string][]byte{
