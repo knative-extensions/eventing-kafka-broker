@@ -29,7 +29,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/system"
 
 	"knative.dev/eventing/pkg/apis/feature"
 
@@ -418,13 +417,13 @@ func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
 }
 
 func (r *Reconciler) getCaCerts() (string, error) {
-	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(sinkIngressTLSSecretName)
+	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(sinkIngressTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), sinkIngressTLSSecretName, err)
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, sinkIngressTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), sinkIngressTLSSecretName, caCertsSecretKey)
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, sinkIngressTLSSecretName, caCertsSecretKey)
 	}
 	return string(caCerts), nil
 }
