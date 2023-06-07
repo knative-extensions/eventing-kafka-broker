@@ -377,10 +377,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						StatusProbeFailed(prober.StatusNotReady),
-						WithChannelAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  ChannelAddress(),
-						}),
 					),
 				},
 			},
@@ -450,10 +446,6 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						StatusProbeFailed(prober.StatusUnknown),
-						WithChannelAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  ChannelAddress(),
-						}),
 					),
 				},
 			},
