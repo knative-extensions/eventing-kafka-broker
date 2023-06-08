@@ -53,7 +53,7 @@ func TestNewController(t *testing.T) {
 			Name:      secret.Name,
 		},
 		Data: map[string][]byte{
-			"ca.crt": []byte(eventingtlstesting.CA),
+			"ca.crt": eventingtlstesting.CA,
 		},
 		Type: corev1.SecretTypeTLS,
 	})
