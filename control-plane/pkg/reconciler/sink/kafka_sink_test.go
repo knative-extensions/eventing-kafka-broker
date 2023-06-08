@@ -1708,7 +1708,7 @@ func makeTLSSecret() *corev1.Secret {
 			Name:      sinkIngressTLSSecretName,
 		},
 		Data: map[string][]byte{
-			"ca.crt": []byte(eventingtlstesting.CA),
+			"ca.crt": eventingtlstesting.CA,
 		},
 		Type: corev1.SecretTypeTLS,
 	}
