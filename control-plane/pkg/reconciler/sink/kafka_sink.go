@@ -43,7 +43,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	pkgduckv1 "knative.dev/pkg/apis/duck/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
@@ -238,7 +238,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	logger.Debug("Updated receiver pod annotation")
 
 	transportEncryptionFlags := feature.FromContext(ctx)
-	var addressableStatus pkgduckv1.AddressStatus
+	var addressableStatus duckv1.AddressStatus
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
@@ -253,7 +253,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		//   - https address with path-based routing
 		//   - http address with path-based routing
 		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []pkgduckv1.Addressable{httpsAddress, httpAddress}
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
 	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
@@ -266,14 +266,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
 
 		addressableStatus.Address = &httpsAddress
-		addressableStatus.Addresses = []pkgduckv1.Addressable{httpsAddress}
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
 		// Disabled mode:
 		// Unchange
 		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
 
 		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []pkgduckv1.Addressable{httpAddress}
+		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
 
 	address := addressableStatus.Address.URL.URL()
@@ -292,8 +292,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	statusConditionManager.ProbesStatusReady()
 
-	ks.Status.AddressStatus.Address = addressableStatus.Address
-	ks.Status.AddressStatus.Addresses = addressableStatus.Addresses
+	ks.Status.AddressStatus = addressableStatus
 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
@@ -332,8 +331,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		return err
 	}
 
-	// ks.Status.AddressStatus.Address = &pkgduckv1.Addressable{}
-	// ks.Status.AddressStatus.Address.URL = nil
+	ks.Status.AddressStatus = duckv1.AddressStatus{}
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous
 	// reconciliation we might have failed to update one of our data plane pod annotation, so we want to anyway update
