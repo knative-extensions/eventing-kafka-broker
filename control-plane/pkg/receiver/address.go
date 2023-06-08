@@ -34,15 +34,6 @@ func Address(host string, object metav1.Object) *url.URL {
 	}
 }
 
-// func AddressTLS(host string, object metav1.Object, caCerts string) *url.URL {
-// 	return &url.URL{
-// 		Scheme: "https",
-// 		Host:   host,
-// 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
-// 		caCerts: caCerts,
-// 	}
-// }
-
 // HTTPAddress returns the addressable
 func HTTPAddress(host string, object metav1.Object) pkgduckv1.Addressable {
 	httpAddress := pkgduckv1.Addressable{
