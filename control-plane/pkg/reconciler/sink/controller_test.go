@@ -25,7 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-
 	_ "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
@@ -65,4 +64,3 @@ func TestNewController(t *testing.T) {
 
 	assert.NotNil(t, controller, "controller is nil")
 }
-
