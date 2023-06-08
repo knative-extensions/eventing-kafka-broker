@@ -90,8 +90,8 @@ func NewAdmissionController(
 	}
 
 	logger := logging.FromContext(ctx)
-	// TODO: https://github.com/knative/pkg/issues/2418
-	c := controller.NewContext(ctx, wh, controller.ControllerOptions{WorkQueueName: name, Logger: logger.Named(name)})
+	const queueName = "DefaultingWebhook"
+	c := controller.NewContext(ctx, wh, controller.ControllerOptions{WorkQueueName: queueName, Logger: logger.Named(queueName)})
 
 	// Reconcile when the named MutatingWebhookConfiguration changes.
 	mwhInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{

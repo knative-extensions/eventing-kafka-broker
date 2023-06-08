@@ -279,7 +279,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	broker.Status.Address = addressableStatus.Address
 	broker.Status.Addresses = addressableStatus.Addresses
-	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }

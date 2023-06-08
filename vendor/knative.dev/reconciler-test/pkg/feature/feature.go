@@ -195,17 +195,21 @@ func (f *Feature) References() []corev1.ObjectReference {
 // DeleteResources delete all known resources to the Feature registered
 // via `Reference`.
 //
-// It doesn't fail when a referenced resource couldn't be deleted.
-// Use References to get the undeleted resources.
-//
 // Expected to be used as a StepFn.
 func (f *Feature) DeleteResources(ctx context.Context, t T) {
+	if err := DeleteResources(ctx, t, f.References()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func DeleteResources(ctx context.Context, t T, refs []corev1.ObjectReference) error {
 	dc := dynamicclient.Get(ctx)
-	for _, ref := range f.References() {
+
+	for _, ref := range refs {
 
 		gv, err := schema.ParseGroupVersion(ref.APIVersion)
 		if err != nil {
-			t.Fatalf("Could not parse GroupVersion for %+v", ref.APIVersion)
+			return fmt.Errorf("could not parse GroupVersion for %+v", ref.APIVersion)
 		}
 
 		resource := apis.KindToResource(gv.WithKind(ref.Kind))
@@ -223,15 +227,11 @@ func (f *Feature) DeleteResources(ctx context.Context, t T) {
 		}
 	}
 
-	// refFailedDeletion keeps the failed to delete resources.
-	var refFailedDeletion []corev1.ObjectReference
-
 	err := wait.Poll(time.Second, 4*time.Minute, func() (bool, error) {
-		refFailedDeletion = nil // Reset failed deletion.
-		for _, ref := range f.References() {
+		for _, ref := range refs {
 			gv, err := schema.ParseGroupVersion(ref.APIVersion)
 			if err != nil {
-				t.Fatalf("Could not parse GroupVersion for %+v", ref.APIVersion)
+				return false, fmt.Errorf("could not parse GroupVersion for %+v", ref.APIVersion)
 			}
 
 			resource := apis.KindToResource(gv.WithKind(ref.Kind))
@@ -244,7 +244,7 @@ func (f *Feature) DeleteResources(ctx context.Context, t T) {
 				continue
 			}
 			if err != nil {
-				refFailedDeletion = append(refFailedDeletion, ref)
+				LogReferences(ref)(ctx, t)
 				return false, fmt.Errorf("failed to get resource %+v %s/%s: %w", resource, ref.Namespace, ref.Name, err)
 			}
 
@@ -255,20 +255,52 @@ func (f *Feature) DeleteResources(ctx context.Context, t T) {
 		return true, nil
 	})
 	if err != nil {
-		LogReferences(refFailedDeletion...)(ctx, t)
-		t.Fatalf("failed to wait for resources to be deleted: %v", err)
+		return fmt.Errorf("failed to wait for resources to be deleted: %v", err)
 	}
 
-	f.refsMu.Lock()
-	defer f.refsMu.Unlock()
-
-	f.refs = refFailedDeletion
+	return nil
 }
 
 var (
 	// Expected to be used as a StepFn.
 	_ StepFn = (&Feature{}).DeleteResources
 )
+
+// PrerequisiteResult is the result returned by ShouldRun.
+type PrerequisiteResult struct {
+	// ShouldRun is the flag signaling whether other timings will run or not.
+	// True means other timings will run, false will skip other timings.
+	ShouldRun bool
+	// Reason will report why a given prerequisite is not satisfied.
+	// This is used to report a clear skip reason to the user.
+	Reason string
+}
+
+// ShouldRun is the function signature for Prerequisite steps.
+type ShouldRun func(ctx context.Context, t T) (PrerequisiteResult, error)
+
+func (sr ShouldRun) AsStepFn() StepFn {
+	return func(ctx context.Context, t T) {
+		shouldRun, err := sr(ctx, t)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !shouldRun.ShouldRun {
+			t.Errorf("Prerequisite: %s", shouldRun.Reason)
+		}
+	}
+}
+
+// Prerequisite adds a step function to the feature set at the Prerequisite timing phase.
+func (f *Feature) Prerequisite(name string, fn ShouldRun) {
+	f.AddStep(Step{
+		Name: name,
+		S:    Any,
+		L:    All,
+		T:    Prerequisite,
+		Fn:   fn.AsStepFn(),
+	})
+}
 
 // Setup adds a step function to the feature set at the Setup timing phase.
 func (f *Feature) Setup(name string, fn StepFn) {

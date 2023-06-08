@@ -36,6 +36,7 @@ import (
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 )
 
 func TestNewController(t *testing.T) {
@@ -58,7 +59,7 @@ func TestNewController(t *testing.T) {
 			Name:      secret.Name,
 		},
 		Data: map[string][]byte{
-			"ca.crt": loadCert(),
+			"ca.crt": eventingtlstesting.CA,
 		},
 		Type: corev1.SecretTypeTLS,
 	})
