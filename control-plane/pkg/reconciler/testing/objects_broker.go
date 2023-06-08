@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -350,6 +351,7 @@ func NamespacedBrokerAddressable(env *config.Env) func(broker *eventing.Broker) 
 
 func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace string) {
 	broker.Status.Address = &duckv1.Addressable{
+		Name: pointer.String("http"),
 		URL: &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(serviceName, serviceNamespace),

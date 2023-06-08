@@ -68,6 +68,8 @@
     <module>core</module>
     <module>receiver</module>
     <module>dispatcher</module>
+    <module>receiver-vertx</module>
+    <module>dispatcher-vertx</module>
   </modules>
 
   <profiles>
