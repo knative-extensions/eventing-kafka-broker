@@ -34,6 +34,7 @@ func Address(host string, object metav1.Object) *url.URL {
 	}
 }
 
+// HTTPAddress returns the addressable
 func HTTPAddress(host string, object metav1.Object) duckv1.Addressable {
 	httpAddress := duckv1.Addressable{
 		Name: pointer.String("http"),

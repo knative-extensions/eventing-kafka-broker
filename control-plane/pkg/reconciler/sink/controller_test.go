@@ -19,21 +19,44 @@ package sink
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/stretchr/testify/assert"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	_ "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 
+	"k8s.io/apimachinery/pkg/types"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/pkg/system"
+
+	eventingtlstesting "knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 )
 
 func TestNewController(t *testing.T) {
 
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	secret := types.NamespacedName{
+		Namespace: system.Namespace(),
+		Name:      sinkIngressTLSSecretName,
+	}
+
+	_ = secretinformer.Get(ctx).Informer().GetStore().Add(&corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: secret.Namespace,
+			Name:      secret.Name,
+		},
+		Data: map[string][]byte{
+			"ca.crt": eventingtlstesting.CA,
+		},
+		Type: corev1.SecretTypeTLS,
+	})
 
 	controller := NewController(ctx, nil, &config.Env{
 		IngressPodPort: "8080",
