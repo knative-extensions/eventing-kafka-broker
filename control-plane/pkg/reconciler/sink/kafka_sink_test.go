@@ -97,7 +97,7 @@ var (
 
 	errCreateTopic = fmt.Errorf("failed to create topic")
 
-	errorDeleteTopic = fmt.Errorf("failed to delete topic")
+	errDeleteTopic = fmt.Errorf("failed to delete topic")
 )
 
 var DefaultEnv = &config.Env{
@@ -1557,7 +1557,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to delete topic %s: %v",
-					"topic-2", errorDeleteTopic,
+					"topic-2", errDeleteTopic,
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1577,7 +1577,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: errorDeleteTopic,
+				wantErrorOnDeleteTopic: errDeleteTopic,
 				wantTopicName:          "topic-2",
 				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
