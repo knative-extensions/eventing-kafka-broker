@@ -95,8 +95,9 @@ var (
 		Path:   fmt.Sprintf("/%s/%s", SinkNamespace, SinkName),
 	}
 
-	createTopicError = fmt.Errorf("failed to create topic")
-	deleteTopicError = fmt.Errorf("failed to delete topic")
+	errCreateTopic = fmt.Errorf("failed to create topic")
+
+	errorDeleteTopic = fmt.Errorf("failed to delete topic")
 )
 
 var DefaultEnv = &config.Env{
@@ -550,7 +551,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to create topic: %s: %v",
-					SinkTopic(), createTopicError,
+					SinkTopic(), errCreateTopic,
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -568,7 +569,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic: createTopicError,
+				wantErrorOnCreateTopic: errCreateTopic,
 			},
 		},
 		{
@@ -1556,7 +1557,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to delete topic %s: %v",
-					"topic-2", deleteTopicError,
+					"topic-2", errorDeleteTopic,
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1576,7 +1577,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: deleteTopicError,
+				wantErrorOnDeleteTopic: errorDeleteTopic,
 				wantTopicName:          "topic-2",
 				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
