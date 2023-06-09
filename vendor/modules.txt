@@ -1311,6 +1311,7 @@ knative.dev/eventing/pkg/client/listers/sources/v1
 knative.dev/eventing/pkg/client/listers/sources/v1beta2
 knative.dev/eventing/pkg/duck
 knative.dev/eventing/pkg/eventingtls
+knative.dev/eventing/pkg/eventingtls/eventingtlstesting
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
@@ -1446,7 +1447,9 @@ knative.dev/pkg/injection
 knative.dev/pkg/injection/clients/dynamicclient
 knative.dev/pkg/injection/clients/dynamicclient/fake
 knative.dev/pkg/injection/clients/namespacedkube/informers/core/v1/secret
+knative.dev/pkg/injection/clients/namespacedkube/informers/core/v1/secret/fake
 knative.dev/pkg/injection/clients/namespacedkube/informers/factory
+knative.dev/pkg/injection/clients/namespacedkube/informers/factory/fake
 knative.dev/pkg/injection/sharedmain
 knative.dev/pkg/kflag
 knative.dev/pkg/kmap
