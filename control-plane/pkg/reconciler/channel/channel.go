@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/apis/feature"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/apis"
@@ -293,6 +292,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	var addressableStatus duckv1.AddressStatus
+	channelHttpsHost := apis.HTTPS(network.GetServiceHostname(NewChannelIngressServiceName, r.SystemNamespace)).String()
+	channelHttpHost := apis.HTTP(network.GetServiceHostname(channel.Name, channel.Namespace)).String()
 	transportEncryptionFlags := feature.FromContext(ctx)
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
@@ -300,8 +301,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpAddress := r.httpAddress(channelService)
-		httpsAddress := r.httpsAddress(caCerts, channelService)
+		httpAddress := receiver.HTTPAddress(channelHttpHost, channelService)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -319,11 +320,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpsAddress := r.httpsAddress(caCerts, channelService)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 		addressableStatus.Address = &httpsAddress
 	} else {
-		httpAddress := r.httpAddress(channelService)
+		httpAddress := receiver.HTTPAddress(channelHttpHost, channelService)
 		addressableStatus.Address = &httpAddress
 	}
 
@@ -345,7 +346,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.ProbesStatusReady()
 	channel.Status.Address = addressableStatus.Address
 	channel.Status.Addresses = addressableStatus.Addresses
-	statusConditionManager.Object.GetConditionSet().Manage(statusConditionManager.Object.GetStatus()).MarkTrue(base.ConditionAddressable)
+	channel.GetConditionSet().Manage(channel.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }
@@ -724,26 +725,6 @@ func (r *Reconciler) getCaCerts() (string, error) {
 		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), kafkaChannelTLSSecretName, caCertsSecretKey)
 	}
 	return string(caCerts), nil
-}
-
-func (r *Reconciler) httpAddress(channel *corev1.Service) duckv1.Addressable {
-	// http address uses host-based routing
-	httpAddress := duckv1.Addressable{
-		Name: pointer.String("http"),
-		URL:  apis.HTTP(network.GetServiceHostname(channel.Name, channel.Namespace)),
-	}
-	return httpAddress
-}
-
-func (r *Reconciler) httpsAddress(caCerts string, channel *corev1.Service) duckv1.Addressable {
-	// https address uses path-based routing
-	httpsAddress := duckv1.Addressable{
-		Name:    pointer.String("https"),
-		URL:     apis.HTTPS(network.GetServiceHostname(NewChannelIngressServiceName, r.SystemNamespace)),
-		CACerts: pointer.String(caCerts),
-	}
-	httpsAddress.URL.Path = fmt.Sprintf("/%s/%s", channel.Namespace, channel.Name)
-	return httpsAddress
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
