@@ -24,15 +24,11 @@ import (
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
-	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -71,10 +67,6 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
-)
-
-var (
-	testCaCerts = string(eventingtlstesting.CA)
 )
 
 var finalizerUpdatedEvent = Eventf(
@@ -1614,187 +1606,6 @@ func TestReconcileKind(t *testing.T) {
 				),
 			},
 		},
-		{
-			Name: "Reconciled normal - TLS Permissive",
-			Objects: []runtime.Object{
-				NewChannel(
-					WithChannelDelivery(&eventingduck.DeliverySpec{
-						DeadLetterSink: ServiceDestination,
-						Retry:          pointer.Int32(5),
-					}),
-				),
-				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
-					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
-				}),
-				ChannelReceiverPod(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "0",
-					"annotation_to_preserve":           "value_to_preserve",
-				}),
-				makeTLSSecret(),
-			},
-			Key: testKey,
-			Ctx: feature.ToContext(context.Background(), feature.Flags{
-				feature.TransportEncryption: feature.Permissive,
-			}),
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              ChannelUUID,
-							Topics:           []string{ChannelTopic()},
-							BootstrapServers: ChannelBootstrapServers,
-							Reference:        ChannelReference(),
-							Ingress: &contract.Ingress{
-								Host: receiver.Host(ChannelNamespace, ChannelName),
-							},
-							EgressConfig: &contract.EgressConfig{
-								DeadLetter: ServiceURL,
-								Retry:      5,
-							},
-						},
-					},
-				}),
-				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				NewPerChannelService(&env),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: NewChannel(
-						WithChannelDelivery(&eventingduck.DeliverySpec{
-							DeadLetterSink: ServiceDestination,
-							Retry:          pointer.Int32(5),
-						}),
-						WithInitKafkaChannelConditions,
-						StatusConfigParsed,
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(ChannelTopic()),
-						ChannelAddressable(&env),
-						StatusProbeSucceeded,
-						StatusChannelSubscribers(),
-						WithChannelDeadLetterSinkURI(ServiceURL),
-						WithChannelAddresses([]duckv1.Addressable{
-							{
-								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
-								CACerts: pointer.String(testCaCerts),
-							},
-							{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							},
-						}),
-						WithChannelAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  ChannelAddress(),
-						}),
-						WithChannelAddessable(),
-					),
-				},
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-		},
-		{
-			Name: "Reconciled normal - TLS Strict",
-			Objects: []runtime.Object{
-				NewChannel(
-					WithChannelDelivery(&eventingduck.DeliverySpec{
-						DeadLetterSink: ServiceDestination,
-						Retry:          pointer.Int32(5),
-					}),
-				),
-				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
-					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
-				}),
-				ChannelReceiverPod(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "0",
-					"annotation_to_preserve":           "value_to_preserve",
-				}),
-				makeTLSSecret(),
-			},
-			Key: testKey,
-			Ctx: feature.ToContext(context.Background(), feature.Flags{
-				feature.TransportEncryption: feature.Strict,
-			}),
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
-					Generation: 1,
-					Resources: []*contract.Resource{
-						{
-							Uid:              ChannelUUID,
-							Topics:           []string{ChannelTopic()},
-							BootstrapServers: ChannelBootstrapServers,
-							Reference:        ChannelReference(),
-							Ingress: &contract.Ingress{
-								Host: receiver.Host(ChannelNamespace, ChannelName),
-							},
-							EgressConfig: &contract.EgressConfig{
-								DeadLetter: ServiceURL,
-								Retry:      5,
-							},
-						},
-					},
-				}),
-				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
-					"annotation_to_preserve":           "value_to_preserve",
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
-			WantCreates: []runtime.Object{
-				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				NewPerChannelService(&env),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: NewChannel(
-						WithChannelDelivery(&eventingduck.DeliverySpec{
-							DeadLetterSink: ServiceDestination,
-							Retry:          pointer.Int32(5),
-						}),
-						WithInitKafkaChannelConditions,
-						StatusConfigParsed,
-						StatusConfigMapUpdatedReady(&env),
-						StatusTopicReadyWithName(ChannelTopic()),
-						ChannelAddressable(&env),
-						StatusProbeSucceeded,
-						StatusChannelSubscribers(),
-						WithChannelDeadLetterSinkURI(ServiceURL),
-						WithChannelAddresses([]duckv1.Addressable{
-							{
-								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
-								CACerts: pointer.String(testCaCerts),
-							},
-						}),
-						WithChannelAddress(duckv1.Addressable{
-							Name:    pointer.String("https"),
-							URL:     httpsURL(ChannelServiceName, ChannelNamespace),
-							CACerts: pointer.String(testCaCerts),
-						}),
-						WithChannelAddessable(),
-					),
-				},
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-		},
 	}
 
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
@@ -1901,25 +1712,4 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
-}
-
-func makeTLSSecret() *corev1.Secret {
-	return &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: DefaultEnv.SystemNamespace,
-			Name:      kafkaChannelTLSSecretName,
-		},
-		Data: map[string][]byte{
-			"ca.crt": []byte(testCaCerts),
-		},
-		Type: corev1.SecretTypeTLS,
-	}
-}
-
-func httpsURL(name string, namespace string) *apis.URL {
-	return &apis.URL{
-		Scheme: "https",
-		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
-		Path:   fmt.Sprintf("/%s/%s", namespace, name),
-	}
 }

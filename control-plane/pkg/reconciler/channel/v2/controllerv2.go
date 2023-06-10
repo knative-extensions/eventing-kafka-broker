@@ -95,10 +95,6 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 
 	reconciler.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
-	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithName(kafkaChannelTLSSecretName),
-		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkachannel", impl.EnqueueKey)),
-	})
 
 	reconciler.Tracker = impl.Tracker
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
