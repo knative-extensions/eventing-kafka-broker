@@ -27,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
-	"knative.dev/pkg/apis"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 
@@ -292,8 +291,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	var addressableStatus duckv1.AddressStatus
-	channelHttpsHost := apis.HTTPS(network.GetServiceHostname(NewChannelIngressServiceName, r.SystemNamespace)).String()
-	channelHttpHost := apis.HTTP(network.GetServiceHostname(channel.Name, channel.Namespace)).String()
+	channelHttpsHost := network.GetServiceHostname(NewChannelIngressServiceName, r.SystemNamespace)
+	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
 	transportEncryptionFlags := feature.FromContext(ctx)
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()

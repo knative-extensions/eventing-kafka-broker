@@ -24,11 +24,15 @@ import (
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -67,6 +71,10 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+)
+
+var (
+	testCaCerts = string(eventingtlstesting.CA)
 )
 
 var finalizerUpdatedEvent = Eventf(
@@ -176,11 +184,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - no subscription (no cons group) - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -217,11 +221,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -242,11 +242,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with delivery",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(),
+				NewChannel(
 					WithChannelDelivery(&eventingduck.DeliverySpec{
 						DeadLetterSink: ServiceDestination,
 						Retry:          pointer.Int32(5),
@@ -292,11 +288,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithChannelDelivery(&eventingduck.DeliverySpec{
 							DeadLetterSink: ServiceDestination,
 							Retry:          pointer.Int32(5),
@@ -322,11 +314,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled failed - no subscription (no cons group) - probe " + prober.StatusNotReady.String(),
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -355,11 +343,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -382,11 +366,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled failed - no subscription (no cons group) - probe " + prober.StatusUnknown.String(),
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -415,11 +395,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -442,11 +418,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - cg unknown - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -458,21 +431,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -499,11 +464,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -525,11 +486,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single unready subscriber - cg unknown - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithUnreadySubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithUnreadySubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -541,21 +499,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -582,11 +532,8 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
+
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -608,11 +555,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single ready subscriber - cg unknown - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1())),
+				NewChannel(
+					WithSubscribers(Subscriber1())),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -624,21 +568,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -665,11 +601,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -691,11 +623,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - existing ready cg with update - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -703,11 +632,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					ConsumerGroupReady,
 				),
@@ -735,21 +660,13 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewConsumerGroup(
 						WithConsumerGroupName(Subscription1UUID),
 						WithConsumerGroupNamespace(ChannelNamespace),
-						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-							Name: pointer.String("http"),
-							URL:  ChannelAddress(),
-						}),
-							WithChannelAddessable()))),
+						WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 						WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 						WithConsumerGroupLabels(ConsumerSubscription1Label),
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(ChannelTopic()),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-									Name: pointer.String("http"),
-									URL:  ChannelAddress(),
-								}),
-									WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+								ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -761,11 +678,8 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
+
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -787,11 +701,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - existing cg but failed - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -799,21 +710,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -829,11 +732,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -871,11 +770,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with two fresh subscribers - no auth",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(),
+				NewChannel(
+
 					WithSubscribers(Subscriber1(WithFreshSubscriber)),
 					WithSubscribers(Subscriber2(WithFreshSubscriber)),
 				),
@@ -890,21 +786,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -914,21 +802,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription2UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription2Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -955,11 +835,8 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
+
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -981,11 +858,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with one fresh subscriber and one removed subscriber (cg removal needed)",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(),
+				NewChannel(
+
 					WithSubscribers(Subscriber1(WithFreshSubscriber)),
 				),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -995,21 +869,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription2UUID), //removed subscriber
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription2Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -1023,21 +889,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -1064,11 +922,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1103,22 +957,14 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "channel configmap not resolved",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 			},
 			Key:                     testKey,
 			WantErr:                 true,
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigNotParsed(fmt.Sprintf(`failed to get configmap %s/%s: configmap %q not found`, env.SystemNamespace, DefaultEnv.GeneralConfigMapName, DefaultEnv.GeneralConfigMapName)),
 					),
@@ -1139,11 +985,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "channel configmap does not have bootstrap servers",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					"foo": "bar",
 				}),
@@ -1152,11 +994,7 @@ func TestReconcileKind(t *testing.T) {
 			WantErr: true,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigNotParsed("unable to get bootstrapServers from configmap: invalid configuration bootstrapServers: [] - ConfigMap data: map[foo:bar]"),
 					),
@@ -1177,11 +1015,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "channel configmap has blank bootstrap servers",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: "",
 				}),
@@ -1191,11 +1025,7 @@ func TestReconcileKind(t *testing.T) {
 			WantErr:                 true,
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigNotParsed("unable to get bootstrapServers from configmap: invalid configuration bootstrapServers: [] - ConfigMap data: map[bootstrap.servers:]"),
 					),
@@ -1216,11 +1046,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Channel spec is used properly",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(),
+				NewChannel(
+
 					WithNumPartitions(3),
 					WithReplicationFactor(4),
 					WithRetentionDuration("PT10M"),
@@ -1258,11 +1085,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithNumPartitions(3),
 						WithReplicationFactor(4),
 						WithRetentionDuration("PT10M"),
@@ -1286,11 +1109,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - with auth - SSL",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 					security.AuthSecretNameKey:         "secret-1",
@@ -1301,21 +1121,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -1374,11 +1186,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1400,11 +1208,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL SSL",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				//NewService(),
 				NewPerChannelService(DefaultEnv),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -1417,21 +1222,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -1490,11 +1287,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1516,11 +1309,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - with auth - SASL",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(), WithSubscribers(Subscriber1(WithFreshSubscriber))),
+				NewChannel(
+					WithSubscribers(Subscriber1(WithFreshSubscriber))),
 				NewPerChannelService(DefaultEnv),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
@@ -1532,21 +1322,13 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -1602,11 +1384,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1628,11 +1406,8 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Reconciled normal - with single fresh subscriber - with autoscaling annotations",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable(),
+				NewChannel(
+
 					WithSubscribers(Subscriber1(WithFreshSubscriber)),
 				),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -1650,22 +1425,14 @@ func TestReconcileKind(t *testing.T) {
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription1UUID),
 					WithConsumerGroupNamespace(ChannelNamespace),
-					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable()))),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					WithConsumerGroupLabels(ConsumerSubscription1Label),
 					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(WithChannelAddress(duckv1.Addressable{
-								Name: pointer.String("http"),
-								URL:  ChannelAddress(),
-							}),
-								WithChannelAddessable()), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -1692,11 +1459,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1718,11 +1481,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Create contract configmap when it does not exist",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -1751,11 +1510,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1776,11 +1531,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Do not create contract configmap when it exists",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -1808,11 +1559,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
@@ -1833,11 +1580,7 @@ func TestReconcileKind(t *testing.T) {
 		{
 			Name: "Corrupt contract in configmap",
 			Objects: []runtime.Object{
-				NewChannel(WithChannelAddress(duckv1.Addressable{
-					Name: pointer.String("http"),
-					URL:  ChannelAddress(),
-				}),
-					WithChannelAddessable()),
+				NewChannel(),
 				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
@@ -1848,11 +1591,7 @@ func TestReconcileKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
-					Object: NewChannel(WithChannelAddress(duckv1.Addressable{
-						Name: pointer.String("http"),
-						URL:  ChannelAddress(),
-					}),
-						WithChannelAddessable(),
+					Object: NewChannel(
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusTopicReadyWithName(ChannelTopic()),
@@ -1873,6 +1612,187 @@ func TestReconcileKind(t *testing.T) {
 					"InternalError",
 					"failed to get broker and triggers data from config map knative-eventing/kafka-channel-channels-subscriptions: failed to unmarshal contract: 'corrupt'",
 				),
+			},
+		},
+		{
+			Name: "Reconciled normal - TLS Permissive",
+			Objects: []runtime.Object{
+				NewChannel(
+					WithChannelDelivery(&eventingduck.DeliverySpec{
+						DeadLetterSink: ServiceDestination,
+						Retry:          pointer.Int32(5),
+					}),
+				),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				makeTLSSecret(),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Permissive,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter: ServiceURL,
+								Retry:      5,
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithChannelDelivery(&eventingduck.DeliverySpec{
+							DeadLetterSink: ServiceDestination,
+							Retry:          pointer.Int32(5),
+						}),
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelDeadLetterSinkURI(ServiceURL),
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								CACerts: pointer.String(testCaCerts),
+							},
+							{
+								Name: pointer.String("http"),
+								URL:  ChannelAddress(),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  ChannelAddress(),
+						}),
+						WithChannelAddessable(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - TLS Strict",
+			Objects: []runtime.Object{
+				NewChannel(
+					WithChannelDelivery(&eventingduck.DeliverySpec{
+						DeadLetterSink: ServiceDestination,
+						Retry:          pointer.Int32(5),
+					}),
+				),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				makeTLSSecret(),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Strict,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter: ServiceURL,
+								Retry:      5,
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithChannelDelivery(&eventingduck.DeliverySpec{
+							DeadLetterSink: ServiceDestination,
+							Retry:          pointer.Int32(5),
+						}),
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelDeadLetterSinkURI(ServiceURL),
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								CACerts: pointer.String(testCaCerts),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name:    pointer.String("https"),
+							URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+							CACerts: pointer.String(testCaCerts),
+						}),
+						WithChannelAddessable(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 	}
@@ -1981,4 +1901,25 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func makeTLSSecret() *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: DefaultEnv.SystemNamespace,
+			Name:      kafkaChannelTLSSecretName,
+		},
+		Data: map[string][]byte{
+			"ca.crt": []byte(testCaCerts),
+		},
+		Type: corev1.SecretTypeTLS,
+	}
+}
+
+func httpsURL(name string, namespace string) *apis.URL {
+	return &apis.URL{
+		Scheme: "https",
+		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
+		Path:   fmt.Sprintf("/%s/%s", namespace, name),
+	}
 }
