@@ -30,3 +30,11 @@ data:
   {{ if .authSecret }}
   auth.secret.ref.name: "{{ .authSecret }}"
   {{ end }}
+  {{ if .kafkaChannel }}
+  channel-template-spec: |
+    apiVersion: messaging.knative.dev/{{ .kafkaChannel.version }}
+    kind: KafkaChannel
+    spec:
+      numPartitions: {{ .kafkaChannel.numPartitions }}
+      replicationFactor: {{ .kafkaChannel.replicationFactor }}
+  {{ end }}

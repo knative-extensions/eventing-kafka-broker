@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -162,6 +163,24 @@ func WithRetry(retry *int32, policy *eventingduck.BackoffPolicyType, delay *stri
 func WithBrokerConfig(reference *duckv1.KReference) func(*eventing.Broker) {
 	return func(broker *eventing.Broker) {
 		broker.Spec.Config = reference
+	}
+}
+
+func WithBrokerAddress(address duckv1.Addressable) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		broker.Status.Address = &address
+	}
+}
+
+func WithBrokerAddresses(addresses []duckv1.Addressable) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		broker.Status.Addresses = addresses
+	}
+}
+
+func WithBrokerAddessable() reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(eventing.BrokerConditionAddressable)
 	}
 }
 
@@ -332,6 +351,7 @@ func NamespacedBrokerAddressable(env *config.Env) func(broker *eventing.Broker) 
 
 func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace string) {
 	broker.Status.Address = &duckv1.Addressable{
+		Name: pointer.String("http"),
 		URL: &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(serviceName, serviceNamespace),

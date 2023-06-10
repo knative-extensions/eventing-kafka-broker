@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 )
 
 func TestAddress(t *testing.T) {
@@ -39,4 +40,37 @@ func TestAddress(t *testing.T) {
 	require.Equal(t, "http", url.Scheme)
 	require.Contains(t, url.Path, ks.GetNamespace())
 	require.Contains(t, url.Path, ks.GetName())
+}
+
+func TestHTTPSAddress(t *testing.T) {
+	host := "example.com"
+	ks := &eventing.KafkaSink{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "ns",
+			Name:      "ks",
+		},
+	}
+	httpsAddress := HTTPSAddress(host, ks, string(eventingtlstesting.CA))
+
+	require.Equal(t, httpsAddress.URL.Host, host)
+	require.Equal(t, httpsAddress.URL.Scheme, "https")
+	require.Contains(t, httpsAddress.URL.Path, ks.GetNamespace())
+	require.Contains(t, httpsAddress.URL.Path, ks.GetName())
+	require.Equal(t, *httpsAddress.CACerts, string(eventingtlstesting.CA))
+}
+
+func TestHTTPAddress(t *testing.T) {
+	host := "example.com"
+	ks := &eventing.KafkaSink{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "ns",
+			Name:      "ks",
+		},
+	}
+	httpAddress := HTTPAddress(host, ks)
+
+	require.Equal(t, host, httpAddress.URL.Host)
+	require.Equal(t, httpAddress.URL.Scheme, "http")
+	require.Contains(t, httpAddress.URL.Path, ks.GetNamespace())
+	require.Contains(t, httpAddress.URL.Path, ks.GetName())
 }

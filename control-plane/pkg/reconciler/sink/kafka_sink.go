@@ -28,10 +28,14 @@ import (
 	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
+
+	"knative.dev/eventing/pkg/apis/feature"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -39,16 +43,21 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
-	ExternalTopicOwner   = "external"
-	ControllerTopicOwner = "kafkasink-controller"
+	ExternalTopicOwner       = "external"
+	ControllerTopicOwner     = "kafkasink-controller"
+	caCertsSecretKey         = "ca.crt"
+	sinkIngressTLSSecretName = "kafka-sink-ingress-server-tls" //nolint:gosec // This is not a hardcoded credential
 )
 
 type Reconciler struct {
 	*base.Reconciler
 	*config.Env
+
+	Resolver *resolver.URIResolver
 
 	ConfigMapLister corelisters.ConfigMapLister
 
@@ -228,7 +237,46 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Updated receiver pod annotation")
 
-	address := receiver.Address(r.IngressHost, ks)
+	transportEncryptionFlags := feature.FromContext(ctx)
+	var addressableStatus duckv1.AddressStatus
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+
+		addressableStatus.Address = &httpsAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
+	} else {
+		// Disabled mode:
+		// Unchange
+		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+
+		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
+	}
+
+	address := addressableStatus.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -241,7 +289,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	statusConditionManager.Addressable(address)
+
+	statusConditionManager.ProbesStatusReady()
+
+	ks.Status.AddressStatus = addressableStatus
+
+	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }
@@ -278,7 +331,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		return err
 	}
 
-	ks.Status.Address.URL = nil
+	ks.Status.AddressStatus = duckv1.AddressStatus{}
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous
 	// reconciliation we might have failed to update one of our data plane pod annotation, so we want to anyway update
@@ -359,4 +412,16 @@ func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
 		},
 		BootstrapServers: kss.BootstrapServers,
 	}
+}
+
+func (r *Reconciler) getCaCerts() (string, error) {
+	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(sinkIngressTLSSecretName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, sinkIngressTLSSecretName, err)
+	}
+	caCerts, ok := secret.Data[caCertsSecretKey]
+	if !ok {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, sinkIngressTLSSecretName, caCertsSecretKey)
+	}
+	return string(caCerts), nil
 }
