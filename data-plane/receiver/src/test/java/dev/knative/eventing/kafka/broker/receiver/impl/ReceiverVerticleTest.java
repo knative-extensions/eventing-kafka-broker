@@ -25,6 +25,8 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -46,7 +48,6 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.producer.MockProducer;
@@ -106,7 +107,7 @@ public class ReceiverVerticleTest {
       new StringSerializer(),
       new CloudEventSerializerMock()
     );
-    KafkaProducer<String, CloudEvent> producer = KafkaProducer.create(vertx, mockProducer);
+    ReactiveKafkaProducer<String, CloudEvent> producer = MockReactiveProducerFactory.createStatic(vertx, mockProducer);
 
     store = new IngressProducerReconcilableStore(
       AuthProvider.noAuth(),
@@ -180,8 +181,7 @@ public class ReceiverVerticleTest {
               .reduce((a, b) -> b) // get last element
               .orElse(defaultCounter);
           }
-        } catch (MeterNotFoundException ignored1) {
-        }
+        } catch (MeterNotFoundException ignored1) {}
 
         assertThat(counter.count())
           .describedAs("Counter: " + StreamSupport
@@ -281,7 +281,7 @@ public class ReceiverVerticleTest {
           .withType("type")
           .withId("1234")
           .build()),
-        202,
+        ACCEPTED.code(),
         DataPlaneContract.Resource.newBuilder()
           .setUid("1")
           .addTopics("topic-name-1")
