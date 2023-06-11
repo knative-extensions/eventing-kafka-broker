@@ -263,7 +263,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	var addressableStatus duckv1.AddressStatus
-	channelHttpsHost := network.GetServiceHostname(channelService.Name, r.SystemNamespace)
+	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
 	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
 	transportEncryptionFlags := feature.FromContext(ctx)
 	if transportEncryptionFlags.IsPermissiveTransportEncryption() {

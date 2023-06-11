@@ -40,6 +40,7 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
+	"knative.dev/pkg/system"
 
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -1906,7 +1907,7 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 func makeTLSSecret() *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: DefaultEnv.SystemNamespace,
+			Namespace: system.Namespace(),
 			Name:      kafkaChannelTLSSecretName,
 		},
 		Data: map[string][]byte{
