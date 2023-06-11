@@ -127,7 +127,7 @@ message Egress {
     // Discard response.
     Empty discardReply = 9;
   }
-      
+
   //replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
   string replyUrlCACerts = 16;
 
