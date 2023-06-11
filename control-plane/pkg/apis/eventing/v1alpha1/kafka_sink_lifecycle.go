@@ -16,7 +16,10 @@
 
 package v1alpha1
 
-import "knative.dev/pkg/apis"
+import (
+	"knative.dev/pkg/apis"
+	v1 "knative.dev/pkg/apis/duck/v1"
+)
 
 const (
 	ConditionAddressable apis.ConditionType = "Addressable"
@@ -39,7 +42,8 @@ func (ks *KafkaSinkStatus) GetConditionSet() apis.ConditionSet {
 // SetAddress makes this Kafka Sink addressable by setting the URI. It also
 // sets the ConditionAddressable to true.
 func (ks *KafkaSinkStatus) SetAddress(url *apis.URL) {
-	ks.Address.URL = url
+	ks.AddressStatus.Address = &v1.Addressable{}
+	ks.AddressStatus.Address.URL = url
 	if url != nil {
 		ks.GetConditionSet().Manage(ks).MarkTrue(ConditionAddressable)
 	} else {

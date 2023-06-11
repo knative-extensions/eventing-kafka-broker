@@ -21,6 +21,9 @@ import (
 	"net/url"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func Address(host string, object metav1.Object) *url.URL {
@@ -29,4 +32,24 @@ func Address(host string, object metav1.Object) *url.URL {
 		Host:   host,
 		Path:   fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName()),
 	}
+}
+
+// HTTPAddress returns the addressable
+func HTTPAddress(host string, object metav1.Object) duckv1.Addressable {
+	httpAddress := duckv1.Addressable{
+		Name: pointer.String("http"),
+		URL:  apis.HTTP(host),
+	}
+	httpAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
+	return httpAddress
+}
+
+func HTTPSAddress(host string, object metav1.Object, caCerts string) duckv1.Addressable {
+	httpsAddress := duckv1.Addressable{
+		Name:    pointer.String("https"),
+		URL:     apis.HTTPS(host),
+		CACerts: pointer.String(caCerts),
+	}
+	httpsAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
+	return httpsAddress
 }

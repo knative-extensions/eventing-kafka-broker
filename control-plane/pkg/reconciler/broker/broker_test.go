@@ -43,10 +43,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
@@ -75,6 +78,8 @@ const (
 	finalizerName = "brokers.eventing.knative.dev"
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
+
+	brokerIngressTLSSecretName = "kafka-broker-ingress-server-tls"
 )
 
 var (
@@ -83,6 +88,12 @@ var (
 		"FinalizerUpdate",
 		fmt.Sprintf(`Updated %q finalizers`, BrokerName),
 	)
+
+	brokerAddress = &apis.URL{
+		Scheme: "http",
+		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
+		Path:   fmt.Sprintf("/%s/%s", BrokerNamespace, BrokerName),
+	}
 
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
@@ -176,6 +187,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -239,6 +261,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(ExternalTopicName),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -473,6 +506,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -533,6 +577,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURLFrom(BrokerNamespace, ServiceName)),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -641,6 +696,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -696,6 +762,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -778,6 +855,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -877,6 +965,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved("http://www.my-sink.com/api"),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -962,6 +1061,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1040,6 +1150,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1211,6 +1332,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1294,6 +1426,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerConfigMapSecretAnnotation("secret-1"),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1512,6 +1655,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1611,6 +1765,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1678,6 +1843,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1742,6 +1918,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1809,6 +1996,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1859,6 +2057,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerDLSResolved(ServiceURL),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -1912,6 +2121,17 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerDLSResolved(ServiceURL),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},
@@ -2399,6 +2619,143 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				testProber: probertesting.MockProber(prober.StatusNotReady),
 			},
 		},
+		{
+			Name: "Reconciled normal - TLS permissive",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					BrokerConfigMapAnnotations(),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
+						},
+					},
+					Generation: 1,
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+				makeTLSSecret(),
+			},
+			Key:     testKey,
+			WantErr: false,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Permissive,
+			}),
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerTopicReady,
+						StatusBrokerConfigParsed,
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerDLSResolved(ServiceURL),
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(BrokerName, BrokerNamespace),
+								CACerts: pointer.String(string(eventingtlstesting.CA)),
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - TLS strict",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithDelivery(),
+					BrokerConfigMapAnnotations(),
+				),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+							EgressConfig:     &contract.EgressConfig{DeadLetter: ServiceURL},
+						},
+					},
+					Generation: 1,
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "1"}),
+				makeTLSSecret(),
+			},
+			Key:     testKey,
+			WantErr: false,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Strict,
+			}),
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithDelivery(),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerTopicReady,
+						StatusBrokerConfigParsed,
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerDLSResolved(ServiceURL),
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(BrokerName, BrokerNamespace),
+								CACerts: pointer.String(string(eventingtlstesting.CA)),
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name:    pointer.String("https"),
+							URL:     httpsURL(BrokerName, BrokerNamespace),
+							CACerts: pointer.String(string(eventingtlstesting.CA)),
+						}),
+					),
+				},
+			},
+		},
 	}
 
 	for i := range table {
@@ -2504,4 +2861,25 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func makeTLSSecret() *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: DefaultEnv.SystemNamespace,
+			Name:      brokerIngressTLSSecretName,
+		},
+		Data: map[string][]byte{
+			"ca.crt": []byte(eventingtlstesting.CA),
+		},
+		Type: corev1.SecretTypeTLS,
+	}
+}
+
+func httpsURL(name string, namespace string) *apis.URL {
+	return &apis.URL{
+		Scheme: "https",
+		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
+		Path:   fmt.Sprintf("/%s/%s", namespace, name),
+	}
 }
