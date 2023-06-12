@@ -166,6 +166,13 @@ func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
 	a.enqueue(arg.(types.NamespacedName))
 }
 
+// Resets the cache to a new empty cache with the given expiry time
+func (a *asyncProber) resetCache(ctx context.Context, expiry time.Duration) {
+	a.clientMu.Lock()
+	defer a.clientMu.Unlock()
+	a.cache = NewLocalExpiringCache(ctx, expiry)
+}
+
 func (a *asyncProber) RotateRootCaCerts(caCerts *string) error {
 	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
 	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
