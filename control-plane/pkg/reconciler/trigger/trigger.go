@@ -305,11 +305,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 }
 
 func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Egress, error) {
-	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
+	destination, err := r.Resolver.AddressableFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
 	}
-	trigger.Status.SubscriberURI = destination
+	trigger.Status.SubscriberURI = destination.URL
 
 	groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
 	if !ok {
@@ -317,7 +317,7 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 
 	egress := &contract.Egress{
-		Destination:   destination.String(),
+		Destination:   destination.URL.String(),
 		ConsumerGroup: groupId,
 		Uid:           string(trigger.UID),
 		Reference: &contract.Reference{

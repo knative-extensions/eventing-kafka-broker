@@ -22,6 +22,8 @@ import (
 	"io"
 	"testing"
 
+	"k8s.io/utils/pointer"
+
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 
@@ -36,11 +38,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
+	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
 	. "knative.dev/pkg/reconciler/testing"
+
+	"knative.dev/eventing/pkg/apis/feature"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
@@ -49,8 +54,13 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
-	reconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+
+	eventingtlstesting "knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
+)
+
+var (
+	sinkIngressTLSSecretName = "kafka-sink-ingress-server-tls"
 )
 
 const (
@@ -79,8 +89,15 @@ var (
 
 	bootstrapServersArr = []string{"kafka-1:9092", "kafka-2:9093"}
 
-	createTopicError = fmt.Errorf("failed to create topic")
-	deleteTopicError = fmt.Errorf("failed to delete topic")
+	sinkAddress = &apis.URL{
+		Scheme: "http",
+		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
+		Path:   fmt.Sprintf("/%s/%s", SinkNamespace, SinkName),
+	}
+
+	errCreateTopic = fmt.Errorf("failed to create topic")
+
+	errDeleteTopic = fmt.Errorf("failed to delete topic")
 )
 
 var DefaultEnv = &config.Env{
@@ -114,7 +131,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 				),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
@@ -149,7 +166,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -158,6 +175,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -166,7 +194,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - content mode structured",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					SinkContentMode(v1alpha1.ModeStructured),
 				),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
@@ -202,7 +230,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						SinkContentMode(v1alpha1.ModeStructured),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
@@ -212,6 +240,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -220,7 +259,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - with auth config",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					SinkAuthSecretRef("secret-1"),
 				),
 				NewSSLSecret(SinkNamespace, "secret-1"),
@@ -266,7 +305,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						SinkAuthSecretRef("secret-1"),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
@@ -276,6 +315,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -284,7 +334,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - no topic owner",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
+					StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.ReplicationFactor = nil
@@ -328,7 +378,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
+						StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 						func(obj duckv1.KRShaped) {
 							s := obj.(*v1alpha1.KafkaSink)
 							s.Spec.ReplicationFactor = nil
@@ -342,6 +392,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ExternalTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -350,7 +411,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "No topic owner - topic present err",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
+					StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.ReplicationFactor = nil
@@ -380,7 +441,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
+						StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 						func(obj duckv1.KRShaped) {
 							s := obj.(*v1alpha1.KafkaSink)
 							s.Spec.ReplicationFactor = nil
@@ -400,7 +461,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - set topic and bootstrap servers",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.Topic = "my-topic-1"
@@ -441,7 +502,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						func(obj duckv1.KRShaped) {
 							s := obj.(*v1alpha1.KafkaSink)
 							s.Spec.Topic = "my-topic-1"
@@ -455,6 +516,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -466,7 +538,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				SinkReceiverPod(env.SystemNamespace, nil),
@@ -479,7 +551,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to create topic: %s: %v",
-					SinkTopic(), createTopicError,
+					SinkTopic(), errCreateTopic,
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -488,7 +560,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
@@ -497,14 +569,14 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic: createTopicError,
+				wantErrorOnCreateTopic: errCreateTopic,
 			},
 		},
 		{
 			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewService(),
@@ -547,7 +619,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -556,6 +628,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -564,7 +647,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - config map not readable",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, []byte(`{"hello": "world"}`)),
@@ -597,7 +680,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -606,6 +689,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -614,7 +708,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -670,7 +764,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -679,6 +773,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -687,7 +792,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - update existing broker while preserving others",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -742,7 +847,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -751,6 +856,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -786,7 +902,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - unchanged",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -824,7 +940,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -833,6 +949,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -841,7 +968,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - unchanged contract - changed receiver pod annotation",
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					BootstrapServers(bootstrapServersArr),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -884,7 +1011,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -893,6 +1020,17 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						SinkAddressable(&env),
 						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
 					),
 				},
 			},
@@ -901,7 +1039,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled failed - probe " + prober.StatusNotReady.String(),
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 				),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
@@ -936,7 +1074,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -955,7 +1093,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled failed - probe " + prober.StatusUnknown.String(),
 			Objects: []runtime.Object{
 				NewSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 				),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
@@ -990,7 +1128,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSink(
-						StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -1003,6 +1141,147 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				testProber: probertesting.MockProber(prober.StatusUnknown),
+			},
+		},
+		{
+			Name: "Reconciled normal - TLS permissive",
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				makeTLSSecret(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Permissive,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        SinkReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&env),
+						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  sinkAddress,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(SinkName, SinkNamespace),
+								CACerts: pointer.String(string(eventingtlstesting.CA)),
+							},
+							{
+								Name: pointer.String("http"),
+								URL:  sinkAddress,
+							},
+						}),
+						WithSinkAddessable(),
+					),
+				},
+			},
+		},
+		{
+			Name: "Reconciled normal - TLS Strict",
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				makeTLSSecret(),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.TransportEncryption: feature.Strict,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        SinkReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&env),
+						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name:    pointer.String("https"),
+							URL:     httpsURL(SinkName, SinkNamespace),
+							CACerts: pointer.String(string(eventingtlstesting.CA)),
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name:    pointer.String("https"),
+								URL:     httpsURL(SinkName, SinkNamespace),
+								CACerts: pointer.String(string(eventingtlstesting.CA)),
+							},
+						}),
+						WithSinkAddessable(),
+					),
+				},
 			},
 		},
 	}
@@ -1036,7 +1315,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic externally controlled",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					StatusControllerOwnsTopic(reconciler.ExternalTopicOwner),
+					StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -1087,7 +1366,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic controlled by us",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -1138,7 +1417,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal, probe not ready",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -1189,7 +1468,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled failed, probe ready",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 				),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -1241,7 +1520,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - topic controlled by us - error deleting topic",
 			Objects: []runtime.Object{
 				NewDeletedSink(
-					StatusControllerOwnsTopic(reconciler.ControllerTopicOwner),
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					func(obj duckv1.KRShaped) {
 						s := obj.(*v1alpha1.KafkaSink)
 						s.Spec.Topic = "topic-2"
@@ -1278,7 +1557,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to delete topic %s: %v",
-					"topic-2", deleteTopicError,
+					"topic-2", errDeleteTopic,
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1298,7 +1577,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: deleteTopicError,
+				wantErrorOnDeleteTopic: errDeleteTopic,
 				wantTopicName:          "topic-2",
 				testProber:             probertesting.MockProber(prober.StatusNotReady),
 			},
@@ -1420,4 +1699,25 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func makeTLSSecret() *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: DefaultEnv.SystemNamespace,
+			Name:      sinkIngressTLSSecretName,
+		},
+		Data: map[string][]byte{
+			"ca.crt": eventingtlstesting.CA,
+		},
+		Type: corev1.SecretTypeTLS,
+	}
+}
+
+func httpsURL(name string, namespace string) *apis.URL {
+	return &apis.URL{
+		Scheme: "https",
+		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
+		Path:   fmt.Sprintf("/%s/%s", namespace, name),
+	}
 }

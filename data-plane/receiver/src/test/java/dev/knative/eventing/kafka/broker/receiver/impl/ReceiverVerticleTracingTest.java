@@ -84,7 +84,7 @@ public class ReceiverVerticleTracingTest {
     this.spanExporter = InMemorySpanExporter.create();
     SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
       .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
-      .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
+      .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
       // Uncomment this line if you want to try locally
       //.addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
       .setSampler(Sampler.alwaysOn())

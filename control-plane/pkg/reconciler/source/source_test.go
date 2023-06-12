@@ -54,6 +54,18 @@ import (
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
+const (
+	finalizerName = "kafkasources.sources.knative.dev"
+)
+
+var (
+	finalizerUpdatedEvent = Eventf(
+		corev1.EventTypeNormal,
+		"FinalizerUpdate",
+		fmt.Sprintf(`Updated %q finalizers`, SourceName),
+	)
+)
+
 func TestGetLabels(t *testing.T) {
 
 	testLabels := GetLabels("testSourceName")
@@ -136,6 +148,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal, offset earliest",
@@ -183,6 +201,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal, offset latest",
@@ -229,6 +253,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -282,6 +312,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal, key type label",
@@ -329,6 +365,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -459,6 +501,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal with SASL without type",
@@ -572,6 +620,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - ce overrides",
@@ -627,6 +681,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - with autoscaling annotations",
@@ -674,6 +734,12 @@ func TestReconcileKind(t *testing.T) {
 						WithAutoscalingAnnotationsSource(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -758,6 +824,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg with update",
@@ -816,6 +888,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -877,6 +955,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg with update but not ready",
@@ -935,6 +1019,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg without update",
@@ -982,6 +1072,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg without update but not ready",
@@ -1026,6 +1122,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -1072,6 +1174,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -1120,6 +1228,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 		{
@@ -1203,6 +1317,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - ignore source replicas when KEDA is enabled",
@@ -1254,6 +1374,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - with unordered consumer verticle",
@@ -1301,6 +1427,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
 		},
 		{
 			Name: "Reconciled normal - with ordered consumer verticle",
@@ -1347,6 +1479,12 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSelector(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
 			},
 		},
 	}
@@ -1458,4 +1596,13 @@ func SourceNetSaslTls(withType bool) KRShapedOption {
 			}
 		}
 	}
+}
+
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = SourceName
+	action.Namespace = SourceNamespace
+	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }

@@ -45,10 +45,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	dynamicclientfake "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
@@ -61,6 +63,15 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+)
+
+var (
+	brokerNamespacedAddress = &apis.URL{
+		Scheme: "http",
+		Host:   network.GetServiceHostname(DefaultEnv.IngressName, BrokerNamespace),
+		Path:   fmt.Sprintf("/%s/%s", BrokerNamespace, BrokerName),
+	}
 )
 
 func TestNamespacedBrokerReconciler(t *testing.T) {
@@ -282,6 +293,17 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 						StatusBrokerProbeSucceeded,
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerNamespacedAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerNamespacedAddress,
+						}),
+						WithBrokerAddessable(),
 					),
 				},
 			},

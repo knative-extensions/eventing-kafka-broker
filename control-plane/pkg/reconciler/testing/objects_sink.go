@@ -22,6 +22,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
@@ -117,7 +118,8 @@ func SinkAddressable(configs *config.Env) func(obj duckv1.KRShaped) {
 
 	return func(obj duckv1.KRShaped) {
 		sink := obj.(*eventing.KafkaSink)
-		sink.Status.Address.URL = &apis.URL{
+		sink.Status.AddressStatus.Address = &duckv1.Addressable{}
+		sink.Status.AddressStatus.Address.URL = &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", sink.Namespace, sink.Name),
@@ -172,5 +174,25 @@ func SinkContentMode(cm string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*eventing.KafkaSink)
 		ks.Spec.ContentMode = &cm
+	}
+}
+
+func WithSinkAddress(address duckv1.Addressable) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.Status.Address = &address
+	}
+}
+
+func WithSinkAddresses(addresses []duckv1.Addressable) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.Status.Addresses = addresses
+	}
+}
+func WithSinkAddessable() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(base.ConditionAddressable)
 	}
 }
