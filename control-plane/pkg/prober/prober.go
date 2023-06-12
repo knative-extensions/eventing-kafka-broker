@@ -43,6 +43,8 @@ type EnqueueFunc func(key types.NamespacedName)
 type Prober interface {
 	// Probe probes the provided Addressable resource and returns its Status.
 	Probe(ctx context.Context, addressable Addressable, expected Status) Status
+	// RotateRootCaCerts rotates the CA certs used to make http requests
+	RotateRootCaCerts(caCerts *string) error
 }
 
 // Func type is an adapter to allow the use of
