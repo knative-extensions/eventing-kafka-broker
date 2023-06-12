@@ -29,10 +29,11 @@ if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
 fi
 
 if [[ -z "${BROKER_CLASS}" ]]; then
-  fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
-else
-  echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
+  export BROKER_CLASS=Kafka
+  echo "BROKER_CLASS is not defined, falling back to the default BROKER_CLASS=Kafka. Override this with the 'BROKER_CLASS' env var."
 fi
+
+echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
 
 go_test_e2e -timeout=1h ./test/e2e/...        || fail_test "E2E suite failed (directory: ./e2e/...)"
 go_test_e2e -timeout=1h ./test/e2e_sink/...   || fail_test "E2E suite failed (directory: ./e2e_sink/...)"
