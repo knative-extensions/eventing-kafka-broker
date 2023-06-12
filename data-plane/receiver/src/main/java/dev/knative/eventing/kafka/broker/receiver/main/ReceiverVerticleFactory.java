@@ -39,16 +39,20 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
   private final ReceiverEnv env;
   private final Properties producerConfigs;
   private final HttpServerOptions httpServerOptions;
+  private final HttpServerOptions httpsServerOptions;
 
   private final IngressRequestHandler ingressRequestHandler;
 
   ReceiverVerticleFactory(final ReceiverEnv env,
                           final Properties producerConfigs,
                           final MeterRegistry metricsRegistry,
-                          final HttpServerOptions httpServerOptions) {
+                          final HttpServerOptions httpServerOptions,
+                          final HttpServerOptions httpsServerOptions
+                          ) {
     this.env = env;
     this.producerConfigs = producerConfigs;
     this.httpServerOptions = httpServerOptions;
+    this.httpsServerOptions = httpsServerOptions;
     this.ingressRequestHandler = new IngressRequestHandlerImpl(
       StrictRequestToRecordMapper.getInstance(),
       metricsRegistry
@@ -60,6 +64,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     return new ReceiverVerticle(
       env,
       httpServerOptions,
+      httpsServerOptions,
       v -> new IngressProducerReconcilableStore(
         AuthProvider.kubernetes(),
         producerConfigs,
