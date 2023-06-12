@@ -88,6 +88,11 @@ public class Main {
     httpServerOptions.setPort(env.getIngressPort());
     httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
+    // Read https server configuration and merge it with port from env
+    HttpServerOptions httpsServerOptions = new HttpServerOptions(
+      Configurations.readPropertiesAsJsonSync(env.getHttpsServerConfigFilePath())
+    );
+
     // Configure the verticle to deploy and the deployment options
     final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
       env,
