@@ -246,18 +246,17 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 		},
 	}
 	l, err := net.Listen("tcp", ":0")
+	require.NoError(t, err)
 	defer l.Close()
 	port := l.Addr().(*net.TCPAddr).Port
 	l = tls.NewListener(l, s.TLSConfig)
 	go func() {
-		err = s.Serve(l)
-		return
+		s.Serve(l)
 	}()
-	require.NoError(t, err)
+	defer s.Close()
 	addrString := fmt.Sprintf("https://127.0.0.1:%d", port)
 	u, err := url.Parse(addrString)
 	require.NoError(t, err)
-	defer s.Close()
 
 	addressable := Addressable{
 		Address:     &url.URL{Scheme: "https", Path: "/b1/b1", Host: addrString},
