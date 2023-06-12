@@ -58,6 +58,11 @@ func (p Func) Probe(ctx context.Context, addressable Addressable, expected Statu
 	return p(ctx, addressable, expected)
 }
 
+// RotateRootCaCerts is an empty implementation to complete the Prober interface for Func.
+func (p Func) RotateRootCaCerts(caCerts *string) error {
+	return nil
+}
+
 // httpClient interface is an interface for an HTTP client.
 type httpClient interface {
 	Do(r *http.Request) (*http.Response, error)
