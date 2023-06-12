@@ -19,15 +19,15 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +43,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class IngressProducerReconcilableStoreTest {
@@ -292,8 +291,8 @@ public class IngressProducerReconcilableStoreTest {
       AuthProvider.noAuth(),
       new Properties(),
       properties -> {
-        producerFactoryInvocations.incrementAndGet();
-        return mockProducer();
+          producerFactoryInvocations.incrementAndGet();
+          return mockProducer();
       }
     );
 
@@ -316,11 +315,8 @@ public class IngressProducerReconcilableStoreTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static KafkaProducer<String, CloudEvent> mockProducer() {
-    KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
-    when(producer.flush()).thenReturn(Future.succeededFuture());
-    when(producer.close()).thenReturn(Future.succeededFuture());
-    when(producer.unwrap()).thenReturn(new MockProducer<>());
+  private static ReactiveKafkaProducer<String, CloudEvent> mockProducer() {
+    ReactiveKafkaProducer<String, CloudEvent> producer = mock(MockReactiveKafkaProducer.class);
     return producer;
   }
 
@@ -360,12 +356,12 @@ public class IngressProducerReconcilableStoreTest {
         .setContentMode(DataPlaneContract.ContentMode.STRUCTURED).build())
       .build();
 
-    KafkaProducer<String, CloudEvent> producer1 = mockProducer();
-    KafkaProducer<String, CloudEvent> producer2 = mockProducer();
-    KafkaProducer<String, CloudEvent> producer3 = mockProducer();
-    KafkaProducer<String, CloudEvent> producer4 = mockProducer();
+    ReactiveKafkaProducer<String, CloudEvent> producer1 = mockProducer();
+    ReactiveKafkaProducer<String, CloudEvent> producer2 = mockProducer();
+    ReactiveKafkaProducer<String, CloudEvent> producer3 = mockProducer();
+    ReactiveKafkaProducer<String, CloudEvent> producer4 = mockProducer();
 
-    Map<String, KafkaProducer<String, CloudEvent>> producerMap = Map.of(
+    Map<String, ReactiveKafkaProducer<String, CloudEvent>> producerMap = Map.of(
       "kafka-1:9092", producer1,
       "kafka-2:9092", producer2,
       "kafka-3:9092", producer3,
@@ -376,7 +372,7 @@ public class IngressProducerReconcilableStoreTest {
       AuthProvider.noAuth(),
       new Properties(),
       properties -> {
-        KafkaProducer<String, CloudEvent> producer = producerMap.get(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        ReactiveKafkaProducer<String, CloudEvent> producer = producerMap.get(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
         if (producer == null) {
           throw new IllegalStateException("Can't determine what producer to return");
         }

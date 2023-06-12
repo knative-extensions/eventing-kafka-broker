@@ -19,13 +19,12 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.micrometer.core.instrument.Meter.Id;
-import io.micrometer.core.instrument.cumulative.CumulativeCounter;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -42,7 +41,6 @@ import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
@@ -108,7 +106,7 @@ public class ReceiverVerticleTracingTest {
     this.store = new IngressProducerReconcilableStore(
       AuthProvider.noAuth(),
       new Properties(),
-      properties -> KafkaProducer.create(vertx, mockProducer)
+      properties -> MockReactiveProducerFactory.createStatic(vertx, mockProducer)
     );
 
     final var env = mock(ReceiverEnv.class);
