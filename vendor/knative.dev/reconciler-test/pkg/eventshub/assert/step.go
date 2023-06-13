@@ -37,7 +37,7 @@ func (m MatchAssertionBuilder) MatchReceivedEvent(matchers ...cetest.EventMatche
 
 // MatchRejectedEvent is a shortcut for Match(MatchKind(eventshub.EventRejected), MatchEvent(matchers...))
 func (m MatchAssertionBuilder) MatchRejectedEvent(matchers ...cetest.EventMatcher) MatchAssertionBuilder {
-	m.matchers = append(m.matchers, MatchKind(eventshub.EventReceived))
+	m.matchers = append(m.matchers, MatchKind(eventshub.EventRejected))
 	m.matchers = append(m.matchers, MatchEvent(matchers...))
 	return m
 }
