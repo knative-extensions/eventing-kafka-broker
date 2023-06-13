@@ -76,6 +76,9 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - name: secret-volume
+              mountPath: /etc/secret-volume
+              readOnly: true
           ports:
             - containerPort: 9090
               name: http-metrics
@@ -169,6 +172,12 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
+        - name: secret-volume
+          secret:
+            secretName: kafka-broker-receiver-TLS-secret
+            optional: true
+
+            
       restartPolicy: Always
 ---
 
@@ -199,3 +208,13 @@ spec:
       protocol: TCP
       targetPort: 9090
 ---
+
+
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kafka-broker-receiver-TLS-secret
+data:
+  keystore_path: temp_valule
+  keystore_password: temp_value
