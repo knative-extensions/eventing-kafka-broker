@@ -12,39 +12,60 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+    */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import java.util.Properties;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 public class MockReactiveKafkaProducer<K, V> implements ReactiveKafkaProducer<String, CloudEvent> {
 
+    private final Producer<String, CloudEvent> producer;
 
-    public MockReactiveKafkaProducer() {
+    public MockReactiveKafkaProducer(Properties config) {
+        this.producer = new KafkaProducer<>(config);
+    }
+
+    public MockReactiveKafkaProducer(Producer<String, CloudEvent> producer) {
+        this.producer = producer;
     }
 
     @Override
     public Future<Void> close() {
+        producer.close();
         return Future.succeededFuture();
     }
 
     @Override
     public Future<Void> flush() {
+        producer.flush();
         return Future.succeededFuture();
     }
 
     @Override
     public Future<RecordMetadata> send(ProducerRecord<String, CloudEvent> record) {
-        return Future.succeededFuture();
+        final Promise<RecordMetadata> p = Promise.promise();
+        producer.send(record, (recordMetadata, exception) -> {
+            if (exception != null) {
+                p.fail(exception);
+            } else {
+                p.complete(recordMetadata);
+            }
+        });
+        return p.future();
     }
 
     @Override
     public org.apache.kafka.clients.producer.Producer<String, CloudEvent> unwrap() {
-        return new org.apache.kafka.clients.producer.MockProducer<String, CloudEvent>();
+        return producer;
     }
-    
+
 }

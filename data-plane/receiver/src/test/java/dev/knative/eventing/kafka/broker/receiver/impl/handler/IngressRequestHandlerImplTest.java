@@ -34,6 +34,8 @@ import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 
@@ -75,7 +77,7 @@ public class IngressRequestHandlerImplTest {
       if (failedToSend) {
         return Future.failedFuture("failure");
       } else {
-        return Future.succeededFuture(mock(RecordMetadata.class));
+        return Future.succeededFuture(new RecordMetadata(new TopicPartition("", 0), 0, 0, 0, 0, 0));
       }
     });
 
@@ -151,7 +153,11 @@ public class IngressRequestHandlerImplTest {
 
   @SuppressWarnings("unchecked")
   private static ReactiveKafkaProducer<String, CloudEvent> mockProducer() {
-    return mock(MockReactiveKafkaProducer.class);
+    ReactiveKafkaProducer<String, CloudEvent> producer = mock(MockReactiveKafkaProducer.class);
+    when(producer.flush()).thenReturn(Future.succeededFuture());
+    when(producer.close()).thenReturn(Future.succeededFuture());
+    when(producer.unwrap()).thenReturn(new MockProducer<>());
+    return producer;
   }
 
   private static HttpServerRequest mockHttpServerRequest(String path) {

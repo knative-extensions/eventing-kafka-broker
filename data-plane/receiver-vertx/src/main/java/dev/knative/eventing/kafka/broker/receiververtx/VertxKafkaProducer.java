@@ -32,7 +32,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
-    KafkaProducer<K, V> producer;
+    private final KafkaProducer<K, V> producer;
     
     public VertxKafkaProducer(Vertx v, Properties config) {
         producer = KafkaProducer.create(v, config);

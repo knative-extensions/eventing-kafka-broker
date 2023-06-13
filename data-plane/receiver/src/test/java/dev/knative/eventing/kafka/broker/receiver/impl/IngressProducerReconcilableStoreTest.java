@@ -28,6 +28,8 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
+import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class IngressProducerReconcilableStoreTest {
@@ -317,6 +320,9 @@ public class IngressProducerReconcilableStoreTest {
   @SuppressWarnings("unchecked")
   private static ReactiveKafkaProducer<String, CloudEvent> mockProducer() {
     ReactiveKafkaProducer<String, CloudEvent> producer = mock(MockReactiveKafkaProducer.class);
+    when(producer.flush()).thenReturn(Future.succeededFuture());
+    when(producer.close()).thenReturn(Future.succeededFuture());
+    when(producer.unwrap()).thenReturn(new MockProducer<>());
     return producer;
   }
 

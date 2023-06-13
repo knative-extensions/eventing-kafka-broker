@@ -25,7 +25,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDese
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
-import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
+// import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
@@ -382,7 +383,7 @@ public class DataPlaneTest {
       v -> new IngressProducerReconcilableStore(
         AuthProvider.noAuth(),
         producerConfigs(),
-        properties -> MockReactiveProducerFactory.createStatic(v, properties)
+        properties -> new MockReactiveKafkaProducer<>(properties)
       ),
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),
