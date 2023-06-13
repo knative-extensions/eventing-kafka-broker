@@ -19,7 +19,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
-import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
@@ -62,7 +62,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ReceiverVerticleTracingTest {
+public abstract class ReceiverVerticleTracingTest {
 
   private static final int TIMEOUT = 10;
   private static final int PORT = 8083;
@@ -77,6 +77,8 @@ public class ReceiverVerticleTracingTest {
     BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
   }
 
+  public abstract ReactiveProducerFactory<String, CloudEvent> createProducerFactory();
+  
   @BeforeEach
   public void setup() throws ExecutionException, InterruptedException {
     this.spanExporter = InMemorySpanExporter.create();
@@ -106,7 +108,7 @@ public class ReceiverVerticleTracingTest {
     this.store = new IngressProducerReconcilableStore(
       AuthProvider.noAuth(),
       new Properties(),
-      properties -> MockReactiveProducerFactory.createStatic(vertx, mockProducer)
+      properties -> createProducerFactory().create(vertx, mockProducer)
     );
 
     final var env = mock(ReceiverEnv.class);
@@ -141,8 +143,7 @@ public class ReceiverVerticleTracingTest {
       .get();
   }
 
-  @Test
-  public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
+  public void traceIsPropagated(int expectedSpanSize) throws ExecutionException, InterruptedException, TimeoutException {
     CloudEvent inputEvent = new CloudEventBuilder()
       .withSubject("subject")
       .withSource(URI.create("/hello"))
@@ -188,6 +189,6 @@ public class ReceiverVerticleTracingTest {
     }
 
     assertThat(spanExporter.getFinishedSpanItems())
-      .hasSize(3);
+      .hasSize(expectedSpanSize);
   }
 }

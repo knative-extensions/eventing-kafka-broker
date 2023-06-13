@@ -38,6 +38,10 @@ public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         producer = KafkaProducer.create(v, config);
     }
 
+    public VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
+        this.producer = KafkaProducer.create(v, producer);
+    }
+
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record) {
         return this.producer.send(KafkaProducerRecord.create(record.topic(), record.value())).map(

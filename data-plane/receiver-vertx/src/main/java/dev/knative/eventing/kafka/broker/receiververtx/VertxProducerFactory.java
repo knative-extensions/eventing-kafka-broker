@@ -19,6 +19,7 @@ import java.util.Properties;
 
 import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
+import org.apache.kafka.clients.producer.Producer;
 import io.vertx.core.Vertx;
 
 public class VertxProducerFactory<K,V> implements ReactiveProducerFactory<K,V> {
@@ -28,4 +29,7 @@ public class VertxProducerFactory<K,V> implements ReactiveProducerFactory<K,V> {
         return new VertxKafkaProducer<K,V>(v,config);
     }
     
+    public ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer) {
+        return new VertxKafkaProducer<K,V>(v,producer);
+    }
 }
