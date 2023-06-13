@@ -98,8 +98,6 @@ public class Main {
     httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
 
-
-
     // Configure the verticle to deploy and the deployment options
     final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
       env,
