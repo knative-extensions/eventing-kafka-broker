@@ -216,7 +216,6 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 			Scheme: "http",
 			Host:   fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(channel.Name), channel.Namespace, network.GetClusterDomainName()),
 		}
-		channel.Status.Address.URL.Path = fmt.Sprintf("/%s/%s", ChannelNamespace, resources.MakeChannelServiceName(channel.Name))
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
 	}
@@ -404,6 +403,5 @@ func ChannelAddress() *apis.URL {
 	return &apis.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s.%s.svc.%s", ChannelServiceName, ChannelNamespace, network.GetClusterDomainName()),
-		Path:   fmt.Sprintf("/%s/%s", ChannelNamespace, ChannelServiceName),
 	}
 }
