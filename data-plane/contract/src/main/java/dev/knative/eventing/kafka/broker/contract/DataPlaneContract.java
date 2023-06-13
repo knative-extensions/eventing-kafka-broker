@@ -1343,7 +1343,7 @@ public final class DataPlaneContract {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_AttributesEntry_descriptor, 
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Exact_AttributesEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -2081,7 +2081,7 @@ public final class DataPlaneContract {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_AttributesEntry_descriptor, 
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Prefix_AttributesEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -2819,7 +2819,7 @@ public final class DataPlaneContract {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_AttributesEntry_descriptor, 
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Suffix_AttributesEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -3417,7 +3417,7 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
         getFiltersList();
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
@@ -3430,7 +3430,7 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
         getFiltersOrBuilderList();
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
@@ -3542,7 +3542,7 @@ public final class DataPlaneContract {
      * <code>repeated .DialectedFilter filters = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
         getFiltersOrBuilderList() {
       return filters_;
     }
@@ -3873,7 +3873,7 @@ public final class DataPlaneContract {
               filtersBuilder_ = null;
               filters_ = other.filters_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              filtersBuilder_ = 
+              filtersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getFiltersFieldBuilder() : null;
             } else {
@@ -4106,7 +4106,7 @@ public final class DataPlaneContract {
       /**
        * <code>repeated .DialectedFilter filters = 1;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
            getFiltersOrBuilderList() {
         if (filtersBuilder_ != null) {
           return filtersBuilder_.getMessageOrBuilderList();
@@ -4132,12 +4132,12 @@ public final class DataPlaneContract {
       /**
        * <code>repeated .DialectedFilter filters = 1;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder>
            getFiltersBuilderList() {
         return getFiltersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
           getFiltersFieldBuilder() {
         if (filtersBuilder_ == null) {
           filtersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -4210,7 +4210,7 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
         getFiltersList();
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
@@ -4223,7 +4223,7 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
         getFiltersOrBuilderList();
     /**
      * <code>repeated .DialectedFilter filters = 1;</code>
@@ -4335,7 +4335,7 @@ public final class DataPlaneContract {
      * <code>repeated .DialectedFilter filters = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
         getFiltersOrBuilderList() {
       return filters_;
     }
@@ -4666,7 +4666,7 @@ public final class DataPlaneContract {
               filtersBuilder_ = null;
               filters_ = other.filters_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              filtersBuilder_ = 
+              filtersBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getFiltersFieldBuilder() : null;
             } else {
@@ -4899,7 +4899,7 @@ public final class DataPlaneContract {
       /**
        * <code>repeated .DialectedFilter filters = 1;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
            getFiltersOrBuilderList() {
         if (filtersBuilder_ != null) {
           return filtersBuilder_.getMessageOrBuilderList();
@@ -4925,12 +4925,12 @@ public final class DataPlaneContract {
       /**
        * <code>repeated .DialectedFilter filters = 1;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder>
            getFiltersBuilderList() {
         return getFiltersFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
           getFiltersFieldBuilder() {
         if (filtersBuilder_ == null) {
           filtersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -5533,7 +5533,7 @@ public final class DataPlaneContract {
        * <code>.DialectedFilter filter = 1;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder getFilterBuilder() {
-        
+
         onChanged();
         return getFilterFieldBuilder().getBuilder();
       }
@@ -5552,7 +5552,7 @@ public final class DataPlaneContract {
        * <code>.DialectedFilter filter = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
           getFilterFieldBuilder() {
         if (filterBuilder_ == null) {
           filterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -5729,7 +5729,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         expression_ = s;
@@ -5745,7 +5745,7 @@ public final class DataPlaneContract {
         getExpressionBytes() {
       java.lang.Object ref = expression_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         expression_ = b;
@@ -6082,7 +6082,7 @@ public final class DataPlaneContract {
           getExpressionBytes() {
         java.lang.Object ref = expression_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           expression_ = b;
@@ -6101,7 +6101,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         expression_ = value;
         onChanged();
         return this;
@@ -6111,7 +6111,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearExpression() {
-        
+
         expression_ = getDefaultInstance().getExpression();
         onChanged();
         return this;
@@ -6127,7 +6127,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         expression_ = value;
         onChanged();
         return this;
@@ -7361,7 +7361,7 @@ public final class DataPlaneContract {
        * <code>.Exact exact = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ExactOrBuilder>
           getExactFieldBuilder() {
         if (exactBuilder_ == null) {
           if (!(filterCase_ == 1)) {
@@ -7502,7 +7502,7 @@ public final class DataPlaneContract {
        * <code>.Prefix prefix = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.PrefixOrBuilder>
           getPrefixFieldBuilder() {
         if (prefixBuilder_ == null) {
           if (!(filterCase_ == 2)) {
@@ -7643,7 +7643,7 @@ public final class DataPlaneContract {
        * <code>.Suffix suffix = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SuffixOrBuilder>
           getSuffixFieldBuilder() {
         if (suffixBuilder_ == null) {
           if (!(filterCase_ == 3)) {
@@ -7784,7 +7784,7 @@ public final class DataPlaneContract {
        * <code>.All all = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AllOrBuilder>
           getAllFieldBuilder() {
         if (allBuilder_ == null) {
           if (!(filterCase_ == 4)) {
@@ -7925,7 +7925,7 @@ public final class DataPlaneContract {
        * <code>.Any any = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.AnyOrBuilder>
           getAnyFieldBuilder() {
         if (anyBuilder_ == null) {
           if (!(filterCase_ == 5)) {
@@ -8066,7 +8066,7 @@ public final class DataPlaneContract {
        * <code>.Not not = 6;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.NotOrBuilder>
           getNotFieldBuilder() {
         if (notBuilder_ == null) {
           if (!(filterCase_ == 6)) {
@@ -8207,7 +8207,7 @@ public final class DataPlaneContract {
        * <code>.CESQL cesql = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQLOrBuilder>
           getCesqlFieldBuilder() {
         if (cesqlBuilder_ == null) {
           if (!(filterCase_ == 7)) {
@@ -8464,7 +8464,7 @@ public final class DataPlaneContract {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Filter_AttributesEntry_descriptor, 
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Filter_AttributesEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -9367,7 +9367,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         deadLetter_ = s;
@@ -9387,7 +9387,7 @@ public final class DataPlaneContract {
         getDeadLetterBytes() {
       java.lang.Object ref = deadLetter_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         deadLetter_ = b;
@@ -9413,7 +9413,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         deadLetterCACerts_ = s;
@@ -9433,7 +9433,7 @@ public final class DataPlaneContract {
         getDeadLetterCACertsBytes() {
       java.lang.Object ref = deadLetterCACerts_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         deadLetterCACerts_ = b;
@@ -9938,7 +9938,7 @@ public final class DataPlaneContract {
           getDeadLetterBytes() {
         java.lang.Object ref = deadLetter_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           deadLetter_ = b;
@@ -9961,7 +9961,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         deadLetter_ = value;
         onChanged();
         return this;
@@ -9975,7 +9975,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearDeadLetter() {
-        
+
         deadLetter_ = getDefaultInstance().getDeadLetter();
         onChanged();
         return this;
@@ -9995,7 +9995,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         deadLetter_ = value;
         onChanged();
         return this;
@@ -10034,7 +10034,7 @@ public final class DataPlaneContract {
           getDeadLetterCACertsBytes() {
         java.lang.Object ref = deadLetterCACerts_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           deadLetterCACerts_ = b;
@@ -10057,7 +10057,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         deadLetterCACerts_ = value;
         onChanged();
         return this;
@@ -10071,7 +10071,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearDeadLetterCACerts() {
-        
+
         deadLetterCACerts_ = getDefaultInstance().getDeadLetterCACerts();
         onChanged();
         return this;
@@ -10091,7 +10091,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         deadLetterCACerts_ = value;
         onChanged();
         return this;
@@ -10124,7 +10124,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setRetry(int value) {
-        
+
         retry_ = value;
         onChanged();
         return this;
@@ -10140,7 +10140,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearRetry() {
-        
+
         retry_ = 0;
         onChanged();
         return this;
@@ -10168,7 +10168,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setBackoffPolicyValue(int value) {
-        
+
         backoffPolicy_ = value;
         onChanged();
         return this;
@@ -10200,7 +10200,7 @@ public final class DataPlaneContract {
         if (value == null) {
           throw new NullPointerException();
         }
-        
+
         backoffPolicy_ = value.getNumber();
         onChanged();
         return this;
@@ -10214,7 +10214,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearBackoffPolicy() {
-        
+
         backoffPolicy_ = 0;
         onChanged();
         return this;
@@ -10243,7 +10243,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setBackoffDelay(long value) {
-        
+
         backoffDelay_ = value;
         onChanged();
         return this;
@@ -10257,7 +10257,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearBackoffDelay() {
-        
+
         backoffDelay_ = 0L;
         onChanged();
         return this;
@@ -10286,7 +10286,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setTimeout(long value) {
-        
+
         timeout_ = value;
         onChanged();
         return this;
@@ -10300,7 +10300,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearTimeout() {
-        
+
         timeout_ = 0L;
         onChanged();
         return this;
@@ -10422,6 +10422,15 @@ public final class DataPlaneContract {
     com.google.protobuf.ByteString
         getDestinationCACertsBytes();
 
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 3;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    boolean hasReplyUrl();
     /**
      * <pre>
      * Send the response to an url
@@ -10678,7 +10687,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
         getDialectedFilterList();
     /**
      * <pre>
@@ -10703,7 +10712,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
         getDialectedFilterOrBuilderList();
     /**
      * <pre>
@@ -11044,7 +11053,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         consumerGroup_ = s;
@@ -11064,7 +11073,7 @@ public final class DataPlaneContract {
         getConsumerGroupBytes() {
       java.lang.Object ref = consumerGroup_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         consumerGroup_ = b;
@@ -11090,7 +11099,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         destination_ = s;
@@ -11110,7 +11119,7 @@ public final class DataPlaneContract {
         getDestinationBytes() {
       java.lang.Object ref = destination_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         destination_ = b;
@@ -11136,7 +11145,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         destinationCACerts_ = s;
@@ -11156,7 +11165,7 @@ public final class DataPlaneContract {
         getDestinationCACertsBytes() {
       java.lang.Object ref = destinationCACerts_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         destinationCACerts_ = b;
@@ -11173,6 +11182,17 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    public boolean hasReplyUrl() {
+      return replyStrategyCase_ == 3;
+    }
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 3;</code>
      * @return The replyUrl.
      */
     public java.lang.String getReplyUrl() {
@@ -11183,7 +11203,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (replyStrategyCase_ == 3) {
@@ -11207,7 +11227,7 @@ public final class DataPlaneContract {
         ref = replyStrategy_;
       }
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         if (replyStrategyCase_ == 3) {
@@ -11321,7 +11341,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         replyUrlCACerts_ = s;
@@ -11341,7 +11361,7 @@ public final class DataPlaneContract {
         getReplyUrlCACertsBytes() {
       java.lang.Object ref = replyUrlCACerts_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         replyUrlCACerts_ = b;
@@ -11406,7 +11426,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         uid_ = s;
@@ -11427,7 +11447,7 @@ public final class DataPlaneContract {
         getUidBytes() {
       java.lang.Object ref = uid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         uid_ = b;
@@ -11602,7 +11622,7 @@ public final class DataPlaneContract {
      * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
         getDialectedFilterOrBuilderList() {
       return dialectedFilter_;
     }
@@ -12319,7 +12339,7 @@ public final class DataPlaneContract {
               dialectedFilterBuilder_ = null;
               dialectedFilter_ = other.dialectedFilter_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              dialectedFilterBuilder_ = 
+              dialectedFilterBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getDialectedFilterFieldBuilder() : null;
             } else {
@@ -12430,7 +12450,7 @@ public final class DataPlaneContract {
           getConsumerGroupBytes() {
         java.lang.Object ref = consumerGroup_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           consumerGroup_ = b;
@@ -12453,7 +12473,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         consumerGroup_ = value;
         onChanged();
         return this;
@@ -12467,7 +12487,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearConsumerGroup() {
-        
+
         consumerGroup_ = getDefaultInstance().getConsumerGroup();
         onChanged();
         return this;
@@ -12487,7 +12507,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         consumerGroup_ = value;
         onChanged();
         return this;
@@ -12526,7 +12546,7 @@ public final class DataPlaneContract {
           getDestinationBytes() {
         java.lang.Object ref = destination_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           destination_ = b;
@@ -12549,7 +12569,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         destination_ = value;
         onChanged();
         return this;
@@ -12563,7 +12583,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearDestination() {
-        
+
         destination_ = getDefaultInstance().getDestination();
         onChanged();
         return this;
@@ -12583,7 +12603,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         destination_ = value;
         onChanged();
         return this;
@@ -12622,7 +12642,7 @@ public final class DataPlaneContract {
           getDestinationCACertsBytes() {
         java.lang.Object ref = destinationCACerts_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           destinationCACerts_ = b;
@@ -12645,7 +12665,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         destinationCACerts_ = value;
         onChanged();
         return this;
@@ -12659,7 +12679,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearDestinationCACerts() {
-        
+
         destinationCACerts_ = getDefaultInstance().getDestinationCACerts();
         onChanged();
         return this;
@@ -12679,12 +12699,24 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         destinationCACerts_ = value;
         onChanged();
         return this;
       }
 
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 3;</code>
+       * @return Whether the replyUrl field is set.
+       */
+      @java.lang.Override
+      public boolean hasReplyUrl() {
+        return replyStrategyCase_ == 3;
+      }
       /**
        * <pre>
        * Send the response to an url
@@ -12727,7 +12759,7 @@ public final class DataPlaneContract {
           ref = replyStrategy_;
         }
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           if (replyStrategyCase_ == 3) {
@@ -12953,7 +12985,7 @@ public final class DataPlaneContract {
        * <code>.Empty replyToOriginalTopic = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>
           getReplyToOriginalTopicFieldBuilder() {
         if (replyToOriginalTopicBuilder_ == null) {
           if (!(replyStrategyCase_ == 4)) {
@@ -13130,7 +13162,7 @@ public final class DataPlaneContract {
        * <code>.Empty discardReply = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>
           getDiscardReplyFieldBuilder() {
         if (discardReplyBuilder_ == null) {
           if (!(replyStrategyCase_ == 9)) {
@@ -13181,7 +13213,7 @@ public final class DataPlaneContract {
           getReplyUrlCACertsBytes() {
         java.lang.Object ref = replyUrlCACerts_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           replyUrlCACerts_ = b;
@@ -13204,7 +13236,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         replyUrlCACerts_ = value;
         onChanged();
         return this;
@@ -13218,7 +13250,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearReplyUrlCACerts() {
-        
+
         replyUrlCACerts_ = getDefaultInstance().getReplyUrlCACerts();
         onChanged();
         return this;
@@ -13238,7 +13270,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         replyUrlCACerts_ = value;
         onChanged();
         return this;
@@ -13359,7 +13391,7 @@ public final class DataPlaneContract {
        * <code>.Filter filter = 5;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder getFilterBuilder() {
-        
+
         onChanged();
         return getFilterFieldBuilder().getBuilder();
       }
@@ -13386,7 +13418,7 @@ public final class DataPlaneContract {
        * <code>.Filter filter = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder>
           getFilterFieldBuilder() {
         if (filterBuilder_ == null) {
           filterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -13434,7 +13466,7 @@ public final class DataPlaneContract {
           getUidBytes() {
         java.lang.Object ref = uid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           uid_ = b;
@@ -13458,7 +13490,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         uid_ = value;
         onChanged();
         return this;
@@ -13473,7 +13505,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearUid() {
-        
+
         uid_ = getDefaultInstance().getUid();
         onChanged();
         return this;
@@ -13494,7 +13526,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         uid_ = value;
         onChanged();
         return this;
@@ -13622,7 +13654,7 @@ public final class DataPlaneContract {
        * <code>.EgressConfig egressConfig = 7;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder getEgressConfigBuilder() {
-        
+
         onChanged();
         return getEgressConfigFieldBuilder().getBuilder();
       }
@@ -13651,7 +13683,7 @@ public final class DataPlaneContract {
        * <code>.EgressConfig egressConfig = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder>
           getEgressConfigFieldBuilder() {
         if (egressConfigBuilder_ == null) {
           egressConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -13688,7 +13720,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setDeliveryOrderValue(int value) {
-        
+
         deliveryOrder_ = value;
         onChanged();
         return this;
@@ -13722,7 +13754,7 @@ public final class DataPlaneContract {
         if (value == null) {
           throw new NullPointerException();
         }
-        
+
         deliveryOrder_ = value.getNumber();
         onChanged();
         return this;
@@ -13737,7 +13769,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearDeliveryOrder() {
-        
+
         deliveryOrder_ = 0;
         onChanged();
         return this;
@@ -13765,7 +13797,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setKeyTypeValue(int value) {
-        
+
         keyType_ = value;
         onChanged();
         return this;
@@ -13797,7 +13829,7 @@ public final class DataPlaneContract {
         if (value == null) {
           throw new NullPointerException();
         }
-        
+
         keyType_ = value.getNumber();
         onChanged();
         return this;
@@ -13811,7 +13843,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearKeyType() {
-        
+
         keyType_ = 0;
         onChanged();
         return this;
@@ -13953,7 +13985,7 @@ public final class DataPlaneContract {
        * <code>.Reference reference = 11;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
-        
+
         onChanged();
         return getReferenceFieldBuilder().getBuilder();
       }
@@ -13986,7 +14018,7 @@ public final class DataPlaneContract {
        * <code>.Reference reference = 11;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>
           getReferenceFieldBuilder() {
         if (referenceBuilder_ == null) {
           referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -14254,7 +14286,7 @@ public final class DataPlaneContract {
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
            getDialectedFilterOrBuilderList() {
         if (dialectedFilterBuilder_ != null) {
           return dialectedFilterBuilder_.getMessageOrBuilderList();
@@ -14292,12 +14324,12 @@ public final class DataPlaneContract {
        *
        * <code>repeated .DialectedFilter dialectedFilter = 12;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder>
            getDialectedFilterBuilderList() {
         return getDialectedFilterFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
           getDialectedFilterFieldBuilder() {
         if (dialectedFilterBuilder_ == null) {
           dialectedFilterBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -14334,7 +14366,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setVReplicas(int value) {
-        
+
         vReplicas_ = value;
         onChanged();
         return this;
@@ -14348,7 +14380,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearVReplicas() {
-        
+
         vReplicas_ = 0;
         onChanged();
         return this;
@@ -14469,7 +14501,7 @@ public final class DataPlaneContract {
        * <code>.EgressFeatureFlags featureFlags = 14;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder getFeatureFlagsBuilder() {
-        
+
         onChanged();
         return getFeatureFlagsFieldBuilder().getBuilder();
       }
@@ -14496,7 +14528,7 @@ public final class DataPlaneContract {
        * <code>.EgressFeatureFlags featureFlags = 14;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder>
           getFeatureFlagsFieldBuilder() {
         if (featureFlagsBuilder_ == null) {
           featureFlagsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -15046,7 +15078,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setEnableRateLimiter(boolean value) {
-        
+
         enableRateLimiter_ = value;
         onChanged();
         return this;
@@ -15060,7 +15092,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearEnableRateLimiter() {
-        
+
         enableRateLimiter_ = false;
         onChanged();
         return this;
@@ -15089,7 +15121,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setEnableOrderedExecutorMetrics(boolean value) {
-        
+
         enableOrderedExecutorMetrics_ = value;
         onChanged();
         return this;
@@ -15103,7 +15135,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearEnableOrderedExecutorMetrics() {
-        
+
         enableOrderedExecutorMetrics_ = false;
         onChanged();
         return this;
@@ -15375,7 +15407,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         path_ = s;
@@ -15395,7 +15427,7 @@ public final class DataPlaneContract {
         getPathBytes() {
       java.lang.Object ref = path_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         path_ = b;
@@ -15421,7 +15453,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         host_ = s;
@@ -15441,7 +15473,7 @@ public final class DataPlaneContract {
         getHostBytes() {
       java.lang.Object ref = host_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         host_ = b;
@@ -15818,7 +15850,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setContentModeValue(int value) {
-        
+
         contentMode_ = value;
         onChanged();
         return this;
@@ -15850,7 +15882,7 @@ public final class DataPlaneContract {
         if (value == null) {
           throw new NullPointerException();
         }
-        
+
         contentMode_ = value.getNumber();
         onChanged();
         return this;
@@ -15864,7 +15896,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearContentMode() {
-        
+
         contentMode_ = 0;
         onChanged();
         return this;
@@ -15903,7 +15935,7 @@ public final class DataPlaneContract {
           getPathBytes() {
         java.lang.Object ref = path_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           path_ = b;
@@ -15926,7 +15958,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         path_ = value;
         onChanged();
         return this;
@@ -15940,7 +15972,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearPath() {
-        
+
         path_ = getDefaultInstance().getPath();
         onChanged();
         return this;
@@ -15960,7 +15992,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         path_ = value;
         onChanged();
         return this;
@@ -15999,7 +16031,7 @@ public final class DataPlaneContract {
           getHostBytes() {
         java.lang.Object ref = host_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           host_ = b;
@@ -16022,7 +16054,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         host_ = value;
         onChanged();
         return this;
@@ -16036,7 +16068,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearHost() {
-        
+
         host_ = getDefaultInstance().getHost();
         onChanged();
         return this;
@@ -16056,7 +16088,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         host_ = value;
         onChanged();
         return this;
@@ -16323,7 +16355,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         uuid_ = s;
@@ -16343,7 +16375,7 @@ public final class DataPlaneContract {
         getUuidBytes() {
       java.lang.Object ref = uuid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         uuid_ = b;
@@ -16369,7 +16401,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         namespace_ = s;
@@ -16389,7 +16421,7 @@ public final class DataPlaneContract {
         getNamespaceBytes() {
       java.lang.Object ref = namespace_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         namespace_ = b;
@@ -16415,7 +16447,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         name_ = s;
@@ -16435,7 +16467,7 @@ public final class DataPlaneContract {
         getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         name_ = b;
@@ -16461,7 +16493,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         version_ = s;
@@ -16481,7 +16513,7 @@ public final class DataPlaneContract {
         getVersionBytes() {
       java.lang.Object ref = version_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         version_ = b;
@@ -16881,7 +16913,7 @@ public final class DataPlaneContract {
           getUuidBytes() {
         java.lang.Object ref = uuid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           uuid_ = b;
@@ -16904,7 +16936,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         uuid_ = value;
         onChanged();
         return this;
@@ -16918,7 +16950,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearUuid() {
-        
+
         uuid_ = getDefaultInstance().getUuid();
         onChanged();
         return this;
@@ -16938,7 +16970,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         uuid_ = value;
         onChanged();
         return this;
@@ -16977,7 +17009,7 @@ public final class DataPlaneContract {
           getNamespaceBytes() {
         java.lang.Object ref = namespace_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           namespace_ = b;
@@ -17000,7 +17032,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         namespace_ = value;
         onChanged();
         return this;
@@ -17014,7 +17046,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearNamespace() {
-        
+
         namespace_ = getDefaultInstance().getNamespace();
         onChanged();
         return this;
@@ -17034,7 +17066,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         namespace_ = value;
         onChanged();
         return this;
@@ -17073,7 +17105,7 @@ public final class DataPlaneContract {
           getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           name_ = b;
@@ -17096,7 +17128,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         name_ = value;
         onChanged();
         return this;
@@ -17110,7 +17142,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearName() {
-        
+
         name_ = getDefaultInstance().getName();
         onChanged();
         return this;
@@ -17130,7 +17162,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         name_ = value;
         onChanged();
         return this;
@@ -17169,7 +17201,7 @@ public final class DataPlaneContract {
           getVersionBytes() {
         java.lang.Object ref = version_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           version_ = b;
@@ -17192,7 +17224,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         version_ = value;
         onChanged();
         return this;
@@ -17206,7 +17238,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearVersion() {
-        
+
         version_ = getDefaultInstance().getVersion();
         onChanged();
         return this;
@@ -17226,7 +17258,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         version_ = value;
         onChanged();
         return this;
@@ -17322,7 +17354,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference>
         getKeyFieldReferencesList();
     /**
      * <pre>
@@ -17347,7 +17379,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder>
         getKeyFieldReferencesOrBuilderList();
     /**
      * <pre>
@@ -17522,7 +17554,7 @@ public final class DataPlaneContract {
      * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder>
         getKeyFieldReferencesOrBuilderList() {
       return keyFieldReferences_;
     }
@@ -17895,7 +17927,7 @@ public final class DataPlaneContract {
               keyFieldReferencesBuilder_ = null;
               keyFieldReferences_ = other.keyFieldReferences_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              keyFieldReferencesBuilder_ = 
+              keyFieldReferencesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getKeyFieldReferencesFieldBuilder() : null;
             } else {
@@ -18048,7 +18080,7 @@ public final class DataPlaneContract {
        * <code>.Reference reference = 1;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
-        
+
         onChanged();
         return getReferenceFieldBuilder().getBuilder();
       }
@@ -18075,7 +18107,7 @@ public final class DataPlaneContract {
        * <code>.Reference reference = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>
           getReferenceFieldBuilder() {
         if (referenceBuilder_ == null) {
           referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -18343,7 +18375,7 @@ public final class DataPlaneContract {
        *
        * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder>
            getKeyFieldReferencesOrBuilderList() {
         if (keyFieldReferencesBuilder_ != null) {
           return keyFieldReferencesBuilder_.getMessageOrBuilderList();
@@ -18381,12 +18413,12 @@ public final class DataPlaneContract {
        *
        * <code>repeated .KeyFieldReference keyFieldReferences = 2;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder>
            getKeyFieldReferencesBuilderList() {
         return getKeyFieldReferencesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder>
           getKeyFieldReferencesFieldBuilder() {
         if (keyFieldReferencesBuilder_ == null) {
           keyFieldReferencesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -18602,7 +18634,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         secretKey_ = s;
@@ -18622,7 +18654,7 @@ public final class DataPlaneContract {
         getSecretKeyBytes() {
       java.lang.Object ref = secretKey_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         secretKey_ = b;
@@ -19010,7 +19042,7 @@ public final class DataPlaneContract {
           getSecretKeyBytes() {
         java.lang.Object ref = secretKey_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           secretKey_ = b;
@@ -19033,7 +19065,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         secretKey_ = value;
         onChanged();
         return this;
@@ -19047,7 +19079,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearSecretKey() {
-        
+
         secretKey_ = getDefaultInstance().getSecretKey();
         onChanged();
         return this;
@@ -19067,7 +19099,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         secretKey_ = value;
         onChanged();
         return this;
@@ -19095,7 +19127,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setFieldValue(int value) {
-        
+
         field_ = value;
         onChanged();
         return this;
@@ -19127,7 +19159,7 @@ public final class DataPlaneContract {
         if (value == null) {
           throw new NullPointerException();
         }
-        
+
         field_ = value.getNumber();
         onChanged();
         return this;
@@ -19141,7 +19173,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearField() {
-        
+
         field_ = 0;
         onChanged();
         return this;
@@ -19229,7 +19261,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .SecretReference references = 2;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference>
         getReferencesList();
     /**
      * <pre>
@@ -19254,7 +19286,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .SecretReference references = 2;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder>
         getReferencesOrBuilderList();
     /**
      * <pre>
@@ -19412,7 +19444,7 @@ public final class DataPlaneContract {
      * <code>repeated .SecretReference references = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder>
         getReferencesOrBuilderList() {
       return references_;
     }
@@ -19771,7 +19803,7 @@ public final class DataPlaneContract {
               referencesBuilder_ = null;
               references_ = other.references_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              referencesBuilder_ = 
+              referencesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getReferencesFieldBuilder() : null;
             } else {
@@ -19831,7 +19863,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setProtocolValue(int value) {
-        
+
         protocol_ = value;
         onChanged();
         return this;
@@ -19863,7 +19895,7 @@ public final class DataPlaneContract {
         if (value == null) {
           throw new NullPointerException();
         }
-        
+
         protocol_ = value.getNumber();
         onChanged();
         return this;
@@ -19877,7 +19909,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearProtocol() {
-        
+
         protocol_ = 0;
         onChanged();
         return this;
@@ -20138,7 +20170,7 @@ public final class DataPlaneContract {
        *
        * <code>repeated .SecretReference references = 2;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder>
            getReferencesOrBuilderList() {
         if (referencesBuilder_ != null) {
           return referencesBuilder_.getMessageOrBuilderList();
@@ -20176,12 +20208,12 @@ public final class DataPlaneContract {
        *
        * <code>repeated .SecretReference references = 2;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder>
            getReferencesBuilderList() {
         return getReferencesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder>
           getReferencesFieldBuilder() {
         if (referencesBuilder_ == null) {
           referencesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -20398,7 +20430,7 @@ public final class DataPlaneContract {
           java.lang.String, java.lang.String> defaultEntry =
               com.google.protobuf.MapEntry
               .<java.lang.String, java.lang.String>newDefaultInstance(
-                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_ExtensionsEntry_descriptor, 
+                  dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CloudEventOverrides_ExtensionsEntry_descriptor,
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.STRING,
@@ -21151,7 +21183,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 6;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress>
         getEgressesList();
     /**
      * <pre>
@@ -21176,7 +21208,7 @@ public final class DataPlaneContract {
      *
      * <code>repeated .Egress egresses = 6;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>
         getEgressesOrBuilderList();
     /**
      * <pre>
@@ -21681,7 +21713,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         uid_ = s;
@@ -21702,7 +21734,7 @@ public final class DataPlaneContract {
         getUidBytes() {
       java.lang.Object ref = uid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         uid_ = b;
@@ -21788,7 +21820,7 @@ public final class DataPlaneContract {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
+        com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         bootstrapServers_ = s;
@@ -21809,7 +21841,7 @@ public final class DataPlaneContract {
         getBootstrapServersBytes() {
       java.lang.Object ref = bootstrapServers_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         bootstrapServers_ = b;
@@ -21916,7 +21948,7 @@ public final class DataPlaneContract {
      * <code>repeated .Egress egresses = 6;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>
         getEgressesOrBuilderList() {
       return egresses_;
     }
@@ -22808,7 +22840,7 @@ public final class DataPlaneContract {
               egressesBuilder_ = null;
               egresses_ = other.egresses_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              egressesBuilder_ = 
+              egressesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getEgressesFieldBuilder() : null;
             } else {
@@ -22919,7 +22951,7 @@ public final class DataPlaneContract {
           getUidBytes() {
         java.lang.Object ref = uid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           uid_ = b;
@@ -22943,7 +22975,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         uid_ = value;
         onChanged();
         return this;
@@ -22958,7 +22990,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearUid() {
-        
+
         uid_ = getDefaultInstance().getUid();
         onChanged();
         return this;
@@ -22979,7 +23011,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         uid_ = value;
         onChanged();
         return this;
@@ -23184,7 +23216,7 @@ public final class DataPlaneContract {
           getBootstrapServersBytes() {
         java.lang.Object ref = bootstrapServers_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8(
                   (java.lang.String) ref);
           bootstrapServers_ = b;
@@ -23208,7 +23240,7 @@ public final class DataPlaneContract {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+
         bootstrapServers_ = value;
         onChanged();
         return this;
@@ -23223,7 +23255,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearBootstrapServers() {
-        
+
         bootstrapServers_ = getDefaultInstance().getBootstrapServers();
         onChanged();
         return this;
@@ -23244,7 +23276,7 @@ public final class DataPlaneContract {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-        
+
         bootstrapServers_ = value;
         onChanged();
         return this;
@@ -23365,7 +23397,7 @@ public final class DataPlaneContract {
        * <code>.Ingress ingress = 4;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder getIngressBuilder() {
-        
+
         onChanged();
         return getIngressFieldBuilder().getBuilder();
       }
@@ -23392,7 +23424,7 @@ public final class DataPlaneContract {
        * <code>.Ingress ingress = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder>
           getIngressFieldBuilder() {
         if (ingressBuilder_ == null) {
           ingressBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -23520,7 +23552,7 @@ public final class DataPlaneContract {
        * <code>.EgressConfig egressConfig = 5;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder getEgressConfigBuilder() {
-        
+
         onChanged();
         return getEgressConfigFieldBuilder().getBuilder();
       }
@@ -23547,7 +23579,7 @@ public final class DataPlaneContract {
        * <code>.EgressConfig egressConfig = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder>
           getEgressConfigFieldBuilder() {
         if (egressConfigBuilder_ == null) {
           egressConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -23815,7 +23847,7 @@ public final class DataPlaneContract {
        *
        * <code>repeated .Egress egresses = 6;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>
            getEgressesOrBuilderList() {
         if (egressesBuilder_ != null) {
           return egressesBuilder_.getMessageOrBuilderList();
@@ -23853,12 +23885,12 @@ public final class DataPlaneContract {
        *
        * <code>repeated .Egress egresses = 6;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder>
            getEgressesBuilderList() {
         return getEgressesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>
           getEgressesFieldBuilder() {
         if (egressesBuilder_ == null) {
           egressesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -24031,7 +24063,7 @@ public final class DataPlaneContract {
        * <code>.Empty absentAuth = 7;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>
           getAbsentAuthFieldBuilder() {
         if (absentAuthBuilder_ == null) {
           if (!(authCase_ == 7)) {
@@ -24460,7 +24492,7 @@ public final class DataPlaneContract {
        * <code>.Reference authSecret = 8;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>
           getAuthSecretFieldBuilder() {
         if (authSecretBuilder_ == null) {
           if (!(authCase_ == 8)) {
@@ -24637,7 +24669,7 @@ public final class DataPlaneContract {
        * <code>.MultiSecretReference multiAuthSecret = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReferenceOrBuilder>
           getMultiAuthSecretFieldBuilder() {
         if (multiAuthSecretBuilder_ == null) {
           if (!(authCase_ == 9)) {
@@ -24742,7 +24774,7 @@ public final class DataPlaneContract {
        * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder getCloudEventOverridesBuilder() {
-        
+
         onChanged();
         return getCloudEventOverridesFieldBuilder().getBuilder();
       }
@@ -24761,7 +24793,7 @@ public final class DataPlaneContract {
        * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder>
           getCloudEventOverridesFieldBuilder() {
         if (cloudEventOverridesBuilder_ == null) {
           cloudEventOverridesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -24917,7 +24949,7 @@ public final class DataPlaneContract {
        * <code>.Reference reference = 11;</code>
        */
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getReferenceBuilder() {
-        
+
         onChanged();
         return getReferenceFieldBuilder().getBuilder();
       }
@@ -24952,7 +24984,7 @@ public final class DataPlaneContract {
        * <code>.Reference reference = 11;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>
           getReferenceFieldBuilder() {
         if (referenceBuilder_ == null) {
           referenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -25035,7 +25067,7 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> 
+    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource>
         getResourcesList();
     /**
      * <code>repeated .Resource resources = 2;</code>
@@ -25048,7 +25080,7 @@ public final class DataPlaneContract {
     /**
      * <code>repeated .Resource resources = 2;</code>
      */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
+    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder>
         getResourcesOrBuilderList();
     /**
      * <code>repeated .Resource resources = 2;</code>
@@ -25181,7 +25213,7 @@ public final class DataPlaneContract {
      * <code>repeated .Resource resources = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
+    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder>
         getResourcesOrBuilderList() {
       return resources_;
     }
@@ -25530,7 +25562,7 @@ public final class DataPlaneContract {
               resourcesBuilder_ = null;
               resources_ = other.resources_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              resourcesBuilder_ = 
+              resourcesBuilder_ =
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getResourcesFieldBuilder() : null;
             } else {
@@ -25593,7 +25625,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder setGeneration(long value) {
-        
+
         generation_ = value;
         onChanged();
         return this;
@@ -25608,7 +25640,7 @@ public final class DataPlaneContract {
        * @return This builder for chaining.
        */
       public Builder clearGeneration() {
-        
+
         generation_ = 0L;
         onChanged();
         return this;
@@ -25809,7 +25841,7 @@ public final class DataPlaneContract {
       /**
        * <code>repeated .Resource resources = 2;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
+      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder>
            getResourcesOrBuilderList() {
         if (resourcesBuilder_ != null) {
           return resourcesBuilder_.getMessageOrBuilderList();
@@ -25835,12 +25867,12 @@ public final class DataPlaneContract {
       /**
        * <code>repeated .Resource resources = 2;</code>
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder> 
+      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder>
            getResourcesBuilderList() {
         return getResourcesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder>
           getResourcesFieldBuilder() {
         if (resourcesBuilder_ == null) {
           resourcesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
@@ -25908,132 +25940,132 @@ public final class DataPlaneContract {
 
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Empty_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Empty_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Exact_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Exact_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Exact_AttributesEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Exact_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Prefix_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Prefix_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Prefix_AttributesEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Prefix_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Suffix_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Suffix_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Suffix_AttributesEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Suffix_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_All_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_All_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Any_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Any_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Not_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Not_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_CESQL_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_CESQL_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_DialectedFilter_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_DialectedFilter_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Filter_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Filter_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Filter_AttributesEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Filter_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_EgressConfig_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_EgressConfig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Egress_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Egress_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_EgressFeatureFlags_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_EgressFeatureFlags_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Ingress_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Ingress_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Reference_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Reference_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_SecretReference_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_SecretReference_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_KeyFieldReference_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_KeyFieldReference_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_MultiSecretReference_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_MultiSecretReference_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_CloudEventOverrides_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_CloudEventOverrides_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_CloudEventOverrides_ExtensionsEntry_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_CloudEventOverrides_ExtensionsEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Resource_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Resource_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Contract_descriptor;
-  private static final 
+  private static final
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Contract_fieldAccessorTable;
 
