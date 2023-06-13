@@ -114,13 +114,27 @@ public class ReceiverVerticleTracingTest {
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
     when(env.getReadinessProbePath()).thenReturn("/readyz");
+    
+    final var httpServerOptions = new HttpServerOptions();
+    httpServerOptions.setPort(PORT);
+    httpServerOptions.setHost("localhost");
+    httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+    final var httpsServerOptions = new HttpServerOptions();
+    httpsServerOptions.setPort(PORT + 1);
+    httpsServerOptions.setHost("localhost");
+    httpsServerOptions.setSsl(true);
+    httpsServerOptions.setKeyStoreOptions(
+      new io.vertx.core.net.JksOptions()
+        .setPath("src/test/resources/keystore.jks")
+        .setPassword("password")
+    );
+    httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
     final var verticle = new ReceiverVerticle(
       env,
-      new HttpServerOptions()
-        .setPort(PORT)
-        .setHost("localhost")
-        .setTracingPolicy(TracingPolicy.PROPAGATE),
+      httpServerOptions,
+      httpsServerOptions,
       v -> store,
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),

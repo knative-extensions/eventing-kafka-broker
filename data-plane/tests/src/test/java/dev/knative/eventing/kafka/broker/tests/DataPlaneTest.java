@@ -372,6 +372,11 @@ public class DataPlaneTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(INGRESS_PORT);
 
+    final var httpsServerOptions = new HttpServerOptions();
+    httpsServerOptions.setPort(INGRESS_PORT + 1);
+    httpsServerOptions.setSsl(true);
+
+
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
     when(env.getReadinessProbePath()).thenReturn("/readyz");
@@ -379,6 +384,7 @@ public class DataPlaneTest {
     final var verticle = new ReceiverVerticle(
       env,
       httpServerOptions,
+      httpsServerOptions,
       v -> new IngressProducerReconcilableStore(
         AuthProvider.noAuth(),
         producerConfigs(),

@@ -90,15 +90,23 @@ public class Main {
 
     // Read https server configuration and merge it with port from env
     HttpServerOptions httpsServerOptions = new HttpServerOptions(
-      Configurations.readPropertiesAsJsonSync(env.getHttpsServerConfigFilePath())
+      Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath())
     );
+
+    // Set the TLS port to a different port so that they don't have conflicts
+    httpsServerOptions.setPort(env.getIngressTLSPort());    
+    httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+
+
 
     // Configure the verticle to deploy and the deployment options
     final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
       env,
       producerConfigs,
       Metrics.getRegistry(),
-      httpServerOptions
+      httpServerOptions,
+      httpsServerOptions
     );
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setInstances(Runtime.getRuntime().availableProcessors());

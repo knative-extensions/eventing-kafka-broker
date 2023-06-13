@@ -39,6 +39,7 @@ public class ReceiverVerticleFactoryTest {
       mock(ReceiverEnv.class),
       mock(Properties.class),
       mock(MeterRegistry.class),
+      mock(HttpServerOptions.class),
       mock(HttpServerOptions.class)
     );
 

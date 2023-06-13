@@ -119,12 +119,25 @@ public class ReceiverVerticleTest {
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
+
+    final var httpsServerOptions = new HttpServerOptions();
+    httpsServerOptions.setPort(PORT + 1);
+    httpsServerOptions.setHost("localhost");
+    httpsServerOptions.setSsl(true);
+    httpsServerOptions.setKeyStoreOptions(
+      new io.vertx.core.net.JksOptions()
+        .setPath("src/test/resources/keystore.jks")
+        .setPassword("password")
+    );
+
+
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
     when(env.getReadinessProbePath()).thenReturn("/readyz");
     final var verticle = new ReceiverVerticle(
       env,
       httpServerOptions,
+      httpsServerOptions,
       v -> store,
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),

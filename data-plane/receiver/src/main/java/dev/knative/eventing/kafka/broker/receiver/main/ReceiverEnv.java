@@ -47,6 +47,10 @@ public class ReceiverEnv extends BaseEnv {
     return ingressPort;
   }
 
+  public int getIngressTLSPort() {
+    return ingressPort + 1;
+  }
+
   public String getLivenessProbePath() {
     return livenessProbePath;
   }
