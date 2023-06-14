@@ -33,7 +33,7 @@ public class ReceiverVerticleTracingVertxImplTest extends ReceiverVerticleTracin
     }
     @Test
     public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
-        super.traceIsPropagated(3);
+        super.traceIsPropagated();
     }
 
 }

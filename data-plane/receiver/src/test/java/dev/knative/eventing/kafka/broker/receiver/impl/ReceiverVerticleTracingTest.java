@@ -143,7 +143,7 @@ public abstract class ReceiverVerticleTracingTest {
       .get();
   }
 
-  public void traceIsPropagated(int expectedSpanSize) throws ExecutionException, InterruptedException, TimeoutException {
+  public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
     CloudEvent inputEvent = new CloudEventBuilder()
       .withSubject("subject")
       .withSource(URI.create("/hello"))
@@ -189,6 +189,6 @@ public abstract class ReceiverVerticleTracingTest {
     }
 
     assertThat(spanExporter.getFinishedSpanItems())
-      .hasSize(expectedSpanSize);
+      .hasSize(3);
   }
 }
