@@ -43,14 +43,15 @@
 
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>receiver</artifactId>
-      <version>${project.version}</version>
+      <artifactId>core</artifactId>
+      <classifier>tests</classifier>
       <type>test-jar</type>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>core</artifactId>
+      <artifactId>receiver</artifactId>
       <classifier>tests</classifier>
       <type>test-jar</type>
       <version>${project.version}</version>
