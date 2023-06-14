@@ -20,11 +20,13 @@ import (
 	"context"
 
 	"github.com/cloudevents/sdk-go/v2/test"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/eventshub"
-	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
+
+	"knative.dev/reconciler-test/pkg/eventshub/assert"
 
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/pingsource"
@@ -69,7 +71,7 @@ func TriggerDependencyAnnotation() *feature.Feature {
 		}
 		cfg := []manifest.CfgFn{
 			pingsource.WithSchedule("*/1 * * * *"),
-			pingsource.WithSink(nil, brokeruri.String()),
+			pingsource.WithSink(&duckv1.Destination{URI: brokeruri}),
 			pingsource.WithData("text/plain", "Test trigger-annotation"),
 		}
 		pingsource.Install(psourcename, cfg...)(ctx, t)
@@ -81,6 +83,49 @@ func TriggerDependencyAnnotation() *feature.Feature {
 			test.HasType("dev.knative.sources.ping"),
 			test.DataContains("Test trigger-annotation"),
 		).AtLeast(1))
+
+	return f
+}
+
+func TriggerWithTLSSubscriber() *feature.Feature {
+	f := feature.NewFeatureNamed("Trigger with TLS subscriber")
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+	triggerName := feature.MakeRandomK8sName("trigger")
+
+	eventToSend := test.FullEvent()
+
+	// Install Broker
+	f.Setup("Install Broker", broker.Install(brokerName, broker.WithEnvConfig()...))
+	f.Setup("Broker is ready", broker.IsReady(brokerName))
+	f.Setup("Broker is addressable", broker.IsAddressable(brokerName))
+
+	// Install Sink
+	f.Setup("Install Sink", eventshub.Install(sinkName, eventshub.StartReceiverTLS))
+
+	// Install Trigger
+	f.Setup("Install trigger", func(ctx context.Context, t feature.T) {
+		subscriber := service.AsDestinationRef(sinkName)
+		subscriber.CACerts = eventshub.GetCaCerts(ctx)
+
+		trigger.Install(triggerName, brokerName,
+			trigger.WithSubscriberFromDestination(subscriber))(ctx, t)
+	})
+	f.Setup("Wait for Trigger to become ready", trigger.IsReady(triggerName))
+
+	// Install Source
+	f.Requirement("Install Source", eventshub.Install(
+		sourceName,
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
+		eventshub.InputEvent(eventToSend),
+	))
+
+	f.Assert("Trigger delivers events to TLS subscriber", assert.OnStore(sinkName).
+		MatchEvent(test.HasId(eventToSend.ID())).
+		Match(assert.MatchKind(eventshub.EventReceived)).
+		AtLeast(1))
 
 	return f
 }

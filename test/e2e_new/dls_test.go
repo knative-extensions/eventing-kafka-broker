@@ -103,13 +103,13 @@ func SendsEventWithRetries() *feature.Feature {
 
 	f.Assert("receive event on sink",
 		OnStore(sinkName).
-			MatchEvent(cetest.HasId(ev.ID())).
+			MatchRejectedEvent(cetest.HasId(ev.ID())).
 			Exact(1),
 	)
 
 	f.Assert("receive event on dead letter sink",
 		OnStore(deadLetterSinkName).
-			MatchEvent(cetest.HasId(ev.ID())).
+			MatchReceivedEvent(cetest.HasId(ev.ID())).
 			Exact(1),
 	)
 
@@ -164,13 +164,13 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 
 	f.Assert("receive event on sink",
 		OnStore(sinkName).
-			MatchEvent(cetest.HasId(ev.ID())).
+			MatchRejectedEvent(cetest.HasId(ev.ID())).
 			Exact(1),
 	)
 
 	f.Assert("receive event on dead letter sink",
 		OnStore(deadLetterSinkName).
-			MatchEvent(cetest.HasId(ev.ID())).
+			MatchReceivedEvent(cetest.HasId(ev.ID())).
 			Exact(1),
 	)
 
