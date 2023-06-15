@@ -25,6 +25,9 @@ public class ReceiverEnv extends BaseEnv {
   public static final String INGRESS_PORT = "INGRESS_PORT";
   private final int ingressPort;
 
+  public static final String INGRESS_TLS_PORT = "INGRESS_TLS_PORT";
+  private final int ingressTLSPort;
+
   public static final String LIVENESS_PROBE_PATH = "LIVENESS_PROBE_PATH";
   private final String livenessProbePath;
 
@@ -38,6 +41,7 @@ public class ReceiverEnv extends BaseEnv {
     super(envProvider);
 
     this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
+    this.ingressTLSPort = Integer.parseInt(envProvider.apply(INGRESS_TLS_PORT));
     this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
     this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
     this.httpServerConfigFilePath = requireNonNull(envProvider.apply(HTTPSERVER_CONFIG_FILE_PATH));
@@ -48,7 +52,7 @@ public class ReceiverEnv extends BaseEnv {
   }
 
   public int getIngressTLSPort() {
-    return ingressPort + 1;
+    return ingressTLSPort;
   }
 
   public String getLivenessProbePath() {

@@ -87,6 +87,7 @@ public class DataPlaneTest {
   private static final int NUM_PARTITIONS = 10;
   private static final int REPLICATION_FACTOR = 1;
   private static final int INGRESS_PORT = 12345;
+  private static final int INGRESS_TLS_PORT = 12343;
   private static final int SERVICE_PORT = INGRESS_PORT + 1;
   private static final int NUM_SYSTEM_VERTICLES = 1;
   private static final int NUM_RESOURCES = 1;
@@ -373,9 +374,8 @@ public class DataPlaneTest {
     httpServerOptions.setPort(INGRESS_PORT);
 
     final var httpsServerOptions = new HttpServerOptions();
-    httpsServerOptions.setPort(INGRESS_PORT + 1);
+    httpsServerOptions.setPort(INGRESS_TLS_PORT);
     httpsServerOptions.setSsl(true);
-
 
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
