@@ -1,15 +1,14 @@
 diff --git a/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go b/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go
-index b50fcf8f..b18fe8fa 100644
+index ba50005d7..31cfda0ea 100644
 --- a/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go
 +++ b/vendor/knative.dev/pkg/webhook/resourcesemantics/defaulting/controller.go
-@@ -90,8 +90,8 @@ func NewAdmissionController(
- 	}
-
+@@ -113,7 +113,7 @@ func newController(ctx context.Context, name string, optsFunc ...OptionFunc) *co
  	logger := logging.FromContext(ctx)
--	const queueName = "DefaultingWebhook"
--	c := controller.NewContext(ctx, wh, controller.ControllerOptions{WorkQueueName: queueName, Logger: logger.Named(queueName)})
-+	// TODO: https://github.com/knative/pkg/issues/2418
-+	c := controller.NewContext(ctx, wh, controller.ControllerOptions{WorkQueueName: name, Logger: logger.Named(name)})
-
- 	// Reconcile when the named MutatingWebhookConfiguration changes.
- 	mwhInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+ 	controllerOptions := wopts.ControllerOptions
+ 	if controllerOptions == nil {
+-		const queueName = "DefaultingWebhook"
+-		controllerOptions = &controller.ControllerOptions{WorkQueueName: queueName, Logger: logger.Named(queueName)}
++		// TODO: https://github.com/knative/pkg/issues/2418
++		controllerOptions = &controller.ControllerOptions{WorkQueueName: name, Logger: logger.Named(name)}
+ 	}
+ 	c := controller.NewContext(ctx, wh, *controllerOptions)

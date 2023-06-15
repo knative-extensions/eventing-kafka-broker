@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/eventing/pkg/apis/eventing/v1beta2"
 	"knative.dev/pkg/apis"
@@ -60,9 +62,9 @@ func WithEventTypeType(t string) EventTypeOption {
 	}
 }
 
-func WithEventTypeBroker(broker string) EventTypeOption {
+func WithEventTypeReference(ref *duckv1.KReference) EventTypeOption {
 	return func(et *v1beta2.EventType) {
-		et.Spec.Broker = broker
+		et.Spec.Reference = ref
 	}
 }
 
@@ -99,21 +101,4 @@ func WithEventTypeBrokerDoesNotExist(et *v1beta2.EventType) {
 // WithEventTypeBrokerExists calls .Status.MarkBrokerExists on the EventType.
 func WithEventTypeBrokerExists(et *v1beta2.EventType) {
 	et.Status.MarkBrokerExists()
-}
-
-func WithEventTypeBrokerFailed(reason, message string) EventTypeOption {
-	return func(et *v1beta2.EventType) {
-		et.Status.MarkBrokerFailed(reason, message)
-	}
-}
-
-func WithEventTypeBrokerUnknown(reason, message string) EventTypeOption {
-	return func(et *v1beta2.EventType) {
-		et.Status.MarkBrokerUnknown(reason, message)
-	}
-}
-
-// WithEventTypeBrokerReady calls .Status.MarkBrokerReady on the EventType.
-func WithEventTypeBrokerReady(et *v1beta2.EventType) {
-	et.Status.MarkBrokerReady()
 }
