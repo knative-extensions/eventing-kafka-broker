@@ -28,6 +28,10 @@ import (
 	"knative.dev/pkg/logging"
 )
 
+var (
+	cacheExpiryTime = time.Minute * 30
+)
+
 type IPsLister func(addressable Addressable) ([]string, error)
 
 type asyncProber struct {
@@ -54,7 +58,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		client:    client,
 		enqueue:   enqueue,
 		logger:    logger,
-		cache:     NewLocalExpiringCache(ctx, 30*time.Minute),
+		cache:     NewLocalExpiringCache(ctx, cacheExpiryTime),
 		IPsLister: IPsLister,
 		port:      port,
 		clientMu:  sync.Mutex{},
@@ -62,18 +66,11 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 }
 
 func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
-	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
-	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
+	newClient, err := makeHttpClientWithTLS(caCerts)
 	if err != nil {
 		return nil, err
 	}
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsClientConfig,
-		},
-	}
-
+	client := newClient
 	return NewAsync(ctx, client, port, IPsLister, enqueue), nil
 }
 
@@ -166,27 +163,29 @@ func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
 	a.enqueue(arg.(types.NamespacedName))
 }
 
-// Resets the cache to a new empty cache with the given expiry time
-func (a *asyncProber) resetCache(ctx context.Context, expiry time.Duration) {
-	a.clientMu.Lock()
-	defer a.clientMu.Unlock()
-	a.cache = NewLocalExpiringCache(ctx, expiry)
-}
-
 func (a *asyncProber) RotateRootCaCerts(caCerts *string) error {
-	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
-	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
+	newClient, err := makeHttpClientWithTLS(caCerts)
 	if err != nil {
 		return err
 	}
 
 	a.clientMu.Lock()
 	defer a.clientMu.Unlock()
-	a.client = &http.Client{
+	a.client.(*http.Client).CloseIdleConnections()
+	a.client = newClient
+	return nil
+}
+
+func makeHttpClientWithTLS(caCerts *string) (*http.Client, error) {
+	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
+	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: tlsClientConfig,
 		},
-	}
-
-	return nil
+	}, nil
 }

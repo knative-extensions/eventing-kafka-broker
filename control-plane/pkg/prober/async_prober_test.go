@@ -285,6 +285,7 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 		return ips, nil
 	}
 
+	cacheExpiryTime = time.Second * 5
 	prober, err := NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
 		wantRequeueCountMin.Dec()
 	}, pointer.String(string(CA1)))
@@ -306,7 +307,7 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 			cert, err := tls.X509KeyPair(Crt2, Key2)
 			return &cert, err
 		}
-		prober.(*asyncProber).resetCache(ctx, time.Minute*5)
+		time.Sleep(time.Second * 10)
 		require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
 		require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
 		require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
