@@ -70,8 +70,7 @@ func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqu
 	if err != nil {
 		return nil, err
 	}
-	client := newClient
-	return NewAsync(ctx, client, port, IPsLister, enqueue), nil
+	return NewAsync(ctx, newClient, port, IPsLister, enqueue), nil
 }
 
 func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
