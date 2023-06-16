@@ -76,8 +76,9 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
-            - name: kafka-broker-receiver-secret-volume
-              mountPath: /etc/kafka-broker-receiver-secret-volume
+            - mountPath: /etc/broker-receiver-secret-volume
+              name: kafka-broker-receiver-secret-volume
+              
           ports:
             - containerPort: 9090
               name: http-metrics

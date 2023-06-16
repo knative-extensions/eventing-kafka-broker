@@ -33,6 +33,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.Future;
 
 import org.slf4j.Logger;
@@ -104,14 +105,17 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
         .buildAndListen(vertx);
 
+    PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
+        .setKeyPath("/etc/kafka-broker-receiver-secret-volume/tls.key")
+        .setCertPath("/etc/kafka-broker-receiver-secret-volume/tls.crt");
+
     this.httpServerOptions
         .setSsl(false);
 
     this.httpsServerOptions
         .setSsl(true)
-        .setKeyStoreOptions(new JksOptions()
-            .setPath("/path/to/keystore.jks")
-            .setPassword("keystore_password"));
+        // use pem file for now
+        .setPemKeyCertOptions(keyCertOptions);
 
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
     this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
