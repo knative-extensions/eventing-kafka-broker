@@ -143,6 +143,7 @@ public abstract class ReceiverVerticleTracingTest {
       .get();
   }
 
+  @Test
   public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
     CloudEvent inputEvent = new CloudEventBuilder()
       .withSubject("subject")
