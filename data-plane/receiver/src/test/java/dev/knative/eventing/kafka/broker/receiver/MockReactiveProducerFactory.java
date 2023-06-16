@@ -25,14 +25,14 @@ import io.vertx.core.Vertx;
 public class MockReactiveProducerFactory implements ReactiveProducerFactory<String, CloudEvent> {
 
     @Override
+    public ReactiveKafkaProducer<String, CloudEvent> create(Vertx v, Producer<String, CloudEvent> producer) {
+        return new MockReactiveKafkaProducer<String, CloudEvent>(producer);
+    }
+    
     public ReactiveKafkaProducer<String, CloudEvent> create(Vertx v, Properties config) {
         return new MockReactiveKafkaProducer<String, CloudEvent>(config);
     }
 
-    @Override
-    public ReactiveKafkaProducer<String, CloudEvent> create(Vertx v, Producer<String, CloudEvent> producer) {
-        return new MockReactiveKafkaProducer<String, CloudEvent>(producer);
-    }
 
     public static ReactiveKafkaProducer<String, CloudEvent> createStatic(Vertx v, Properties config) {
         return new MockReactiveKafkaProducer<String, CloudEvent>(config);

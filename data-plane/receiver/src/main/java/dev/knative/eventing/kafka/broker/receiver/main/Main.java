@@ -59,7 +59,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void start(final String[] args, ReactiveProducerFactory kafkaProducerFactory) throws IOException {
+  public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory) throws IOException {
     ReceiverEnv env = new ReceiverEnv(System::getenv);
 
     OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();

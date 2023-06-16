@@ -45,7 +45,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
  * <p>
  * Instances of this class can be shared among verticles, given the {@code requestToRecordMapper} provided is shareable among verticles.
  */
-public class IngressRequestHandlerImpl implements IngressRequestHandler{
+public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
   static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
 

@@ -28,6 +28,7 @@ import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
 import java.util.Properties;
 import java.util.function.Supplier;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
 class ReceiverVerticleFactory implements Supplier<Verticle> {
 
@@ -43,7 +44,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                           final Properties producerConfigs,
                           final MeterRegistry metricsRegistry,
                           final HttpServerOptions httpServerOptions,
-                          ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
+                          final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
     this.env = env;
     this.producerConfigs = producerConfigs;
     this.httpServerOptions = httpServerOptions;
@@ -62,7 +63,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
       v -> new IngressProducerReconcilableStore(
         AuthProvider.kubernetes(),
         producerConfigs,
-        properties -> kafkaProducerFactory.create(v, properties)
+        properties -> kafkaProducerFactory.create(v, new KafkaProducer<>(properties))
       ),
       this.ingressRequestHandler
     );

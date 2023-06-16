@@ -27,14 +27,6 @@ import io.vertx.core.Vertx;
  * @param <V> the value type
  */
 public interface ReactiveProducerFactory<K, V> {
-    /**
-     * Create a new ReactiveKafkaProducer
-     *
-     * @param v      the Vertx instance used when creating the vertx KafkaProducer
-     * @param config the Kafka producer configuration
-     * @return a new ReactiveKafkaProducer
-     */
-    public ReactiveKafkaProducer<K, V> create(Vertx v, Properties config);
 
     /**
      * Create a new ReactiveKafkaProducer
@@ -43,5 +35,5 @@ public interface ReactiveProducerFactory<K, V> {
      * @param producer the Kafka producer
      * @return a new ReactiveKafkaProducer
      */
-    public ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer);
+    ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer);
 }
