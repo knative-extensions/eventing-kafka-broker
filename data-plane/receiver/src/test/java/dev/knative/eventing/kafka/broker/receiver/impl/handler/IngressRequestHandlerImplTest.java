@@ -102,7 +102,7 @@ public class IngressRequestHandlerImplTest {
 
       @Override
       public DataPlaneContract.Reference getReference() {
-        return DataPlaneContract.Reference.newBuilder().build(); 
+        return DataPlaneContract.Reference.newBuilder().build();
       }
     });
 
