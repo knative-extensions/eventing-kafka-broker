@@ -24,7 +24,7 @@ public class VertxProducerFactory<K,V> implements ReactiveProducerFactory<K,V> {
 
     @Override
     public ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer) {
-        return new VertxKafkaProducer<K,V>(v, producer);
+        return new VertxKafkaProducer<>(v, producer);
     }
     
 }

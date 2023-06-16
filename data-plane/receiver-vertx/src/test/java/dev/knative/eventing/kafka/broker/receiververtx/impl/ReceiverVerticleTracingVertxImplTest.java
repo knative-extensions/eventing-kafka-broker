@@ -29,8 +29,9 @@ public class ReceiverVerticleTracingVertxImplTest extends ReceiverVerticleTracin
 
     @Override
     public ReactiveProducerFactory<String, CloudEvent> createProducerFactory() {
-        return new VertxProducerFactory<String, CloudEvent>();
+        return new VertxProducerFactory<>();
     }
+    
     @Test
     public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
         super.traceIsPropagated();
