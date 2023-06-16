@@ -119,24 +119,13 @@ public class ReceiverVerticleTest {
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
 
-    final var httpsServerOptions = new HttpServerOptions();
-    httpsServerOptions.setPort(PORT + 1);
-    httpsServerOptions.setHost("localhost");
-    httpsServerOptions.setSsl(true);
-
-    PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-        .setKeyPath("/etc/kafka-broker-receiver-secret-volume/tls.key")
-        .setCertPath("/etc/kafka-broker-receiver-secret-volume/tls.crt");
-
-    httpsServerOptions.setPemKeyCertOptions(keyCertOptions);
-
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
     when(env.getReadinessProbePath()).thenReturn("/readyz");
     final var verticle = new ReceiverVerticle(
         env,
         httpServerOptions,
-        httpsServerOptions,
+        null,
         v -> store,
         new IngressRequestHandlerImpl(
             StrictRequestToRecordMapper.getInstance(),

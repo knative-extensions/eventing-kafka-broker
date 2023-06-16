@@ -32,7 +32,6 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.Future;
 
@@ -92,7 +91,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     this.env = env;
     this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
-    this.httpsServerOptions = httpsServerOptions != null ? httpsServerOptions : new HttpServerOptions();
+    this.httpsServerOptions = httpsServerOptions != null ? httpsServerOptions : null;
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
     this.ingressRequestHandler = ingressRequestHandler;
   }
@@ -105,26 +104,34 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
         .buildAndListen(vertx);
 
-    PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-        .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
-        .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
+   
 
     this.httpServerOptions
         .setSsl(false);
 
+        this.httpServer = vertx.createHttpServer(this.httpServerOptions);
+
+        if(this.httpsServerOptions!=null)
+        {
+         PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
+        .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
+        .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
     this.httpsServerOptions
         .setSsl(true)
         // use pem file for now
         .setPemKeyCertOptions(keyCertOptions);
 
-    this.httpServer = vertx.createHttpServer(this.httpServerOptions);
+    
     this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
+        }
 
     final var handler = new ProbeHandler(
         env.getLivenessProbePath(),
         env.getReadinessProbePath(),
         new MethodNotAllowedHandler(this));
 
+
+        if (this.httpsServer != null) {
     CompositeFuture.all(
         this.httpServer.requestHandler(handler)
             .exceptionHandler(startPromise::tryFail)
@@ -136,7 +143,12 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
             .<Void>mapEmpty())
         .<Void>mapEmpty().onComplete(startPromise);
-
+        }else{
+            this.httpServer.requestHandler(handler)
+            .exceptionHandler(startPromise::tryFail)
+            .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
+            .<Void>mapEmpty().onComplete(startPromise);
+        }
   }
 
   @Override
