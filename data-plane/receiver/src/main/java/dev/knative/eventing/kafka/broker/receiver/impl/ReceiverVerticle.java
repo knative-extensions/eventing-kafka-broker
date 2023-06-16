@@ -106,8 +106,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .buildAndListen(vertx);
 
     PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-        .setKeyPath("/etc/kafka-broker-receiver-secret-volume/tls.key")
-        .setCertPath("/etc/kafka-broker-receiver-secret-volume/tls.crt");
+        .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
+        .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
 
     this.httpServerOptions
         .setSsl(false);
