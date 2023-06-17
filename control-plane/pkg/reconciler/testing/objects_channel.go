@@ -209,13 +209,16 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		channel := obj.(*messagingv1beta1.KafkaChannel)
 
-		channel.Status.Address = &duckv1.Addressable{}
-
-		channel.Status.Address.Name = pointer.String("http")
-		channel.Status.Address.URL = &apis.URL{
-			Scheme: "http",
-			Host:   fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(channel.Name), channel.Namespace, network.GetClusterDomainName()),
+		httpAddress := &duckv1.Addressable{
+			Name: pointer.String("http"),
+			URL: &apis.URL{
+				Scheme: "http",
+				Host:   fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(channel.Name), channel.Namespace, network.GetClusterDomainName()),
+			},
 		}
+
+		channel.Status.Address = httpAddress
+		channel.Status.Addresses = []duckv1.Addressable{*httpAddress}
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
 	}
