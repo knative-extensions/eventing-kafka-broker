@@ -325,6 +325,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	} else {
 		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, channelService)
 		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
 
 	address := addressableStatus.Address.URL.URL()
