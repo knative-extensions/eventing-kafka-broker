@@ -109,7 +109,7 @@ java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
-  -jar "${PROJECT_ROOT_DIR}"/receiver/target/receiver-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
+  -jar "${PROJECT_ROOT_DIR}"/receiver-vertx/target/receiver-vertx-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
 receiver_pid=$!
 
 # Define expected env variables.

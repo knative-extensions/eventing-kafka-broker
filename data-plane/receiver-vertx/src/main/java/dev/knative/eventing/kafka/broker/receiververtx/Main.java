@@ -13,26 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiververtx;
 
-import org.apache.kafka.clients.producer.Producer;
-import io.vertx.core.Vertx;
+import java.io.IOException;
 
-/**
- * Factory for creating ReactiveKafkaProducer
- * 
- * @param <K> the key type
- * @param <V> the value type
- */
-public interface ReactiveProducerFactory<K, V> {
 
-    /**
-     * Create a new ReactiveKafkaProducer
-     *
-     * @param v        the Vertx instance used when creating the vertx KafkaProducer
-     * @param producer the Kafka producer
-     * @return a new ReactiveKafkaProducer
-     */
-    ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer);
-
+public class Main {
+    public static void main(String[] args) throws IOException {
+        dev.knative.eventing.kafka.broker.receiver.main.Main.start(args, new VertxProducerFactory());
+    }
 }

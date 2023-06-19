@@ -25,6 +25,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDese
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
@@ -43,7 +44,6 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -382,7 +382,7 @@ public class DataPlaneTest {
       v -> new IngressProducerReconcilableStore(
         AuthProvider.noAuth(),
         producerConfigs(),
-        properties -> KafkaProducer.create(v, properties)
+        properties -> new MockReactiveKafkaProducer<>(properties)
       ),
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),

@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiververtx.impl;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import org.junit.jupiter.api.Test;
+
+import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticleTracingTest;
+import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.Future;
-import io.vertx.core.http.HttpServerRequest;
-import org.apache.kafka.clients.producer.ProducerRecord;
 
-@FunctionalInterface
-public interface RequestToRecordMapper {
+public class ReceiverVerticleTracingVertxImplTest extends ReceiverVerticleTracingTest{
 
-  /**
-   * Map the given HTTP request to a Kafka record.
-   *
-   * @param request http request.
-   * @param topic   topic to send the event
-   * @return kafka record (record can be null).
-   */
-  Future<ProducerRecord<String, CloudEvent>> requestToRecord(
-    final HttpServerRequest request,
-    final String topic
-  );
+    @Override
+    public ReactiveProducerFactory<String, CloudEvent> createProducerFactory() {
+        return new VertxProducerFactory<>();
+    }
+
 }
