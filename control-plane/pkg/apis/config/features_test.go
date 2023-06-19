@@ -60,6 +60,11 @@ func TestGetFlags(t *testing.T) {
 	require.True(t, flags.IsControllerAutoscalerEnabled())
 	require.Len(t, flags.features.TriggersConsumerGroupTemplate.Tree.Root.Nodes, 4)
 	require.Equal(t, flags.features.TriggersConsumerGroupTemplate.Name(), "triggers.consumergroup.template")
+	require.Len(t, flags.features.BrokersTopicTemplate.Tree.Root.Nodes, 4)
+	require.Equal(t, flags.features.BrokersTopicTemplate.Name(), "brokers.topic.template")
+	require.Len(t, flags.features.ChannelsTopicTemplate.Tree.Root.Nodes, 4)
+	require.Equal(t, flags.features.ChannelsTopicTemplate.Name(), "channels.topic.template")
+
 }
 
 func TestStoreLoadWithConfigMap(t *testing.T) {
@@ -75,6 +80,8 @@ func TestStoreLoadWithConfigMap(t *testing.T) {
 	require.Equal(t, expected.IsDispatcherOrderedExecutorMetricsEnabled(), have.IsDispatcherOrderedExecutorMetricsEnabled())
 	require.Equal(t, expected.IsControllerAutoscalerEnabled(), have.IsControllerAutoscalerEnabled())
 	require.Equal(t, expected.features.TriggersConsumerGroupTemplate.Name(), have.features.TriggersConsumerGroupTemplate.Name())
+	require.Equal(t, expected.features.BrokersTopicTemplate.Name(), have.features.BrokersTopicTemplate.Name())
+	require.Equal(t, expected.features.ChannelsTopicTemplate.Name(), have.features.ChannelsTopicTemplate.Name())
 }
 
 func TestStoreLoadWithContext(t *testing.T) {
@@ -84,6 +91,8 @@ func TestStoreLoadWithContext(t *testing.T) {
 	require.False(t, have.IsDispatcherOrderedExecutorMetricsEnabled())
 	require.False(t, have.IsControllerAutoscalerEnabled())
 	require.Equal(t, have.features.TriggersConsumerGroupTemplate.Name(), "triggers.consumergroup.template")
+	require.Equal(t, have.features.BrokersTopicTemplate.Name(), "brokers.topic.template")
+	require.Equal(t, have.features.ChannelsTopicTemplate.Name(), "channels.topic.template")
 }
 
 func TestExecuteTriggersConsumerGroupTemplateDefault(t *testing.T) {
@@ -114,4 +123,64 @@ func TestExecuteTriggersConsumerGroupTemplateOverride(t *testing.T) {
 	}
 
 	require.Equal(t, result, "knative-trigger-namespace-trigger-138ac0ec-2694-4747-900d-45be3da5c9a9")
+}
+
+func TestExecuteBrokersTopicTemplateDefault(t *testing.T) {
+	nc := DefaultFeaturesConfig()
+	result, err := nc.ExecuteBrokersTopicTemplate(v1.ObjectMeta{
+		Name:      "topic",
+		Namespace: "namespace",
+		UID:       "138ac0ec-2694-4747-900d-45be3da5c9a9",
+	})
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, result, "knative-broker-namespace-topic")
+}
+
+func TestExecuteBrokersTopicTemplateOverride(t *testing.T) {
+	nc := DefaultFeaturesConfig()
+	nc.features.BrokersTopicTemplate, _ = template.New("custom-template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+
+	result, err := nc.ExecuteBrokersTopicTemplate(v1.ObjectMeta{
+		Name:      "topic",
+		Namespace: "namespace",
+		UID:       "138ac0ec-2694-4747-900d-45be3da5c9a9",
+	})
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, result, "knative-broker-namespace-topic-138ac0ec-2694-4747-900d-45be3da5c9a9")
+}
+
+func TestExecuteChannelsTopicTemplateDefault(t *testing.T) {
+	nc := DefaultFeaturesConfig()
+	result, err := nc.ExecuteChannelsTopicTemplate(v1.ObjectMeta{
+		Name:      "topic",
+		Namespace: "namespace",
+		UID:       "138ac0ec-2694-4747-900d-45be3da5c9a9",
+	})
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, result, "knative-channel-namespace-topic")
+}
+
+func TestExecuteChannelsTopicTemplateOverride(t *testing.T) {
+	nc := DefaultFeaturesConfig()
+	nc.features.ChannelsTopicTemplate, _ = template.New("custom-template").Parse("knative-channel-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+
+	result, err := nc.ExecuteChannelsTopicTemplate(v1.ObjectMeta{
+		Name:      "topic",
+		Namespace: "namespace",
+		UID:       "138ac0ec-2694-4747-900d-45be3da5c9a9",
+	})
+	if err != nil {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, result, "knative-channel-namespace-topic-138ac0ec-2694-4747-900d-45be3da5c9a9")
 }
