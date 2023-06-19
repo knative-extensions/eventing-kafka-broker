@@ -38,13 +38,12 @@ public class ReceiverVerticleFactoryTest {
   @Test
   public void shouldCreateMultipleReceiverVerticleInstances() {
     final var supplier = new ReceiverVerticleFactory(
-      mock(ReceiverEnv.class),
-      mock(Properties.class),
-      mock(MeterRegistry.class),
-      mock(HttpServerOptions.class),
-      mock(HttpServerOptions.class),
-      mock(MockReactiveProducerFactory.class));
-    );
+        mock(ReceiverEnv.class),
+        mock(Properties.class),
+        mock(MeterRegistry.class),
+        mock(HttpServerOptions.class),
+        mock(HttpServerOptions.class),
+        mock(MockReactiveProducerFactory.class));
 
     assertThat(supplier.get()).isNotSameAs(supplier.get());
   }
