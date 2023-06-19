@@ -76,12 +76,18 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - mountPath: /etc/sink-receiver-secret-volume
+              name: kafka-sink-receiver-secret-volume
+              readOnly: true
           ports:
             - containerPort: 9090
               name: http-metrics
               protocol: TCP
             - containerPort: 8080
               name: http
+              protocol: TCP
+            - containerPort: 8443
+              name: https
               protocol: TCP
           env:
             - name: SERVICE_NAME
@@ -171,6 +177,10 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
+        - name: kafka-sink-receiver-secret-volume
+          secret:
+            secretName: kafka-sink-ingress-server-tls
+            optional: true
       restartPolicy: Always
 ---
 
@@ -196,6 +206,10 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
     - name: http-metrics
       port: 9090
       protocol: TCP
