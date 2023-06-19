@@ -78,6 +78,7 @@ spec:
               readOnly: true
             - mountPath: /etc/broker-receiver-secret-volume
               name: kafka-broker-receiver-secret-volume
+              readOnly: true
               
           ports:
             - containerPort: 9090
