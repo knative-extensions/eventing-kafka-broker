@@ -80,8 +80,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+
 @ExtendWith(VertxExtension.class)
-public class ReceiverVerticleTest {
+public class ReceiverVerticleTLSTest {
 
   private static final int TIMEOUT = 10;
   private static final int PORT = 8082;
@@ -101,11 +102,11 @@ public class ReceiverVerticleTest {
   private PrometheusMeterRegistry registry;
 
   @BeforeEach
-  public void setUpHTTP(final Vertx vertx, final VertxTestContext testContext) {
+  public void setUpHTTPS(final Vertx vertx, final VertxTestContext testContext) {
     ContractMessageCodec.register(vertx.eventBus());
 
     webClient = WebClient.create(vertx);
-    ReceiverVerticleTest.mockProducer = new MockProducer<>(
+    ReceiverVerticleTLSTest.mockProducer = new MockProducer<>(
       true,
       new StringSerializer(),
       new CloudEventSerializerMock()
@@ -123,6 +124,14 @@ public class ReceiverVerticleTest {
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
 
+    final var httpsServerOptions = new HttpServerOptions();
+    httpsServerOptions.setPort(TLS_PORT);
+    httpsServerOptions.setHost("localhost");
+    httpsServerOptions.setSsl(true);
+    httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
+        .setKeyPath("src/test/resources/tls.key")
+        .setCertPath("src/test/resources/tls.crt"));
+
 
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
@@ -130,6 +139,7 @@ public class ReceiverVerticleTest {
     final var verticle = new ReceiverVerticle(
         env,
         httpServerOptions,
+        // Intentionally, will change after
         null,
         v -> store,
         new IngressRequestHandlerImpl(
