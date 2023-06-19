@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.io.File;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.PROBE_HASH_HEADER_NAME;
@@ -104,51 +105,70 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
         .buildAndListen(vertx);
 
-   
-
     this.httpServerOptions
         .setSsl(false);
 
-        this.httpServer = vertx.createHttpServer(this.httpServerOptions);
+    this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
-        if(this.httpsServerOptions!=null)
-        {
-         PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-        .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
-        .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
-    this.httpsServerOptions
-        .setSsl(true)
-        // use pem file for now
-        .setPemKeyCertOptions(keyCertOptions);
+    // check whether the secret volume is mounted
+    File secretVolume = new File("/etc/broker-receiver-secret-volume");
+    if (secretVolume.exists()) {
+      // The secret volume is mounted, we should start the https server
+      logger.info("Secret volume is mounted");
 
-    
-    this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
-        }
+      // check whether the tls.key and tls.crt files exist
+      File tlsKeyFile = new File("/etc/broker-receiver-secret-volume/tls.key");
+      File tlsCrtFile = new File("/etc/broker-receiver-secret-volume/tls.crt");
+
+      if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+        // The tls.key and tls.crt files exist, we should start the https server
+        logger.info("tls.key and tls.crt files exist, and the httpsServerOptions is not null");
+        logger.info("Proceed to start the https server");
+
+        PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
+            .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
+            .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
+        this.httpsServerOptions
+            .setSsl(true)
+            // use pem file for now
+            .setPemKeyCertOptions(keyCertOptions);
+
+        this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
+
+      } else {
+        // The tls.key and tls.crt files do not exist, we should start the http server
+        // only
+        logger.info("tls.key and tls.crt files do not exist");
+      }
+
+    } else {
+      // The secret volume is not mounted, we should start the http server only
+      logger.info("Secret volume is not mounted");
+    }
 
     final var handler = new ProbeHandler(
         env.getLivenessProbePath(),
         env.getReadinessProbePath(),
         new MethodNotAllowedHandler(this));
 
+    if (this.httpsServer != null) {
+      CompositeFuture.all(
+          this.httpServer.requestHandler(handler)
+              .exceptionHandler(startPromise::tryFail)
+              .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
+              .<Void>mapEmpty(),
 
-        if (this.httpsServer != null) {
-    CompositeFuture.all(
-        this.httpServer.requestHandler(handler)
-            .exceptionHandler(startPromise::tryFail)
-            .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
-            .<Void>mapEmpty(),
-
-        this.httpsServer.requestHandler(handler)
-            .exceptionHandler(startPromise::tryFail)
-            .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
-            .<Void>mapEmpty())
-        .<Void>mapEmpty().onComplete(startPromise);
-        }else{
-            this.httpServer.requestHandler(handler)
-            .exceptionHandler(startPromise::tryFail)
-            .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
-            .<Void>mapEmpty().onComplete(startPromise);
-        }
+          this.httpsServer.requestHandler(handler)
+              .exceptionHandler(startPromise::tryFail)
+              .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
+              .<Void>mapEmpty())
+          .<Void>mapEmpty().onComplete(startPromise);
+    } else {
+      this.httpServer.requestHandler(handler)
+          .exceptionHandler(startPromise::tryFail)
+          .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
+          .<Void>mapEmpty().onComplete(startPromise);
+    }
   }
 
   @Override
