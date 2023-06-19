@@ -28,9 +28,6 @@ import (
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/system"
@@ -41,6 +38,11 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
+
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/statefulset"
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
@@ -64,13 +66,13 @@ const (
 	PlainMech      = "plain"
 )
 
-func SetupAndCleanupKafkaSources(prefix string, n int) *feature.Feature {
-	f := SetupKafkaSources(prefix, n)
+func SetupAndCleanupKafkaSources(prefix string, n int, cfg ...manifest.CfgFn) *feature.Feature {
+	f := SetupKafkaSources(prefix, n, cfg...)
 	f.Teardown("cleanup resources", f.DeleteResources)
 	return f
 }
 
-func SetupKafkaSources(prefix string, n int) *feature.Feature {
+func SetupKafkaSources(prefix string, n int, cfg ...manifest.CfgFn) *feature.Feature {
 	sink := "sink"
 	f := feature.NewFeatureNamed("KafkaSources")
 
@@ -84,14 +86,22 @@ func SetupKafkaSources(prefix string, n int) *feature.Feature {
 		f.Setup("install kafka topic", kafkatopic.Install(topicName))
 		f.Setup(fmt.Sprintf("install kafkasource %s", name), kafkasource.Install(
 			name,
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
-			kafkasource.WithTopics([]string{topicName}),
-			kafkasource.WithSink(&duckv1.KReference{Kind: "Service", Name: sink, APIVersion: "v1"}, ""),
+			append(cfg,
+				kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+				kafkasource.WithTopics([]string{topicName}),
+				kafkasource.WithSink(&duckv1.KReference{Kind: "Service", Name: sink, APIVersion: "v1"}, ""),
+			)...,
 		))
 
 		f.Assert(fmt.Sprintf("kafkasource %s is ready", name), kafkasource.IsReady(name))
 	}
 
+	return f
+}
+
+func VerifyExpectedDispatcherPods(count int32) *feature.Feature {
+	f := feature.NewFeatureNamed("Verify expected dispatcher pods")
+	f.Assert("Must have expected num of dispatcher pods", statefulset.WaitForReplicas("kafka-source-dispatcher", count))
 	return f
 }
 

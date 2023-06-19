@@ -23,6 +23,8 @@ import (
 	"testing"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
+
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -60,9 +62,10 @@ func TestKafkaSourceDeletedFromContractConfigMaps(t *testing.T) {
 	)
 	t.Cleanup(env.Finish)
 
-	env.Test(ctx, t, features.SetupKafkaSources("permanent-kafka-source-", 21))
-	env.Test(ctx, t, features.SetupAndCleanupKafkaSources("x-kafka-source-", 42))
+	env.Test(ctx, t, features.SetupKafkaSources("permanent-kafka-source-", 21, kafkasource.WithConsumers(3)))
+	env.Test(ctx, t, features.SetupAndCleanupKafkaSources("x-kafka-source-", 42, kafkasource.WithConsumers(2)))
 	env.Test(ctx, t, features.KafkaSourcesAreNotPresentInContractConfigMaps("x-kafka-source-"))
+	env.Test(ctx, t, features.VerifyExpectedDispatcherPods(4 /* 21 * 3 = 63 / 20 = 4 */))
 }
 
 func TestKafkaSourceScale(t *testing.T) {
