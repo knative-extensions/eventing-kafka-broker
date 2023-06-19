@@ -176,15 +176,17 @@ func (a *asyncProber) RotateRootCaCerts(caCerts *string) error {
 }
 
 func makeHttpClientWithTLS(caCerts *string) (*http.Client, error) {
+	var err error
+
 	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
-	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
+
+	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
+	httpTransport.TLSClientConfig, err = eventingtls.GetTLSClientConfig(tlsClient)
 	if err != nil {
 		return nil, err
 	}
 
 	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsClientConfig,
-		},
+		Transport: httpTransport,
 	}, nil
 }
