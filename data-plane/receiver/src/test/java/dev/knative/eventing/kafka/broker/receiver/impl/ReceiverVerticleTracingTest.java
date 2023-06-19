@@ -19,13 +19,12 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.micrometer.core.instrument.Meter.Id;
-import io.micrometer.core.instrument.cumulative.CumulativeCounter;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
@@ -43,7 +42,6 @@ import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
@@ -65,7 +63,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ReceiverVerticleTracingTest {
+public abstract class ReceiverVerticleTracingTest {
 
     private static final int TIMEOUT = 10;
     private static final int PORT = 8083;
@@ -80,20 +78,22 @@ public class ReceiverVerticleTracingTest {
         BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
     }
 
-    @BeforeEach
-    public void setup() throws ExecutionException, InterruptedException {
-        this.spanExporter = InMemorySpanExporter.create();
-        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
-                .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
-                .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
-                // Uncomment this line if you want to try locally
-                // .addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
-                .setSampler(Sampler.alwaysOn())
-                .build();
-        OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
-                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-                .setTracerProvider(tracerProvider)
-                .build();
+  public abstract ReactiveProducerFactory<String, CloudEvent> createProducerFactory();
+
+  @BeforeEach
+  public void setup() throws ExecutionException, InterruptedException {
+    this.spanExporter = InMemorySpanExporter.create();
+    SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+      .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
+      .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
+      // Uncomment this line if you want to try locally
+      //.addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
+      .setSampler(Sampler.alwaysOn())
+      .build();
+    OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
+      .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+      .setTracerProvider(tracerProvider)
+      .build();
 
         this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
@@ -104,10 +104,11 @@ public class ReceiverVerticleTracingTest {
                 new StringSerializer(),
                 new CloudEventSerializerMock());
 
-        this.store = new IngressProducerReconcilableStore(
-                AuthProvider.noAuth(),
-                new Properties(),
-                properties -> KafkaProducer.create(vertx, mockProducer));
+    this.store = new IngressProducerReconcilableStore(
+      AuthProvider.noAuth(),
+      new Properties(),
+      properties -> createProducerFactory().create(vertx, mockProducer)
+    );
 
         final var env = mock(ReceiverEnv.class);
         when(env.getLivenessProbePath()).thenReturn("/healthz");

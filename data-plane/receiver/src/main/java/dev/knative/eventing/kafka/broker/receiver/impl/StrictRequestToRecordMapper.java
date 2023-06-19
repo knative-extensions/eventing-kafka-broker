@@ -21,10 +21,10 @@ import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 /**
- * This class implements a strict {@link HttpServerRequest} to {@link KafkaProducerRecord} mapper.
+ * This class implements a strict {@link HttpServerRequest} to {@link ProducerRecord} mapper.
  * The conversion will fail if the request does not contain a valid {@link CloudEvent}.
  * <p>
  * This class is stateless, hence thread safe and shareable among verticles.
@@ -43,7 +43,7 @@ public class StrictRequestToRecordMapper implements RequestToRecordMapper {
   }
 
   @Override
-  public Future<KafkaProducerRecord<String, CloudEvent>> requestToRecord(
+  public Future<ProducerRecord<String, CloudEvent>> requestToRecord(
     final HttpServerRequest request,
     final String topic) {
 
@@ -53,7 +53,7 @@ public class StrictRequestToRecordMapper implements RequestToRecordMapper {
         if (event == null) {
           throw new IllegalArgumentException("event cannot be null");
         }
-        return KafkaProducerRecord.create(topic, event);
+        return new ProducerRecord<String, CloudEvent>(topic, event);
       });
   }
 }

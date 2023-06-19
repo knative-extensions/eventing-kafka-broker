@@ -15,24 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import java.util.Properties;
+
 import org.apache.kafka.clients.producer.Producer;
+
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
 
-/**
- * Factory for creating ReactiveKafkaProducer
- * 
- * @param <K> the key type
- * @param <V> the value type
- */
-public interface ReactiveProducerFactory<K, V> {
+public class MockReactiveProducerFactory implements ReactiveProducerFactory<String, CloudEvent> {
 
-    /**
-     * Create a new ReactiveKafkaProducer
-     *
-     * @param v        the Vertx instance used when creating the vertx KafkaProducer
-     * @param producer the Kafka producer
-     * @return a new ReactiveKafkaProducer
-     */
-    ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer);
+    @Override
+    public ReactiveKafkaProducer<String, CloudEvent> create(Vertx v, Producer<String, CloudEvent> producer) {
+        return new MockReactiveKafkaProducer<String, CloudEvent>(producer);
+    }
 
 }

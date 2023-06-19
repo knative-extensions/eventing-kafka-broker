@@ -17,11 +17,13 @@
 package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +42,8 @@ public class ReceiverVerticleFactoryTest {
       mock(Properties.class),
       mock(MeterRegistry.class),
       mock(HttpServerOptions.class),
-      mock(HttpServerOptions.class)
+      mock(HttpServerOptions.class),
+      mock(MockReactiveProducerFactory.class));
     );
 
     assertThat(supplier.get()).isNotSameAs(supplier.get());

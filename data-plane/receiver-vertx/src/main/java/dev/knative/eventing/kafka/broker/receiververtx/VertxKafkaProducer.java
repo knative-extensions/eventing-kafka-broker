@@ -15,8 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx;
 
-import java.util.Properties;
-
 import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 
 import org.apache.kafka.clients.producer.Producer;
@@ -32,10 +30,10 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
-    KafkaProducer<K, V> producer;
-    
-    public VertxKafkaProducer(Vertx v, Properties config) {
-        producer = KafkaProducer.create(v, config);
+    private final KafkaProducer<K, V> producer;
+
+    VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
+        this.producer = KafkaProducer.create(v, producer);
     }
 
     @Override
