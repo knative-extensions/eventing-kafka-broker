@@ -28,6 +28,10 @@ import (
 	"knative.dev/pkg/logging"
 )
 
+var (
+	cacheExpiryTime = time.Minute * 30
+)
+
 type IPsLister func(addressable Addressable) ([]string, error)
 
 type asyncProber struct {
@@ -37,6 +41,7 @@ type asyncProber struct {
 	cache     Cache
 	IPsLister IPsLister
 	port      string
+	clientMu  sync.Mutex
 }
 
 // NewAsync creates an async Prober.
@@ -53,26 +58,19 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		client:    client,
 		enqueue:   enqueue,
 		logger:    logger,
-		cache:     NewLocalExpiringCache(ctx, 30*time.Minute),
+		cache:     NewLocalExpiringCache(ctx, cacheExpiryTime),
 		IPsLister: IPsLister,
 		port:      port,
+		clientMu:  sync.Mutex{},
 	}
 }
 
 func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
-	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
-	tlsClientConfig, err := eventingtls.GetTLSClientConfig(tlsClient)
+	newClient, err := makeHttpClientWithTLS(caCerts)
 	if err != nil {
 		return nil, err
 	}
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsClientConfig,
-		},
-	}
-
-	return NewAsync(ctx, client, port, IPsLister, enqueue), nil
+	return NewAsync(ctx, newClient, port, IPsLister, enqueue), nil
 }
 
 func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
@@ -144,6 +142,8 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 		go func() {
 			defer wg.Done()
 			// Probe the pod.
+			a.clientMu.Lock()
+			defer a.clientMu.Unlock()
 			status := probe(ctx, a.client, logger, address)
 			logger.Debug("Probe status", zap.Stringer("status", status))
 			// Update the status in the cache.
@@ -160,4 +160,33 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 
 func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
 	a.enqueue(arg.(types.NamespacedName))
+}
+
+func (a *asyncProber) RotateRootCaCerts(caCerts *string) error {
+	newClient, err := makeHttpClientWithTLS(caCerts)
+	if err != nil {
+		return err
+	}
+
+	a.clientMu.Lock()
+	defer a.clientMu.Unlock()
+	a.client.(*http.Client).CloseIdleConnections()
+	a.client = newClient
+	return nil
+}
+
+func makeHttpClientWithTLS(caCerts *string) (*http.Client, error) {
+	var err error
+
+	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
+
+	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
+	httpTransport.TLSClientConfig, err = eventingtls.GetTLSClientConfig(tlsClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &http.Client{
+		Transport: httpTransport,
+	}, nil
 }

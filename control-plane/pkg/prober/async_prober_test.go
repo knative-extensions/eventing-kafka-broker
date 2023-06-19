@@ -19,6 +19,8 @@ package prober
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -38,13 +40,16 @@ import (
 )
 
 var (
-	CA  []byte
-	Key []byte
-	Crt []byte
+	CA1  []byte
+	Key1 []byte
+	Crt1 []byte
+	CA2  []byte
+	Key2 []byte
+	Crt2 []byte
 )
 
 func init() {
-	CA, Key, Crt = loadCerts()
+	CA1, Key1, Crt1, CA2, Key2, Crt2 = loadCerts()
 }
 
 func TestAsyncProber(t *testing.T) {
@@ -162,7 +167,7 @@ func TestAsyncProber(t *testing.T) {
 			})
 			s := httptest.NewUnstartedServer(h)
 			if tc.useTLS {
-				cert, err := tls.X509KeyPair(Crt, Key)
+				cert, err := tls.X509KeyPair(Crt1, Key1)
 				require.NoError(t, err)
 				s.TLS = &tls.Config{
 					Certificates: []tls.Certificate{cert},
@@ -196,7 +201,7 @@ func TestAsyncProber(t *testing.T) {
 			if tc.useTLS {
 				prober, err = NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
 					wantRequeueCountMin.Dec()
-				}, pointer.String(string(CA)))
+				}, pointer.String(string(CA1)))
 				require.NoError(t, err)
 			} else {
 				prober = NewAsync(ctx, s.Client(), u.Port(), IPsLister, func(key types.NamespacedName) {
@@ -216,8 +221,101 @@ func TestAsyncProber(t *testing.T) {
 	}
 }
 
+func TestAsyncProberRotateCACerts(t *testing.T) {
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, cancel := context.WithCancel(ctx)
+	defer func() {
+		time.Sleep(time.Second)
+		cancel()
+	}()
+	wantRequestCountMin := atomic.NewInt64(int64(2))
+	wantRequeueCountMin := atomic.NewInt64(int64(2))
+	wantStatus := StatusReady
+	h := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+		wantRequestCountMin.Dec()
+		require.Equal(t, network.ProbeHeaderValue, r.Header.Get(network.ProbeHeaderName))
+		writer.WriteHeader(http.StatusOK)
+	})
+	s := http.Server{
+		Handler: h,
+		TLSConfig: &tls.Config{
+			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+				cert, err := tls.X509KeyPair(Crt1, Key1)
+				return &cert, err
+			},
+		},
+	}
+	l, err := net.Listen("tcp", ":0")
+	require.NoError(t, err)
+	defer l.Close()
+	port := l.Addr().(*net.TCPAddr).Port
+	l = tls.NewListener(l, s.TLSConfig)
+	go func() {
+		s.Serve(l)
+	}()
+	defer s.Close()
+	addrString := fmt.Sprintf("https://127.0.0.1:%d", port)
+	u, err := url.Parse(addrString)
+	require.NoError(t, err)
+
+	addressable := Addressable{
+		Address:     &url.URL{Scheme: "https", Path: "/b1/b1", Host: addrString},
+		ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+	}
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "ns",
+			Name:      "p1",
+			Labels:    map[string]string{"app": "p"},
+		},
+		Status: corev1.PodStatus{PodIP: "127.0.0.1"},
+	}
+	podinformer.Get(ctx).Informer().GetStore().Add(pod)
+	labelSelector := labels.SelectorFromSet(map[string]string{"app": "p"})
+	var IPsLister IPsLister = func(addressable Addressable) ([]string, error) {
+		pods, err := podinformer.Get(ctx).Lister().List(labelSelector)
+		if err != nil {
+			return nil, err
+		}
+		ips := make([]string, 0, len(pods))
+		for _, p := range pods {
+			ips = append(ips, p.Status.PodIP)
+		}
+		return ips, nil
+	}
+
+	cacheExpiryTime = time.Second * 5
+	prober, err := NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
+		wantRequeueCountMin.Dec()
+	}, pointer.String(string(CA1)))
+	require.NoError(t, err)
+
+	probeFunc := func() bool {
+		status := prober.Probe(ctx, addressable, wantStatus)
+		return status == wantStatus
+	}
+
+	t.Run("one pod - TLS certs before rotation", func(tt *testing.T) {
+		require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
+		require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 1 }, 5*time.Second, 100*time.Millisecond, "got %d, want 1", wantRequestCountMin.Load())
+		require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 1 }, 5*time.Second, 100*time.Millisecond, "got %d, want 1", wantRequeueCountMin.Load())
+	})
+	t.Run("one pod - TLS certs after rotation", func(tt *testing.T) {
+		prober.RotateRootCaCerts(pointer.String(string(CA2)))
+		s.TLSConfig.GetCertificate = func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+			cert, err := tls.X509KeyPair(Crt2, Key2)
+			return &cert, err
+		}
+		time.Sleep(time.Second * 10)
+		require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
+		require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
+		require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
+	})
+}
+
 // Adapted from https://github.com/knative/eventing/blob/57d78e060db6e0d2f3046eeedd27137cfa4fe0bc/pkg/eventingtls/eventingtlstesting/eventingtlstesting.go#L84
-func loadCerts() ([]byte, []byte, []byte) {
+func loadCerts() ([]byte, []byte, []byte, []byte, []byte, []byte) {
 	/*
 		Provisioned using:
 		openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout RootCA.key -out RootCA.pem -subj "/C=US/CN=Knative-Example-Root-CA"
@@ -309,5 +407,75 @@ Y6wIq3dlk98ZlQEwhBz3M4SYpLKyKAn/E/2ScsW+9vcvAAAK32BO27Tk9Ca6ShtQ
 p32q5PZOx9+eicXzW7qb4a26k1aFnnaDEUuSQsKXhzVVyt9Xmg14m8ETeEL5xPfI
 PiUZitNmqpg2123YyPwE4NW8okkLO03UD3I0I/Bn0mS0sb8xMt/ncR4iWeJOvZSG
 0YhYDYdUoSliRZYy5zTe7orFj7Q=
+-----END CERTIFICATE-----`), []byte(`
+-----BEGIN CERTIFICATE-----
+MIIDLzCCAhegAwIBAgIUALVX5LtdxZ7BFdmHRrvew+g3BU0wDQYJKoZIhvcNAQEL
+BQAwJzELMAkGA1UEBhMCVVMxGDAWBgNVBAMMD0V4YW1wbGUtUm9vdC1DQTAeFw0y
+MzA2MDkxOTM0NDhaFw0yNjAzMjkxOTM0NDhaMCcxCzAJBgNVBAYTAlVTMRgwFgYD
+VQQDDA9FeGFtcGxlLVJvb3QtQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+AoIBAQDNGMA/DCQ/+noh9a4tbIuo7TD8/VF2fnJoOGWf2a7zgnTR6qcixAgnIE9k
+mZhdmtOel5JcJ0qwk3zPWktAo7xNHPk8176Byle+tlDBiUj0rYyCmzQKJaUd5TRC
+Kh5a+f+6evGu3taRomr0n/qfYTldDipq+GIp0e0lFxF7svF4PJQRh7OJxEy9ShTg
+yFskDzq/Eu+NbwBH+jb4L6iAFGtBJLaNyDTDnx3VRtvlqBJzBOlt+BKTdeS4df2e
+cJ2IzGL4gl+FYk5YJ8za7KvGeQKV/CF+Qz6DTgjrQWtg5Nxi4HWE9Qo7Tlnhb8Qq
+rFaHqAU37oDsCmPkyH5cf+2osQWHAgMBAAGjUzBRMB0GA1UdDgQWBBQyDgHFw/7i
+kGBwXNvgzk5xqA41UjAfBgNVHSMEGDAWgBQyDgHFw/7ikGBwXNvgzk5xqA41UjAP
+BgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQBATinVQHNrUuwpNYGr
+WhB2KtHwVKlWlonYsP5N/waFTol1uzWLksHx5Khw5BnpmESdmkyrCtlFT4hd5LKX
+EK6XPRgK+3msNeQdFpu3+6cZYqVB123JFX8h+x0a/3OHsfuE9ozbOmFMqmKhq6Ol
+mKDWF7L/DmxqynSjjwJl5SgkBOl0IagGUCm4kfrwILPocaVNCrhX345CfwpueTAX
+ihH9viKxmQcmNx2ELTKIgSW7sEJzNTQSyccBAGkZ7487lGNo0h198sS3W+y4fIk7
+w5qSz7/ubZ0lfFHjNZJgZaBxqeoJOIe8BGtLzIhaZ8VzskrGJ2NmFadBZ+VNDZXQ
+c9JW
+-----END CERTIFICATE-----`), []byte(`
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDSpTAoVGabVt6A
+4fTapMlUn9bT1w+db9AAhTLaj82w/RKmVX+l7Xa+2vd1uTATSjmVWGlHXkD/a0Ov
+ujhXk2KRVaIwLLNIkK9cxAcfDeHqG6fd2Hh0SbeE+XXDIraXjQKTizkyGwun1Rjw
+v4LFhMSkPaaFMT5H/TSkrvcrNZpnMx9msVzkg8tbvGAlQbDh83wxCL+PWYwu0Uxp
+utQK/RPeCaymyhtRcCamxVckHepuzUreDS5mc+a4F4qclr8y7p08QXXAWHRYtkK3
+wHZQmEooKOe7NPHnAjaU/t4bhQ+m9QkALhC4bafkIhd1AsS0PrkPeYCZ+osP8di6
+/xCL61mNAgMBAAECggEAIG0pcqvmImJHB6lrsKokDBDnAzQHcAGhutLGYfrie9fE
+Iog63ud6m3rIaVOZYP7Qynq9Ci1/l/zX2JoJc6x5RKIywMkWIu+S70GF+ckrTodK
+BM6pYaK6IOWTXqIItbURVnaHgX0ZrZESW80/a6SP7jCct8LoMYYlr8xMuawbbr3v
+vL3yIWctE16SV68APlsocInTg0MHVR3A1IYViJ1wWLM3y8MvWzZZUtwFSwpeVzBQ
+/3WufTnGJ7LCyYTjMeat4icaJyHhwgIroeZWPm4XLUn2uaRZcD5q1PHOkvar1MDz
+lApf54wX3AmeuavvDdGoMPftxB+bFX/lslRwvVveSQKBgQDwgO5LBW8TzQWAKGV9
+johBpxAL14zdh+eRjNDSYYB1UJVtX9xc0KHpadVGqHI6BRr1qCSHhmU/05iANVrD
+rhu1QL3yMAbrw8NQCc9qf1NM2S+7n81XCtPrM5yeWIIY+sH2AN2HcgI2GLoOO4FM
+D4EF1UvpZ+jdptLt+EqPe9kbQwKBgQDgN7+LwXGPfCYXq8LpczzFr7BdcvxWnSzf
+ofyuWLxamEIK9ncLmWjyC+4MJHT2ZDdCY1RpkCcyYkhE4Ij8aY6vzEqMOBjfuO6+
+rQMPC8aZHCBvfwRCfT+FrK4760aGh5sWHl/y3vUX9rWYtoDTsgCn8ePds/RL26N/
+GNu07zQi7wKBgQCVvXCgPQ3fojLejEhEWE31snKHLPmDpG5FbQtHMXWtlTK0Go81
+KqDklwQ3LgGQpkUW1k2II+E+UBwPFykf1HNj8p9Q/x4QBJ7CYplFkWjn3AGgK+rJ
+WvB+7G+DF1BJBTdmVzuWbSF7VQHigqIKHU0TuK2+8PdHqeqCR6kElPOjyQKBgCon
+MPK0VoY0P/EZUJaVHKrJwe1/raMW/5W3nYqlkhuyHlBzT6Q1nj5LMeDEhdzAsIbh
+p8AE4umdAps4X2ic679vN+CutzZwTSo52qZcf2TPneV4SrO5WlTmRwdqzyKBog2B
+fmZptkhgEHn6bbPe9jKczksjBt2wGEfPw5Z7liCvAoGAQtPF/j1TMjz8WA6VZA6e
+MHlZSlfLOj6BF9Ar964eVvkSY6oNOSVOQRZRoUAhi+HuoPzxcR75QitEQ7yYJ96c
+1WRUiyZARcJ6MeQfM5pVZBQuLM8GBgJMO2lFS9vZ99o4GPyr7jqg8ks+UIWcGBU5
+uyTc//uUvg7HkMZ3wqutYkM=
+-----END PRIVATE KEY-----`), []byte(`
+-----BEGIN CERTIFICATE-----
+MIIDmDCCAoCgAwIBAgIURssTCKOLGem03zDla60by6Eg+9kwDQYJKoZIhvcNAQEL
+BQAwJzELMAkGA1UEBhMCVVMxGDAWBgNVBAMMD0V4YW1wbGUtUm9vdC1DQTAeFw0y
+MzA2MDkxOTM0NDhaFw0yNjAzMjkxOTM0NDhaMG0xCzAJBgNVBAYTAlVTMRIwEAYD
+VQQIDAlZb3VyU3RhdGUxETAPBgNVBAcMCFlvdXJDaXR5MR0wGwYDVQQKDBRFeGFt
+cGxlLUNlcnRpZmljYXRlczEYMBYGA1UEAwwPbG9jYWxob3N0LmxvY2FsMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0qUwKFRmm1begOH02qTJVJ/W09cP
+nW/QAIUy2o/NsP0SplV/pe12vtr3dbkwE0o5lVhpR15A/2tDr7o4V5NikVWiMCyz
+SJCvXMQHHw3h6hun3dh4dEm3hPl1wyK2l40Ck4s5MhsLp9UY8L+CxYTEpD2mhTE+
+R/00pK73KzWaZzMfZrFc5IPLW7xgJUGw4fN8MQi/j1mMLtFMabrUCv0T3gmspsob
+UXAmpsVXJB3qbs1K3g0uZnPmuBeKnJa/Mu6dPEF1wFh0WLZCt8B2UJhKKCjnuzTx
+5wI2lP7eG4UPpvUJAC4QuG2n5CIXdQLEtD65D3mAmfqLD/HYuv8Qi+tZjQIDAQAB
+o3YwdDAfBgNVHSMEGDAWgBQyDgHFw/7ikGBwXNvgzk5xqA41UjAJBgNVHRMEAjAA
+MAsGA1UdDwQEAwIE8DAaBgNVHREEEzARgglsb2NhbGhvc3SHBH8AAAEwHQYDVR0O
+BBYEFJn+Tr9zuHZjNdGWeK4bolbym69HMA0GCSqGSIb3DQEBCwUAA4IBAQB9OVZ8
+EVE2lqTQzKsnMrNqSNUIP93+JEXMWk9mHUPypQHwMomtanp9s4ZjnVLfVTgsYr4j
+FEkRmJ5gv+xjg53R+m5VHGbIegknSafZ5Sc9/1wrA21r59op2tpBkh3bxNbhfmOu
+7mod7B9H+r85lh9JKq07hW/3gmg6rqqvGTBjckgDU/PgIXhDFxWgL78r6HbqhAys
+xmRzYZZ8YR+a4DQkFf7Hjj9aLuXLhAuJKuYc+zYSrNeozaMRW1rYU+kLTPQ7aYep
+xEvjwqWqH5moiuvwopm9glqr72wZh+6YO+qD8MsS3u7fqjRFJHlDiadNlra2S1kv
+tJMpubIHfZ5aeaCE
 -----END CERTIFICATE-----`)
 }
