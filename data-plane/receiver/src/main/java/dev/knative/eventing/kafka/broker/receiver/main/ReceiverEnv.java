@@ -67,9 +67,6 @@ public class ReceiverEnv extends BaseEnv {
     return httpServerConfigFilePath;
   }
 
-  public String getHttpsServerConfigFilePath() {
-    return httpServerConfigFilePath.replace(".yaml", "-https.yaml");
-  }
 
   @Override
   public String toString() {

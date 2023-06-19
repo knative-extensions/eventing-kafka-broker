@@ -114,38 +114,25 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     File secretVolume = new File("/etc/broker-receiver-secret-volume");
     if (secretVolume.exists()) {
       // The secret volume is mounted, we should start the https server
-      logger.info("Secret volume is mounted");
-
       // check whether the tls.key and tls.crt files exist
       File tlsKeyFile = new File("/etc/broker-receiver-secret-volume/tls.key");
       File tlsCrtFile = new File("/etc/broker-receiver-secret-volume/tls.crt");
 
       if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-        // The tls.key and tls.crt files exist, we should start the https server
-        logger.info("tls.key and tls.crt files exist, and the httpsServerOptions is not null");
-        logger.info("Proceed to start the https server");
-
         PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
             .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
             .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
         this.httpsServerOptions
             .setSsl(true)
-            // use pem file for now
             .setPemKeyCertOptions(keyCertOptions);
 
         this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
 
       } else {
-        // The tls.key and tls.crt files do not exist, we should start the http server
-        // only
-        logger.info("tls.key and tls.crt files do not exist");
+        this.httpsServer = null;
       }
 
-    } else {
-      // The secret volume is not mounted, we should start the http server only
-      logger.info("Secret volume is not mounted");
     }
-
     final var handler = new ProbeHandler(
         env.getLivenessProbePath(),
         env.getReadinessProbePath(),
