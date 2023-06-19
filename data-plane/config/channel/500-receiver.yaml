@@ -92,6 +92,8 @@ spec:
                   fieldPath: metadata.namespace
             - name: INGRESS_PORT
               value: "8080"
+            - name: INGRESS_TLS_PORT
+              value: "8443"
             - name: PRODUCER_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-channel-producer.properties
             - name: HTTPSERVER_CONFIG_FILE_PATH
