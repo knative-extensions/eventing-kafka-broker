@@ -25,8 +25,11 @@ readonly DATA_PLANE_CONFIG_DIR=${DATA_PLANE_DIR}/config
 readonly SOURCE_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/source
 # Broker config
 readonly BROKER_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker
+readonly BROKER_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker-tls
 readonly SINK_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink
+readonly SINK_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink-tls
 readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
+readonly CHANNEL_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel-tls
 
 readonly RECEIVER_DIRECTORY=receiver-vertx
 readonly DISPATCHER_DIRECTORY=dispatcher
@@ -132,9 +135,16 @@ function data_plane_unit_tests() {
   return $mvn_output
 }
 
+function tls_setup() {
+	ko resolve ${KO_FLAGS} -Rf ${BROKER_TLS_CONFIG_DIR} \
+		-Rf ${SINK_TLS_CONFIG_DIR} \
+		-Rf ${CHANNEL_TLS_CONFIG_DIR} \
+		| "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_TLS_NETWORK_ARTIFACT}"
+}
+
 # Note: do not change this function name, it's used during releases.
 function data_plane_setup() {
-  data_plane_build_push && k8s
+  data_plane_build_push && k8s && tls_setup
   return $?
 }
 
