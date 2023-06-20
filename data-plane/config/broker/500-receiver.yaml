@@ -59,7 +59,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-receiver
-          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+          image: docker.io/leo6leoredhat/knative-kafka-broker-receiver:f4f592c819108bf27c50da289123c6bebdd0e28d
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -76,9 +76,8 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
-            - mountPath: /etc/broker-receiver-secret-volume
-              name: kafka-broker-receiver-secret-volume
-              readOnly: true
+            - mountPath: /etc/receiver-secret-volume
+              name: receiver-secret-volume
               
           ports:
             - containerPort: 9090
@@ -178,7 +177,7 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
-        - name: kafka-broker-receiver-secret-volume
+        - name: receiver-secret-volume
           secret:
             secretName: kafka-broker-ingress-server-tls
             optional: true

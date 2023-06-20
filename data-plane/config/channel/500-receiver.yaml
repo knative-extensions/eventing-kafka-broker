@@ -76,8 +76,8 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
-            - mountPath: /etc/channel-receiver-secret-volume
-              name: kafka-channel-receiver-secret-volume
+            - mountPath: /etc/receiver-secret-volume
+              name: receiver-secret-volume
               readOnly: true
           ports:
             - containerPort: 9090
@@ -177,7 +177,7 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
-        - name: kafka-channel-receiver-secret-volume
+        - name: receiver-secret-volume
           secret:
             secretName: kafka-channel-ingress-server-tls
             optional: true
