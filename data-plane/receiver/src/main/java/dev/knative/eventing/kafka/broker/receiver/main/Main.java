@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -58,7 +59,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void main(final String[] args) throws IOException {
+  public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory) throws IOException {
     ReceiverEnv env = new ReceiverEnv(System::getenv);
 
     OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
@@ -93,7 +94,8 @@ public class Main {
       env,
       producerConfigs,
       Metrics.getRegistry(),
-      httpServerOptions
+      httpServerOptions,
+      kafkaProducerFactory
     );
     DeploymentOptions deploymentOptions = new DeploymentOptions()
       .setInstances(Runtime.getRuntime().availableProcessors());

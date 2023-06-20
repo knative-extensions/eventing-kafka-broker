@@ -40,6 +40,8 @@ type features struct {
 	DispatcherOrderedExecutorMetrics feature.Flag
 	ControllerAutoscaler             feature.Flag
 	TriggersConsumerGroupTemplate    *template.Template
+	BrokersTopicTemplate             *template.Template
+	ChannelsTopicTemplate            *template.Template
 }
 
 type KafkaFeatureFlags struct {
@@ -47,10 +49,16 @@ type KafkaFeatureFlags struct {
 	m        sync.RWMutex
 }
 
-var DefaultTriggersConsumerGroupTemplate *template.Template
+var (
+	DefaultTriggersConsumerGroupTemplate *template.Template
+	DefaultBrokersTopicTemplate          *template.Template
+	DefaultChannelsTopicTemplate         *template.Template
+)
 
 func init() {
 	DefaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
+	DefaultBrokersTopicTemplate, _ = template.New("brokers.topic.template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}")
+	DefaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-channel-{{ .Namespace }}-{{ .Name }}")
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
@@ -60,6 +68,8 @@ func DefaultFeaturesConfig() *KafkaFeatureFlags {
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
 			ControllerAutoscaler:             feature.Disabled,
 			TriggersConsumerGroupTemplate:    DefaultTriggersConsumerGroupTemplate,
+			BrokersTopicTemplate:             DefaultBrokersTopicTemplate,
+			ChannelsTopicTemplate:            DefaultChannelsTopicTemplate,
 		},
 	}
 }
@@ -72,6 +82,8 @@ func newFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) 
 		asFlag("dispatcher.ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
 		asFlag("controller.autoscaler", &nc.features.ControllerAutoscaler),
 		asTemplate("triggers.consumergroup.template", nc.features.TriggersConsumerGroupTemplate),
+		asTemplate("brokers.topic.template", nc.features.BrokersTopicTemplate),
+		asTemplate("channels.topic.template", nc.features.ChannelsTopicTemplate),
 	)
 	return nc, err
 }
@@ -95,13 +107,15 @@ func (f *KafkaFeatureFlags) IsControllerAutoscalerEnabled() bool {
 }
 
 func (f *KafkaFeatureFlags) ExecuteTriggersConsumerGroupTemplate(triggerMetadata v1.ObjectMeta) (string, error) {
-	var result bytes.Buffer
-	err := f.features.TriggersConsumerGroupTemplate.Execute(&result, triggerMetadata)
-	if err != nil {
-		return "", fmt.Errorf("unable to execute triggers consumergroup template: %w", err)
-	}
+	return executeTemplateToString(f.features.TriggersConsumerGroupTemplate, triggerMetadata, "unable to execute triggers consumergroup template: %w")
+}
 
-	return result.String(), nil
+func (f *KafkaFeatureFlags) ExecuteBrokersTopicTemplate(brokerMetadata v1.ObjectMeta) (string, error) {
+	return executeTemplateToString(f.features.BrokersTopicTemplate, brokerMetadata, "unable to execute brokers topic template: %w")
+}
+
+func (f *KafkaFeatureFlags) ExecuteChannelsTopicTemplate(channelMetadata v1.ObjectMeta) (string, error) {
+	return executeTemplateToString(f.features.ChannelsTopicTemplate, channelMetadata, "unable to execute channels topic template: %w")
 }
 
 // Store is a typed wrapper around configmap.Untyped store to handle our configmaps.
@@ -185,4 +199,14 @@ func asTemplate(key string, target *template.Template) configmap.ParseFunc {
 		}
 		return nil
 	}
+}
+
+func executeTemplateToString(template *template.Template, metadata v1.ObjectMeta, errorMessage string) (string, error) {
+	var result bytes.Buffer
+	err := template.Execute(&result, metadata)
+	if err != nil {
+		return "", fmt.Errorf(errorMessage, err)
+	}
+
+	return result.String(), nil
 }

@@ -18,28 +18,27 @@ package dev.knative.eventing.kafka.broker.receiver;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.kafka.client.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
- * This interface wraps a {@link KafkaProducer} together with the topic where the ingress should produce to.
+ * This interface wraps a {@link ReactiveKafkaProducer} together with the topic where the ingress should produce to.
  */
 public interface IngressProducer {
 
   /**
-   * Convenience method for {@link KafkaProducer#send(KafkaProducerRecord)}.
+   * Convenience method for {@link ReactiveKafkaProducer#send(ProducerRecord)}.
    *
-   * @see KafkaProducer#send(KafkaProducerRecord)
+   * @see ReactiveKafkaProducer#send(ProducerRecord)
    */
-  default Future<RecordMetadata> send(KafkaProducerRecord<String, CloudEvent> record) {
+  default Future<RecordMetadata> send(ProducerRecord<String, CloudEvent> record) {
     return getKafkaProducer().send(record);
   }
 
   /**
    * @return the unwrapped kafka producer.
    */
-  KafkaProducer<String, CloudEvent> getKafkaProducer();
+  ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer();
 
   /**
    * @return the topic where the record should be sent to.

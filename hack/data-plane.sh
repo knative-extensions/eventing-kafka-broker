@@ -28,7 +28,7 @@ readonly BROKER_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/broker
 readonly SINK_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink
 readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
 
-readonly RECEIVER_DIRECTORY=receiver
+readonly RECEIVER_DIRECTORY=receiver-vertx
 readonly DISPATCHER_DIRECTORY=dispatcher
 
 # Checks whether the given function exists.
