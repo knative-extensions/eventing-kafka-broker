@@ -214,9 +214,9 @@ func TestAsyncProber(t *testing.T) {
 				return status == tc.wantStatus
 			}
 
-			require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
-			require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
-			require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
+			require.Eventuallyf(t, probeFunc, 5*time.Second, 250*time.Millisecond, "")
+			require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
+			require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
 		})
 	}
 }
@@ -297,9 +297,9 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 	}
 
 	t.Run("one pod - TLS certs before rotation", func(tt *testing.T) {
-		require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
-		require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 1 }, 5*time.Second, 100*time.Millisecond, "got %d, want 1", wantRequestCountMin.Load())
-		require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 1 }, 5*time.Second, 100*time.Millisecond, "got %d, want 1", wantRequeueCountMin.Load())
+		require.Eventuallyf(tt, probeFunc, 5*time.Second, 250*time.Millisecond, "")
+		require.Eventuallyf(tt, func() bool { return wantRequestCountMin.Load() == 1 }, 5*time.Second, 250*time.Millisecond, "got %d, want 1", wantRequestCountMin.Load())
+		require.Eventuallyf(tt, func() bool { return wantRequeueCountMin.Load() == 1 }, 5*time.Second, 250*time.Millisecond, "got %d, want 1", wantRequeueCountMin.Load())
 	})
 	t.Run("one pod - TLS certs after rotation", func(tt *testing.T) {
 		prober.RotateRootCaCerts(pointer.String(string(CA2)))
@@ -308,9 +308,9 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 			return &cert, err
 		}
 		time.Sleep(time.Second * 10)
-		require.Eventuallyf(t, probeFunc, 5*time.Second, 100*time.Millisecond, "")
-		require.Eventuallyf(t, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
-		require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 100*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
+		require.Eventuallyf(tt, probeFunc, 5*time.Second, 250*time.Millisecond, "")
+		require.Eventuallyf(tt, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
+		require.Eventuallyf(tt, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
 	})
 }
 
