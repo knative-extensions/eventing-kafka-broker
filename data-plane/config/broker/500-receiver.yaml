@@ -78,6 +78,7 @@ spec:
               readOnly: true
             - mountPath: /etc/receiver-secret-volume
               name: broker-receiver-secret-volume
+              readOnly: true
               
           ports:
             - containerPort: 9090
