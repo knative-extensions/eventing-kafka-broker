@@ -59,7 +59,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-receiver
-          image: docker.io/leo6leoredhat/knative-kafka-broker-receiver:f4f592c819108bf27c50da289123c6bebdd0e28d
+          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
