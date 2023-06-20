@@ -4,7 +4,7 @@ metadata:
   name: config-kafka-features
   namespace: knative-eventing
   annotations:
-    knative.dev/example-checksum: "330d9f60"
+    knative.dev/example-checksum: "1192895d"
 data:
   _example: |-
     ################################
@@ -36,7 +36,15 @@ data:
     # The Go text/template used to generate consumergroup ID for triggers.
     # The template can reference the trigger Kubernetes metadata only.
     triggers.consumergroup.template: "knative-trigger-{{ .Namespace }}-{{ .Name }}"
+    # The Go text/template used to generate topics for Brokers.
+    # The template can reference the broker Kubernetes metadata only.
+    brokers.topic.template: "knative-broker-{{ .Namespace }}-{{ .Name }}"
+    # The Go text/template used to generate topics for Channels.
+    # The template can reference the channel Kubernetes metadata only.
+    channels.topic.template: "knative-channel-{{ .Namespace }}-{{ .Name }}"
   dispatcher.rate-limiter: "disabled"
   dispatcher.ordered-executor-metrics: "disabled"
   controller.autoscaler: "disabled"
   triggers.consumergroup.template: "knative-trigger-{{ .Namespace }}-{{ .Name }}"
+  brokers.topic.template: "knative-broker-{{ .Namespace }}-{{ .Name }}"
+  channels.topic.template: "knative-channel-{{ .Namespace }}-{{ .Name }}"
