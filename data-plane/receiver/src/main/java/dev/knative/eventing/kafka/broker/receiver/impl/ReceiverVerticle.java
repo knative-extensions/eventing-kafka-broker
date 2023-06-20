@@ -110,18 +110,19 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
+
     // check whether the secret volume is mounted
-    File secretVolume = new File("/etc/broker-receiver-secret-volume");
+    File secretVolume = new File("/etc/receiver-secret-volume");
     if (secretVolume.exists()) {
       // The secret volume is mounted, we should start the https server
       // check whether the tls.key and tls.crt files exist
-      File tlsKeyFile = new File("/etc/broker-receiver-secret-volume/tls.key");
-      File tlsCrtFile = new File("/etc/broker-receiver-secret-volume/tls.crt");
+      File tlsKeyFile = new File("/etc/receiver-secret-volume/tls.key");
+      File tlsCrtFile = new File("/etc/receiver-secret-volume/tls.crt");
 
       if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
         PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-            .setKeyPath("/etc/broker-receiver-secret-volume/tls.key")
-            .setCertPath("/etc/broker-receiver-secret-volume/tls.crt");
+            .setKeyPath("/etc/receiver-secret-volume/tls.key")
+            .setCertPath("/etc/receiver-secret-volume/tls.crt");
         this.httpsServerOptions
             .setSsl(true)
             .setPemKeyCertOptions(keyCertOptions);
