@@ -110,7 +110,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
-
     // check whether the secret volume is mounted
     File secretVolume = new File("/etc/receiver-secret-volume");
     if (secretVolume.exists()) {
@@ -129,8 +128,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
 
-      } else {
-        this.httpsServer = null;
       }
 
     }

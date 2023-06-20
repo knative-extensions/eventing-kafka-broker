@@ -123,6 +123,14 @@ public class ReceiverVerticleTest {
     httpServerOptions.setPort(PORT);
     httpServerOptions.setHost("localhost");
 
+    final var httpsServerOptions = new HttpServerOptions();
+    httpsServerOptions.setPort(TLS_PORT);
+    httpsServerOptions.setHost("localhost");
+    httpsServerOptions.setSsl(true);
+    httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
+        .setCertPath("src/test/resources/tls.crt")
+        .setKeyPath("src/test/resources/tls.key"));
+
 
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
@@ -130,7 +138,7 @@ public class ReceiverVerticleTest {
     final var verticle = new ReceiverVerticle(
         env,
         httpServerOptions,
-        null,
+        httpsServerOptions,
         v -> store,
         new IngressRequestHandlerImpl(
             StrictRequestToRecordMapper.getInstance(),
