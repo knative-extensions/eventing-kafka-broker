@@ -79,7 +79,6 @@ spec:
             - mountPath: /etc/receiver-secret-volume
               name: broker-receiver-secret-volume
               readOnly: true
-              
           ports:
             - containerPort: 9090
               name: http-metrics

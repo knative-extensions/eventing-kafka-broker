@@ -92,7 +92,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     this.env = env;
     this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
-    this.httpsServerOptions = httpsServerOptions != null ? httpsServerOptions : null;
+    this.httpsServerOptions = httpsServerOptions;
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
     this.ingressRequestHandler = ingressRequestHandler;
   }
