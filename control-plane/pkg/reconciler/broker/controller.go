@@ -39,6 +39,7 @@ import (
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -56,6 +57,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
+	featureFlags := apisconfig.DefaultFeaturesConfig()
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -73,6 +75,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		ConfigMapLister:            configmapInformer.Lister(),
 		Env:                        env,
 		Counter:                    counter.NewExpiringCounter(ctx),
+		KafkaFeatureFlags:          featureFlags,
 	}
 
 	logger := logging.FromContext(ctx)

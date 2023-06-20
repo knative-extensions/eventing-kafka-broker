@@ -38,6 +38,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
@@ -57,11 +58,12 @@ const (
 )
 
 var (
-	BrokerTopics = []string{fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)}
+	kafkaFeatureFlags = apisconfig.DefaultFeaturesConfig()
+	BrokerTopics      = []string{getKafkaTopic()}
 )
 
 func BrokerTopic() string {
-	return fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
+	return getKafkaTopic()
 }
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.
@@ -310,7 +312,11 @@ func StatusBrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Br
 }
 
 func StatusBrokerTopicReady(broker *eventing.Broker) {
-	StatusTopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
+	topicName, err := kafkaFeatureFlags.ExecuteBrokersTopicTemplate(broker.ObjectMeta)
+	if err != nil {
+		panic("Failed to create broker topic name")
+	}
+	StatusTopicReadyWithName(topicName)(broker)
 }
 
 func StatusExternalBrokerTopicReady(topic string) func(broker *eventing.Broker) {
@@ -488,4 +494,12 @@ func BrokerConfigMapSecretAnnotation(name string) reconcilertesting.BrokerOption
 		}
 		broker.Status.Annotations[security.AuthSecretNameKey] = name
 	}
+}
+
+func getKafkaTopic() string {
+	topicName, err := kafkaFeatureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName})
+	if err != nil {
+		panic("Failed to create broker topic name")
+	}
+	return topicName
 }

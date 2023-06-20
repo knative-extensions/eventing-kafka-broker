@@ -40,6 +40,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/manifestival/client-go-client"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -59,6 +60,7 @@ import (
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -452,7 +454,8 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
-		expectedTopicName := fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
+		expectedTopicName, err := kafkaFeatureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName})
+		require.NoError(t, err, "Failed to create broker topic name from feature flags")
 		if t, ok := row.OtherTestData[externalTopic]; ok {
 			expectedTopicName = t.(string)
 		}
@@ -506,6 +509,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			Prober:                             proberMock,
 			ManifestivalClient:                 mfcMockClient,
 			DataplaneLifecycleLocksByNamespace: util.NewExpiringLockMap[string](ctx, time.Minute*30),
+			KafkaFeatureFlags:                  apisconfig.DefaultFeaturesConfig(),
 		}
 
 		r := brokerreconciler.NewReconciler(

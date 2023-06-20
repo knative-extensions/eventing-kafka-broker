@@ -37,11 +37,13 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
@@ -98,8 +100,9 @@ var (
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 
-	linear      = eventingduck.BackoffPolicyLinear
-	exponential = eventingduck.BackoffPolicyExponential
+	linear            = eventingduck.BackoffPolicyLinear
+	exponential       = eventingduck.BackoffPolicyExponential
+	kafkaFeatureFlags = apisconfig.DefaultFeaturesConfig()
 )
 
 var DefaultEnv = &config.Env{
@@ -2789,7 +2792,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
-		expectedTopicName := fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
+		expectedTopicName, err := kafkaFeatureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName})
+		require.NoError(t, err, "Failed to create broker topic name from feature flags")
 		if t, ok := row.OtherTestData[externalTopic]; ok {
 			expectedTopicName = t.(string)
 		}
@@ -2830,9 +2834,10 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:     env,
-			Prober:  proberMock,
-			Counter: counter.NewExpiringCounter(ctx),
+			Env:               env,
+			Prober:            proberMock,
+			Counter:           counter.NewExpiringCounter(ctx),
+			KafkaFeatureFlags: apisconfig.DefaultFeaturesConfig(),
 		}
 
 		reconciler.Tracker = &FakeTracker{}
