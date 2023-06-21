@@ -86,12 +86,12 @@ function knative_teardown() {
 }
 
 function knative_eventing() {
+  # we need cert-manager installed to be able to create the issuers
+  kubectl apply -Rf "${CERTMANAGER_CONFIG}"
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-core.yaml"
-	# we need cert-manager installed to be able to create the issuers
-	kubectl apply -Rf "${CERTMANAGER_CONFIG}"
 	kubectl apply -f "${EVENTING_CONFIG}/eventing-tls-networking.yaml"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
