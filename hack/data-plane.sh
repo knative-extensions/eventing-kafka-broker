@@ -101,6 +101,10 @@ function k8s() {
   ko resolve ${KO_FLAGS} -Rf ${BROKER_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_BROKER_ARTIFACT}"
   ko resolve ${KO_FLAGS} -Rf ${SINK_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_SINK_ARTIFACT}"
   ko resolve ${KO_FLAGS} -Rf ${CHANNEL_DATA_PLANE_CONFIG_DIR} | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CHANNEL_ARTIFACT}"
+  ko resolve ${KO_FLAGS} -Rf ${BROKER_TLS_CONFIG_DIR} \
+    -Rf ${SINK_TLS_CONFIG_DIR} \
+    -Rf ${CHANNEL_TLS_CONFIG_DIR} \
+    | "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_TLS_NETWORK_ARTIFACT}"
 
   replace_images "${EVENTING_KAFKA_SOURCE_ARTIFACT}" &&
     replace_images "${EVENTING_KAFKA_BROKER_ARTIFACT}" &&
@@ -135,16 +139,9 @@ function data_plane_unit_tests() {
   return $mvn_output
 }
 
-function tls_setup() {
-	ko resolve ${KO_FLAGS} -Rf ${BROKER_TLS_CONFIG_DIR} \
-		-Rf ${SINK_TLS_CONFIG_DIR} \
-		-Rf ${CHANNEL_TLS_CONFIG_DIR} \
-		| "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_TLS_NETWORK_ARTIFACT}"
-}
-
 # Note: do not change this function name, it's used during releases.
 function data_plane_setup() {
-  data_plane_build_push && k8s && tls_setup
+  data_plane_build_push && k8s
   return $?
 }
 
