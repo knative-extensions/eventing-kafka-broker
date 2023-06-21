@@ -70,6 +70,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
   private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
   private static final String SECRET_VOLUME_PATH = "/etc/receiver-secret-volume";
+  private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
+  private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
 
   private final HttpServerOptions httpServerOptions;
   private final HttpServerOptions httpsServerOptions;
@@ -116,13 +118,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     if (secretVolume.exists()) {
       // The secret volume is mounted, we should start the https server
       // check whether the tls.key and tls.crt files exist
-      File tlsKeyFile = new File(SECRET_VOLUME_PATH + "/tls.key");
-      File tlsCrtFile = new File(SECRET_VOLUME_PATH + "/tls.crt");
+      File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
+      File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
 
       if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
         PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-            .setKeyPath(SECRET_VOLUME_PATH + "/tls.key")
-            .setCertPath(SECRET_VOLUME_PATH + "/tls.crt");
+            .setKeyPath(TLS_KEY_FILE_PATH)
+            .setCertPath(TLS_CRT_FILE_PATH);
         this.httpsServerOptions
             .setSsl(true)
             .setPemKeyCertOptions(keyCertOptions);

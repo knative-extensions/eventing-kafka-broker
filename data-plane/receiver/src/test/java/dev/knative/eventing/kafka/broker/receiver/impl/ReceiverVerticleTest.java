@@ -88,6 +88,8 @@ public class ReceiverVerticleTest {
   private static final int TLS_PORT = 8443;
   private static final String HOST = "localhost";
   private static final String SECRET_VOLUME_PATH = "src/test/resources";
+  private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+  private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
 
   private static WebClient webClient;
 
@@ -129,8 +131,8 @@ public class ReceiverVerticleTest {
     httpsServerOptions.setHost(HOST);
     httpsServerOptions.setSsl(true);
     httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
-        .setCertPath(SECRET_VOLUME_PATH + "/tls.crt")
-        .setKeyPath(SECRET_VOLUME_PATH + "/tls.key"));
+        .setCertPath(TLS_KEY_FILE_PATH)
+        .setKeyPath(TLS_CRT_FILE_PATH));
 
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
@@ -175,7 +177,7 @@ public class ReceiverVerticleTest {
     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
         .accept(tc.getContract());
 
-    tc.requestSender.apply(webClient.post(PORT, "localhost", tc.path))
+    tc.requestSender.apply(webClient.post(PORT, HOST, tc.path))
         .onFailure(context::failNow)
         .onSuccess(response -> vertx.setTimer(1000, ignored -> context.verify(() -> {
           assertThat(response.statusCode())

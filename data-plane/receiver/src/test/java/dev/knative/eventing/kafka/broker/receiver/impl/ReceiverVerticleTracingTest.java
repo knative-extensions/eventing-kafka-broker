@@ -70,6 +70,8 @@ public abstract class ReceiverVerticleTracingTest {
     private static final int PORT_TLS = 8443;
     private static final String HOST = "localhost";
     private static final String SECRET_VOLUME_PATH = "src/test/resources";
+    private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+    private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
 
     private Vertx vertx;
     private InMemorySpanExporter spanExporter;
@@ -127,8 +129,8 @@ public abstract class ReceiverVerticleTracingTest {
         httpsServerOptions.setHost(HOST);
         httpsServerOptions.setSsl(true);
         httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
-                .setCertPath(SECRET_VOLUME_PATH + "/tls.crt")
-                .setKeyPath(SECRET_VOLUME_PATH + "/tls.key"));
+                .setCertPath(TLS_KEY_FILE_PATH)
+                .setKeyPath(TLS_CRT_FILE_PATH));
 
 
         final var verticle = new ReceiverVerticle(
