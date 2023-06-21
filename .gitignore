@@ -43,3 +43,5 @@ data-plane/**/build/
 /eventing-kafka-sink-prometheus-operator.yaml
 
 /eventing-kafka-source-bundle.yaml
+
+/eventing-kafka-tls-networking.yaml
