@@ -68,6 +68,8 @@ public abstract class ReceiverVerticleTracingTest {
     private static final int TIMEOUT = 10;
     private static final int PORT = 8083;
     private static final int PORT_TLS = 8443;
+    private static final String HOST = "localhost";
+    private static final String SECRET_VOLUME_PATH = "src/test/resources";
 
     private Vertx vertx;
     private InMemorySpanExporter spanExporter;
@@ -117,16 +119,16 @@ public abstract class ReceiverVerticleTracingTest {
 
         final var httpServerOptions = new HttpServerOptions();
         httpServerOptions.setPort(PORT);
-        httpServerOptions.setHost("localhost");
+        httpServerOptions.setHost(HOST);
         httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
         final var httpsServerOptions = new HttpServerOptions();
         httpsServerOptions.setPort(PORT_TLS);
-        httpsServerOptions.setHost("localhost");
+        httpsServerOptions.setHost(HOST);
         httpsServerOptions.setSsl(true);
         httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
-                .setCertPath("src/test/resources/tls.crt")
-                .setKeyPath("src/test/resources/tls.key"));
+                .setCertPath(SECRET_VOLUME_PATH + "/tls.crt")
+                .setKeyPath(SECRET_VOLUME_PATH + "/tls.key"));
 
 
         final var verticle = new ReceiverVerticle(
@@ -177,7 +179,7 @@ public abstract class ReceiverVerticleTracingTest {
 
         HttpResponse<Buffer> response = vertx.<HttpResponse<Buffer>>executeBlocking(promise -> {
             VertxMessageFactory
-                    .createWriter(webClient.post(PORT, "localhost", path))
+                    .createWriter(webClient.post(PORT, HOST, path))
                     .writeBinary(inputEvent)
                     .onComplete(promise);
         }).toCompletionStage()

@@ -86,6 +86,8 @@ public class ReceiverVerticleTest {
   private static final int TIMEOUT = 10;
   private static final int PORT = 8082;
   private static final int TLS_PORT = 8443;
+  private static final String HOST = "localhost";
+  private static final String SECRET_VOLUME_PATH = "src/test/resources";
 
   private static WebClient webClient;
 
@@ -121,15 +123,15 @@ public class ReceiverVerticleTest {
 
     final var httpServerOptions = new HttpServerOptions();
     httpServerOptions.setPort(PORT);
-    httpServerOptions.setHost("localhost");
+    httpServerOptions.setHost(HOST); 
 
     final var httpsServerOptions = new HttpServerOptions();
     httpsServerOptions.setPort(TLS_PORT);
-    httpsServerOptions.setHost("localhost");
+    httpsServerOptions.setHost(HOST);
     httpsServerOptions.setSsl(true);
     httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
-        .setCertPath("src/test/resources/tls.crt")
-        .setKeyPath("src/test/resources/tls.key"));
+        .setCertPath(SECRET_VOLUME_PATH + "/tls.crt")
+        .setKeyPath(SECRET_VOLUME_PATH + "/tls.key"));
 
 
     final var env = mock(ReceiverEnv.class);

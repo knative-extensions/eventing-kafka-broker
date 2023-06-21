@@ -69,6 +69,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
+  private static final String SECRET_VOLUME_PATH = "/etc/receiver-secret-volume";
 
   private final HttpServerOptions httpServerOptions;
   private final HttpServerOptions httpsServerOptions;
@@ -109,17 +110,17 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
     // check whether the secret volume is mounted
-    File secretVolume = new File("/etc/receiver-secret-volume");
+    File secretVolume = new File(SECRET_VOLUME_PATH);
     if (secretVolume.exists()) {
       // The secret volume is mounted, we should start the https server
       // check whether the tls.key and tls.crt files exist
-      File tlsKeyFile = new File("/etc/receiver-secret-volume/tls.key");
-      File tlsCrtFile = new File("/etc/receiver-secret-volume/tls.crt");
+      File tlsKeyFile = new File(SECRET_VOLUME_PATH + "/tls.key");
+      File tlsCrtFile = new File(SECRET_VOLUME_PATH + "/tls.crt");
 
       if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
         PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-            .setKeyPath("/etc/receiver-secret-volume/tls.key")
-            .setCertPath("/etc/receiver-secret-volume/tls.crt");
+            .setKeyPath(SECRET_VOLUME_PATH + "/tls.key")
+            .setCertPath(SECRET_VOLUME_PATH + "/tls.crt");
         this.httpsServerOptions
             .setSsl(true)
             .setPemKeyCertOptions(keyCertOptions);
