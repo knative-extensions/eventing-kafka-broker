@@ -310,9 +310,14 @@ func (r *Reconciler) reconcileBrokerTopic(broker *eventing.Broker, securityOptio
 		}
 	} else {
 		// no external topic, we create it
-		topicName, err = r.KafkaFeatureFlags.ExecuteBrokersTopicTemplate(broker.ObjectMeta)
-		if err != nil {
-			return "", statusConditionManager.TopicsNotPresentOrInvalidErr([]string{topicName}, err)
+		var existingTopic bool
+		// check if the broker already has reconciled with a topic name and use that if it exists
+		// otherwise, we create a new topic name from the broker topic template
+		if topicName, existingTopic = broker.Status.Annotations[kafka.TopicAnnotation]; !existingTopic {
+			topicName, err = r.KafkaFeatureFlags.ExecuteBrokersTopicTemplate(broker.ObjectMeta)
+			if err != nil {
+				return "", statusConditionManager.TopicsNotPresentOrInvalidErr([]string{topicName}, err)
+			}
 		}
 
 		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
