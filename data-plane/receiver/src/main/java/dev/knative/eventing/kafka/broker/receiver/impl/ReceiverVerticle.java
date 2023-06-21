@@ -129,9 +129,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             .setPemKeyCertOptions(keyCertOptions);
 
         this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
-
       }
-
     }
 
     final var handler = new ProbeHandler(
