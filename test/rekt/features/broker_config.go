@@ -18,6 +18,7 @@ package features
 
 import (
 	"context"
+
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
