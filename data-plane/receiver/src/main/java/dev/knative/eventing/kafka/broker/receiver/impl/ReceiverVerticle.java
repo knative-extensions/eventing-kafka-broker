@@ -88,6 +88,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
       final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
       final IngressRequestHandler ingressRequestHandler) {
     Objects.requireNonNull(env);
+    Objects.requireNonNull(httpServerOptions);
+    Objects.requireNonNull(httpsServerOptions);
     Objects.requireNonNull(ingressProducerStoreFactory);
     Objects.requireNonNull(ingressRequestHandler);
 
@@ -96,6 +98,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     this.httpsServerOptions = httpsServerOptions;
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
     this.ingressRequestHandler = ingressRequestHandler;
+    
   }
 
   @Override
@@ -128,9 +131,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
       }
 
-    } else {
-      this.httpsServer = null;
-    }
+    } 
+
     final var handler = new ProbeHandler(
         env.getLivenessProbePath(),
         env.getReadinessProbePath(),
@@ -144,8 +146,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
           this.httpsServer.requestHandler(handler)
               .exceptionHandler(startPromise::tryFail)
-              .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
-              .<Void>mapEmpty())
+              .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
           .<Void>mapEmpty().onComplete(startPromise);
     } else {
       this.httpServer.requestHandler(handler)
