@@ -67,6 +67,7 @@ public abstract class ReceiverVerticleTracingTest {
 
     private static final int TIMEOUT = 10;
     private static final int PORT = 8083;
+    private static final int PORT_TLS = 8443;
 
     private Vertx vertx;
     private InMemorySpanExporter spanExporter;
@@ -119,10 +120,19 @@ public abstract class ReceiverVerticleTracingTest {
         httpServerOptions.setHost("localhost");
         httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
+        final var httpsServerOptions = new HttpServerOptions();
+        httpsServerOptions.setPort(PORT_TLS);
+        httpsServerOptions.setHost("localhost");
+        httpsServerOptions.setSsl(true);
+        httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
+                .setCertPath("src/test/resources/tls.crt")
+                .setKeyPath("src/test/resources/tls.key"));
+
+
         final var verticle = new ReceiverVerticle(
                 env,
                 httpServerOptions,
-                null,
+                httpsServerOptions,
                 v -> store,
                 new IngressRequestHandlerImpl(
                         StrictRequestToRecordMapper.getInstance(),
