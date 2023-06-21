@@ -92,7 +92,7 @@ function knative_eventing() {
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-core.yaml"
-	kubectl apply -f "${EVENTING_CONFIG}/eventing-tls-networking.yaml"
+    kubectl apply -f "${EVENTING_CONFIG}/eventing-tls-networking.yaml"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
