@@ -105,8 +105,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
         .buildAndListen(vertx);
 
-    this.httpServerOptions
-        .setSsl(false);
 
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
@@ -140,8 +138,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
       CompositeFuture.all(
           this.httpServer.requestHandler(handler)
               .exceptionHandler(startPromise::tryFail)
-              .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
-              .<Void>mapEmpty(),
+              .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
 
           this.httpsServer.requestHandler(handler)
               .exceptionHandler(startPromise::tryFail)
