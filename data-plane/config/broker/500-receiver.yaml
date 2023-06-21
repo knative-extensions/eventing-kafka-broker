@@ -76,8 +76,8 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
-            - mountPath: /etc/receiver-secret-volume
-              name: broker-receiver-secret-volume
+            - mountPath: /etc/receiver-tls-secret
+              name: broker-receiver-tls-secret
               readOnly: true
           ports:
             - containerPort: 9090
@@ -177,7 +177,7 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
-        - name: broker-receiver-secret-volume
+        - name: broker-receiver-tls-secret
           secret:
             secretName: kafka-broker-ingress-server-tls
             optional: true
