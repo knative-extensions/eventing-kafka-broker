@@ -132,7 +132,6 @@ public abstract class ReceiverVerticleTracingTest {
                 .setCertPath(TLS_KEY_FILE_PATH)
                 .setKeyPath(TLS_CRT_FILE_PATH));
 
-
         final var verticle = new ReceiverVerticle(
                 env,
                 httpServerOptions,

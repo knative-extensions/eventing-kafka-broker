@@ -100,7 +100,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     this.httpsServerOptions = httpsServerOptions;
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
     this.ingressRequestHandler = ingressRequestHandler;
-    
   }
 
   @Override
@@ -133,7 +132,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
       }
 
-    } 
+    }
 
     final var handler = new ProbeHandler(
         env.getLivenessProbePath(),
