@@ -37,6 +37,7 @@ import (
 	"knative.dev/pkg/network"
 	. "knative.dev/pkg/reconciler/testing"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -1653,6 +1654,7 @@ func TestReconcileKind(t *testing.T) {
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,
 			IngressHost:         network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
 		}
 		reconciler.Tracker = &FakeTracker{}
 		reconciler.Tracker = &FakeTracker{}

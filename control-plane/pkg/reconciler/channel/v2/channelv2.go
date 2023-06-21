@@ -59,6 +59,7 @@ import (
 	channelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
 	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
@@ -69,8 +70,6 @@ import (
 )
 
 const (
-	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
-	TopicPrefix          = "knative-messaging-kafka"
 	DefaultDeliveryOrder = kafkasource.Ordered
 
 	KafkaChannelConditionSubscribersReady apis.ConditionType = "Subscribers" // condition is registered by controller
@@ -106,6 +105,7 @@ type Reconciler struct {
 
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
+	KafkaFeatureFlags   *apisconfig.KafkaFeatureFlags
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -159,7 +159,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	// get security option for Sarama with secret info in it
 	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
-	topicName := kafka.ChannelTopic(TopicPrefix, channel)
+	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
+	if err != nil {
+		return err
+	}
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -426,7 +429,11 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.ChannelTopic(TopicPrefix, channel))
+	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
+	if err != nil {
+		return err
+	}
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
 		return err
 	}

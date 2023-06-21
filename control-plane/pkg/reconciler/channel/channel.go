@@ -48,6 +48,7 @@ import (
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
@@ -61,7 +62,6 @@ import (
 
 const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
-	TopicPrefix                  = "knative-messaging-kafka"
 	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
 	NewChannelIngressServiceName = "kafka-channel-ingress"
 )
@@ -92,6 +92,8 @@ type Reconciler struct {
 	Prober prober.Prober
 
 	IngressHost string
+
+	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -161,7 +163,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topicName := kafka.ChannelTopic(TopicPrefix, channel)
+	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
+	if err != nil {
+		return err
+	}
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -432,7 +437,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.ChannelTopic(TopicPrefix, channel))
+	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
+	if err != nil {
+		return err
+	}
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
 		return err
 	}
@@ -503,9 +512,12 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 		return nil
 	}
 
-	topicName := kafka.ChannelTopic(TopicPrefix, channel)
+	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
+	if err != nil {
+		return err
+	}
 	groupID := consumerGroup(channel, sub)
-	_, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
+	_, err = r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
 	return err
 }
 

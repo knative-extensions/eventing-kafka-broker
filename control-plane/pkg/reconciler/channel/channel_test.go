@@ -19,6 +19,7 @@ package channel_test
 import (
 	"context"
 	"fmt"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"strconv"
 	"testing"
 
@@ -1806,8 +1807,9 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 					T: t,
 				}, nil
 			},
-			Prober:      proberMock,
-			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			Prober:            proberMock,
+			IngressHost:       network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			KafkaFeatureFlags: apisconfig.DefaultFeaturesConfig(),
 		}
 
 		reconciler.Tracker = &FakeTracker{}

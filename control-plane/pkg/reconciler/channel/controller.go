@@ -43,6 +43,7 @@ import (
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -74,6 +75,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
 		ServiceLister:              serviceInformer.Lister(),
+		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
 	}
 
 	logger := logging.FromContext(ctx)
