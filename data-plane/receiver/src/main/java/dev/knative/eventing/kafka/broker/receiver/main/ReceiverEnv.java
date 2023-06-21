@@ -67,7 +67,6 @@ public class ReceiverEnv extends BaseEnv {
     return httpServerConfigFilePath;
   }
 
-
   @Override
   public String toString() {
     return "ReceiverEnv{" +
