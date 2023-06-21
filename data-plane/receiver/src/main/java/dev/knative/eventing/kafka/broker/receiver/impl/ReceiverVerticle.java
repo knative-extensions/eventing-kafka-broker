@@ -106,7 +106,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
         .buildAndListen(vertx);
 
-
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
     // check whether the secret volume is mounted
@@ -129,6 +128,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
       }
 
+    } else {
+      this.httpsServer = null;
     }
     final var handler = new ProbeHandler(
         env.getLivenessProbePath(),
