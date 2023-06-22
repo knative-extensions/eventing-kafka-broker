@@ -19,7 +19,6 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
-	cm "knative.dev/pkg/configmap/testing"
 	"net/url"
 	"testing"
 	"text/template"
@@ -29,6 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/utils/pointer"
+
+	cm "knative.dev/pkg/configmap/testing"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"

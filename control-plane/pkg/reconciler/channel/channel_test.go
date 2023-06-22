@@ -19,12 +19,13 @@ package channel_test
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 	"text/template"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/Shopify/sarama"
 	"k8s.io/utils/pointer"
