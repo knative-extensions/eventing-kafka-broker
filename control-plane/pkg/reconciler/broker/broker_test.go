@@ -19,8 +19,10 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
+	cm "knative.dev/pkg/configmap/testing"
 	"net/url"
 	"testing"
+	"text/template"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
@@ -74,6 +76,10 @@ const (
 	ExpectedTopicDetail    = "expectedTopicDetail"
 	testProber             = "testProber"
 	externalTopic          = "externalTopic"
+
+	useCustomTopicTemplate = "use-custom-topic-template"
+
+	FlagsConfigName = "config-kafka-features"
 )
 
 const (
@@ -103,6 +109,8 @@ var (
 	linear            = eventingduck.BackoffPolicyLinear
 	exponential       = eventingduck.BackoffPolicyExponential
 	kafkaFeatureFlags = apisconfig.DefaultFeaturesConfig()
+
+	customBrokerTopicTemplate = customTemplate()
 )
 
 var DefaultEnv = &config.Env{
@@ -2138,6 +2146,81 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
+		}, {
+			Name: "Reconciled normal - with custom topic template",
+			Objects: []runtime.Object{
+				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{CustomBrokerTopic(customBrokerTopicTemplate)},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusExternalBrokerTopicReady(CustomBrokerTopic(customBrokerTopicTemplate)),
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(CustomBrokerTopic(customBrokerTopicTemplate)),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
+					),
+				},
+			},
+
+			OtherTestData: map[string]interface{}{
+				useCustomTopicTemplate: true,
+			},
 		},
 	}
 
@@ -2777,6 +2860,16 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			ReplicationFactor: DefaultReplicationFactor,
 		}
 
+		var featureFlags *apisconfig.KafkaFeatureFlags
+		var err error
+		if useCustomTemplate, ok := row.OtherTestData[useCustomTopicTemplate]; ok == true && useCustomTemplate == true {
+			_, example := cm.ConfigMapsFromTestFile(t, FlagsConfigName)
+			featureFlags, err = apisconfig.NewFeaturesConfigFromMap(example)
+			require.NoError(t, err)
+		} else {
+			featureFlags = apisconfig.DefaultFeaturesConfig()
+		}
+
 		var onCreateTopicError error
 		if want, ok := row.OtherTestData[wantErrorOnCreateTopic]; ok {
 			onCreateTopicError = want.(error)
@@ -2792,7 +2885,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
-		expectedTopicName, err := kafkaFeatureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName})
+		expectedTopicName, err := featureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName, UID: BrokerUUID})
 		require.NoError(t, err, "Failed to create broker topic name from feature flags")
 		if t, ok := row.OtherTestData[externalTopic]; ok {
 			expectedTopicName = t.(string)
@@ -2837,7 +2930,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			Env:               env,
 			Prober:            proberMock,
 			Counter:           counter.NewExpiringCounter(ctx),
-			KafkaFeatureFlags: apisconfig.DefaultFeaturesConfig(),
+			KafkaFeatureFlags: featureFlags,
 		}
 
 		reconciler.Tracker = &FakeTracker{}
@@ -2887,4 +2980,9 @@ func httpsURL(name string, namespace string) *apis.URL {
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", namespace, name),
 	}
+}
+
+func customTemplate() *template.Template {
+	brokersTemplate, _ := template.New("brokers.topic.template").Parse("custom-broker-template.{{ .Namespace }}-{{ .Name }}")
+	return brokersTemplate
 }

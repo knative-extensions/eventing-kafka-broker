@@ -17,8 +17,10 @@
 package testing
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -67,6 +69,16 @@ func ChannelTopic() string {
 		panic("Failed to create channel topic name")
 	}
 	return topicName
+}
+
+func CustomTopic(template *template.Template) string {
+	c := NewChannel()
+	var result bytes.Buffer
+	err := template.Execute(&result, c.ObjectMeta)
+	if err != nil {
+		panic("Failed to create custom topic name")
+	}
+	return result.String()
 }
 
 func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {

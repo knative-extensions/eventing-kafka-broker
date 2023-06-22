@@ -17,8 +17,10 @@
 package testing
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -64,6 +66,15 @@ var (
 
 func BrokerTopic() string {
 	return getKafkaTopic()
+}
+
+func CustomBrokerTopic(template *template.Template) string {
+	var result bytes.Buffer
+	err := template.Execute(&result, metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName, UID: BrokerUUID})
+	if err != nil {
+		panic("Failed to create custom topic name")
+	}
+	return result.String()
 }
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.

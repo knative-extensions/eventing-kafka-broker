@@ -19,8 +19,10 @@ package channel_test
 import (
 	"context"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
+	"text/template"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 
@@ -39,6 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	cm "knative.dev/pkg/configmap/testing"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -68,6 +71,10 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+
+	useCustomTopicTemplate = "use-custom-topic-template"
+
+	FlagsConfigName = "config-kafka-features"
 )
 
 var finalizerUpdatedEvent = Eventf(
@@ -84,6 +91,8 @@ var DefaultEnv = &config.Env{
 	SystemNamespace:             "knative-eventing",
 	ContractConfigMapFormat:     base.Json,
 }
+
+var customChannelTopicTemplate = customTemplate()
 
 func TestReconcileKind(t *testing.T) {
 
@@ -1692,6 +1701,77 @@ func TestReconcileKind(t *testing.T) {
 				),
 			},
 		},
+		{
+			Name: "Reconciled normal - custom topic template",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{CustomTopic(customChannelTopicTemplate)},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(DefaultEnv),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(CustomTopic(customChannelTopicTemplate)),
+						StatusTopicReadyWithName(CustomTopic(customChannelTopicTemplate)),
+						StatusDataPlaneAvailable,
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			OtherTestData: map[string]interface{}{
+				useCustomTopicTemplate: true,
+			},
+		},
 	}
 
 	useTable(t, table, env)
@@ -1769,6 +1849,16 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			proberMock = p.(prober.Prober)
 		}
 
+		var kafkaFeatureFlags *apisconfig.KafkaFeatureFlags
+		var err error
+		if useCustomTemplate, ok := row.OtherTestData[useCustomTopicTemplate]; ok == true && useCustomTemplate == true {
+			_, example := cm.ConfigMapsFromTestFile(t, FlagsConfigName)
+			kafkaFeatureFlags, err = apisconfig.NewFeaturesConfigFromMap(example)
+			require.NoError(t, err)
+		} else {
+			kafkaFeatureFlags = apisconfig.DefaultFeaturesConfig()
+		}
+
 		numPartitions := int32(1)
 		if v, ok := row.OtherTestData[TestExpectedDataNumPartitions]; ok {
 			numPartitions = v.(int32)
@@ -1827,7 +1917,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			},
 			Prober:            proberMock,
 			IngressHost:       network.GetServiceHostname(env.IngressName, env.SystemNamespace),
-			KafkaFeatureFlags: apisconfig.DefaultFeaturesConfig(),
+			KafkaFeatureFlags: kafkaFeatureFlags,
 		}
 
 		reconciler.Tracker = &FakeTracker{}
@@ -1854,4 +1944,9 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func customTemplate() *template.Template {
+	channelsTemplate, _ := template.New("channels.topic.template").Parse("custom-channel-template.{{ .Namespace }}.{{ .Name }}")
+	return channelsTemplate
 }
