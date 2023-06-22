@@ -101,6 +101,7 @@ export WAIT_STARTUP_SECONDS="8"
 export SERVICE_NAME="kafka-broker-receiver"
 export SERVICE_NAMESPACE="knative-eventing"
 export INGRESS_PORT="8080"
+export INGRESS_TLS_PORT="8443"
 export METRICS_PORT="9098"
 export INSTANCE_ID="receiver"
 
@@ -116,6 +117,7 @@ receiver_pid=$!
 export SERVICE_NAME="kafka-broker-dispatcher"
 export SERVICE_NAMESPACE="knative-eventing"
 export INGRESS_PORT="8080"
+export INGRESS_TLS_PORT="8443"
 export METRICS_PORT="9099"
 export INSTANCE_ID="dispatcher"
 

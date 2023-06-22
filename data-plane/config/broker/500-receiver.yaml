@@ -76,12 +76,18 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - mountPath: /etc/receiver-tls-secret
+              name: broker-receiver-tls-secret
+              readOnly: true
           ports:
             - containerPort: 9090
               name: http-metrics
               protocol: TCP
             - containerPort: 8080
               name: http
+              protocol: TCP
+            - containerPort: 8443
+              name: https
               protocol: TCP
           env:
             - name: SERVICE_NAME
@@ -92,6 +98,8 @@ spec:
                   fieldPath: metadata.namespace
             - name: INGRESS_PORT
               value: "8080"
+            - name: INGRESS_TLS_PORT
+              value: "8443"
             - name: PRODUCER_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-broker-producer.properties
             - name: HTTPSERVER_CONFIG_FILE_PATH
@@ -169,6 +177,12 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
+        - name: broker-receiver-tls-secret
+          secret:
+            secretName: kafka-broker-ingress-server-tls
+            optional: true
+
+            
       restartPolicy: Always
 ---
 
@@ -190,6 +204,10 @@ spec:
       port: 80
       protocol: TCP
       targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
     - name: http-container
       port: 8080
       protocol: TCP
