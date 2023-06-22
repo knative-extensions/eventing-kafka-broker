@@ -19,9 +19,10 @@ package channel_test
 import (
 	"context"
 	"fmt"
-	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"strconv"
 	"testing"
+
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 
 	"github.com/Shopify/sarama"
 	"k8s.io/utils/pointer"
