@@ -51,7 +51,7 @@ func TestFlags_IsEnabled_ContainingFlag(t *testing.T) {
 
 func TestGetFlags(t *testing.T) {
 	_, example := cm.ConfigMapsFromTestFile(t, FlagsConfigName)
-	flags, err := newFeaturesConfigFromMap(example)
+	flags, err := NewFeaturesConfigFromMap(example)
 	require.NoError(t, err)
 
 	require.True(t, flags.IsDispatcherRateLimiterEnabled())
@@ -74,7 +74,7 @@ func TestStoreLoadWithConfigMap(t *testing.T) {
 	store.OnConfigChanged(exampleConfig)
 
 	have := FromContext(store.ToContext(context.Background()))
-	expected, _ := newFeaturesConfigFromMap(exampleConfig)
+	expected, _ := NewFeaturesConfigFromMap(exampleConfig)
 
 	require.Equal(t, expected.IsDispatcherRateLimiterEnabled(), have.IsDispatcherRateLimiterEnabled())
 	require.Equal(t, expected.IsDispatcherOrderedExecutorMetricsEnabled(), have.IsDispatcherOrderedExecutorMetricsEnabled())

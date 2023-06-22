@@ -58,7 +58,8 @@ var (
 func init() {
 	DefaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
 	DefaultBrokersTopicTemplate, _ = template.New("brokers.topic.template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}")
-	DefaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-channel-{{ .Namespace }}-{{ .Name }}")
+	// This will resolve to the old naming convention, to prevent errors switching over to the new topic templates approach
+	DefaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}")
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
@@ -74,8 +75,8 @@ func DefaultFeaturesConfig() *KafkaFeatureFlags {
 	}
 }
 
-// newFeaturesConfigFromMap creates a Features from the supplied Map
-func newFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) {
+// NewFeaturesConfigFromMap creates a Features from the supplied Map
+func NewFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) {
 	nc := DefaultFeaturesConfig()
 	err := configmap.Parse(cm.Data,
 		asFlag("dispatcher.rate-limiter", &nc.features.DispatcherRateLimiter),
@@ -131,7 +132,7 @@ func NewStore(ctx context.Context, onAfterStore ...func(name string, value *Kafk
 			"config-kafka-features",
 			logging.FromContext(ctx).Named("config-kafka-features"),
 			configmap.Constructors{
-				FlagsConfigName: newFeaturesConfigFromMap,
+				FlagsConfigName: NewFeaturesConfigFromMap,
 			},
 			func(name string, value interface{}) {
 				for _, f := range onAfterStore {

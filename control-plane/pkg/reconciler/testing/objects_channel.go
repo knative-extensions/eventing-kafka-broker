@@ -34,6 +34,7 @@ import (
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -220,6 +221,16 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 		}
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func WithChannelTopicStatusAnnotation(topicName string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		channel := obj.(*messagingv1beta1.KafkaChannel)
+		if channel.Status.Annotations == nil {
+			channel.Status.Annotations = make(map[string]string, 1)
+		}
+		channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 	}
 }
 

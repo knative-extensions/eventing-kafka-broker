@@ -163,10 +163,20 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
-	if err != nil {
-		return err
+	if channel.Status.Annotations == nil {
+		channel.Status.Annotations = make(map[string]string)
 	}
+	// Check if there is an existing topic name for this channel. If there is, reconcile the channel with the existing name.
+	// If not, create a new topic name from the channel topic name template.
+	var topicName string
+	var existingTopic bool
+	if topicName, existingTopic = channel.Status.Annotations[kafka.TopicAnnotation]; !existingTopic {
+		topicName, err = r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
+		if err != nil {
+			return err
+		}
+	}
+	channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
