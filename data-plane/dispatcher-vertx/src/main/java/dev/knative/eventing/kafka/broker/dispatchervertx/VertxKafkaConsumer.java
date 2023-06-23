@@ -15,8 +15,90 @@
  */
 package dev.knative.eventing.kafka.broker.dispatchervertx;
 
-public class VertxKafkaConsumer {
-    public static void main(String[] args) {
-        System.out.println("Hello Vertx KafkaConsumer!");
+import java.time.Duration;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
+
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.kafka.client.common.KafkaClientOptions;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+
+public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V>{
+
+    private KafkaConsumer<K, V> consumer;
+
+    public VertxKafkaConsumer(Vertx v, KafkaClientOptions configs){
+        consumer = KafkaConsumer.create(v, configs);
     }
+
+    @Override
+    public Future<Void> assign(Collection<TopicPartition> partitions) {
+        Set<io.vertx.kafka.client.common.TopicPartition> vertxTopicPartitions = new HashSet<>();
+
+        for(TopicPartition kafkTopicPartition: partitions){
+            vertxTopicPartitions.add(new io.vertx.kafka.client.common.TopicPartition(kafkTopicPartition.topic(), kafkTopicPartition.partition()));
+        }
+
+        return consumer.assign(vertxTopicPartitions);
+    }
+
+    @Override
+    public Future<Void> close() {
+        return consumer.close();
+    }
+
+    @Override
+    public Future<Void> pause(Collection<TopicPartition> partitions) {
+        Set<io.vertx.kafka.client.common.TopicPartition> vertxTopicPartitions = new HashSet<>();
+
+        for(TopicPartition kafkTopicPartition: partitions){
+            vertxTopicPartitions.add(new io.vertx.kafka.client.common.TopicPartition(kafkTopicPartition.topic(), kafkTopicPartition.partition()));
+        }
+
+        return consumer.pause(vertxTopicPartitions);
+    }
+
+    @Override
+    public Future<ConsumerRecords<K, V>> poll(Duration timeout) {
+        return consumer.poll(timeout).map(kafkaConsumerRecords -> {
+            return kafkaConsumerRecords.records();
+        });
+    }
+
+    @Override
+    public Future<Void> resume(Collection<TopicPartition> partitions) {
+        Set<io.vertx.kafka.client.common.TopicPartition> vertxTopicPartitions = new HashSet<>();
+
+        for(TopicPartition kafkTopicPartition: partitions){
+            vertxTopicPartitions.add(new io.vertx.kafka.client.common.TopicPartition(kafkTopicPartition.topic(), kafkTopicPartition.partition()));
+        }
+
+        return consumer.resume(vertxTopicPartitions);
+    }
+
+    @Override
+    public Future<Void> subscribe(Collection<String> topics) {
+        return consumer.subscribe(new HashSet<>(topics));
+    }
+
+    @Override
+    public Consumer<K, V> unwrap() {
+        return consumer.unwrap();
+    }
+
+    @Override
+    public ReactiveKafkaConsumer<K, V> exceptionHandler(Handler<Throwable> handler) {
+        consumer = consumer.exceptionHandler(handler);
+        return this;
+    }
+
 }
