@@ -166,7 +166,7 @@ func TestExecuteChannelsTopicTemplateDefault(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	require.Equal(t, result, "knative-channel-namespace-topic")
+	require.Equal(t, result, "knative-messaging-kafka.namespace.topic")
 }
 
 func TestExecuteChannelsTopicTemplateOverride(t *testing.T) {
