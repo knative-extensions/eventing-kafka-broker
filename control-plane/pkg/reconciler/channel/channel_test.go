@@ -19,12 +19,13 @@ package channel_test
 import (
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"testing"
 	"text/template"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Shopify/sarama"
 	"k8s.io/utils/pointer"

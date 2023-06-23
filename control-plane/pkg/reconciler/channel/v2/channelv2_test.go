@@ -19,10 +19,11 @@ package v2
 import (
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"testing"
 	"text/template"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
