@@ -50,16 +50,16 @@ type KafkaFeatureFlags struct {
 }
 
 var (
-	DefaultTriggersConsumerGroupTemplate *template.Template
-	DefaultBrokersTopicTemplate          *template.Template
-	DefaultChannelsTopicTemplate         *template.Template
+	defaultTriggersConsumerGroupTemplate *template.Template
+	defaultBrokersTopicTemplate          *template.Template
+	defaultChannelsTopicTemplate         *template.Template
 )
 
 func init() {
-	DefaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
-	DefaultBrokersTopicTemplate, _ = template.New("brokers.topic.template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}")
+	defaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
+	defaultBrokersTopicTemplate, _ = template.New("brokers.topic.template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}")
 	// This will resolve to the old naming convention, to prevent errors switching over to the new topic templates approach
-	DefaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}")
+	defaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}")
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
@@ -68,9 +68,9 @@ func DefaultFeaturesConfig() *KafkaFeatureFlags {
 			DispatcherRateLimiter:            feature.Disabled,
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
 			ControllerAutoscaler:             feature.Disabled,
-			TriggersConsumerGroupTemplate:    DefaultTriggersConsumerGroupTemplate,
-			BrokersTopicTemplate:             DefaultBrokersTopicTemplate,
-			ChannelsTopicTemplate:            DefaultChannelsTopicTemplate,
+			TriggersConsumerGroupTemplate:    defaultTriggersConsumerGroupTemplate,
+			BrokersTopicTemplate:             defaultBrokersTopicTemplate,
+			ChannelsTopicTemplate:            defaultChannelsTopicTemplate,
 		},
 	}
 }
