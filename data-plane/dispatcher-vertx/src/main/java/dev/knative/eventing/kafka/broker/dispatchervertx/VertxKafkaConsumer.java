@@ -30,11 +30,11 @@ import io.vertx.core.Vertx;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
-public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V>{
+public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     private KafkaConsumer<K, V> consumer;
 
-    public VertxKafkaConsumer(Vertx v, KafkaClientOptions configs){
+    public VertxKafkaConsumer(Vertx v, KafkaClientOptions configs) {
         consumer = KafkaConsumer.create(v, configs);
     }
 
