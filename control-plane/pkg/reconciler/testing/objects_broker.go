@@ -124,6 +124,16 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 	)
 }
 
+func NewDeletedBrokerWithAnnotatedTopicName(topicName string, options ...reconcilertesting.BrokerOption) runtime.Object {
+	b := NewDeletedBroker(options...)
+	broker := b.(*eventing.Broker)
+	if broker.Status.Annotations == nil {
+		broker.Status.Annotations = make(map[string]string)
+	}
+	broker.Status.Annotations[kafka.TopicAnnotation] = topicName
+	return broker
+}
+
 func NewDeletedBrokerWithoutConfigMapAnnotations(options ...reconcilertesting.BrokerOption) runtime.Object {
 	return NewBroker(
 		append(

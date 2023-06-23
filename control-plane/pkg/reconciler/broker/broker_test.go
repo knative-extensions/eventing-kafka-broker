@@ -2272,7 +2272,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - no DLS",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBrokerWithAnnotatedTopicName(BrokerTopic()),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2299,7 +2299,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - no ConfigMap, rebuild from annotations",
 			Objects: []runtime.Object{
-				NewDeletedBroker(
+				NewDeletedBrokerWithAnnotatedTopicName(
+					BrokerTopic(),
 					BrokerConfigMapAnnotations(),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -2353,7 +2354,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled failed - probe not ready",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBrokerWithAnnotatedTopicName(BrokerTopic()),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2381,7 +2382,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - with DLS",
 			Objects: []runtime.Object{
-				NewDeletedBroker(
+				NewDeletedBrokerWithAnnotatedTopicName(
+					BrokerTopic(),
 					WithDelivery(),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
@@ -2553,7 +2555,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Failed to delete topic",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBrokerWithAnnotatedTopicName(BrokerTopic()),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2589,7 +2591,8 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
-				NewDeletedBroker(
+				NewDeletedBrokerWithAnnotatedTopicName(
+					BrokerTopic(),
 					WithDelivery(),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
@@ -2608,7 +2611,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBrokerWithAnnotatedTopicName(BrokerTopic()),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2646,7 +2649,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - topic doesn't exist",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBrokerWithAnnotatedTopicName(BrokerTopic()),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2685,7 +2688,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - no broker found in config map",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBrokerWithAnnotatedTopicName(BrokerTopic()),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
