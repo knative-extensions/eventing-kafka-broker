@@ -447,9 +447,9 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topicName, err := r.KafkaFeatureFlags.ExecuteChannelsTopicTemplate(channel.ObjectMeta)
-	if err != nil {
-		return err
+	topicName, ok := channel.Status.Annotations[kafka.TopicAnnotation]
+	if !ok {
+		return fmt.Errorf("no topic annotated on channel")
 	}
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {

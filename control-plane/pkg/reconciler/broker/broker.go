@@ -510,9 +510,9 @@ func (r *Reconciler) finalizeNonExternalBrokerTopic(broker *eventing.Broker, sec
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topicName, err := r.KafkaFeatureFlags.ExecuteBrokersTopicTemplate(broker.ObjectMeta)
-	if err != nil {
-		return err
+	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
+	if !ok {
+		return fmt.Errorf("no topic annotated on broker")
 	}
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
