@@ -19,8 +19,10 @@ package v2
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"testing"
+	"text/template"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
@@ -68,6 +70,8 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+
+	kafkaFeatureFlags = "kafka-feature-flags"
 )
 
 var finalizerUpdatedEvent = Eventf(
@@ -75,6 +79,8 @@ var finalizerUpdatedEvent = Eventf(
 	"FinalizerUpdate",
 	fmt.Sprintf(`Updated %q finalizers`, ChannelName),
 )
+
+var customChannelTopicTemplate = customTemplate()
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
@@ -1611,12 +1617,99 @@ func TestReconcileKind(t *testing.T) {
 				),
 			},
 		},
+		{
+			Name: "Reconciled normal - with custom template",
+			Objects: []runtime.Object{
+				NewChannel(
+					WithChannelDelivery(&eventingduck.DeliverySpec{
+						DeadLetterSink: ServiceDestination,
+						Retry:          pointer.Int32(5),
+					}),
+				),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{CustomTopic(customChannelTopicTemplate)},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+							EgressConfig: &contract.EgressConfig{
+								DeadLetter: ServiceURL,
+								Retry:      5,
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithChannelDelivery(&eventingduck.DeliverySpec{
+							DeadLetterSink: ServiceDestination,
+							Retry:          pointer.Int32(5),
+						}),
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(CustomTopic(customChannelTopicTemplate)),
+						StatusTopicReadyWithName(CustomTopic(customChannelTopicTemplate)),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelDeadLetterSinkURI(ServiceURL),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			OtherTestData: map[string]interface{}{
+				kafkaFeatureFlags: newKafkaFeaturesConfigFromMap(&corev1.ConfigMap{
+					Data: map[string]string{
+						"channels.topic.template": "custom-channel-template.{{ .Namespace}}.{{ .Name }}",
+					},
+				}),
+			},
+		},
 	}
 
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 		proberMock := probertesting.MockProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
 			proberMock = p.(prober.Prober)
+		}
+
+		var featureFlags *apisconfig.KafkaFeatureFlags
+		if v, ok := row.OtherTestData[kafkaFeatureFlags]; ok {
+			featureFlags = v.(*apisconfig.KafkaFeatureFlags)
+		} else {
+			featureFlags = apisconfig.DefaultFeaturesConfig()
 		}
 
 		numPartitions := int32(1)
@@ -1640,6 +1733,11 @@ func TestReconcileKind(t *testing.T) {
 
 		retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
 
+		expectedTopicName, err := featureFlags.ExecuteChannelsTopicTemplate(metav1.ObjectMeta{Name: ChannelName, Namespace: ChannelNamespace, UID: ChannelUUID})
+		if err != nil {
+			panic("failed to create expected topic name")
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                  kubeclient.Get(ctx),
@@ -1655,7 +1753,7 @@ func TestReconcileKind(t *testing.T) {
 			Env: env,
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName: ChannelTopic(),
+					ExpectedTopicName: expectedTopicName,
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     numPartitions,
 						ReplicationFactor: replicationFactor,
@@ -1673,7 +1771,7 @@ func TestReconcileKind(t *testing.T) {
 			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
 			Prober:              proberMock,
 			IngressHost:         network.GetServiceHostname(env.IngressName, env.SystemNamespace),
-			KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
+			KafkaFeatureFlags:   featureFlags,
 		}
 		reconciler.Tracker = &FakeTracker{}
 		reconciler.Tracker = &FakeTracker{}
@@ -1718,4 +1816,17 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func customTemplate() *template.Template {
+	channelsTemplate, _ := template.New("channels.topic.template").Parse("custom-channel-template.{{ .Namespace }}.{{ .Name }}")
+	return channelsTemplate
+}
+
+func newKafkaFeaturesConfigFromMap(cm *corev1.ConfigMap) *apisconfig.KafkaFeatureFlags {
+	featureFlags, err := apisconfig.NewFeaturesConfigFromMap(cm)
+	if err != nil {
+		panic("failed to create kafka features from config map")
+	}
+	return featureFlags
 }

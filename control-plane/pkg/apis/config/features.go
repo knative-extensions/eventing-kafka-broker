@@ -63,14 +63,28 @@ func init() {
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
+	// we need to clone the default values when creating a new features config
+	// otherwise, when calling NewFeaturesConfigFromMap, we will overwrite the default variables
+	triggersGroupTemplate, err := defaultTriggersConsumerGroupTemplate.Clone()
+	if err != nil {
+		panic("failed to clone default triggers group template")
+	}
+	brokersTopicTemplate, err := defaultBrokersTopicTemplate.Clone()
+	if err != nil {
+		panic("failed to clone default brokers topic template")
+	}
+	channelsTopicTemplate, err := defaultChannelsTopicTemplate.Clone()
+	if err != nil {
+		panic("failed to clone default channels topic template")
+	}
 	return &KafkaFeatureFlags{
 		features: features{
 			DispatcherRateLimiter:            feature.Disabled,
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
 			ControllerAutoscaler:             feature.Disabled,
-			TriggersConsumerGroupTemplate:    defaultTriggersConsumerGroupTemplate,
-			BrokersTopicTemplate:             defaultBrokersTopicTemplate,
-			ChannelsTopicTemplate:            defaultChannelsTopicTemplate,
+			TriggersConsumerGroupTemplate:    triggersGroupTemplate,
+			BrokersTopicTemplate:             brokersTopicTemplate,
+			ChannelsTopicTemplate:            channelsTopicTemplate,
 		},
 	}
 }

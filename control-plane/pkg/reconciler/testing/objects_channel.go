@@ -81,6 +81,24 @@ func CustomTopic(template *template.Template) string {
 	return result.String()
 }
 
+func NewChannelWithAnnotations(annotations map[string]string, options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
+	c := &messagingv1beta1.KafkaChannel{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ChannelNamespace,
+			Name:      ChannelName,
+			UID:       ChannelUUID,
+		},
+		Status: messagingv1beta1.KafkaChannelStatus{
+			ChannelableStatus: eventingduckv1.ChannelableStatus{
+				Status: duckv1.Status{
+					Annotations: annotations,
+				},
+			},
+		},
+	}
+	return applyOptionsToChannel(c, options...)
+}
+
 func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	c := &messagingv1beta1.KafkaChannel{
 		ObjectMeta: metav1.ObjectMeta{
@@ -89,6 +107,10 @@ func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 			UID:       ChannelUUID,
 		},
 	}
+	return applyOptionsToChannel(c, options...)
+}
+
+func applyOptionsToChannel(c *messagingv1beta1.KafkaChannel, options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	for _, opt := range options {
 		opt(c)
 	}
@@ -96,8 +118,9 @@ func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	return c
 }
 
-func NewDeletedChannel(options ...KRShapedOption) runtime.Object {
-	return NewChannel(
+func NewDeletedChannel(annotations map[string]string, options ...KRShapedOption) runtime.Object {
+	return NewChannelWithAnnotations(
+		annotations,
 		append(
 			options,
 			WithDeletedTimeStamp,

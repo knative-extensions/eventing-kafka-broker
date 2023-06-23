@@ -29,8 +29,6 @@ import (
 
 	"k8s.io/utils/pointer"
 
-	cm "knative.dev/pkg/configmap/testing"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
@@ -78,9 +76,7 @@ const (
 	testProber             = "testProber"
 	externalTopic          = "externalTopic"
 
-	useCustomTopicTemplate = "use-custom-topic-template"
-
-	FlagsConfigName = "config-kafka-features"
+	kafkaFeatureFlags = "kafka-feature-flags"
 )
 
 const (
@@ -107,10 +103,8 @@ var (
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 
-	linear            = eventingduck.BackoffPolicyLinear
-	exponential       = eventingduck.BackoffPolicyExponential
-	kafkaFeatureFlags = apisconfig.DefaultFeaturesConfig()
-
+	linear                    = eventingduck.BackoffPolicyLinear
+	exponential               = eventingduck.BackoffPolicyExponential
 	customBrokerTopicTemplate = customTemplate()
 )
 
@@ -2220,7 +2214,11 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			},
 
 			OtherTestData: map[string]interface{}{
-				useCustomTopicTemplate: true,
+				kafkaFeatureFlags: newKafkaFeaturesConfigFromMap(&corev1.ConfigMap{
+					Data: map[string]string{
+						"brokers.topic.template": "custom-broker-template.{{ .Namespace }}-{{ .Name }}",
+					},
+				}),
 			},
 		},
 	}
@@ -2862,11 +2860,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 		}
 
 		var featureFlags *apisconfig.KafkaFeatureFlags
-		var err error
-		if useCustomTemplate, ok := row.OtherTestData[useCustomTopicTemplate]; ok == true && useCustomTemplate == true {
-			_, example := cm.ConfigMapsFromTestFile(t, FlagsConfigName)
-			featureFlags, err = apisconfig.NewFeaturesConfigFromMap(example)
-			require.NoError(t, err)
+		if v, ok := row.OtherTestData[kafkaFeatureFlags]; ok {
+			featureFlags = v.(*apisconfig.KafkaFeatureFlags)
 		} else {
 			featureFlags = apisconfig.DefaultFeaturesConfig()
 		}
@@ -2986,4 +2981,12 @@ func httpsURL(name string, namespace string) *apis.URL {
 func customTemplate() *template.Template {
 	brokersTemplate, _ := template.New("brokers.topic.template").Parse("custom-broker-template.{{ .Namespace }}-{{ .Name }}")
 	return brokersTemplate
+}
+
+func newKafkaFeaturesConfigFromMap(cm *corev1.ConfigMap) *apisconfig.KafkaFeatureFlags {
+	featureFlags, err := apisconfig.NewFeaturesConfigFromMap(cm)
+	if err != nil {
+		panic("failed to create kafka features from config map")
+	}
+	return featureFlags
 }

@@ -19,13 +19,12 @@ package channel_test
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"testing"
 	"text/template"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/Shopify/sarama"
 	"k8s.io/utils/pointer"
@@ -42,7 +41,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	cm "knative.dev/pkg/configmap/testing"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -73,9 +71,7 @@ const (
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
 
-	useCustomTopicTemplate = "use-custom-topic-template"
-
-	FlagsConfigName = "config-kafka-features"
+	kafkaFeatureFlags = "kafka-feature-flags"
 )
 
 var finalizerUpdatedEvent = Eventf(
@@ -123,7 +119,10 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Channel is being deleted, probe not ready",
 			Key:  testKey,
 			Objects: []runtime.Object{
-				NewChannel(
+				NewChannelWithAnnotations(
+					map[string]string{
+						kafka.TopicAnnotation: defaultTopicName(),
+					},
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -1770,7 +1769,11 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 			OtherTestData: map[string]interface{}{
-				useCustomTopicTemplate: true,
+				kafkaFeatureFlags: newKafkaFeaturesConfigFromMap(&corev1.ConfigMap{
+					Data: map[string]string{
+						"channels.topic.template": "custom-channel-template.{{ .Namespace }}.{{ .Name }}",
+					},
+				}),
 			},
 		},
 	}
@@ -1791,7 +1794,9 @@ func TestFinalizeKind(t *testing.T) {
 		{
 			Name: "Finalize normal - no auth",
 			Objects: []runtime.Object{
-				NewDeletedChannel(),
+				NewDeletedChannel(map[string]string{
+					kafka.TopicAnnotation: defaultTopicName(),
+				}),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
@@ -1850,14 +1855,11 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			proberMock = p.(prober.Prober)
 		}
 
-		var kafkaFeatureFlags *apisconfig.KafkaFeatureFlags
-		var err error
-		if useCustomTemplate, ok := row.OtherTestData[useCustomTopicTemplate]; ok == true && useCustomTemplate == true {
-			_, example := cm.ConfigMapsFromTestFile(t, FlagsConfigName)
-			kafkaFeatureFlags, err = apisconfig.NewFeaturesConfigFromMap(example)
-			require.NoError(t, err)
+		var featureFlags *apisconfig.KafkaFeatureFlags
+		if v, ok := row.OtherTestData[kafkaFeatureFlags]; ok {
+			featureFlags = v.(*apisconfig.KafkaFeatureFlags)
 		} else {
-			kafkaFeatureFlags = apisconfig.DefaultFeaturesConfig()
+			featureFlags = apisconfig.DefaultFeaturesConfig()
 		}
 
 		numPartitions := int32(1)
@@ -1880,6 +1882,11 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 		}
 
 		retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
+
+		expectedTopicName, err := featureFlags.ExecuteChannelsTopicTemplate(metav1.ObjectMeta{Name: ChannelName, Namespace: ChannelNamespace, UID: ChannelUUID})
+		if err != nil {
+			panic("failed to create expected topic name")
+		}
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
@@ -1905,7 +1912,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			},
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName: ChannelTopic(),
+					ExpectedTopicName: expectedTopicName,
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     numPartitions,
 						ReplicationFactor: replicationFactor,
@@ -1918,7 +1925,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			},
 			Prober:            proberMock,
 			IngressHost:       network.GetServiceHostname(env.IngressName, env.SystemNamespace),
-			KafkaFeatureFlags: kafkaFeatureFlags,
+			KafkaFeatureFlags: featureFlags,
 		}
 
 		reconciler.Tracker = &FakeTracker{}
@@ -1947,7 +1954,23 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	return action
 }
 
+func defaultTopicName() string {
+	topicName, err := apisconfig.DefaultFeaturesConfig().ExecuteChannelsTopicTemplate(metav1.ObjectMeta{Name: ChannelName, Namespace: ChannelNamespace})
+	if err != nil {
+		panic("failed to create default channel topic name")
+	}
+	return topicName
+}
+
 func customTemplate() *template.Template {
 	channelsTemplate, _ := template.New("channels.topic.template").Parse("custom-channel-template.{{ .Namespace }}.{{ .Name }}")
 	return channelsTemplate
+}
+
+func newKafkaFeaturesConfigFromMap(cm *corev1.ConfigMap) *apisconfig.KafkaFeatureFlags {
+	featureFlags, err := apisconfig.NewFeaturesConfigFromMap(cm)
+	if err != nil {
+		panic("failed to create kafka features from config map")
+	}
+	return featureFlags
 }

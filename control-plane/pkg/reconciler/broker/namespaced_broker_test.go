@@ -454,7 +454,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
-		expectedTopicName, err := kafkaFeatureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName})
+		expectedTopicName, err := apisconfig.DefaultFeaturesConfig().ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName})
 		require.NoError(t, err, "Failed to create broker topic name from feature flags")
 		if t, ok := row.OtherTestData[externalTopic]; ok {
 			expectedTopicName = t.(string)
