@@ -17,7 +17,6 @@
 package features
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -77,12 +76,9 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 
 	f := feature.NewFeatureNamed("Trigger with KafkaSink")
 	topic, err := apisconfig.DefaultFeaturesConfig().ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Name: brokerName, Namespace: env.Namespace()})
-
-	f.Assert("No error creating broker topic", func(ctx context.Context, t feature.T) {
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
+	if err != nil {
+		panic("failed to create broker topic name")
+	}
 
 	f.Setup("Install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
 	f.Setup("Broker is ready", broker.IsReady(brokerName))
