@@ -40,6 +40,7 @@ readonly LATEST_RELEASE_VERSION=$(latest_version)
 readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
+readonly CERTMANAGER_CONFIG=${CERTMANAGER_CONFIG:-"./third_party/cert-manager/"}
 
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -85,10 +86,13 @@ function knative_teardown() {
 }
 
 function knative_eventing() {
+  # we need cert-manager installed to be able to create the issuers
+  kubectl apply -Rf "${CERTMANAGER_CONFIG}"
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-core.yaml"
+    kubectl apply -f "${EVENTING_CONFIG}/eventing-tls-networking.yaml"
   else
     echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
@@ -174,6 +178,7 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_TLS_NETWORK_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.

@@ -24,12 +24,12 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ import java.util.function.Function;
 public class IngressProducerReconcilableStore implements IngressReconcilerListener {
 
   private final Properties producerConfigs;
-  private final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory;
+  private final Function<Properties, ReactiveKafkaProducer<String, CloudEvent>> producerFactory;
   private final AuthProvider authProvider;
 
   // ingress uuid -> IngressInfo
@@ -68,7 +68,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
   public IngressProducerReconcilableStore(
     final AuthProvider authProvider,
     final Properties producerConfigs,
-    final Function<Properties, KafkaProducer<String, CloudEvent>> producerFactory
+    final Function<Properties, ReactiveKafkaProducer<String, CloudEvent>> producerFactory
   ) {
 
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
@@ -241,15 +241,15 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
     private static final Logger logger = LoggerFactory.getLogger(ProducerHolder.class);
 
-    private final KafkaProducer<String, CloudEvent> producer;
+    private final ReactiveKafkaProducer<String, CloudEvent> producer;
     private final AsyncCloseable producerMeterBinder;
 
-    ProducerHolder(final KafkaProducer<String, CloudEvent> producer) {
+    ProducerHolder(final ReactiveKafkaProducer<String, CloudEvent> producer) {
       this.producer = producer;
       this.producerMeterBinder = Metrics.register(producer.unwrap());
     }
 
-    KafkaProducer<String, CloudEvent> getProducer() {
+    ReactiveKafkaProducer<String, CloudEvent> getProducer() {
       return producer;
     }
 
@@ -274,14 +274,14 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
   private static class IngressProducerImpl implements IngressProducer {
 
-    private final KafkaProducer<String, CloudEvent> producer;
+    private final ReactiveKafkaProducer<String, CloudEvent> producer;
     private final String topic;
     private final String path;
     private final String host;
     private final Properties producerProperties;
     private final DataPlaneContract.Reference reference;
 
-    IngressProducerImpl(final KafkaProducer<String, CloudEvent> producer,
+    IngressProducerImpl(final ReactiveKafkaProducer<String, CloudEvent> producer,
                         final DataPlaneContract.Resource resource,
                         final String path,
                         final String host,
@@ -295,7 +295,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     }
 
     @Override
-    public KafkaProducer<String, CloudEvent> getKafkaProducer() {
+    public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
       return producer;
     }
 

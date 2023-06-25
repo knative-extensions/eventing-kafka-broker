@@ -19,6 +19,8 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
@@ -29,12 +31,12 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.RecordMetadata;
-import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -62,20 +64,20 @@ public class IngressRequestHandlerImplTest {
   }
 
   private static void shouldSendRecord(boolean failedToSend, int statusCode) {
-    final var record = new KafkaProducerRecordImpl<>(
-      "topic", "key", CoreObjects.event(), 10
+    final var record = new ProducerRecord<>(
+      "topic", 10, "key", CoreObjects.event()
     );
 
     final RequestToRecordMapper mapper
       = (request, topic) -> Future.succeededFuture(record);
 
-    final KafkaProducer<String, CloudEvent> producer = mockProducer();
+    final ReactiveKafkaProducer<String, CloudEvent> producer = mockProducer();
 
     when(producer.send(any())).thenAnswer(invocationOnMock -> {
       if (failedToSend) {
         return Future.failedFuture("failure");
       } else {
-        return Future.succeededFuture(mock(RecordMetadata.class));
+        return Future.succeededFuture(new RecordMetadata(new TopicPartition("", 0), 0, 0, 0, 0, 0));
       }
     });
 
@@ -89,7 +91,7 @@ public class IngressRequestHandlerImplTest {
 
     handler.handle(new RequestContext(request), new IngressProducer() {
       @Override
-      public KafkaProducer<String, CloudEvent> getKafkaProducer() {
+      public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
         return producer;
       }
 
@@ -124,7 +126,7 @@ public class IngressRequestHandlerImplTest {
 
     handler.handle(new RequestContext(request), new IngressProducer() {
       @Override
-      public KafkaProducer<String, CloudEvent> getKafkaProducer() {
+      public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
         return producer;
       }
 
@@ -150,8 +152,8 @@ public class IngressRequestHandlerImplTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static KafkaProducer<String, CloudEvent> mockProducer() {
-    KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
+  private static ReactiveKafkaProducer<String, CloudEvent> mockProducer() {
+    ReactiveKafkaProducer<String, CloudEvent> producer = mock(MockReactiveKafkaProducer.class);
     when(producer.flush()).thenReturn(Future.succeededFuture());
     when(producer.close()).thenReturn(Future.succeededFuture());
     when(producer.unwrap()).thenReturn(new MockProducer<>());

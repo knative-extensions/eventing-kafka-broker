@@ -562,7 +562,13 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						withTriggerStatusGroupIdAnnotation(TriggerUUID),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
-						reconcilertesting.WithTriggerStatusDeadLetterSinkURI("http://localhost/path"),
+						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
+							URL: &apis.URL{
+								Scheme: "http",
+								Host:   "localhost",
+								Path:   "/path",
+							},
+						}),
 					),
 				},
 			},

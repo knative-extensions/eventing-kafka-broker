@@ -101,6 +101,7 @@ export WAIT_STARTUP_SECONDS="8"
 export SERVICE_NAME="kafka-broker-receiver"
 export SERVICE_NAMESPACE="knative-eventing"
 export INGRESS_PORT="8080"
+export INGRESS_TLS_PORT="8443"
 export METRICS_PORT="9098"
 export INSTANCE_ID="receiver"
 
@@ -109,13 +110,14 @@ java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
-  -jar "${PROJECT_ROOT_DIR}"/receiver/target/receiver-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
+  -jar "${PROJECT_ROOT_DIR}"/receiver-vertx/target/receiver-vertx-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
 receiver_pid=$!
 
 # Define expected env variables.
 export SERVICE_NAME="kafka-broker-dispatcher"
 export SERVICE_NAMESPACE="knative-eventing"
 export INGRESS_PORT="8080"
+export INGRESS_TLS_PORT="8443"
 export METRICS_PORT="9099"
 export INSTANCE_ID="dispatcher"
 
