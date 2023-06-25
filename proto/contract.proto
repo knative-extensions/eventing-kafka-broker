@@ -114,7 +114,7 @@ message Egress {
   // destination is the sink where events are sent.
   string destination = 2;
 
-  //destination CA Cert is the CA Cert used for HTTPS communication through destination
+  // destination CA Cert is the CA Cert used for HTTPS communication through destination
   string destinationCACerts = 15;
 
   oneof replyStrategy {
