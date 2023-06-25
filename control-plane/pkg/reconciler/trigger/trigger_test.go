@@ -2134,6 +2134,16 @@ func withDelivery(trigger *eventing.Trigger) {
 	}
 }
 
+func withDeliveryTLS(trigger *eventing.Trigger) {
+	trigger.Spec.Delivery = &eventingduck.DeliverySpec{
+		DeadLetterSink: &duckv1.Destination{URI: url, CACerts: pointer.String(string(eventingtlstesting.CA))},
+		Retry:          pointer.Int32(3),
+		BackoffPolicy:  &exponential,
+		BackoffDelay:   pointer.String("PT1S"),
+		Timeout:        pointer.String("PT2S"),
+	}
+}
+
 func TestTriggerFinalizer(t *testing.T) {
 
 	t.Parallel()
@@ -2841,7 +2851,10 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 					WithTopicStatusAnnotation(BrokerTopic()),
 					WithBootstrapServerStatusAnnotation(bootstrapServers),
 				),
-				newTriggerWithCert(withDelivery),
+				newTriggerWithCert(
+					withDeliveryTLS,
+					withDeadLetterSinkURIandCACert(url.String(), string(eventingtlstesting.CA)),
+				),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2899,7 +2912,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTriggerWithCert(
-						withDelivery,
+						withDeliveryTLS,
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
@@ -2908,7 +2921,15 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						withTriggerStatusGroupIdAnnotation(TriggerUUID),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
-						reconcilertesting.WithTriggerStatusDeadLetterSinkURI("http://localhost/path"),
+						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
+							URL: &apis.URL{
+								Scheme: "http",
+								Host:   "localhost",
+								Path:   "/path",
+							},
+							CACerts: pointer.String(string(eventingtlstesting.CA)),
+						}),
+						withDeadLetterSinkURIandCACert(url.String(), string(eventingtlstesting.CA)),
 					),
 				},
 			},
@@ -3066,6 +3087,18 @@ func withDeadLetterSinkURI(uri string) func(trigger *eventing.Trigger) {
 			panic(err)
 		}
 		trigger.Status.DeadLetterSinkURI = u
+		trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
+	}
+}
+
+func withDeadLetterSinkURIandCACert(uri string, cert string) func(trigger *eventing.Trigger) {
+	return func(trigger *eventing.Trigger) {
+		u, err := apis.ParseURL(uri)
+		if err != nil {
+			panic(err)
+		}
+		trigger.Status.DeadLetterSinkURI = u
+		trigger.Status.DeadLetterSinkCACerts = pointer.String(string(eventingtlstesting.CA))
 		trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 	}
 }
