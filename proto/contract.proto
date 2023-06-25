@@ -128,7 +128,7 @@ message Egress {
     Empty discardReply = 9;
   }
 
-  //replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+  // replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
   string replyUrlCACerts = 16;
 
   // A filter for performing exact match against Cloud Events attributes
