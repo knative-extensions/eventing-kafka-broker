@@ -40,7 +40,7 @@ public interface ReactiveKafkaConsumer<K, V> {
      * @param offsets The offsets to commit.
      * @return A future containing the offsets that were committed.
      */
-    Future<Map<TopicPartition,OffsetAndMetadata>> commit(Map<TopicPartition,OffsetAndMetadata> offset);
+    Future<Map<TopicPartition, OffsetAndMetadata>> commit(Map<TopicPartition, OffsetAndMetadata> offset);
 
     /**
      * Closes the consumer.
