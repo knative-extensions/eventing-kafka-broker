@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.main;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
@@ -53,7 +54,7 @@ public class ConsumerVerticleContext {
   private Map<String, Object> producerConfigs;
   private WebClientOptions webClientOptions;
 
-  private ConsumerFactory<Object, CloudEvent> consumerFactory;
+  private ReactiveConsumerFactory<Object, CloudEvent> consumerFactory;
   private ProducerFactory<String, CloudEvent> producerFactory;
 
   private Integer maxPollRecords;
@@ -137,7 +138,7 @@ public class ConsumerVerticleContext {
     return this;
   }
 
-  public ConsumerVerticleContext withConsumerFactory(final ConsumerFactory<Object, CloudEvent> consumerFactory) {
+  public ConsumerVerticleContext withConsumerFactory(final ReactiveConsumerFactory<Object, CloudEvent> consumerFactory) {
     this.consumerFactory = consumerFactory;
     return this;
   }
@@ -202,7 +203,7 @@ public class ConsumerVerticleContext {
     return keyValue("context", getLoggingContext());
   }
 
-  public ConsumerFactory<Object, CloudEvent> getConsumerFactory() {
+  public ReactiveConsumerFactory<Object, CloudEvent> getConsumerFactory() {
     return this.consumerFactory;
   }
 

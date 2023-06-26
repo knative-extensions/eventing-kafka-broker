@@ -22,7 +22,7 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.common.TopicPartition;
+import org.apache.kafka.common.TopicPartition;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -56,8 +56,8 @@ public class OrderedAsyncExecutor {
 
     if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
       final var tags = Tags.of(
-        Metrics.Tags.PARTITION_ID, topicPartition.getPartition() + "",
-        Metrics.Tags.TOPIC_ID, topicPartition.getTopic(),
+        Metrics.Tags.PARTITION_ID, topicPartition.partition() + "",
+        Metrics.Tags.TOPIC_ID, topicPartition.topic(),
         Metrics.Tags.CONSUMER_NAME, egress.getReference().getName(),
         Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace()
       );

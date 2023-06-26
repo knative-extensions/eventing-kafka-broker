@@ -22,6 +22,7 @@ import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
@@ -50,11 +51,13 @@ import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.kafka.client.common.KafkaClientOptions;
-import io.vertx.kafka.client.common.TopicPartition;
+// import io.vertx.kafka.client.common.TopicPartition;
+
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.TopicPartition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,7 +92,7 @@ public class ConsumerVerticleBuilder {
     KafkaClientsAuth.attachCredentials(consumerVerticleContext.getConsumerConfigs(), credentials);
     KafkaClientsAuth.attachCredentials(consumerVerticleContext.getProducerConfigs(), credentials);
 
-    final KafkaConsumer<Object, CloudEvent> consumer = this.consumerVerticleContext
+    final ReactiveKafkaConsumer<Object, CloudEvent> consumer = this.consumerVerticleContext
       .getConsumerFactory()
       .create(vertx, consumerVerticleContext.getConsumerConfigs());
     consumerVerticle.setConsumer(consumer);

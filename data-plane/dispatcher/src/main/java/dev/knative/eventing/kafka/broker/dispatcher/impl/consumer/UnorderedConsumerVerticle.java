@@ -22,6 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +59,9 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
   @Override
   void startConsumer(final Promise<Void> startPromise) {
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), startPromise);
-    startPromise.future()
-      .onSuccess(v -> poll());
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()))
+    .onFailure(startPromise::fail)
+    .onSuccess(v -> poll());
   }
 
   /**
@@ -103,7 +104,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
     }
   }
 
-  private void handleRecords(final KafkaConsumerRecords<Object, CloudEvent> records) {
+  private void handleRecords(final ConsumerRecords<Object, CloudEvent> records) {
     if (closed.get()) {
       isPollInFlight.compareAndSet(true, false);
       return;
@@ -112,16 +113,19 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
     // We are not forcing the dispatcher to send less than `max.poll.records`
     // requests because we don't want to keep records in-memory by waiting
     // for responses.
-    this.inFlightRecords.addAndGet(records.size());
+    this.inFlightRecords.addAndGet(records.count());
     isPollInFlight.compareAndSet(true, false);
 
-    for (int i = 0; i < records.size(); i++) {
-      this.recordDispatcher.dispatch(records.recordAt(i))
+    var recordIterator = records.iterator();
+    while(recordIterator.hasNext()){
+      var record = recordIterator.next();
+      this.recordDispatcher.dispatch(record)
         .onComplete(v -> {
           this.inFlightRecords.decrementAndGet();
           poll();
         });
     }
+    
     poll();
   }
 

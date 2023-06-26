@@ -16,9 +16,11 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.vertx.core.Future;
-import io.vertx.kafka.client.common.TopicPartition;
+import org.apache.kafka.common.TopicPartition;
 
 import java.util.Set;
+
+
 
 /**
  * {@link PartitionRevokedHandler} is the handler called when some partitions are revoked to a

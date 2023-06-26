@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -95,4 +96,5 @@ public interface ReactiveKafkaConsumer<K, V> {
      * @return This consumer instance with the exception handler set.
      */
     ReactiveKafkaConsumer<K, V> exceptionHandler(Handler<Throwable> handler);
+
 }
