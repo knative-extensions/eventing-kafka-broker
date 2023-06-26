@@ -209,12 +209,16 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		channel := obj.(*messagingv1beta1.KafkaChannel)
 
-		channel.Status.Address = &duckv1.Addressable{}
-
-		channel.Status.Address.URL = &apis.URL{
-			Scheme: "http",
-			Host:   fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(channel.Name), channel.Namespace, network.GetClusterDomainName()),
+		httpAddress := &duckv1.Addressable{
+			Name: pointer.String("http"),
+			URL: &apis.URL{
+				Scheme: "http",
+				Host:   fmt.Sprintf("%s.%s.svc.%s", resources.MakeChannelServiceName(channel.Name), channel.Namespace, network.GetClusterDomainName()),
+			},
 		}
+
+		channel.Status.Address = httpAddress
+		channel.Status.Addresses = []duckv1.Addressable{*httpAddress}
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
 	}
@@ -374,5 +378,33 @@ func ChannelAsOwnerReference() metav1.OwnerReference {
 		UID:                ChannelUUID,
 		Controller:         pointer.Bool(true),
 		BlockOwnerDeletion: pointer.Bool(true),
+	}
+}
+
+func WithChannelAddress(address duckv1.Addressable) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Status.Address = &address
+	}
+}
+
+func WithChannelAddresses(addresses []duckv1.Addressable) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Status.Addresses = addresses
+	}
+}
+
+func WithChannelAddessable() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func ChannelAddress() *apis.URL {
+	return &apis.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("%s.%s.svc.%s", ChannelServiceName, ChannelNamespace, network.GetClusterDomainName()),
 	}
 }

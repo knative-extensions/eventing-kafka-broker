@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -36,8 +35,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
@@ -74,6 +75,9 @@ const (
 	DefaultDeliveryOrder = kafkasource.Ordered
 
 	KafkaChannelConditionSubscribersReady apis.ConditionType = "Subscribers" // condition is registered by controller
+
+	kafkaChannelTLSSecretName = "kafka-channel-ingress-server-tls" //nolint:gosec // This is not a hardcoded credential
+	caCertsSecretKey          = "ca.crt"
 )
 
 var (
@@ -258,7 +262,46 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
-	address, _ := url.Parse(fmt.Sprintf("http://%s.%s.svc.%s", channelService.Name, channelService.Namespace, network.GetClusterDomainName()))
+	var addressableStatus duckv1.AddressStatus
+	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
+	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
+	transportEncryptionFlags := feature.FromContext(ctx)
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
+		addressableStatus.Address = &httpAddress
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
+		addressableStatus.Address = &httpsAddress
+	} else {
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
+	}
+
+	address := addressableStatus.Address.URL.URL()
+
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -273,7 +316,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	statusConditionManager.Addressable(address)
+
+	statusConditionManager.ProbesStatusReady()
+	channel.Status.Address = addressableStatus.Address
+	channel.Status.Addresses = addressableStatus.Addresses
+	channel.GetConditionSet().Manage(channel.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }
@@ -697,4 +744,16 @@ func (r *Reconciler) getSubscriptionAnnotations(channel *messagingv1beta1.KafkaC
 	}
 
 	return nil, apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
+}
+
+func (r *Reconciler) getCaCerts() (string, error) {
+	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(kafkaChannelTLSSecretName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
+	}
+	caCerts, ok := secret.Data[caCertsSecretKey]
+	if !ok {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), kafkaChannelTLSSecretName, caCertsSecretKey)
+	}
+	return string(caCerts), nil
 }

@@ -19,15 +19,16 @@ package channel
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/network"
+	"knative.dev/pkg/system"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/multierr"
@@ -41,6 +42,7 @@ import (
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -64,6 +66,8 @@ const (
 	TopicPrefix                  = "knative-messaging-kafka"
 	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
 	NewChannelIngressServiceName = "kafka-channel-ingress"
+	kafkaChannelTLSSecretName    = "kafka-channel-ingress-server-tls" //nolint:gosec // This is not a hardcoded credential
+	caCertsSecretKey             = "ca.crt"
 )
 
 type Reconciler struct {
@@ -286,7 +290,45 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
-	address, _ := url.Parse(fmt.Sprintf("http://%s.%s.svc.%s", channelService.Name, channelService.Namespace, network.GetClusterDomainName()))
+	var addressableStatus duckv1.AddressStatus
+	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
+	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
+	transportEncryptionFlags := feature.FromContext(ctx)
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
+		addressableStatus.Address = &httpAddress
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
+		addressableStatus.Address = &httpsAddress
+	} else {
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		addressableStatus.Address = &httpAddress
+		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
+	}
+
+	address := addressableStatus.Address.URL.URL()
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{
@@ -301,7 +343,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
-	statusConditionManager.Addressable(address)
+	statusConditionManager.ProbesStatusReady()
+	channel.Status.Address = addressableStatus.Address
+	channel.Status.Addresses = addressableStatus.Addresses
+	channel.GetConditionSet().Manage(channel.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }
@@ -668,6 +713,18 @@ func (r *Reconciler) getSubscriptionName(channel *messagingv1beta1.KafkaChannel,
 	}
 
 	return "", apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
+}
+
+func (r *Reconciler) getCaCerts() (string, error) {
+	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(kafkaChannelTLSSecretName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
+	}
+	caCerts, ok := secret.Data[caCertsSecretKey]
+	if !ok {
+		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), kafkaChannelTLSSecretName, caCertsSecretKey)
+	}
+	return string(caCerts), nil
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription

@@ -44,6 +44,15 @@ func HTTPAddress(host string, object metav1.Object) duckv1.Addressable {
 	return httpAddress
 }
 
+// HTTPAddress returns the addressable
+func ChannelHTTPAddress(host string) duckv1.Addressable {
+	httpAddress := duckv1.Addressable{
+		Name: pointer.String("http"),
+		URL:  apis.HTTP(host),
+	}
+	return httpAddress
+}
+
 func HTTPSAddress(host string, object metav1.Object, caCerts string) duckv1.Addressable {
 	httpsAddress := duckv1.Addressable{
 		Name:    pointer.String("https"),
