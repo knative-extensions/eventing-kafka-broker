@@ -343,7 +343,10 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 				reconcilertesting.NewNamespace(BrokerNamespace, func(ns *corev1.Namespace) {
 					ns.UID = BrokerNamespaceUUID
 				}),
-				NewDeletedBroker(reconcilertesting.WithBrokerClass(kafka.NamespacedBrokerClass)),
+				NewDeletedBroker(
+					WithTopicStatusAnnotation(BrokerTopic()),
+					reconcilertesting.WithBrokerClass(kafka.NamespacedBrokerClass),
+				),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{

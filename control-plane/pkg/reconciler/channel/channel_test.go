@@ -120,10 +120,8 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Channel is being deleted, probe not ready",
 			Key:  testKey,
 			Objects: []runtime.Object{
-				NewChannelWithAnnotations(
-					map[string]string{
-						kafka.TopicAnnotation: defaultTopicName(),
-					},
+				NewChannel(
+					WithChannelTopicStatusAnnotation(defaultTopicName()),
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -1795,9 +1793,7 @@ func TestFinalizeKind(t *testing.T) {
 		{
 			Name: "Finalize normal - no auth",
 			Objects: []runtime.Object{
-				NewDeletedChannel(map[string]string{
-					kafka.TopicAnnotation: defaultTopicName(),
-				}),
+				NewDeletedChannel(WithChannelTopicStatusAnnotation(defaultTopicName())),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
