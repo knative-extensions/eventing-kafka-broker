@@ -39,6 +39,7 @@
     <maven.enforcer.plugin.version>3.1.0</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
+    <spotless.plugin.version>2.37.0</spotless.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.3.2</vertx.version>
@@ -577,6 +578,41 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+  <groupId>com.diffplug.spotless</groupId>
+  <artifactId>spotless-maven-plugin</artifactId>
+  <version>${spotless.plugin.version}</version>
+  <configuration>
+    <formats>
+      <!-- you can define as many formats as you want, each is independent -->
+      <format>
+        <!-- define the files to apply to -->
+        <includes>
+          <include>*.md</include>
+          <include>.gitignore</include>
+        </includes>
+        <!-- define the steps to apply to those files -->
+        <trimTrailingWhitespace/>
+        <endWithNewline/>
+        <indent>
+          <tabs>true</tabs>
+          <spacesPerTab>4</spacesPerTab>
+        </indent>
+      </format>
+    </formats>
+    <!-- define a language-specific format -->
+    <java>
+      <!-- no need to specify files, inferred automatically, but you can if you want -->
+
+      <!-- apply a specific flavor of google-java-format and reflow long strings -->
+      <googleJavaFormat>
+        <version>1.17.0</version>
+        <style>GOOGLE</style>
+        <reflowLongStrings>true</reflowLongStrings>
+      </googleJavaFormat>
+    </java>
+  </configuration>
+</plugin>
     </plugins>
   </build>
 </project>
