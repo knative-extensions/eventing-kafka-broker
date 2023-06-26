@@ -17,10 +17,9 @@ package dev.knative.eventing.kafka.broker.dispatchervertx;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -42,27 +41,20 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     }
 
     @Override
-    public Future<Map<TopicPartition,OffsetAndMetadata>> commit(Map<TopicPartition,OffsetAndMetadata> offset){
+    public Future<Map<TopicPartition, OffsetAndMetadata>> commit(Map<TopicPartition, OffsetAndMetadata> offset) {
 
-        Map<io.vertx.kafka.client.common.TopicPartition,io.vertx.kafka.client.consumer.OffsetAndMetadata> vertxOffset = new HashMap<>();
+        final var vertxOffset = offset.entrySet().stream()
+            .collect(Collectors.toMap(
+                entry -> new io.vertx.kafka.client.common.TopicPartition(entry.getKey().topic(),entry.getKey().partition()),
+                entry -> new io.vertx.kafka.client.consumer.OffsetAndMetadata(entry.getValue().offset(),entry.getValue().metadata())
+            ));
 
-        for(Map.Entry<TopicPartition,OffsetAndMetadata> entry: offset.entrySet()){
-            vertxOffset.put(
-                new io.vertx.kafka.client.common.TopicPartition(entry.getKey().topic(), entry.getKey().partition()),
-                new io.vertx.kafka.client.consumer.OffsetAndMetadata(entry.getValue().offset(), entry.getValue().metadata())
-            );
-        }
-        
-        return consumer.commit(vertxOffset).map( v -> {
-            Map<TopicPartition,OffsetAndMetadata> result = new HashMap<>();
-            for(Map.Entry<io.vertx.kafka.client.common.TopicPartition,io.vertx.kafka.client.consumer.OffsetAndMetadata> entry: v.entrySet()){
-                result.put(
-                    new TopicPartition(entry.getKey().getTopic(), entry.getKey().getPartition()),
-                    new OffsetAndMetadata(entry.getValue().getOffset(), entry.getValue().getMetadata())
-                );
-            }
-            return result;
-        });
+        return consumer.commit(vertxOffset).map(vertxOffset.entrySet().stream()
+            .collect(Collectors.toMap(
+                entry -> new TopicPartition(entry.getKey().getTopic(), entry.getKey().getPartition()),
+                entry -> new OffsetAndMetadata(entry.getValue().getOffset(), entry.getValue().getMetadata())
+            ))
+        );
     }
 
     @Override
@@ -72,29 +64,23 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> pause(Collection<TopicPartition> partitions) {
-        Set<io.vertx.kafka.client.common.TopicPartition> vertxTopicPartitions = new HashSet<>();
-
-        for(TopicPartition kafkTopicPartition: partitions){
-            vertxTopicPartitions.add(new io.vertx.kafka.client.common.TopicPartition(kafkTopicPartition.topic(), kafkTopicPartition.partition()));
-        }
+        var vertxTopicPartitions = partitions.stream()
+            .map(topicPartition -> new io.vertx.kafka.client.common.TopicPartition(topicPartition.topic(),topicPartition.partition()))
+            .collect(Collectors.toSet());
 
         return consumer.pause(vertxTopicPartitions);
     }
 
     @Override
     public Future<ConsumerRecords<K, V>> poll(Duration timeout) {
-        return consumer.poll(timeout).map(kafkaConsumerRecords -> {
-            return kafkaConsumerRecords.records();
-        });
+        return consumer.poll(timeout).map(kafkaConsumerRecords -> kafkaConsumerRecords.records());
     }
 
     @Override
     public Future<Void> resume(Collection<TopicPartition> partitions) {
-        Set<io.vertx.kafka.client.common.TopicPartition> vertxTopicPartitions = new HashSet<>();
-
-        for(TopicPartition kafkTopicPartition: partitions){
-            vertxTopicPartitions.add(new io.vertx.kafka.client.common.TopicPartition(kafkTopicPartition.topic(), kafkTopicPartition.partition()));
-        }
+        var vertxTopicPartitions = partitions.stream()
+            .map(topicPartition -> new io.vertx.kafka.client.common.TopicPartition(topicPartition.topic(),topicPartition.partition()))
+            .collect(Collectors.toSet());
 
         return consumer.resume(vertxTopicPartitions);
     }
