@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReceiverEnvTest {
 
   private static final String PORT = "8080";
+  private static final String TLS_PORT = "8443";
   private static final String LIVENESS_PATH = "/healthz";
   private static final String READINESS_PATH = "/readyz";
   private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
@@ -37,6 +38,7 @@ class ReceiverEnvTest {
     final var env = new ReceiverEnv(
       key -> switch (key) {
         case ReceiverEnv.INGRESS_PORT -> PORT;
+        case ReceiverEnv.INGRESS_TLS_PORT -> TLS_PORT;
         case ReceiverEnv.LIVENESS_PROBE_PATH -> LIVENESS_PATH;
         case ReceiverEnv.READINESS_PROBE_PATH -> READINESS_PATH;
         case ReceiverEnv.HTTPSERVER_CONFIG_FILE_PATH -> HTTPSERVER_CONFIG_FILE_PATH;
@@ -53,6 +55,7 @@ class ReceiverEnvTest {
     );
 
     assertThat(env.getIngressPort()).isEqualTo(Integer.parseInt(PORT));
+    assertThat(env.getIngressTLSPort()).isEqualTo(Integer.parseInt(TLS_PORT));
     assertThat(env.getLivenessProbePath()).isEqualTo(LIVENESS_PATH);
     assertThat(env.getReadinessProbePath()).isEqualTo(READINESS_PATH);
     assertThat(env.getProducerConfigFilePath()).isEqualTo(PRODUCER_CONFIG_PATH);

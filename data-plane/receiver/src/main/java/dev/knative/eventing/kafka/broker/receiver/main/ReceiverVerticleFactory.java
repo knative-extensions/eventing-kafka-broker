@@ -35,37 +35,40 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
   private final ReceiverEnv env;
   private final Properties producerConfigs;
   private final HttpServerOptions httpServerOptions;
+  private final HttpServerOptions httpsServerOptions;
 
   private final IngressRequestHandler ingressRequestHandler;
 
   private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
   ReceiverVerticleFactory(final ReceiverEnv env,
-                          final Properties producerConfigs,
-                          final MeterRegistry metricsRegistry,
-                          final HttpServerOptions httpServerOptions,
-                          final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
-    this.env = env;
-    this.producerConfigs = producerConfigs;
-    this.httpServerOptions = httpServerOptions;
-    this.ingressRequestHandler = new IngressRequestHandlerImpl(
-      StrictRequestToRecordMapper.getInstance(),
-      metricsRegistry
-    );
-    this.kafkaProducerFactory = kafkaProducerFactory;
+      final Properties producerConfigs,
+      final MeterRegistry metricsRegistry,
+      final HttpServerOptions httpServerOptions,
+      final HttpServerOptions httpsServerOptions,
+      final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
+    {
+      this.env = env;
+      this.producerConfigs = producerConfigs;
+      this.httpServerOptions = httpServerOptions;
+      this.httpsServerOptions = httpsServerOptions;
+      this.ingressRequestHandler = new IngressRequestHandlerImpl(
+          StrictRequestToRecordMapper.getInstance(),
+          metricsRegistry);
+      this.kafkaProducerFactory = kafkaProducerFactory;
+    }
   }
 
   @Override
   public Verticle get() {
     return new ReceiverVerticle(
-      env,
-      httpServerOptions,
-      v -> new IngressProducerReconcilableStore(
-        AuthProvider.kubernetes(),
-        producerConfigs,
-        properties -> kafkaProducerFactory.create(v, new KafkaProducer<>(properties))
-      ),
-      this.ingressRequestHandler
-    );
+        env,
+        httpServerOptions,
+        httpsServerOptions,
+        v -> new IngressProducerReconcilableStore(
+            AuthProvider.kubernetes(),
+            producerConfigs,
+            properties -> kafkaProducerFactory.create(v, new KafkaProducer<>(properties))),
+        this.ingressRequestHandler);
   }
 }
