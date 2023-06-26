@@ -17,11 +17,14 @@ package dev.knative.eventing.kafka.broker.dispatchervertx;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import io.vertx.core.Future;
@@ -39,14 +42,27 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     }
 
     @Override
-    public Future<Void> assign(Collection<TopicPartition> partitions) {
-        Set<io.vertx.kafka.client.common.TopicPartition> vertxTopicPartitions = new HashSet<>();
+    public Future<Map<TopicPartition,OffsetAndMetadata>> commit(Map<TopicPartition,OffsetAndMetadata> offset){
 
-        for(TopicPartition kafkTopicPartition: partitions){
-            vertxTopicPartitions.add(new io.vertx.kafka.client.common.TopicPartition(kafkTopicPartition.topic(), kafkTopicPartition.partition()));
+        Map<io.vertx.kafka.client.common.TopicPartition,io.vertx.kafka.client.consumer.OffsetAndMetadata> vertxOffset = new HashMap<>();
+
+        for(Map.Entry<TopicPartition,OffsetAndMetadata> entry: offset.entrySet()){
+            vertxOffset.put(
+                new io.vertx.kafka.client.common.TopicPartition(entry.getKey().topic(), entry.getKey().partition()),
+                new io.vertx.kafka.client.consumer.OffsetAndMetadata(entry.getValue().offset(), entry.getValue().metadata())
+            );
         }
-
-        return consumer.assign(vertxTopicPartitions);
+        
+        return consumer.commit(vertxOffset).map( v -> {
+            Map<TopicPartition,OffsetAndMetadata> result = new HashMap<>();
+            for(Map.Entry<io.vertx.kafka.client.common.TopicPartition,io.vertx.kafka.client.consumer.OffsetAndMetadata> entry: v.entrySet()){
+                result.put(
+                    new TopicPartition(entry.getKey().getTopic(), entry.getKey().getPartition()),
+                    new OffsetAndMetadata(entry.getValue().getOffset(), entry.getValue().getMetadata())
+                );
+            }
+            return result;
+        });
     }
 
     @Override

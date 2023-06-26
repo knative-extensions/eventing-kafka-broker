@@ -25,6 +25,7 @@ import io.vertx.core.Vertx;
  * @param <K> The type of the Kafka message key.
  * @param <V> The type of the Kafka message value.
  */
+@FunctionalInterface
 public interface ReactiveConsumerFactory<K, V> {
 
     /**

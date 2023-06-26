@@ -17,9 +17,11 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -33,12 +35,12 @@ import io.vertx.core.Handler;
 public interface ReactiveKafkaConsumer<K, V> {
 
     /**
-     * Assigns the specified partitions to this consumer.
+     * Commits the specified offsets.
      *
-     * @param partitions The partitions to assign.
-     * @return A future indicating the success or failure of the assignment.
+     * @param offsets The offsets to commit.
+     * @return A future containing the offsets that were committed.
      */
-    Future<Void> assign(Collection<TopicPartition> partitions);
+    Future<Map<TopicPartition,OffsetAndMetadata>> commit(Map<TopicPartition,OffsetAndMetadata> offset);
 
     /**
      * Closes the consumer.
