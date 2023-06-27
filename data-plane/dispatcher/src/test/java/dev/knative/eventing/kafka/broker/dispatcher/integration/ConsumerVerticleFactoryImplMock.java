@@ -15,27 +15,25 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
+import dev.knative.eventing.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ProducerFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,8 +44,6 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
-
-import static org.mockito.Mockito.mock;
 
 public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory {
 
@@ -71,7 +67,12 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
     ));
   }
 
-  private KafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
+  /**
+   * @param vertx
+   * @param consumerConfigs
+   * @return
+   */
+  private ReactiveKafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
                                                            Map<String, Object> consumerConfigs) {
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
@@ -101,7 +102,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
       );
     });
 
-    return KafkaConsumer.create(vertx, consumer);
+    return new MockReactiveKafkaConsumer<Object, CloudEvent>(consumer);
   }
 
   public void setRecords(final List<ConsumerRecord<String, CloudEvent>> records) {
