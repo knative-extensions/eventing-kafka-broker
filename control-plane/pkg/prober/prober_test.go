@@ -30,12 +30,12 @@ func TestFuncProbe(t *testing.T) {
 
 	calls := atomic.NewInt32(0)
 	status := StatusReady
-	p := Func(func(ctx context.Context, addressable Addressable, expected Status) Status {
+	p := Func(func(ctx context.Context, addressables []Addressable, expected Status) Status {
 		calls.Inc()
 		return status
 	})
 
-	s := p.Probe(context.Background(), Addressable{}, status)
+	s := p.Probe(context.Background(), []Addressable{}, status)
 
 	require.Equal(t, status, s, s.String())
 	require.Equal(t, int32(1), calls.Load())

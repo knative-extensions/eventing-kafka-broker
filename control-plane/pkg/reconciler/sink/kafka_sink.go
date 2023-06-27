@@ -277,15 +277,17 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	address := addressableStatus.Address.URL.URL()
-	proberAddressable := prober.Addressable{
-		Address: address,
-		ResourceKey: types.NamespacedName{
-			Namespace: ks.GetNamespace(),
-			Name:      ks.GetName(),
+	proberAddressables := []prober.Addressable{
+		{
+			Address: address,
+			ResourceKey: types.NamespacedName{
+				Namespace: ks.GetNamespace(),
+				Name:      ks.GetName(),
+			},
 		},
 	}
 
-	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
+	if status := r.Prober.Probe(ctx, proberAddressables, prober.StatusReady); status != prober.StatusReady {
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -349,14 +351,16 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
 	address := receiver.Address(r.IngressHost, ks)
-	proberAddressable := prober.Addressable{
-		Address: address,
-		ResourceKey: types.NamespacedName{
-			Namespace: ks.GetNamespace(),
-			Name:      ks.GetName(),
+	proberAddressables := []prober.Addressable{
+		{
+			Address: address,
+			ResourceKey: types.NamespacedName{
+				Namespace: ks.GetNamespace(),
+				Name:      ks.GetName(),
+			},
 		},
 	}
-	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
+	if status := r.Prober.Probe(ctx, proberAddressables, prober.StatusNotReady); status != prober.StatusNotReady {
 		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
 		// for a new reconciliation.
 		return controller.NewRequeueAfter(5 * time.Second)

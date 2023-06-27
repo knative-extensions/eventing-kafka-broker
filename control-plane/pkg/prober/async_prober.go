@@ -73,7 +73,12 @@ func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqu
 	return NewAsync(ctx, newClient, port, IPsLister, enqueue), nil
 }
 
-func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
+func (a *asyncProber) Probe(ctx context.Context, addressables []Addressable, expected Status) Status {
+	if len(addressables) != 1 {
+		a.logger.Error("Invalid number of addresses passed to async prober")
+		return StatusUnknown
+	}
+	addressable := addressables[0]
 	address := addressable.Address
 	IPs, err := a.IPsLister(addressable)
 	if err != nil {

@@ -59,7 +59,7 @@ func TestAsyncProber(t *testing.T) {
 		name                string
 		pods                []*corev1.Pod
 		podsLabelsSelector  labels.Selector
-		addressable         Addressable
+		addressable         []Addressable
 		responseStatusCode  int
 		wantStatus          Status
 		wantRequeueCountMin int
@@ -70,9 +70,11 @@ func TestAsyncProber(t *testing.T) {
 			name:               "no pods",
 			pods:               []*corev1.Pod{},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
-				Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
-				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: []Addressable{
+				{
+					Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
+					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+				},
 			},
 			responseStatusCode:  http.StatusOK,
 			wantStatus:          StatusNotReady,
@@ -92,9 +94,11 @@ func TestAsyncProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
-				Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
-				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: []Addressable{
+				{
+					Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
+					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+				},
 			},
 			responseStatusCode:  http.StatusOK,
 			wantStatus:          StatusReady,
@@ -115,9 +119,11 @@ func TestAsyncProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
-				Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
-				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: []Addressable{
+				{
+					Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
+					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+				},
 			},
 			responseStatusCode:  http.StatusNotFound,
 			wantStatus:          StatusNotReady,
@@ -138,9 +144,11 @@ func TestAsyncProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
-				Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
-				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: []Addressable{
+				{
+					Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
+					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+				},
 			},
 			responseStatusCode:  http.StatusOK,
 			wantStatus:          StatusReady,
@@ -181,7 +189,7 @@ func TestAsyncProber(t *testing.T) {
 			for _, p := range tc.pods {
 				_ = podinformer.Get(ctx).Informer().GetStore().Add(p)
 			}
-			tc.addressable.Address.Host = s.URL
+			tc.addressable[0].Address.Host = s.URL
 			u, _ := url.Parse(s.URL)
 
 			wantRequeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))
@@ -258,9 +266,11 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 	u, err := url.Parse(addrString)
 	require.NoError(t, err)
 
-	addressable := Addressable{
-		Address:     &url.URL{Scheme: "https", Path: "/b1/b1", Host: addrString},
-		ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+	addressable := []Addressable{
+		{
+			Address:     &url.URL{Scheme: "https", Path: "/b1/b1", Host: addrString},
+			ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+		},
 	}
 
 	pod := &corev1.Pod{

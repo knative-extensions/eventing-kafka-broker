@@ -329,17 +329,19 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	address := addressableStatus.Address.URL.URL()
-	proberAddressable := prober.Addressable{
-		Address: address,
-		ResourceKey: types.NamespacedName{
-			Namespace: channel.GetNamespace(),
-			Name:      channel.GetName(),
+	proberAddressables := []prober.Addressable{
+		{
+			Address: address,
+			ResourceKey: types.NamespacedName{
+				Namespace: channel.GetNamespace(),
+				Name:      channel.GetName(),
+			},
 		},
 	}
 
-	logger.Debug("Going to probe address to check ingress readiness for the channel.", zap.Any("proberAddressable", proberAddressable))
-	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
-		logger.Debug("Ingress is not ready for the channel. Going to requeue.", zap.Any("proberAddressable", proberAddressable))
+	logger.Debug("Going to probe address to check ingress readiness for the channel.", zap.Any("proberAddressables", proberAddressables))
+	if status := r.Prober.Probe(ctx, proberAddressables, prober.StatusReady); status != prober.StatusReady {
+		logger.Debug("Ingress is not ready for the channel. Going to requeue.", zap.Any("proberAddressables", proberAddressables))
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -412,14 +414,16 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
 	address := receiver.Address(r.IngressHost, channel)
-	proberAddressable := prober.Addressable{
-		Address: address,
-		ResourceKey: types.NamespacedName{
-			Namespace: channel.GetNamespace(),
-			Name:      channel.GetName(),
+	proberAddressables := []prober.Addressable{
+		{
+			Address: address,
+			ResourceKey: types.NamespacedName{
+				Namespace: channel.GetNamespace(),
+				Name:      channel.GetName(),
+			},
 		},
 	}
-	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady); status != prober.StatusNotReady {
+	if status := r.Prober.Probe(ctx, proberAddressables, prober.StatusNotReady); status != prober.StatusNotReady {
 		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
 		// for a new reconciliation.
 		return controller.NewRequeueAfter(5 * time.Second)
