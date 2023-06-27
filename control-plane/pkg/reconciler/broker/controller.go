@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -91,7 +92,19 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: reconciler.DataPlaneNamespace, Name: env.IngressName})
-	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, IPsLister, impl.EnqueueKey)
+	features := feature.FromContext(ctx)
+	if features.IsPermissiveTransportEncryption() || features.IsDisabledTransportEncryption() {
+		reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, IPsLister, impl.EnqueueKey)
+	} else {
+		caCerts, err := reconciler.getCaCerts()
+		if err != nil {
+			logger.Fatal("Failed to get CA certs in Strict Transport Encryption", zap.Error(err))
+		}
+		reconciler.Prober, err = prober.NewAsyncWithTLS(ctx, env.IngressPodPort, IPsLister, impl.EnqueueKey, &caCerts)
+		if err != nil {
+			logger.Fatal("Failed to create a TLS enabled prober in Strict Transport Encryption", zap.Error(err))
+		}
+	}
 
 	brokerInformer := brokerinformer.Get(ctx)
 
@@ -102,6 +115,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	globalResync := func(_ interface{}) {
 		impl.GlobalResync(brokerInformer.Informer())
+	}
+
+	rotateCACerts := func(obj interface{}) {
+		newCerts, err := reconciler.getCaCerts()
+		if err != nil {
+			logger.Fatal("Failed to get new CA certs while rotating CA certs in Strict Transport Encryption", zap.Error(err))
+		}
+		reconciler.Prober.RotateRootCaCerts(&newCerts)
+		globalResync(obj)
 	}
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
@@ -121,7 +143,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithName(brokerIngressTLSSecretName),
-		Handler:    controller.HandleAll(globalResync),
+		Handler:    controller.HandleAll(rotateCACerts),
 	})
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
