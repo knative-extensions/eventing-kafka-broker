@@ -17,15 +17,9 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import dev.knative.eventing.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
-import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;

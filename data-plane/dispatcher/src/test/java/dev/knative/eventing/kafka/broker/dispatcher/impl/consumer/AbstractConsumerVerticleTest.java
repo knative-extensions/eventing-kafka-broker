@@ -26,14 +26,11 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherTest;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -166,11 +163,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var checkpoints = context.checkpoint(2);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
-    when(consumer.subscribe((Set<String>) any(),any())).then(answer -> {
-      final Handler<AsyncResult<Void>> callback = answer.getArgument(1);
-      callback.handle(Future.succeededFuture());
-      return consumer;
-    });
+    when(consumer.subscribe((Set<String>) any())).thenReturn(Future.succeededFuture());
     when(consumer.subscribe(any(Set.class))).thenReturn(Future.succeededFuture());
     when(consumer.poll(any()))
       .then(answer -> {

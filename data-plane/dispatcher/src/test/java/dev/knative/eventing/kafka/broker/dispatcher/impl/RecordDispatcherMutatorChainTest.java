@@ -19,7 +19,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 
