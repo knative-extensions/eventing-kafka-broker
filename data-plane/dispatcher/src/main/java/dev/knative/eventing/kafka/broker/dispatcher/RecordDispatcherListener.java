@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
  * This class contains hooks for listening events through the {@link dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher} lifecycle.

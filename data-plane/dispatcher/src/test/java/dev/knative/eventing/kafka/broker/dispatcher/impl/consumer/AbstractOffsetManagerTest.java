@@ -15,15 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.OffsetAndMetadata;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.assertj.core.api.MapAssert;
@@ -48,17 +45,15 @@ import static org.mockito.Mockito.verify;
 
 public abstract class AbstractOffsetManagerTest {
 
-  abstract RecordDispatcherListener createOffsetManager(final Vertx vertx, final KafkaConsumer<?, ?> consumer);
+  abstract RecordDispatcherListener createOffsetManager(final Vertx vertx, final ReactiveKafkaConsumer<?, ?> consumer);
 
-  protected static KafkaConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
-    return new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<>(
+  protected static ConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
+    return new ConsumerRecord<>(
         topic,
         partition,
         offset,
         null,
         null
-      )
     );
   }
 
@@ -78,23 +73,15 @@ public abstract class AbstractOffsetManagerTest {
     // Funky flag to flip in order to induce a failure
     AtomicBoolean failureFlag = new AtomicBoolean(false);
 
-    final KafkaConsumer<String, CloudEvent> vertxConsumer = mock(KafkaConsumer.class);
+    final ReactiveKafkaConsumer<String, CloudEvent> vertxConsumer = mock(ReactiveKafkaConsumer.class);
     doAnswer(invocation -> {
       if (failureFlag.get()) {
         return Future.failedFuture("some failure");
       }
       // If you don't want to lose hours in debugging, please don't remove this FQCNs :)
-      final Map<io.vertx.kafka.client.common.TopicPartition, OffsetAndMetadata>
+      final Map<TopicPartition, OffsetAndMetadata>
         topicsPartitions = invocation.getArgument(0);
-      mockConsumer.commitSync(
-        topicsPartitions.entrySet()
-          .stream()
-          .collect(Collectors.toMap(
-            e -> new TopicPartition(e.getKey().getTopic(), e.getKey().getPartition()),
-            e -> new org.apache.kafka.clients.consumer.OffsetAndMetadata(e.getValue().getOffset(),
-              e.getValue().getMetadata())
-          ))
-      );
+        mockConsumer.commitSync(topicsPartitions);
       return Future.succeededFuture();
     })
       .when(vertxConsumer)
@@ -120,19 +107,12 @@ public abstract class AbstractOffsetManagerTest {
   }
 
   @SuppressWarnings("unchecked")
-  protected void shouldNeverCommit(final KafkaConsumer<String, CloudEvent> consumer) {
-    verify(consumer, never()).commit();
-    verify(consumer, never()).commit(any(Handler.class));
+  protected void shouldNeverCommit(final ReactiveKafkaConsumer<String, CloudEvent> consumer) {
     verify(consumer, never()).commit(any(Map.class));
-    verify(consumer, never()).commit(any(), any());
   }
 
   @SuppressWarnings("unchecked")
-  protected void shouldNeverPause(final KafkaConsumer<String, CloudEvent> consumer) {
-    verify(consumer, never()).pause();
-    verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class));
-    verify(consumer, never()).pause(any(Set.class));
-    verify(consumer, never()).pause(any(io.vertx.kafka.client.common.TopicPartition.class), any());
-    verify(consumer, never()).pause(any(Set.class), any());
+  protected void shouldNeverPause(final ReactiveKafkaConsumer<String, CloudEvent> consumer) {
+    verify(consumer, never()).pause(any(Collection.class));
   }
 }

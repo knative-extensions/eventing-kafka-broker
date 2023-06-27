@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
@@ -49,7 +50,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.*;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,7 +90,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var verticle = createConsumerVerticle(
       consumerVerticleContext,
       (vx, consumerVerticle) -> {
-        consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
+        consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
@@ -131,7 +131,7 @@ public abstract class AbstractConsumerVerticleTest {
         egress1()
       ),
       (vx, consumerVerticle) -> {
-        consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
+        consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
@@ -161,12 +161,12 @@ public abstract class AbstractConsumerVerticleTest {
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
     final var topics = new String[]{"a"};
-    final KafkaConsumer<Object, CloudEvent> consumer = mock(KafkaConsumer.class);
+    final MockReactiveKafkaConsumer<Object, CloudEvent> consumer = mock(MockReactiveKafkaConsumer.class);
 
     final var checkpoints = context.checkpoint(2);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
-    when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
+    when(consumer.subscribe((Set<String>) any(),any())).then(answer -> {
       final Handler<AsyncResult<Void>> callback = answer.getArgument(1);
       callback.handle(Future.succeededFuture());
       return consumer;
@@ -187,7 +187,7 @@ public abstract class AbstractConsumerVerticleTest {
       mockConsumer.unsubscribe();
 
       mockConsumer.assign(Arrays.stream(topics)
-        .map(t -> new TopicPartition(t, 0))
+        .map(topic -> new TopicPartition(topic, 0))
         .collect(Collectors.toSet())
       );
     });

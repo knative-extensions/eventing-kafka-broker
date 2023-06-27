@@ -53,16 +53,15 @@ public class RecordDispatcherMutatorChainTest {
     );
     when(next.dispatch(any())).thenReturn(Future.succeededFuture());
 
-    final var givenRecord = new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<>(
+    final var givenRecord = new ConsumerRecord<>(
         "t1",
         0,
         0,
         (Object) "abc",
         CloudEventBuilder.from(expected)
           .withId(UUID.randomUUID().toString())
-          .build())
-    );
+          .build()
+      );
 
     final var succeeded = chain.dispatch(givenRecord);
 
