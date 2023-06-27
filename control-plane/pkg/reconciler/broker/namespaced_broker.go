@@ -59,6 +59,7 @@ import (
 // TODO: IPListerWithMapping struct can leak resources in case of a leader change
 // TODO: We might need to create a TTL mechanism
 
+// Deprecated
 type NamespacedReconciler struct {
 	*base.Reconciler
 	*config.Env

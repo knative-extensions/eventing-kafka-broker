@@ -49,6 +49,7 @@ const (
 	NamespacedFinalizerName = "kafka.namespaced.triggers.eventing.knative.dev"
 )
 
+// Deprecated
 func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()

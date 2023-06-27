@@ -33,6 +33,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
+// Deprecated
 type NamespacedReconciler struct {
 	*base.Reconciler
 	*FlagsHolder

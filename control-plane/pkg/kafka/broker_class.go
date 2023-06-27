@@ -24,7 +24,8 @@ import (
 
 const (
 	// Kafka broker class annotation value.
-	BrokerClass           = "Kafka"
+	BrokerClass = "Kafka"
+	// Deprecated
 	NamespacedBrokerClass = "KafkaNamespaced"
 )
 
@@ -36,6 +37,7 @@ func BrokerClassFilter() func(interface{}) bool {
 	)
 }
 
+// Deprecated
 func NamespacedBrokerClassFilter() func(interface{}) bool {
 	return pkgreconciler.AnnotationFilterFunc(
 		brokerreconciler.ClassAnnotationKey,

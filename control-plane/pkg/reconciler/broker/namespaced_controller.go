@@ -67,6 +67,7 @@ const (
 	NamespacedBrokerAdditionalResourcesConfigMapName = "config-namespaced-broker-resources"
 )
 
+// Deprecated
 func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env *config.Env) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
