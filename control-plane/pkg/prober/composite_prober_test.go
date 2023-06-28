@@ -195,6 +195,7 @@ func TestCompositeProber(t *testing.T) {
 			prober, err := NewComposite(ctx, httpUrl.Port(), httpsUrl.Port(), IPsLister, func(key types.NamespacedName) {
 				wantRequeueCountMin.Dec()
 			}, pointer.String(string(CA1)))
+			require.NoError(t, err)
 
 			probeFunc := func() bool {
 				status := prober.Probe(ctx, tc.addressables, tc.wantStatus)
