@@ -38,10 +38,10 @@ require (
 require (
 	github.com/google/gofuzz v1.2.0
 	github.com/kedacore/keda/v2 v2.8.1
-	knative.dev/eventing v0.37.1-0.20230626075347-901ef61643d3
-	knative.dev/hack v0.0.0-20230615155948-d7586a218601
-	knative.dev/pkg v0.0.0-20230616134650-eb63a40adfb0
-	knative.dev/reconciler-test v0.0.0-20230613125845-0061957b480e
+	knative.dev/eventing v0.37.1-0.20230628105954-4b5fde82647d
+	knative.dev/hack v0.0.0-20230628110129-fc42790854e8
+	knative.dev/pkg v0.0.0-20230628105954-6eb4b40a9a30
+	knative.dev/reconciler-test v0.0.0-20230628013854-710f92a76fc1
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
