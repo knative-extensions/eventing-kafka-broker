@@ -60,7 +60,7 @@
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.3.2</jib.version>
-    <quarkus.version>2.13.7.Final</quarkus.version>
+    <quarkus.version>3.1.2.Final</quarkus.version>
   </properties>
 
   <modules>
