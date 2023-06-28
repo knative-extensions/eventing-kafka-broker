@@ -111,7 +111,8 @@ func TestExecuteTriggersConsumerGroupTemplateDefault(t *testing.T) {
 
 func TestExecuteTriggersConsumerGroupTemplateOverride(t *testing.T) {
 	nc := DefaultFeaturesConfig()
-	nc.features.TriggersConsumerGroupTemplate, _ = template.New("custom-template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+	customTemplate, _ := template.New("custom-template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+	nc.features.TriggersConsumerGroupTemplate = *customTemplate
 
 	result, err := nc.ExecuteTriggersConsumerGroupTemplate(v1.ObjectMeta{
 		Name:      "trigger",
@@ -141,7 +142,8 @@ func TestExecuteBrokersTopicTemplateDefault(t *testing.T) {
 
 func TestExecuteBrokersTopicTemplateOverride(t *testing.T) {
 	nc := DefaultFeaturesConfig()
-	nc.features.BrokersTopicTemplate, _ = template.New("custom-template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+	customTemplate, _ := template.New("custom-template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+	nc.features.BrokersTopicTemplate = *customTemplate
 
 	result, err := nc.ExecuteBrokersTopicTemplate(v1.ObjectMeta{
 		Name:      "topic",
@@ -171,7 +173,8 @@ func TestExecuteChannelsTopicTemplateDefault(t *testing.T) {
 
 func TestExecuteChannelsTopicTemplateOverride(t *testing.T) {
 	nc := DefaultFeaturesConfig()
-	nc.features.ChannelsTopicTemplate, _ = template.New("custom-template").Parse("knative-channel-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+	customTemplate, _ := template.New("custom-template").Parse("knative-channel-{{ .Namespace }}-{{ .Name }}-{{ .UID }}")
+	nc.features.ChannelsTopicTemplate = *customTemplate
 
 	result, err := nc.ExecuteChannelsTopicTemplate(v1.ObjectMeta{
 		Name:      "topic",

@@ -39,9 +39,9 @@ type features struct {
 	DispatcherRateLimiter            feature.Flag
 	DispatcherOrderedExecutorMetrics feature.Flag
 	ControllerAutoscaler             feature.Flag
-	TriggersConsumerGroupTemplate    *template.Template
-	BrokersTopicTemplate             *template.Template
-	ChannelsTopicTemplate            *template.Template
+	TriggersConsumerGroupTemplate    template.Template
+	BrokersTopicTemplate             template.Template
+	ChannelsTopicTemplate            template.Template
 }
 
 type KafkaFeatureFlags struct {
@@ -63,28 +63,14 @@ func init() {
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
-	// we need to clone the default values when creating a new features config
-	// otherwise, when calling NewFeaturesConfigFromMap, we will overwrite the default variables
-	triggersGroupTemplate, err := defaultTriggersConsumerGroupTemplate.Clone()
-	if err != nil {
-		panic("failed to clone default triggers group template")
-	}
-	brokersTopicTemplate, err := defaultBrokersTopicTemplate.Clone()
-	if err != nil {
-		panic("failed to clone default brokers topic template")
-	}
-	channelsTopicTemplate, err := defaultChannelsTopicTemplate.Clone()
-	if err != nil {
-		panic("failed to clone default channels topic template")
-	}
 	return &KafkaFeatureFlags{
 		features: features{
 			DispatcherRateLimiter:            feature.Disabled,
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
 			ControllerAutoscaler:             feature.Disabled,
-			TriggersConsumerGroupTemplate:    triggersGroupTemplate,
-			BrokersTopicTemplate:             brokersTopicTemplate,
-			ChannelsTopicTemplate:            channelsTopicTemplate,
+			TriggersConsumerGroupTemplate:    *defaultTriggersConsumerGroupTemplate,
+			BrokersTopicTemplate:             *defaultBrokersTopicTemplate,
+			ChannelsTopicTemplate:            *defaultChannelsTopicTemplate,
 		},
 	}
 }
@@ -96,9 +82,9 @@ func NewFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) 
 		asFlag("dispatcher.rate-limiter", &nc.features.DispatcherRateLimiter),
 		asFlag("dispatcher.ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
 		asFlag("controller.autoscaler", &nc.features.ControllerAutoscaler),
-		asTemplate("triggers.consumergroup.template", nc.features.TriggersConsumerGroupTemplate),
-		asTemplate("brokers.topic.template", nc.features.BrokersTopicTemplate),
-		asTemplate("channels.topic.template", nc.features.ChannelsTopicTemplate),
+		asTemplate("triggers.consumergroup.template", &nc.features.TriggersConsumerGroupTemplate),
+		asTemplate("brokers.topic.template", &nc.features.BrokersTopicTemplate),
+		asTemplate("channels.topic.template", &nc.features.ChannelsTopicTemplate),
 	)
 	return nc, err
 }
@@ -216,7 +202,7 @@ func asTemplate(key string, target *template.Template) configmap.ParseFunc {
 	}
 }
 
-func executeTemplateToString(template *template.Template, metadata v1.ObjectMeta, errorMessage string) (string, error) {
+func executeTemplateToString(template template.Template, metadata v1.ObjectMeta, errorMessage string) (string, error) {
 	var result bytes.Buffer
 	err := template.Execute(&result, metadata)
 	if err != nil {
