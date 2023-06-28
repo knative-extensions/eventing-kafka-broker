@@ -156,6 +156,35 @@ func TestAsyncProber(t *testing.T) {
 			wantRequestCountMin: 1,
 			useTLS:              true,
 		},
+		{
+			name: "single pod - too many addressables",
+			pods: []*corev1.Pod{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "ns",
+						Name:      "p1",
+						Labels:    map[string]string{"app": "p"},
+					},
+					Status: corev1.PodStatus{PodIP: "127.0.0.1"},
+				},
+			},
+			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
+			addressable: []Addressable{
+				{
+					Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
+					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+				},
+				{
+					Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
+					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+				},
+			},
+			responseStatusCode:  http.StatusOK,
+			wantStatus:          StatusUnknown,
+			wantRequeueCountMin: 0,
+			wantRequestCountMin: 0,
+			useTLS:              true,
+		},
 	}
 
 	for _, tc := range tt {
