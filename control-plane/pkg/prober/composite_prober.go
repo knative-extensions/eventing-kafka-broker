@@ -29,9 +29,9 @@ type compositeProber struct {
 // NewComposite creates a composite prober.
 //
 // It reports status changes using the provided EnqueueFunc.
-func NewComposite(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
-	httpProber := NewAsync(ctx, http.DefaultClient, port, IPsLister, enqueue)
-	httpsProber, err := NewAsyncWithTLS(ctx, port, IPsLister, enqueue, caCerts)
+func NewComposite(ctx context.Context, httpPort string, httpsPort string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
+	httpProber := NewAsync(ctx, http.DefaultClient, httpPort, IPsLister, enqueue)
+	httpsProber, err := NewAsyncWithTLS(ctx, httpsPort, IPsLister, enqueue, caCerts)
 	if err != nil {
 		return nil, err
 	}
