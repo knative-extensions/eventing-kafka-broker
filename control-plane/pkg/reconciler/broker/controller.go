@@ -98,6 +98,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	brokerInformer := brokerinformer.Get(ctx)
 
+	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
+		reconciler.KafkaFeatureFlags.Reset(value)
+		impl.GlobalResync(brokerInformer.Informer())
+	})
+	kafkaConfigStore.WatchConfigs(watcher)
+
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
 		Handler:    controller.HandleAll(impl.Enqueue),

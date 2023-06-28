@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
@@ -83,6 +84,10 @@ func TestNewController(t *testing.T) {
 		configmap.NewStaticWatcher(&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "cm",
+			},
+		}, &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: apisconfig.FlagsConfigName,
 			},
 		}),
 		env,

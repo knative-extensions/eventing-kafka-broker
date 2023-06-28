@@ -96,7 +96,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "channel-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return channel.NewController(ctx, channelEnv)
+				return channel.NewController(ctx, watcher, channelEnv)
 			},
 		},
 
