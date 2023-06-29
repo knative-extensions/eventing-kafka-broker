@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +59,8 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
   @Override
   void startConsumer(final Promise<Void> startPromise) {
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()))
+    Objects.requireNonNull(getConsumerVerticleContext().getConsumerRebalanceListener());
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), getConsumerVerticleContext().getConsumerRebalanceListener())
     .onFailure(startPromise::fail)
     .onSuccess(v -> poll());
   }

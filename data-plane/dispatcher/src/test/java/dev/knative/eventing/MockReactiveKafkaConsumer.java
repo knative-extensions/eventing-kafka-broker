@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -73,6 +74,12 @@ public class MockReactiveKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K,
     @Override
     public Future<Void> subscribe(Collection<String> topics) {
         consumer.subscribe(topics);
+        return Future.succeededFuture();
+    }
+
+    @Override
+    public Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener) {
+        consumer.subscribe(topics, listener);
         return Future.succeededFuture();
     }
 
