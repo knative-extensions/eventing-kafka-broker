@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
@@ -45,12 +46,13 @@ import (
 
 	"knative.dev/pkg/controller"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
-func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	configmapInformer := configmapinformer.Get(ctx)
 	channelInformer := kafkachannelinformer.Get(ctx)
@@ -75,6 +77,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
 		ConsumerGroupLister:        consumerGroupInformer.Lister(),
 		InternalsClient:            consumergroupclient.Get(ctx),
+		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -88,6 +91,13 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
+
+	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
+		reconciler.KafkaFeatureFlags.Reset(value)
+		impl.GlobalResync(channelInformer.Informer())
+	})
+	kafkaConfigStore.WatchConfigs(watcher)
+
 	IPsLister := prober.IdentityIPsLister()
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, "", IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)

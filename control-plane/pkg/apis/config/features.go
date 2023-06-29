@@ -39,9 +39,9 @@ type features struct {
 	DispatcherRateLimiter            feature.Flag
 	DispatcherOrderedExecutorMetrics feature.Flag
 	ControllerAutoscaler             feature.Flag
-	TriggersConsumerGroupTemplate    *template.Template
-	BrokersTopicTemplate             *template.Template
-	ChannelsTopicTemplate            *template.Template
+	TriggersConsumerGroupTemplate    template.Template
+	BrokersTopicTemplate             template.Template
+	ChannelsTopicTemplate            template.Template
 }
 
 type KafkaFeatureFlags struct {
@@ -50,15 +50,16 @@ type KafkaFeatureFlags struct {
 }
 
 var (
-	DefaultTriggersConsumerGroupTemplate *template.Template
-	DefaultBrokersTopicTemplate          *template.Template
-	DefaultChannelsTopicTemplate         *template.Template
+	defaultTriggersConsumerGroupTemplate *template.Template
+	defaultBrokersTopicTemplate          *template.Template
+	defaultChannelsTopicTemplate         *template.Template
 )
 
 func init() {
-	DefaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
-	DefaultBrokersTopicTemplate, _ = template.New("brokers.topic.template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}")
-	DefaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-channel-{{ .Namespace }}-{{ .Name }}")
+	defaultTriggersConsumerGroupTemplate, _ = template.New("triggers.consumergroup.template").Parse("knative-trigger-{{ .Namespace }}-{{ .Name }}")
+	defaultBrokersTopicTemplate, _ = template.New("brokers.topic.template").Parse("knative-broker-{{ .Namespace }}-{{ .Name }}")
+	// This will resolve to the old naming convention, to prevent errors switching over to the new topic templates approach
+	defaultChannelsTopicTemplate, _ = template.New("channels.topic.template").Parse("knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}")
 }
 
 func DefaultFeaturesConfig() *KafkaFeatureFlags {
@@ -67,23 +68,23 @@ func DefaultFeaturesConfig() *KafkaFeatureFlags {
 			DispatcherRateLimiter:            feature.Disabled,
 			DispatcherOrderedExecutorMetrics: feature.Disabled,
 			ControllerAutoscaler:             feature.Disabled,
-			TriggersConsumerGroupTemplate:    DefaultTriggersConsumerGroupTemplate,
-			BrokersTopicTemplate:             DefaultBrokersTopicTemplate,
-			ChannelsTopicTemplate:            DefaultChannelsTopicTemplate,
+			TriggersConsumerGroupTemplate:    *defaultTriggersConsumerGroupTemplate,
+			BrokersTopicTemplate:             *defaultBrokersTopicTemplate,
+			ChannelsTopicTemplate:            *defaultChannelsTopicTemplate,
 		},
 	}
 }
 
-// newFeaturesConfigFromMap creates a Features from the supplied Map
-func newFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) {
+// NewFeaturesConfigFromMap creates a Features from the supplied Map
+func NewFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) {
 	nc := DefaultFeaturesConfig()
 	err := configmap.Parse(cm.Data,
 		asFlag("dispatcher.rate-limiter", &nc.features.DispatcherRateLimiter),
 		asFlag("dispatcher.ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
 		asFlag("controller.autoscaler", &nc.features.ControllerAutoscaler),
-		asTemplate("triggers.consumergroup.template", nc.features.TriggersConsumerGroupTemplate),
-		asTemplate("brokers.topic.template", nc.features.BrokersTopicTemplate),
-		asTemplate("channels.topic.template", nc.features.ChannelsTopicTemplate),
+		asTemplate("triggers.consumergroup.template", &nc.features.TriggersConsumerGroupTemplate),
+		asTemplate("brokers.topic.template", &nc.features.BrokersTopicTemplate),
+		asTemplate("channels.topic.template", &nc.features.ChannelsTopicTemplate),
 	)
 	return nc, err
 }
@@ -131,7 +132,7 @@ func NewStore(ctx context.Context, onAfterStore ...func(name string, value *Kafk
 			"config-kafka-features",
 			logging.FromContext(ctx).Named("config-kafka-features"),
 			configmap.Constructors{
-				FlagsConfigName: newFeaturesConfigFromMap,
+				FlagsConfigName: NewFeaturesConfigFromMap,
 			},
 			func(name string, value interface{}) {
 				for _, f := range onAfterStore {
@@ -201,7 +202,7 @@ func asTemplate(key string, target *template.Template) configmap.ParseFunc {
 	}
 }
 
-func executeTemplateToString(template *template.Template, metadata v1.ObjectMeta, errorMessage string) (string, error) {
+func executeTemplateToString(template template.Template, metadata v1.ObjectMeta, errorMessage string) (string, error) {
 	var result bytes.Buffer
 	err := template.Execute(&result, metadata)
 	if err != nil {

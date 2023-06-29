@@ -10,4 +10,4 @@ data:
     controller.autoscaler: "enabled"
     triggers.consumergroup.template: "knative-trigger-{{ .Namespace }}-{{ .Name }}"
     brokers.topic.template: "knative-broker-{{ .Namespace }}-{{ .Name }}"
-    channels.topic.template: "knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}"
+    channels.topic.template: "custom-channel-template.{{ .Namespace }}.{{ .Name }}"

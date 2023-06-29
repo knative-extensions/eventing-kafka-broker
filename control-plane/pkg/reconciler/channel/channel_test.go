@@ -21,6 +21,11 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"text/template"
+
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Shopify/sarama"
 	"k8s.io/utils/pointer"
@@ -36,7 +41,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
@@ -71,6 +75,8 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+
+	kafkaFeatureFlags = "kafka-feature-flags"
 )
 
 var (
@@ -93,6 +99,8 @@ var DefaultEnv = &config.Env{
 	SystemNamespace:             "knative-eventing",
 	ContractConfigMapFormat:     base.Json,
 }
+
+var customChannelTopicTemplate = customTemplate()
 
 func TestReconcileKind(t *testing.T) {
 
@@ -123,6 +131,7 @@ func TestReconcileKind(t *testing.T) {
 			Key:  testKey,
 			Objects: []runtime.Object{
 				NewChannel(
+					WithChannelTopicStatusAnnotation(defaultTopicName()),
 					WithInitKafkaChannelConditions,
 					WithDeletedTimeStamp),
 				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
@@ -204,6 +213,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -284,6 +294,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -352,6 +363,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						StatusProbeFailed(prober.StatusNotReady),
@@ -421,6 +433,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						StatusProbeFailed(prober.StatusUnknown),
@@ -492,6 +505,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						WithSubscribers(Subscriber1(WithFreshSubscriber, WithNoSubscriberURI)),
@@ -568,6 +582,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -649,6 +664,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -730,6 +746,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -811,6 +828,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -909,6 +927,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1181,6 +1200,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1283,6 +1303,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1388,6 +1409,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1490,6 +1512,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1558,6 +1581,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1623,6 +1647,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1664,6 +1689,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusConfigMapNotUpdatedReady(
 							"Failed to get contract data from ConfigMap: knative-eventing/kafka-channel-channels-subscriptions",
@@ -1682,6 +1708,81 @@ func TestReconcileKind(t *testing.T) {
 					"InternalError",
 					"failed to get broker and triggers data from config map knative-eventing/kafka-channel-channels-subscriptions: failed to unmarshal contract: 'corrupt'",
 				),
+			},
+		},
+		{
+			Name: "Reconciled normal - custom topic template",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+			},
+			Key: testKey,
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{CustomTopic(customChannelTopicTemplate)},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(DefaultEnv),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(CustomTopic(customChannelTopicTemplate)),
+						StatusTopicReadyWithName(CustomTopic(customChannelTopicTemplate)),
+						StatusDataPlaneAvailable,
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			OtherTestData: map[string]interface{}{
+				kafkaFeatureFlags: newKafkaFeaturesConfigFromMap(&corev1.ConfigMap{
+					Data: map[string]string{
+						"channels.topic.template": "custom-channel-template.{{ .Namespace }}.{{ .Name }}",
+					},
+				}),
 			},
 		},
 		{
@@ -1754,6 +1855,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1855,6 +1957,7 @@ func TestReconcileKind(t *testing.T) {
 						WithInitKafkaChannelConditions,
 						StatusConfigParsed,
 						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusDataPlaneAvailable,
 						ChannelAddressable(&env),
@@ -1901,7 +2004,7 @@ func TestFinalizeKind(t *testing.T) {
 		{
 			Name: "Finalize normal - no auth",
 			Objects: []runtime.Object{
-				NewDeletedChannel(),
+				NewDeletedChannel(WithChannelTopicStatusAnnotation(defaultTopicName())),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
@@ -1960,6 +2063,13 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			proberMock = p.(prober.Prober)
 		}
 
+		var featureFlags *apisconfig.KafkaFeatureFlags
+		if v, ok := row.OtherTestData[kafkaFeatureFlags]; ok {
+			featureFlags = v.(*apisconfig.KafkaFeatureFlags)
+		} else {
+			featureFlags = apisconfig.DefaultFeaturesConfig()
+		}
+
 		numPartitions := int32(1)
 		if v, ok := row.OtherTestData[TestExpectedDataNumPartitions]; ok {
 			numPartitions = v.(int32)
@@ -1980,6 +2090,11 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 		}
 
 		retentionMillisString := strconv.FormatInt(retentionDuration.Milliseconds(), 10)
+
+		expectedTopicName, err := featureFlags.ExecuteChannelsTopicTemplate(metav1.ObjectMeta{Name: ChannelName, Namespace: ChannelNamespace, UID: ChannelUUID})
+		if err != nil {
+			panic("failed to create expected topic name")
+		}
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
@@ -2005,7 +2120,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			},
 			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName: ChannelTopic(),
+					ExpectedTopicName: expectedTopicName,
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     numPartitions,
 						ReplicationFactor: replicationFactor,
@@ -2016,8 +2131,9 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 					T: t,
 				}, nil
 			},
-			Prober:      proberMock,
-			IngressHost: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			Prober:            proberMock,
+			IngressHost:       network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+			KafkaFeatureFlags: featureFlags,
 		}
 
 		reconciler.Tracker = &FakeTracker{}
@@ -2044,6 +2160,27 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func defaultTopicName() string {
+	topicName, err := apisconfig.DefaultFeaturesConfig().ExecuteChannelsTopicTemplate(metav1.ObjectMeta{Name: ChannelName, Namespace: ChannelNamespace})
+	if err != nil {
+		panic("failed to create default channel topic name")
+	}
+	return topicName
+}
+
+func customTemplate() *template.Template {
+	channelsTemplate, _ := template.New("channels.topic.template").Parse("custom-channel-template.{{ .Namespace }}.{{ .Name }}")
+	return channelsTemplate
+}
+
+func newKafkaFeaturesConfigFromMap(cm *corev1.ConfigMap) *apisconfig.KafkaFeatureFlags {
+	featureFlags, err := apisconfig.NewFeaturesConfigFromMap(cm)
+	if err != nil {
+		panic("failed to create kafka features from config map")
+	}
+	return featureFlags
 }
 
 func makeTLSSecret() *corev1.Secret {
