@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 
-import java.util.Set;
 
 public class UnorderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 

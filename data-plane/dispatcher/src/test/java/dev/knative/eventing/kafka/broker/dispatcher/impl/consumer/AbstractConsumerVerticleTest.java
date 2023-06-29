@@ -33,6 +33,8 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
@@ -163,7 +165,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var checkpoints = context.checkpoint(2);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
-    when(consumer.subscribe((Set<String>) any())).thenReturn(Future.succeededFuture());
+    when(consumer.subscribe((Set<String>) any(), any(ConsumerRebalanceListener.class))).thenReturn(Future.succeededFuture());
     when(consumer.subscribe(any(Set.class))).thenReturn(Future.succeededFuture());
     when(consumer.poll(any()))
       .then(answer -> {
@@ -238,8 +240,9 @@ public abstract class AbstractConsumerVerticleTest {
         }))
       );
 
-
-    await().untilAsserted(() -> verify(consumer, times(1)).close());
+    await().untilAsserted(() -> {
+      verify(consumer, times(1)).close();
+    });
     checkpoints.flag();
   }
 
