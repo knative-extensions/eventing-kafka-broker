@@ -20,11 +20,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-// import io.vertx.kafka.client.common.TopicPartition;
-// import io.vertx.kafka.client.consumer.KafkaConsumer;
-// import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-// import io.vertx.kafka.client.consumer.OffsetAndMetadata;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -33,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -203,7 +198,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    *
    * @return succeeded or failed future.
    */
-  private Future<Void> commit(final Set<TopicPartition> partitions) {
+  private Future<Void> commit(final Collection<TopicPartition> partitions) {
     return CompositeFuture.all(
       this.offsetTrackers.entrySet()
         .stream()
@@ -316,7 +311,7 @@ public final class OffsetManager implements RecordDispatcherListener {
   }
 
   private static void logPartitions(final String context,
-                                    final Set<TopicPartition> tps) {
+                                    final Collection<TopicPartition> tps) {
     logger.info("Partitions " + context + " {}", keyValue("partitions", tps));
   }
 

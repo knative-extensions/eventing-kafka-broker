@@ -97,7 +97,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
   @Override
   void startConsumer(Promise<Void> startPromise) {
     // We need to sub first, then we can start the polling loop
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()))
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()),getConsumerVerticleContext().getConsumerRebalanceListener())
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         if (this.pollTimer.compareAndSet(-1, 0)) {
@@ -158,7 +158,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
   }
 
   @Override
-  public PartitionRevokedHandler getPartitionsRevokedHandler() {
+  public PartitionRevokedHandler getPartitionRevokedHandler() {
     return partitionRevokedHandler;
   }
 

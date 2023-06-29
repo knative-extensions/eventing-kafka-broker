@@ -20,7 +20,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
@@ -137,7 +136,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
   }
 
   @Override
-  public PartitionRevokedHandler getPartitionsRevokedHandler() {
+  public PartitionRevokedHandler getPartitionRevokedHandler() {
     return partitions -> Future.succeededFuture();
   }
 }

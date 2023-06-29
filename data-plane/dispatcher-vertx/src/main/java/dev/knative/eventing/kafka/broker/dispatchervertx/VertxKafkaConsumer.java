@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -88,6 +89,21 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> subscribe(Collection<String> topics) {
+        return consumer.subscribe(new HashSet<>(topics));
+    }
+
+    @Override
+    public Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener) {
+        Handler<Set<io.vertx.kafka.client.common.TopicPartition>> handler = partitions -> {
+            Set<TopicPartition> apachePartitions = new HashSet<>();
+            for (io.vertx.kafka.client.common.TopicPartition vertxPartition : partitions) {
+                apachePartitions.add(new TopicPartition(vertxPartition.getTopic(), vertxPartition.getPartition()));
+            }
+
+            listener.onPartitionsRevoked(apachePartitions);
+        };
+        consumer = consumer.partitionsRevokedHandler(handler);
+
         return consumer.subscribe(new HashSet<>(topics));
     }
 

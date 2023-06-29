@@ -104,5 +104,5 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     return consumerVerticleContext;
   }
 
-  public abstract PartitionRevokedHandler getPartitionsRevokedHandler();
+  public abstract PartitionRevokedHandler getPartitionRevokedHandler();
 }
