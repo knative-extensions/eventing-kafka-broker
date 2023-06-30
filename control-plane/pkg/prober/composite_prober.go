@@ -29,7 +29,7 @@ type compositeProber struct {
 // NewComposite creates a composite prober.
 //
 // It reports status changes using the provided EnqueueFunc.
-func NewComposite(ctx context.Context, httpPort string, httpsPort string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
+func NewComposite(ctx context.Context, httpPort string, httpsPort string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (NewProber, error) {
 	httpProber := NewAsync(ctx, http.DefaultClient, httpPort, IPsLister, enqueue)
 	httpsProber, err := NewAsyncWithTLS(ctx, httpsPort, IPsLister, enqueue, caCerts)
 	if err != nil {
@@ -41,14 +41,17 @@ func NewComposite(ctx context.Context, httpPort string, httpsPort string, IPsLis
 	}, nil
 }
 
-func (c *compositeProber) Probe(ctx context.Context, addressables []Addressable, expected Status) Status {
+func (c *compositeProber) Probe(ctx context.Context, addressable NewAddressable, expected Status) Status {
 	var status Status
-	for i := range addressables {
-		addr := addressables[i : i+1]
-		if addr[0].Address.Scheme == "https" {
-			status = c.httpsProber.Probe(ctx, addr, expected)
-		} else if addr[0].Address.Scheme == "http" {
-			c.httpProber.Probe(ctx, addr, expected)
+	for _, addr := range addressable.AddressStatus.Addresses {
+		oldAddressable := Addressable{
+			ResourceKey: addressable.ResourceKey,
+			Address:     addr.URL.URL(),
+		}
+		if addr.URL.Scheme == "https" {
+			status = c.httpsProber.Probe(ctx, oldAddressable, expected)
+		} else if addr.URL.Scheme == "http" {
+			c.httpProber.Probe(ctx, oldAddressable, expected)
 		}
 		if status != expected {
 			return status

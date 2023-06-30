@@ -30,25 +30,25 @@ func TestMockProber(t *testing.T) {
 		name        string
 		status      prober.Status
 		ctx         context.Context
-		addressable []prober.Addressable
+		addressable prober.Addressable
 	}{
 		{
 			name:        "unknown",
 			status:      prober.StatusUnknown,
 			ctx:         context.Background(),
-			addressable: []prober.Addressable{},
+			addressable: prober.Addressable{},
 		},
 		{
 			name:        "ready",
 			status:      prober.StatusReady,
 			ctx:         context.Background(),
-			addressable: []prober.Addressable{},
+			addressable: prober.Addressable{},
 		},
 		{
 			name:        "notReady",
 			status:      prober.StatusNotReady,
 			ctx:         context.Background(),
-			addressable: []prober.Addressable{},
+			addressable: prober.Addressable{},
 		},
 	}
 	for _, tt := range tests {

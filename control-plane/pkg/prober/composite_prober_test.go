@@ -32,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	"knative.dev/pkg/network"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
@@ -44,7 +46,7 @@ func TestCompositeProber(t *testing.T) {
 		name                     string
 		pods                     []*corev1.Pod
 		podsLabelsSelector       labels.Selector
-		addressables             []Addressable
+		addressable              NewAddressable
 		responseStatusCode       int
 		wantStatus               Status
 		wantRequeueCountMin      int
@@ -64,10 +66,16 @@ func TestCompositeProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressables: []Addressable{
-				{
-					Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
-					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: NewAddressable{
+				AddressStatus: &duckv1.AddressStatus{
+					Address: &duckv1.Addressable{
+						URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
+					},
+					Addresses: []duckv1.Addressable{
+						{
+							URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
+						},
+					},
 				},
 			},
 			responseStatusCode:       http.StatusOK,
@@ -89,10 +97,16 @@ func TestCompositeProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressables: []Addressable{
-				{
-					Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
-					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: NewAddressable{
+				AddressStatus: &duckv1.AddressStatus{
+					Address: &duckv1.Addressable{
+						URL: &apis.URL{Scheme: "https", Path: "/b1/b1"},
+					},
+					Addresses: []duckv1.Addressable{
+						{
+							URL: &apis.URL{Scheme: "https", Path: "/b1/b1"},
+						},
+					},
 				},
 			},
 			responseStatusCode:       http.StatusOK,
@@ -102,7 +116,7 @@ func TestCompositeProber(t *testing.T) {
 			wantHttpsRequestCountMin: 1,
 		},
 		{
-			name: "one pod - http and https",
+			name: "one pod - http and https, http primary address",
 			pods: []*corev1.Pod{
 				{
 					ObjectMeta: metav1.ObjectMeta{
@@ -114,14 +128,19 @@ func TestCompositeProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressables: []Addressable{
-				{
-					Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
-					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
-				},
-				{
-					Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
-					ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
+			addressable: NewAddressable{
+				AddressStatus: &duckv1.AddressStatus{
+					Address: &duckv1.Addressable{
+						URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
+					},
+					Addresses: []duckv1.Addressable{
+						{
+							URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
+						},
+						{
+							URL: &apis.URL{Scheme: "https", Path: "/b1/b1"},
+						},
+					},
 				},
 			},
 			responseStatusCode:       http.StatusOK,
@@ -169,11 +188,11 @@ func TestCompositeProber(t *testing.T) {
 				_ = podinformer.Get(ctx).Informer().GetStore().Add(p)
 			}
 
-			for _, addr := range tc.addressables {
-				if addr.Address.Scheme == "http" {
-					addr.Address.Host = httpServer.URL
+			for _, addr := range tc.addressable.AddressStatus.Addresses {
+				if addr.URL.Scheme == "http" {
+					addr.URL.Host = httpServer.URL
 				} else {
-					addr.Address.Host = httpsServer.URL
+					addr.URL.Host = httpsServer.URL
 				}
 			}
 
@@ -198,7 +217,7 @@ func TestCompositeProber(t *testing.T) {
 			require.NoError(t, err)
 
 			probeFunc := func() bool {
-				status := prober.Probe(ctx, tc.addressables, tc.wantStatus)
+				status := prober.Probe(ctx, tc.addressable, tc.wantStatus)
 				return status == tc.wantStatus
 			}
 

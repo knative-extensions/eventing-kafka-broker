@@ -25,6 +25,7 @@ import (
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 )
 
@@ -42,7 +43,23 @@ type EnqueueFunc func(key types.NamespacedName)
 // Prober probes an addressable resource.
 type Prober interface {
 	// Probe probes the provided Addressable resource and returns its Status.
-	Probe(ctx context.Context, addressables []Addressable, expected Status) Status
+	Probe(ctx context.Context, addressable Addressable, expected Status) Status
+	// RotateRootCaCerts rotates the CA certs used to make http requests
+	RotateRootCaCerts(caCerts *string) error
+}
+
+// NewAddressable contains addressable resource data for the new prober
+type NewAddressable struct {
+	// Addressable status
+	AddressStatus *duckv1.AddressStatus
+	// Resource key
+	ResourceKey types.NamespacedName
+}
+
+// NewProber probes an addressable resource
+type NewProber interface {
+	// Probe probes the provided NewAddressable resource and returns its Status
+	Probe(ctx context.Context, addressable NewAddressable, expected Status) Status
 	// RotateRootCaCerts rotates the CA certs used to make http requests
 	RotateRootCaCerts(caCerts *string) error
 }
@@ -51,11 +68,11 @@ type Prober interface {
 // ordinary functions as Prober. If f is a function
 // with the appropriate signature, Func(f) is a
 // Prober that calls f.
-type Func func(ctx context.Context, addressables []Addressable, expected Status) Status
+type Func func(ctx context.Context, addressable Addressable, expected Status) Status
 
 // Probe implements the Prober interface for Func.
-func (p Func) Probe(ctx context.Context, addressables []Addressable, expected Status) Status {
-	return p(ctx, addressables, expected)
+func (p Func) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
+	return p(ctx, addressable, expected)
 }
 
 // RotateRootCaCerts is an empty implementation to complete the Prober interface for Func.

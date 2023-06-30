@@ -263,17 +263,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	address := addressableStatus.Address.URL.URL()
-	proberAddressables := []prober.Addressable{
-		{
-			Address: address,
-			ResourceKey: types.NamespacedName{
-				Namespace: broker.GetNamespace(),
-				Name:      broker.GetName(),
-			},
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
 		},
 	}
 
-	if status := r.Prober.Probe(ctx, proberAddressables, prober.StatusReady); status != prober.StatusReady {
+	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
@@ -352,16 +350,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
 	address := receiver.Address(ingressHost, broker)
-	proberAddressables := []prober.Addressable{
-		{
-			Address: address,
-			ResourceKey: types.NamespacedName{
-				Namespace: broker.GetNamespace(),
-				Name:      broker.GetName(),
-			},
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
 		},
 	}
-	status := r.Prober.Probe(ctx, proberAddressables, prober.StatusNotReady)
+	status := r.Prober.Probe(ctx, proberAddressable, prober.StatusNotReady)
 	if status != prober.StatusNotReady && status != prober.StatusUnknownErr {
 		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
 		// for a new reconciliation.
