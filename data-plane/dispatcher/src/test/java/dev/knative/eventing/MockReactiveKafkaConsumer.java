@@ -29,6 +29,9 @@ import org.apache.kafka.common.TopicPartition;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 
 public class MockReactiveKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
@@ -62,7 +65,12 @@ public class MockReactiveKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K,
 
     @Override
     public Future<ConsumerRecords<K, V>> poll(Duration timeout) {
-        return Future.succeededFuture(consumer.poll(timeout));
+        final Promise<ConsumerRecords<K, V>> p = Promise.promise();
+        final var records = consumer.poll(timeout);
+        
+        // waits timeout time for new records to be available.
+        ((ContextInternal) Vertx.currentContext()).setTimer(timeout.toMillis(), v -> p.complete(records));
+        return p.future();
     }
 
     @Override
@@ -92,5 +100,4 @@ public class MockReactiveKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K,
     public ReactiveKafkaConsumer<K, V> exceptionHandler(Handler<Throwable> handler) {
         return this;
     }
-    
 }
