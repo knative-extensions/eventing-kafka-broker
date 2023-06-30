@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing;
+package dev.knative.eventing.kafka.broker.dispatcher;
 
 import java.util.Map;
 
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import io.vertx.core.Vertx;
 
 public class MockReactiveConsumerFactory<K, V> implements ReactiveConsumerFactory<K, V> {

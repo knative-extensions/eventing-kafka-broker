@@ -15,11 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
-import dev.knative.eventing.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherTest;

@@ -15,9 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
-import dev.knative.eventing.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;

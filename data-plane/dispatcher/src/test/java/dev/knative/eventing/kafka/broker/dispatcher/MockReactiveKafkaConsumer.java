@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing;
+package dev.knative.eventing.kafka.broker.dispatcher;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -26,7 +26,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
