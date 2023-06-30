@@ -73,6 +73,7 @@ var (
 	Formats = []string{base.Protobuf, base.Json}
 
 	ServiceURL         = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceHTTPSURL    = ServiceHTTPSURLFrom(ServiceNamespace, ServiceName)
 	ServiceDestination = ServiceURLDestination(ServiceNamespace, ServiceName)
 )
 
@@ -118,6 +119,10 @@ func WithServiceNamespace(ns string) func(s *corev1.Service) {
 
 func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
+}
+
+func ServiceHTTPSURLFrom(ns, name string) string {
+	return fmt.Sprintf("https://%s.%s.svc.cluster.local", name, ns)
 }
 
 func ServiceURLDestination(ns, name string) *duckv1.Destination {

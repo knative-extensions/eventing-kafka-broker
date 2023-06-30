@@ -75,6 +75,9 @@ message EgressConfig {
   // Dead letter is where the event is sent when something goes wrong
   string deadLetter = 1;
 
+  // Dead Letter CA Cert is the CA Cert used for HTTPS communication through dead letter
+  string deadLetterCACerts = 6;
+
   // retry is the minimum number of retries the sender should attempt when
   // sending an event before moving it to the dead letter sink.
   //
@@ -111,6 +114,9 @@ message Egress {
   // destination is the sink where events are sent.
   string destination = 2;
 
+  // destination CA Cert is the CA Cert used for HTTPS communication through destination
+  string destinationCACerts = 15;
+
   oneof replyStrategy {
     // Send the response to an url
     string replyUrl = 3;
@@ -121,6 +127,10 @@ message Egress {
     // Discard response.
     Empty discardReply = 9;
   }
+
+  // replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+  string replyUrlCACerts = 16;
+
   // A filter for performing exact match against Cloud Events attributes
   Filter filter = 5;
 

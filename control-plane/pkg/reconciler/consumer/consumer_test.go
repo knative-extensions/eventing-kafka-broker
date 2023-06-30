@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
@@ -732,6 +733,108 @@ func TestReconcileKind(t *testing.T) {
 						base.VolumeGenerationAnnotationKey: "2",
 					}),
 				)},
+			},
+		},
+		{
+			Name: "Reconciled normal - With CA Cert",
+			Objects: []runtime.Object{
+				NewService(),
+				NewConsumerGroup(ConsumerGroupOwnerRef(SourceAsOwnerReference())),
+				NewDispatcherPod("p1", PodRunning()),
+				NewConsumer(1,
+					ConsumerUID(ConsumerUUID),
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics...),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+						),
+						ConsumerSubscriber(NewSourceSinkReferenceWithCACert()),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+					)),
+					ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ConsumerUUID,
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{{
+								ConsumerGroup:      SourceConsumerGroup,
+								Destination:        ServiceHTTPSURL,
+								DestinationCACerts: string(eventingtlstesting.CA),
+								ReplyStrategy:      nil,
+								Filter:             nil,
+								Uid:                ConsumerUUID,
+								DeliveryOrder:      contract.DeliveryOrder_UNORDERED,
+								KeyType:            0,
+								VReplicas:          1,
+								Reference: &contract.Reference{
+									Uuid:      SourceUUID,
+									Namespace: ConsumerNamespace,
+									Name:      SourceName,
+								},
+								FeatureFlags: defaultContractFeatureFlags,
+							}},
+							Auth:                nil,
+							CloudEventOverrides: nil,
+							Reference: &contract.Reference{
+								Uuid:      SourceUUID,
+								Namespace: ConsumerNamespace,
+								Name:      SourceName,
+							},
+						},
+					},
+				},
+					DispatcherPodAsOwnerReference("p1"),
+				),
+				{Object: NewDispatcherPod("p1",
+					PodRunning(),
+					PodAnnotations(map[string]string{
+						base.VolumeGenerationAnnotationKey: "1",
+					}),
+				)},
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						c := NewConsumer(1,
+							ConsumerUID(ConsumerUUID),
+							ConsumerSpec(NewConsumerSpec(
+								ConsumerTopics(SourceTopics...),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(SourceBootstrapServers),
+									ConsumerGroupIdConfig(SourceConsumerGroup),
+								),
+								ConsumerSubscriber(NewSourceSinkReferenceWithCACert()),
+								ConsumerVReplicas(1),
+								ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+							)),
+							ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+						)
+						c.GetConditionSet().Manage(c.GetStatus()).InitializeConditions()
+						c.MarkReconcileContractSucceeded()
+						c.MarkBindSucceeded()
+						c.Status.SubscriberURI, _ = apis.ParseURL(ServiceHTTPSURL)
+						return c
+					}(),
+				},
 			},
 		},
 	}
