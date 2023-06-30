@@ -17,15 +17,13 @@
 package features
 
 import (
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 
-	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/test/rekt/resources/broker"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,12 +51,10 @@ func BrokerWithCustomReplicationFactorAndNumPartitions(env environment.Environme
 	))
 	f.Setup("Broker ready", broker.IsReady(brokerName))
 
-	topic := kafka.BrokerTopic(brokerreconciler.TopicPrefix, &eventing.Broker{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      brokerName,
-			Namespace: env.Namespace(),
-		},
-	})
+	topic, err := apisconfig.DefaultFeaturesConfig().ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Name: brokerName, Namespace: env.Namespace()})
+	if err != nil {
+		panic("failed to create broker topic name")
+	}
 	f.Setup("Topic is ready", kafkatopic.IsReady(topic))
 
 	f.Assert("Replication factor", kafkatopic.HasReplicationFactor(topic, replicationFactor))

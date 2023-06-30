@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/url"
 	"testing"
+	"text/template"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
@@ -37,11 +38,13 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
@@ -72,6 +75,8 @@ const (
 	ExpectedTopicDetail    = "expectedTopicDetail"
 	testProber             = "testProber"
 	externalTopic          = "externalTopic"
+
+	kafkaFeatureFlags = "kafka-feature-flags"
 )
 
 const (
@@ -98,8 +103,9 @@ var (
 	createTopicError = fmt.Errorf("failed to create topic")
 	deleteTopicError = fmt.Errorf("failed to delete topic")
 
-	linear      = eventingduck.BackoffPolicyLinear
-	exponential = eventingduck.BackoffPolicyExponential
+	linear                    = eventingduck.BackoffPolicyLinear
+	exponential               = eventingduck.BackoffPolicyExponential
+	customBrokerTopicTemplate = customTemplate()
 )
 
 var DefaultEnv = &config.Env{
@@ -2135,6 +2141,85 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					),
 				},
 			},
+		}, {
+			Name: "Reconciled normal - with custom topic template",
+			Objects: []runtime.Object{
+				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{CustomBrokerTopic(customBrokerTopicTemplate)},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusExternalBrokerTopicReady(CustomBrokerTopic(customBrokerTopicTemplate)),
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(CustomBrokerTopic(customBrokerTopicTemplate)),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name: pointer.String("http"),
+								URL:  brokerAddress,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name: pointer.String("http"),
+							URL:  brokerAddress,
+						}),
+						WithBrokerAddessable(),
+					),
+				},
+			},
+
+			OtherTestData: map[string]interface{}{
+				kafkaFeatureFlags: newKafkaFeaturesConfigFromMap(&corev1.ConfigMap{
+					Data: map[string]string{
+						"brokers.topic.template": "custom-broker-template.{{ .Namespace }}-{{ .Name }}",
+					},
+				}),
+			},
 		},
 	}
 
@@ -2187,7 +2272,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - no DLS",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBroker(WithTopicStatusAnnotation(BrokerTopic())),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2215,6 +2300,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - no ConfigMap, rebuild from annotations",
 			Objects: []runtime.Object{
 				NewDeletedBroker(
+					WithTopicStatusAnnotation(BrokerTopic()),
 					BrokerConfigMapAnnotations(),
 				),
 				NewConfigMapFromContract(&contract.Contract{
@@ -2268,7 +2354,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled failed - probe not ready",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBroker(WithTopicStatusAnnotation(BrokerTopic())),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2297,6 +2383,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Reconciled normal - with DLS",
 			Objects: []runtime.Object{
 				NewDeletedBroker(
+					WithTopicStatusAnnotation(BrokerTopic()),
 					WithDelivery(),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
@@ -2468,7 +2555,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Failed to delete topic",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBroker(WithTopicStatusAnnotation(BrokerTopic())),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2505,6 +2592,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Name: "Config map not found - create config map",
 			Objects: []runtime.Object{
 				NewDeletedBroker(
+					WithTopicStatusAnnotation(BrokerTopic()),
 					WithDelivery(),
 				),
 				BrokerConfig(bootstrapServers, 20, 5),
@@ -2523,7 +2611,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBroker(WithTopicStatusAnnotation(BrokerTopic())),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2561,7 +2649,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - topic doesn't exist",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBroker(WithTopicStatusAnnotation(BrokerTopic())),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2600,7 +2688,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 		{
 			Name: "Reconciled normal - no broker found in config map",
 			Objects: []runtime.Object{
-				NewDeletedBroker(),
+				NewDeletedBroker(WithTopicStatusAnnotation(BrokerTopic())),
 				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -2774,6 +2862,13 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			ReplicationFactor: DefaultReplicationFactor,
 		}
 
+		var featureFlags *apisconfig.KafkaFeatureFlags
+		if v, ok := row.OtherTestData[kafkaFeatureFlags]; ok {
+			featureFlags = v.(*apisconfig.KafkaFeatureFlags)
+		} else {
+			featureFlags = apisconfig.DefaultFeaturesConfig()
+		}
+
 		var onCreateTopicError error
 		if want, ok := row.OtherTestData[wantErrorOnCreateTopic]; ok {
 			onCreateTopicError = want.(error)
@@ -2789,7 +2884,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			expectedTopicDetail = td.(sarama.TopicDetail)
 		}
 
-		expectedTopicName := fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName)
+		expectedTopicName, err := featureFlags.ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Namespace: BrokerNamespace, Name: BrokerName, UID: BrokerUUID})
+		require.NoError(t, err, "Failed to create broker topic name from feature flags")
 		if t, ok := row.OtherTestData[externalTopic]; ok {
 			expectedTopicName = t.(string)
 		}
@@ -2830,9 +2926,10 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 					T:                                      t,
 				}, nil
 			},
-			Env:     env,
-			Prober:  proberMock,
-			Counter: counter.NewExpiringCounter(ctx),
+			Env:               env,
+			Prober:            proberMock,
+			Counter:           counter.NewExpiringCounter(ctx),
+			KafkaFeatureFlags: featureFlags,
 		}
 
 		reconciler.Tracker = &FakeTracker{}
@@ -2882,4 +2979,17 @@ func httpsURL(name string, namespace string) *apis.URL {
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", namespace, name),
 	}
+}
+
+func customTemplate() *template.Template {
+	brokersTemplate, _ := template.New("brokers.topic.template").Parse("custom-broker-template.{{ .Namespace }}-{{ .Name }}")
+	return brokersTemplate
+}
+
+func newKafkaFeaturesConfigFromMap(cm *corev1.ConfigMap) *apisconfig.KafkaFeatureFlags {
+	featureFlags, err := apisconfig.NewFeaturesConfigFromMap(cm)
+	if err != nil {
+		panic("failed to create kafka features from config map")
+	}
+	return featureFlags
 }
