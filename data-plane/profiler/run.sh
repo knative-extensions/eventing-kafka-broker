@@ -126,7 +126,7 @@ java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
-  -jar "${PROJECT_ROOT_DIR}"/dispatcher-vertx/target/dispatcher-1.0-SNAPSHOT.jar >"${LOG_DIR}/dispatcher.log" &
+  -jar "${PROJECT_ROOT_DIR}"/dispatcher-vertx/target/dispatcher-vertx-1.0-SNAPSHOT.jar >"${LOG_DIR}/dispatcher.log" &
 dispatcher_pid=$!
 
 # Download Sacura
