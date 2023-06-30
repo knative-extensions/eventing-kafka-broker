@@ -24,6 +24,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -144,6 +145,19 @@ func NewSourceSinkReference() duckv1.Destination {
 			Name:       s.Name,
 			APIVersion: s.APIVersion,
 		},
+	}
+}
+
+func NewSourceSinkReferenceWithCACert() duckv1.Destination {
+	s := NewService()
+	return duckv1.Destination{
+		Ref: &duckv1.KReference{
+			Kind:       s.Kind,
+			Namespace:  s.Namespace,
+			Name:       s.Name,
+			APIVersion: s.APIVersion,
+		},
+		CACerts: pointer.String(string(eventingtlstesting.CA)),
 	}
 }
 

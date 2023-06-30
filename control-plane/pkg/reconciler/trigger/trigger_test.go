@@ -43,9 +43,11 @@ import (
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -2132,6 +2134,16 @@ func withDelivery(trigger *eventing.Trigger) {
 	}
 }
 
+func withDeliveryTLS(trigger *eventing.Trigger) {
+	trigger.Spec.Delivery = &eventingduck.DeliverySpec{
+		DeadLetterSink: &duckv1.Destination{URI: url, CACerts: pointer.String(string(eventingtlstesting.CA))},
+		Retry:          pointer.Int32(3),
+		BackoffPolicy:  &exponential,
+		BackoffDelay:   pointer.String("PT1S"),
+		Timeout:        pointer.String("PT2S"),
+	}
+}
+
 func TestTriggerFinalizer(t *testing.T) {
 
 	t.Parallel()
@@ -2831,6 +2843,97 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				},
 			},
 		},
+		{
+			Name: "Reconciled normal - With Subscriber CA Cert",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				newTriggerWithCert(
+					withDeliveryTLS,
+					withDeadLetterSinkURIandCACert(url.String(), string(eventingtlstesting.CA)),
+				),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Egresses: []*contract.Egress{
+								{
+									Destination:        ServiceURL,
+									DestinationCACerts: string(eventingtlstesting.CA),
+									ConsumerGroup:      TriggerUUID,
+									Uid:                TriggerUUID,
+									Reference:          TriggerReference(),
+									EgressConfig: &contract.EgressConfig{
+										DeadLetter:        url.String(),
+										DeadLetterCACerts: string(eventingtlstesting.CA),
+										Retry:             3,
+										BackoffPolicy:     contract.BackoffPolicy_Exponential,
+										BackoffDelay:      uint64(time.Second.Milliseconds()),
+										Timeout:           uint64((time.Second * 2).Milliseconds()),
+									},
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTriggerWithCert(
+						withDeliveryTLS,
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
+						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
+							URL: &apis.URL{
+								Scheme: "http",
+								Host:   "localhost",
+								Path:   "/path",
+							},
+							CACerts: pointer.String(string(eventingtlstesting.CA)),
+						}),
+						withDeadLetterSinkURIandCACert(url.String(), string(eventingtlstesting.CA)),
+					),
+				},
+			},
+		},
 	}
 
 	useTable(t, table, &env)
@@ -2932,6 +3035,31 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 	)
 }
 
+func newTriggerWithCert(options ...reconcilertesting.TriggerOption) runtime.Object {
+	return reconcilertesting.NewTrigger(
+		TriggerName,
+		TriggerNamespace,
+		BrokerName,
+		append(
+			options,
+			WithTriggerSubscriberURIAndCert(ServiceURL),
+			func(t *eventing.Trigger) {
+				t.UID = TriggerUUID
+			},
+		)...,
+	)
+}
+
+func WithTriggerSubscriberURIAndCert(rawurl string) reconcilertesting.TriggerOption {
+	uri, _ := apis.ParseURL(rawurl)
+	return func(t *v1.Trigger) {
+		t.Spec.Subscriber = duckv1.Destination{
+			URI:     uri,
+			CACerts: pointer.String(string(eventingtlstesting.CA)),
+		}
+	}
+}
+
 func withFilters(attributes eventing.TriggerFilterAttributes, newFilters []eventing.SubscriptionsAPIFilter, withNewFilters bool) func(*eventing.Trigger) {
 	return func(e *eventing.Trigger) {
 		if withNewFilters {
@@ -2959,6 +3087,18 @@ func withDeadLetterSinkURI(uri string) func(trigger *eventing.Trigger) {
 			panic(err)
 		}
 		trigger.Status.DeadLetterSinkURI = u
+		trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
+	}
+}
+
+func withDeadLetterSinkURIandCACert(uri string, cert string) func(trigger *eventing.Trigger) {
+	return func(trigger *eventing.Trigger) {
+		u, err := apis.ParseURL(uri)
+		if err != nil {
+			panic(err)
+		}
+		trigger.Status.DeadLetterSinkURI = u
+		trigger.Status.DeadLetterSinkCACerts = pointer.String(string(eventingtlstesting.CA))
 		trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 	}
 }

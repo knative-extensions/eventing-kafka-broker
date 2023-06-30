@@ -37,6 +37,7 @@ require (
 
 require (
 	github.com/google/gofuzz v1.2.0
+	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/kedacore/keda/v2 v2.8.1
 	knative.dev/eventing v0.37.1-0.20230628105954-4b5fde82647d
 	knative.dev/hack v0.0.0-20230628110129-fc42790854e8
@@ -94,7 +95,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
