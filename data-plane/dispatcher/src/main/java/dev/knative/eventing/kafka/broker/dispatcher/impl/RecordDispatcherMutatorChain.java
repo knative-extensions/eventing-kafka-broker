@@ -37,8 +37,21 @@ public class RecordDispatcherMutatorChain implements RecordDispatcher {
   }
 
   @Override
-  public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> kafkaRecord) {
-    return next.dispatch(kafkaRecord);
+  public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record) {
+      final var newRecord = new ConsumerRecord<>(
+      record.topic(),
+      record.partition(),
+      record.offset(),
+      record.timestamp(),
+      record.timestampType(),
+      record.serializedKeySize(),
+      record.serializedValueSize(),
+      record.key(),
+      cloudEventMutator.apply(record.value()),
+      record.headers(),
+      record.leaderEpoch()
+    );
+    return next.dispatch(newRecord);
   }
 
   @Override
