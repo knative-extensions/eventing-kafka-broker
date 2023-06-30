@@ -1005,14 +1005,14 @@ type Egress struct {
 	ConsumerGroup string `protobuf:"bytes,1,opt,name=consumerGroup,proto3" json:"consumerGroup,omitempty"`
 	// destination is the sink where events are sent.
 	Destination string `protobuf:"bytes,2,opt,name=destination,proto3" json:"destination,omitempty"`
-	//destination CA Cert is the CA Cert used for HTTPS communication through destination
+	// destination CA Cert is the CA Cert used for HTTPS communication through destination
 	DestinationCACerts string `protobuf:"bytes,15,opt,name=destinationCACerts,proto3" json:"destinationCACerts,omitempty"`
 	// Types that are assignable to ReplyStrategy:
 	//	*Egress_ReplyUrl
 	//	*Egress_ReplyToOriginalTopic
 	//	*Egress_DiscardReply
 	ReplyStrategy isEgress_ReplyStrategy `protobuf_oneof:"replyStrategy"`
-	//replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
+	// replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
 	ReplyUrlCACerts string `protobuf:"bytes,16,opt,name=replyUrlCACerts,proto3" json:"replyUrlCACerts,omitempty"`
 	// A filter for performing exact match against Cloud Events attributes
 	Filter *Filter `protobuf:"bytes,5,opt,name=filter,proto3" json:"filter,omitempty"`
