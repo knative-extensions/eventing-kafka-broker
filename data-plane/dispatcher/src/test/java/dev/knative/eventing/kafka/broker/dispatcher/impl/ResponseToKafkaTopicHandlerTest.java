@@ -17,6 +17,10 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveProducerFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -66,7 +70,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
+      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
     );
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -87,7 +91,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
+      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
     );
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -110,7 +114,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
+      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
     );
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -133,7 +137,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
+      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
     );
 
     final var event = new CloudEventBuilder()
@@ -168,7 +172,7 @@ public class ResponseToKafkaTopicHandlerTest {
   @Test
   @SuppressWarnings("unchecked")
   public void shouldCloseProducer(final Vertx vertx, final VertxTestContext context) {
-    final KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
+    final MockReactiveKafkaProducer<String, CloudEvent> producer = mock(MockReactiveKafkaProducer.class);
     when(producer.close()).thenReturn(Future.succeededFuture());
     final var mockProducer = new MockProducer<String, CloudEvent>();
     when(producer.unwrap()).thenReturn(mockProducer);
