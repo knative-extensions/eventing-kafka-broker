@@ -19,6 +19,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.ConsumerVerticle;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -38,6 +39,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
   private final AuthProvider authProvider;
   private final MeterRegistry metricsRegistry;
   private final ReactiveConsumerFactory reactiveConsumerFactory;
+  private final ReactiveProducerFactory reactiveProducerFactory;
 
   /**
    * All args constructor.
@@ -54,7 +56,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     final Properties producerConfigs,
     final AuthProvider authProvider,
     final MeterRegistry metricsRegistry,
-    final ReactiveConsumerFactory reactiveConsumerFactory) {
+    final ReactiveConsumerFactory reactiveConsumerFactory,
+    final ReactiveProducerFactory reactiveProducerFactory) {
 
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(webClientOptions, "provide webClientOptions");
@@ -73,6 +76,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     this.authProvider = authProvider;
     this.metricsRegistry = metricsRegistry;
     this.reactiveConsumerFactory = reactiveConsumerFactory;
+    this.reactiveProducerFactory = reactiveProducerFactory;
   }
 
   /**
@@ -92,7 +96,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         .withMeterRegistry(metricsRegistry)
         .withResource(resource, egress)
         .withConsumerFactory(reactiveConsumerFactory)
-        .withProducerFactory(ProducerFactory.defaultFactory())
+        .withProducerFactory(reactiveProducerFactory)
     )
       .build();
   }

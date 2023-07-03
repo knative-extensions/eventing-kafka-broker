@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
@@ -226,7 +227,7 @@ public class ConsumerVerticleBuilder {
       return new NoopResponseHandler();
     }
 
-    final KafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
+    final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
       .getProducerFactory()
       .create(vertx, consumerVerticleContext.getProducerConfigs());
     return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));

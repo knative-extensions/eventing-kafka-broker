@@ -25,6 +25,7 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
@@ -64,7 +65,7 @@ public class Main {
    *
    * @param args command line arguments.
    */
-  public static void start(final String[] args, final ReactiveConsumerFactory reactiveConsumerFactory) throws IOException {
+  public static void start(final String[] args, final ReactiveConsumerFactory reactiveConsumerFactory, final ReactiveProducerFactory reactiveProducerFactory) throws IOException {
     DispatcherEnv env = new DispatcherEnv(System::getenv);
 
     OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
@@ -110,7 +111,8 @@ public class Main {
           producerConfig,
           AuthProvider.kubernetes(),
           Metrics.getRegistry(),
-          reactiveConsumerFactory
+          reactiveConsumerFactory,
+          reactiveProducerFactory
         ),
         env.getEgressesInitialCapacity()
       );

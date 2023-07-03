@@ -17,13 +17,13 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
+
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
@@ -37,7 +37,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 public final class ResponseToKafkaTopicHandler extends BaseResponseHandler implements ResponseHandler {
 
   private final String topic;
-  private final KafkaProducer<String, CloudEvent> producer;
+  private final ReactiveKafkaProducer<String, CloudEvent> producer;
   private final AsyncCloseable producerMeterBinder;
 
   private int inFlightEvents = 0;
@@ -50,7 +50,7 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
    * @param producer Kafka producer.
    * @param topic    topic to produce records.
    */
-  public ResponseToKafkaTopicHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
+  public ResponseToKafkaTopicHandler(final ReactiveKafkaProducer<String, CloudEvent> producer, final String topic) {
     super(LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class));
 
     Objects.requireNonNull(topic, "provide topic");
@@ -70,7 +70,7 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
     eventReceived();
 
     final Future<Void> f = producer
-      .send(KafkaProducerRecord.create(topic, event))
+      .send(new ProducerRecord<>(topic, event))
       .mapEmpty();
 
     f.onComplete(v -> eventProduced());
