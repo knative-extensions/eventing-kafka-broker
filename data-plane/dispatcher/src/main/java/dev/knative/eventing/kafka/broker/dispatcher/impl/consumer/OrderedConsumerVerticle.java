@@ -180,9 +180,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
     }
 
     // Put records in internal per-partition queues.
-    var recordIterator = records.iterator();
-    while(recordIterator.hasNext()) {
-      var record = recordIterator.next();
+    for(var record : records) {
       final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
       executor.offer(() -> dispatch(record));
     }
