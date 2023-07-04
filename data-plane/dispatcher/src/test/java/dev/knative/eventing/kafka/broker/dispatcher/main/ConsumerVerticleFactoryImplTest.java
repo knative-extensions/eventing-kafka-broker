@@ -20,6 +20,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolic
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveConsumerFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
@@ -70,7 +71,8 @@ public class ConsumerVerticleFactoryImplTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(MeterRegistry.class)
+      mock(MeterRegistry.class),
+      new MockReactiveConsumerFactory<>()
     );
 
     final var egress = DataPlaneContract.Egress.newBuilder()
@@ -115,7 +117,8 @@ public class ConsumerVerticleFactoryImplTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(MeterRegistry.class)
+      mock(MeterRegistry.class),
+      new MockReactiveConsumerFactory<>()
     );
 
     final var egress = DataPlaneContract.Egress.newBuilder()
@@ -164,7 +167,8 @@ public class ConsumerVerticleFactoryImplTest {
       new WebClientOptions(),
       producerConfigs,
       mock(AuthProvider.class),
-      mock(MeterRegistry.class)
+      mock(MeterRegistry.class),
+      new MockReactiveConsumerFactory<>()
     );
 
     final var egress = DataPlaneContract.Egress.newBuilder()

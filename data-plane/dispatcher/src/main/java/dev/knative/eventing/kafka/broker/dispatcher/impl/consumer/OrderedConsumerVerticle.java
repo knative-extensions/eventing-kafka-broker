@@ -25,15 +25,17 @@ import io.github.bucket4j.local.LocalBucketBuilder;
 import io.github.bucket4j.local.SynchronizationStrategy;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.kafka.client.common.TopicPartition;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -95,8 +97,9 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
   @Override
   void startConsumer(Promise<Void> startPromise) {
+    Objects.requireNonNull(getConsumerVerticleContext().getConsumerRebalanceListener());
     // We need to sub first, then we can start the polling loop
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()))
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()),getConsumerVerticleContext().getConsumerRebalanceListener())
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         if (this.pollTimer.compareAndSet(-1, 0)) {
@@ -157,34 +160,33 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
   }
 
   @Override
-  public PartitionRevokedHandler getPartitionsRevokedHandler() {
+  public PartitionRevokedHandler getPartitionRevokedHandler() {
     return partitionRevokedHandler;
   }
 
-  private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
+  private void recordsHandler(ConsumerRecords<Object, CloudEvent> records) {
     if (this.closed.get()) {
       return;
     }
     isPollInFlight.set(false);
 
-    if (records == null || records.size() == 0) {
+    if (records == null || records.count() == 0) {
       return;
     }
 
     if (bucket != null) {
       // Once we have new records, we force add them to internal per-partition queues.
-      bucket.forceAddTokens(records.size());
+      bucket.forceAddTokens(records.count());
     }
 
     // Put records in internal per-partition queues.
-    for (int i = 0; i < records.size(); i++) {
-      final var record = records.recordAt(i);
+    for(var record : records) {
       final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
       executor.offer(() -> dispatch(record));
     }
   }
 
-  private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
+  private Future<Void> dispatch(final ConsumerRecord<Object, CloudEvent> record) {
     if (this.closed.get()) {
       return Future.failedFuture("Consumer verticle closed " + getConsumerVerticleContext());
     }

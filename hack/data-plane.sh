@@ -32,7 +32,7 @@ readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
 readonly CHANNEL_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel-tls
 
 readonly RECEIVER_DIRECTORY=receiver-vertx
-readonly DISPATCHER_DIRECTORY=dispatcher
+readonly DISPATCHER_DIRECTORY=dispatcher-vertx
 
 # Checks whether the given function exists.
 function function_exists() {

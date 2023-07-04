@@ -19,22 +19,22 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandlerMock;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherTest;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
@@ -49,7 +49,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.*;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,7 +89,7 @@ public abstract class AbstractConsumerVerticleTest {
     final var verticle = createConsumerVerticle(
       consumerVerticleContext,
       (vx, consumerVerticle) -> {
-        consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
+        consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
@@ -131,7 +130,7 @@ public abstract class AbstractConsumerVerticleTest {
         egress1()
       ),
       (vx, consumerVerticle) -> {
-        consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
+        consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
@@ -161,16 +160,12 @@ public abstract class AbstractConsumerVerticleTest {
   @SuppressWarnings("unchecked")
   public void shouldCloseEverything(final Vertx vertx, final VertxTestContext context) {
     final var topics = new String[]{"a"};
-    final KafkaConsumer<Object, CloudEvent> consumer = mock(KafkaConsumer.class);
+    final MockReactiveKafkaConsumer<Object, CloudEvent> consumer = mock(MockReactiveKafkaConsumer.class);
 
     final var checkpoints = context.checkpoint(2);
 
     when(consumer.close()).thenReturn(Future.succeededFuture());
-    when(consumer.subscribe((Set<String>) any(), any())).then(answer -> {
-      final Handler<AsyncResult<Void>> callback = answer.getArgument(1);
-      callback.handle(Future.succeededFuture());
-      return consumer;
-    });
+    when(consumer.subscribe((Set<String>) any(), any(ConsumerRebalanceListener.class))).thenReturn(Future.succeededFuture());
     when(consumer.subscribe(any(Set.class))).thenReturn(Future.succeededFuture());
     when(consumer.poll(any()))
       .then(answer -> {
@@ -187,7 +182,7 @@ public abstract class AbstractConsumerVerticleTest {
       mockConsumer.unsubscribe();
 
       mockConsumer.assign(Arrays.stream(topics)
-        .map(t -> new TopicPartition(t, 0))
+        .map(topic -> new TopicPartition(topic, 0))
         .collect(Collectors.toSet())
       );
     });
@@ -245,8 +240,9 @@ public abstract class AbstractConsumerVerticleTest {
         }))
       );
 
-
-    await().untilAsserted(() -> verify(consumer, times(1)).close());
+    await().untilAsserted(() -> {
+      verify(consumer, times(1)).close();
+    });
     checkpoints.flag();
   }
 

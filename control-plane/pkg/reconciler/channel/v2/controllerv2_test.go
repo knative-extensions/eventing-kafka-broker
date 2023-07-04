@@ -22,16 +22,21 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription/fake"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake"
+	"knative.dev/pkg/configmap"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
@@ -49,6 +54,22 @@ func TestNewController(t *testing.T) {
 		IngressPodPort:       "8080",
 	}
 
+	secret := types.NamespacedName{
+		Namespace: "knative-eventing",
+		Name:      kafkaChannelTLSSecretName,
+	}
+
+	_ = secretinformer.Get(ctx).Informer().GetStore().Add(&corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: secret.Namespace,
+			Name:      secret.Name,
+		},
+		Data: map[string][]byte{
+			"ca.crt": eventingtlstesting.CA,
+		},
+		Type: corev1.SecretTypeTLS,
+	})
+
 	ctx, _ = fakekubeclient.With(
 		ctx,
 		&corev1.ConfigMap{
@@ -65,6 +86,11 @@ func TestNewController(t *testing.T) {
 
 	controller := NewController(
 		ctx,
+		configmap.NewStaticWatcher(&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: apisconfig.FlagsConfigName,
+			},
+		}),
 		configs,
 	)
 	if controller == nil {

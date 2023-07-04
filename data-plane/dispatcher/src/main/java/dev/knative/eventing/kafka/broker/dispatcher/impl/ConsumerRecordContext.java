@@ -15,15 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import io.cloudevents.CloudEvent;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+
 
 class ConsumerRecordContext {
 
-  private KafkaConsumerRecord<Object, CloudEvent> record;
+  private ConsumerRecord<Object, CloudEvent> record;
   private long receivedAtMs;
 
-  ConsumerRecordContext(KafkaConsumerRecord<Object, CloudEvent> record) {
+  ConsumerRecordContext(ConsumerRecord<Object, CloudEvent> record) {
     this.record = record;
     this.resetTimer();
   }
@@ -36,11 +37,11 @@ class ConsumerRecordContext {
     return System.currentTimeMillis() - receivedAtMs;
   }
 
-  KafkaConsumerRecord<Object, CloudEvent> getRecord() {
+  ConsumerRecord<Object, CloudEvent> getRecord() {
     return record;
   }
 
-  void setRecord(final KafkaConsumerRecord<Object, CloudEvent> record) {
+  void setRecord(final ConsumerRecord<Object, CloudEvent> record) {
     this.record = record;
   }
 }
