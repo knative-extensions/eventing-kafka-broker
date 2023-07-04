@@ -15,8 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
  * This class contains hooks for listening events through the {@link dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher} lifecycle.
@@ -28,7 +29,7 @@ public interface RecordDispatcherListener extends AsyncCloseable {
    *
    * @param record record received.
    */
-  void recordReceived(KafkaConsumerRecord<?, ?> record);
+  void recordReceived(ConsumerRecord<?, ?> record);
 
   /**
    * The given record cannot be delivered to dead letter sink.
@@ -36,26 +37,26 @@ public interface RecordDispatcherListener extends AsyncCloseable {
    * @param record record undeliverable to dead letter sink.
    * @param ex     exception occurred.
    */
-  void failedToSendToDeadLetterSink(KafkaConsumerRecord<?, ?> record, Throwable ex);
+  void failedToSendToDeadLetterSink(ConsumerRecord<?, ?> record, Throwable ex);
 
   /**
    * The given event doesn't pass the filter.
    *
    * @param record record discarded.
    */
-  void recordDiscarded(KafkaConsumerRecord<?, ?> record);
+  void recordDiscarded(ConsumerRecord<?, ?> record);
 
   /**
    * The given record has been successfully sent to subscriber.
    *
    * @param record record sent to subscriber.
    */
-  void successfullySentToSubscriber(KafkaConsumerRecord<?, ?> record);
+  void successfullySentToSubscriber(ConsumerRecord<?, ?> record);
 
   /**
    * The given record has been successfully sent to dead letter sink.
    *
    * @param record record sent to dead letter sink.
    */
-  void successfullySentToDeadLetterSink(KafkaConsumerRecord<?, ?> record);
+  void successfullySentToDeadLetterSink(ConsumerRecord<?, ?> record);
 }

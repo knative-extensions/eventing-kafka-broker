@@ -13,24 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
+package dev.knative.eventing.kafka.broker.dispatchervertx;
 
-import io.vertx.core.Future;
-import org.apache.kafka.common.TopicPartition;
+import java.io.IOException;
 
-import java.util.Collection;
-
-
-
-/**
- * {@link PartitionRevokedHandler} is the handler called when some partitions are revoked to a
- * {@link org.apache.kafka.clients.consumer.Consumer}
- */
-public interface PartitionRevokedHandler {
-
-  /**
-   * @param partitions revoked partitions
-   * @return a successful or a failed future
-   */
-  Future<Void> partitionRevoked(final Collection<TopicPartition> partitions);
+public class Main {
+    public static void main(String[] args) throws IOException {
+        dev.knative.eventing.kafka.broker.dispatcher.main.Main.start(args, new VertxConsumerFactory<>());
+    }
 }

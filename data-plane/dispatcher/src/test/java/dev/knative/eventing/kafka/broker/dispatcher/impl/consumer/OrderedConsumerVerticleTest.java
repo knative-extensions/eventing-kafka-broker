@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
@@ -25,12 +26,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.kafka.client.common.TopicPartition;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -102,7 +101,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>(partitions);
     final var recordDispatcher = mock(RecordDispatcherImpl.class);
     when(recordDispatcher.dispatch(any())).then(invocation -> {
-      final KafkaConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
+      final ConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
       return recordDispatcherLogicMock(vertx, random, delay, latch, record, receivedRecords);
     });
     when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
@@ -113,7 +112,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
         CoreObjects.egress1()
       ),
       (vx, consumerVerticle) -> {
-        consumerVerticle.setConsumer(KafkaConsumer.create(vx, consumer));
+        consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
         consumerVerticle.setCloser(Future::succeededFuture);
 
@@ -134,12 +133,12 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     // Assign partitions to consumer (required to add records)
     consumer.updateEndOffsets(
       IntStream.range(0, partitions)
-        .mapToObj(partition -> new org.apache.kafka.common.TopicPartition(topic, partition))
+        .mapToObj(partition -> new TopicPartition(topic, partition))
         .collect(Collectors.toMap(Function.identity(), v -> 0L))
     );
     consumer.rebalance(
       IntStream.range(0, partitions)
-        .mapToObj(partition -> new org.apache.kafka.common.TopicPartition(topic, partition))
+        .mapToObj(partition -> new TopicPartition(topic, partition))
         .collect(Collectors.toList())
     );
 
@@ -202,7 +201,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
     Random random,
     long millis,
     CountDownLatch latch,
-    KafkaConsumerRecord<String, CloudEvent> record,
+    ConsumerRecord<String, CloudEvent> record,
     Map<TopicPartition, List<Long>> receivedRecords) {
     if (millis == 0) {
       receivedRecords

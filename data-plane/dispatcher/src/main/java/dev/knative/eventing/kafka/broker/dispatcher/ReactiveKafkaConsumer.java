@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -82,6 +83,15 @@ public interface ReactiveKafkaConsumer<K, V> {
     Future<Void> subscribe(Collection<String> topics);
 
     /**
+     * Subscribes to the specified topics to start consuming from them.
+     *
+     * @param topics   The topics to subscribe to.
+     * @param listener The listener to invoke when the consumer is rebalanced.
+     * @return A future indicating the success or failure of the subscribe operation.
+     */
+    Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener);
+
+    /**
      * Retrieves the underlying Kafka Consumer instance.
      *
      * @return The KafkaConsumer instance.
@@ -95,4 +105,5 @@ public interface ReactiveKafkaConsumer<K, V> {
      * @return This consumer instance with the exception handler set.
      */
     ReactiveKafkaConsumer<K, V> exceptionHandler(Handler<Throwable> handler);
+
 }

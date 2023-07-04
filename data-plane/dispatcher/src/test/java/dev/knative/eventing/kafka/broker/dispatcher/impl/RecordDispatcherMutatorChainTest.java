@@ -19,7 +19,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Future;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 
@@ -53,16 +52,15 @@ public class RecordDispatcherMutatorChainTest {
     );
     when(next.dispatch(any())).thenReturn(Future.succeededFuture());
 
-    final var givenRecord = new KafkaConsumerRecordImpl<>(
-      new ConsumerRecord<>(
+    final var givenRecord = new ConsumerRecord<>(
         "t1",
         0,
         0,
         (Object) "abc",
         CloudEventBuilder.from(expected)
           .withId(UUID.randomUUID().toString())
-          .build())
-    );
+          .build()
+      );
 
     final var succeeded = chain.dispatch(givenRecord);
 
