@@ -22,6 +22,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
@@ -353,7 +354,8 @@ public class DataPlaneTest {
       producerConfigs,
       AuthProvider.noAuth(),
       Metrics.getRegistry(),
-      new MockReactiveConsumerFactory<>()
+      new MockReactiveConsumerFactory<>(),
+      new MockReactiveProducerFactory<>()
     );
 
     final var verticle = new ConsumerDeployerVerticle(
