@@ -600,7 +600,7 @@
           </formats>
           <java>
             <palantirJavaFormat>
-            <version>${palantirJavaFormat.version}</version>
+              <version>${palantirJavaFormat.version}</version>
             </palantirJavaFormat>
           </java>
         </configuration>
