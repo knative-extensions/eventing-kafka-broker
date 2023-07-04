@@ -62,6 +62,7 @@
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.3.2</jib.version>
     <quarkus.version>2.13.7.Final</quarkus.version>
+    <palantirJavaFormat.version>2.33.0</palantirJavaFormat.version>
   </properties>
 
   <modules>
@@ -579,40 +580,31 @@
         </executions>
       </plugin>
       <plugin>
-  <groupId>com.diffplug.spotless</groupId>
-  <artifactId>spotless-maven-plugin</artifactId>
-  <version>${spotless.plugin.version}</version>
-  <configuration>
-    <formats>
-      <!-- you can define as many formats as you want, each is independent -->
-      <format>
-        <!-- define the files to apply to -->
-        <includes>
-          <include>*.md</include>
-          <include>.gitignore</include>
-        </includes>
-        <!-- define the steps to apply to those files -->
-        <trimTrailingWhitespace/>
-        <endWithNewline/>
-        <indent>
-          <tabs>true</tabs>
-          <spacesPerTab>4</spacesPerTab>
-        </indent>
-      </format>
-    </formats>
-    <!-- define a language-specific format -->
-    <java>
-      <!-- no need to specify files, inferred automatically, but you can if you want -->
-
-      <!-- apply a specific flavor of google-java-format and reflow long strings -->
-      <googleJavaFormat>
-        <version>1.17.0</version>
-        <style>GOOGLE</style>
-        <reflowLongStrings>true</reflowLongStrings>
-      </googleJavaFormat>
-    </java>
-  </configuration>
-</plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.plugin.version}</version>
+        <configuration>
+          <formats>
+            <format>
+              <includes>
+                <include>*.md</include>
+                <include>.gitignore</include>
+              </includes>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+              <indent>
+                <tabs>true</tabs>
+                <spacesPerTab>4</spacesPerTab>
+              </indent>
+            </format>
+          </formats>
+          <java>
+            <palantirJavaFormat>
+            <version>${palantirJavaFormat.version}</version>
+            </palantirJavaFormat>
+          </java>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
