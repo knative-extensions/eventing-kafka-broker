@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
+source "$(dirname $0)"/../vendor/knative.dev/hack/codegen-library.sh
 
 export PATH="$GOBIN:$PATH"
 
@@ -36,38 +36,38 @@ group "Kubernetes Codegen"
 # --output-base    because this script should also be able to run inside the vendor dir of
 #                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
 #                  instead of the $GOPATH directly. For normal projects this can be dropped.
-${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
+"${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client knative.dev/eventing-kafka-broker/control-plane/pkg/apis \
   "eventing:v1alpha1 messaging:v1beta1 sources:v1beta1 bindings:v1beta1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
-${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
+"${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka \
   "eventing:v1alpha1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
-${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
+"${CODEGEN_PKG}"/generate-groups.sh "client,informer,lister" \
   knative.dev/eventing-kafka-broker/third_party/pkg/client knative.dev/eventing-kafka-broker/third_party/pkg/apis \
   "keda:v1alpha1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
 group "Knative Codegen"
 
 # Knative Injection
-${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+"${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client knative.dev/eventing-kafka-broker/control-plane/pkg/apis \
   "eventing:v1alpha1 messaging:v1beta1 sources:v1beta1 bindings:v1beta1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
-${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+"${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka \
   "eventing:v1alpha1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
-${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+"${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
   knative.dev/eventing-kafka-broker/third_party/pkg/client knative.dev/eventing-kafka-broker/third_party/pkg/apis \
   "keda:v1alpha1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
 group "Update deps post-codegen"
 
@@ -75,19 +75,24 @@ group "Update deps post-codegen"
 # For more details: https://github.com/knative-sandbox/eventing-kafka-broker/pull/847#issuecomment-828562570
 # Also: https://github.com/knative-sandbox/knobots/runs/2609020026?check_suite_focus=true#step:6:291
 if ! ${GITHUB_ACTIONS:-false}; then
-  ${REPO_ROOT_DIR}/hack/generate-proto.sh
+  "${REPO_ROOT_DIR}"/hack/generate-proto.sh
 
   # Update Java third party file
   pushd data-plane
   ./mvnw -Dlicense.outputDirectory=. license:aggregate-add-third-party
   popd
+
+  # Run maven command to apply spotless formatting
+  pushd "${REPO_ROOT_DIR}/data-plane"
+  mvn spotless:apply
+  popd
 fi
 
-${REPO_ROOT_DIR}/hack/update-deps.sh
+
+"${REPO_ROOT_DIR}"/hack/update-deps.sh
 
 cert_manager_installer="${REPO_ROOT_DIR}/vendor/knative.dev/eventing/hack/update-cert-manager.sh"
 
 chmod +x "${cert_manager_installer}"
 
 "${cert_manager_installer}"
-
