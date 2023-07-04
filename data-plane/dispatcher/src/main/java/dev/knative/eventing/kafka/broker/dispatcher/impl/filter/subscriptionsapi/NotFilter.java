@@ -22,20 +22,20 @@ import org.slf4j.LoggerFactory;
 
 public class NotFilter implements Filter {
 
-  private static final Logger logger = LoggerFactory.getLogger(NotFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(NotFilter.class);
 
-  private final Filter filter;
+    private final Filter filter;
 
-  public NotFilter(Filter filter) {
-    this.filter = filter;
-  }
+    public NotFilter(Filter filter) {
+        this.filter = filter;
+    }
 
-  @Override
-  public boolean test(CloudEvent cloudEvent) {
-    logger.debug("Testing NOT filter. Event {}", cloudEvent);
-    boolean passed = !filter.test(cloudEvent);
-    String result = passed ? "Succeeded" : "Failed";
-    logger.debug("{}: Filter {} - Event {}", result, this.filter, cloudEvent);
-    return passed;
-  }
+    @Override
+    public boolean test(CloudEvent cloudEvent) {
+        logger.debug("Testing NOT filter. Event {}", cloudEvent);
+        boolean passed = !filter.test(cloudEvent);
+        String result = passed ? "Succeeded" : "Failed";
+        logger.debug("{}: Filter {} - Event {}", result, this.filter, cloudEvent);
+        return passed;
+    }
 }

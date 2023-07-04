@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-
 import java.util.List;
 
 /**
@@ -24,22 +23,18 @@ import java.util.List;
  */
 public final class ConsumerVerticleLoggingContext {
 
-  private final List<String> topics;
-  private final String consumerGroup;
-  private final DataPlaneContract.Reference reference;
+    private final List<String> topics;
+    private final String consumerGroup;
+    private final DataPlaneContract.Reference reference;
 
-  public ConsumerVerticleLoggingContext(final ConsumerVerticleContext context) {
-    this.topics = context.getResource().getTopicsList();
-    this.consumerGroup = context.getEgress().getConsumerGroup();
-    this.reference = context.getEgress().getReference();
-  }
+    public ConsumerVerticleLoggingContext(final ConsumerVerticleContext context) {
+        this.topics = context.getResource().getTopicsList();
+        this.consumerGroup = context.getEgress().getConsumerGroup();
+        this.reference = context.getEgress().getReference();
+    }
 
-  @Override
-  public String toString() {
-    return "{" +
-      "topics=" + topics +
-      ", consumerGroup='" + consumerGroup + '\'' +
-      ", reference=" + reference +
-      '}';
-  }
+    @Override
+    public String toString() {
+        return "{" + "topics=" + topics + ", consumerGroup='" + consumerGroup + '\'' + ", reference=" + reference + '}';
+    }
 }

@@ -15,15 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import io.vertx.core.Future;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.clients.producer.Producer;
-
-import io.vertx.core.Future;
 
 /**
  * Interface for a reactive Kafka producer consist with all the methods needed.
- * 
+ *
  * @param <K> the type of the key
  * @param <V> the type of the value
  */
@@ -63,5 +62,4 @@ public interface ReactiveKafkaProducer<K, V> {
      * @return the instance underlying KafkaProducer
      */
     Producer<K, V> unwrap();
-
 }

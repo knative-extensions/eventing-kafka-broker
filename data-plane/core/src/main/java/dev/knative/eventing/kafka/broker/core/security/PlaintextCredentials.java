@@ -19,43 +19,43 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 public class PlaintextCredentials implements Credentials {
 
-  @Override
-  public String caCertificates() {
-    return null;
-  }
+    @Override
+    public String caCertificates() {
+        return null;
+    }
 
-  @Override
-  public boolean skipClientAuth() {
-    return false;
-  }
+    @Override
+    public boolean skipClientAuth() {
+        return false;
+    }
 
-  @Override
-  public String userCertificate() {
-    return null;
-  }
+    @Override
+    public String userCertificate() {
+        return null;
+    }
 
-  @Override
-  public String userKey() {
-    return null;
-  }
+    @Override
+    public String userKey() {
+        return null;
+    }
 
-  @Override
-  public SecurityProtocol securityProtocol() {
-    return SecurityProtocol.PLAINTEXT;
-  }
+    @Override
+    public SecurityProtocol securityProtocol() {
+        return SecurityProtocol.PLAINTEXT;
+    }
 
-  @Override
-  public String SASLMechanism() {
-    return null;
-  }
+    @Override
+    public String SASLMechanism() {
+        return null;
+    }
 
-  @Override
-  public String SASLUsername() {
-    return null;
-  }
+    @Override
+    public String SASLUsername() {
+        return null;
+    }
 
-  @Override
-  public String SASLPassword() {
-    return null;
-  }
+    @Override
+    public String SASLPassword() {
+        return null;
+    }
 }

@@ -26,36 +26,34 @@ import io.vertx.core.eventbus.MessageCodec;
  * https://github.com/eclipse-vertx/vert.x/issues/3375
  */
 public final class ContractMessageCodec
-  implements MessageCodec<DataPlaneContract.Contract, DataPlaneContract.Contract> {
+        implements MessageCodec<DataPlaneContract.Contract, DataPlaneContract.Contract> {
 
-  @Override
-  public void encodeToWire(Buffer buffer,
-                           DataPlaneContract.Contract contract) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public void encodeToWire(Buffer buffer, DataPlaneContract.Contract contract) {
+        throw new UnsupportedOperationException();
+    }
 
-  @Override
-  public DataPlaneContract.Contract decodeFromWire(int i, Buffer buffer) {
-    throw new UnsupportedOperationException();
-  }
+    @Override
+    public DataPlaneContract.Contract decodeFromWire(int i, Buffer buffer) {
+        throw new UnsupportedOperationException();
+    }
 
-  @Override
-  public DataPlaneContract.Contract transform(
-    DataPlaneContract.Contract contract) {
-    return contract;
-  }
+    @Override
+    public DataPlaneContract.Contract transform(DataPlaneContract.Contract contract) {
+        return contract;
+    }
 
-  @Override
-  public String name() {
-    return getClass().getCanonicalName();
-  }
+    @Override
+    public String name() {
+        return getClass().getCanonicalName();
+    }
 
-  @Override
-  public byte systemCodecID() {
-    return -1;
-  }
+    @Override
+    public byte systemCodecID() {
+        return -1;
+    }
 
-  public static void register(EventBus eventBus) {
-    eventBus.registerDefaultCodec(DataPlaneContract.Contract.class, new ContractMessageCodec());
-  }
+    public static void register(EventBus eventBus) {
+        eventBus.registerDefaultCodec(DataPlaneContract.Contract.class, new ContractMessageCodec());
+    }
 }

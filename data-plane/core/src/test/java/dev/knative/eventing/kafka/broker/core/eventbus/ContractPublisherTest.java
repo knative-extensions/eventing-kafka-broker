@@ -28,23 +28,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(VertxExtension.class)
 public class ContractPublisherTest {
 
-  @Test
-  public void publishTest(Vertx vertx, VertxTestContext testContext) {
-    ContractMessageCodec.register(vertx.eventBus());
+    @Test
+    public void publishTest(Vertx vertx, VertxTestContext testContext) {
+        ContractMessageCodec.register(vertx.eventBus());
 
-    String address = "aaa";
-    DataPlaneContract.Contract expected = CoreObjects.contract();
+        String address = "aaa";
+        DataPlaneContract.Contract expected = CoreObjects.contract();
 
-    vertx.eventBus().localConsumer(address).handler(message -> {
-      testContext.verify(() ->
-        assertThat(message.body())
-          .isEqualTo(expected)
-      );
-      testContext.completeNow();
-    });
+        vertx.eventBus().localConsumer(address).handler(message -> {
+            testContext.verify(() -> assertThat(message.body()).isEqualTo(expected));
+            testContext.completeNow();
+        });
 
-    ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), address);
-    publisher.accept(expected);
-  }
-
+        ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), address);
+        publisher.accept(expected);
+    }
 }

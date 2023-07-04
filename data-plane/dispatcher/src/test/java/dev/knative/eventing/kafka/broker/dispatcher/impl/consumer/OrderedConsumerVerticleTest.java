@@ -15,6 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
@@ -26,16 +31,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import org.apache.kafka.common.TopicPartition;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,181 +43,170 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.common.TopicPartition;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 @DisabledIfEnvironmentVariable(named = "SKIP_SLOW_TESTS", matches = "true")
 public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
 
-  private static Stream<Arguments> inputArgs() {
-    return Stream.of(
-      Arguments.of(0L, 10, 10, true, false),
-      Arguments.of(0L, 100, 10, true, false),
-      Arguments.of(0L, 1_000, 10, true, false),
-      Arguments.of(0L, 10_000, 10, true, false),
-      Arguments.of(50L, 500, 10, true, false),
-      Arguments.of(50L, 100_000, 1_000, true, false),
-      Arguments.of(50L, 100_000, 1_000, false, false),
-      Arguments.of(100L, 10, 10, true, false),
-      Arguments.of(100L, 100, 10, true, false),
-      Arguments.of(1000L, 10, 10, true, false),
-      Arguments.of(1000L, 100, 10, false, false), // ~10 seconds +- 5 seconds
-      Arguments.of(500L, 10_000 * 4, 10_000, false, false),
-      Arguments.of(0L, 10, 10, true, true),
-      Arguments.of(0L, 100, 10, true, true),
-      Arguments.of(0L, 1_000, 10, true, true),
-      Arguments.of(0L, 10_000, 10, true, true),
-      Arguments.of(0L, 10_000, 10, false, true),
-      Arguments.of(50L, 500, 10, true, true),
-      Arguments.of(50L, 100_000, 1_000, true, true),
-      Arguments.of(50L, 100_000, 1_000, false, true),
-      Arguments.of(100L, 10, 10, true, true),
-      Arguments.of(100L, 100, 10, true, true),
-      Arguments.of(1000L, 10, 10, true, true),
-      Arguments.of(1000L, 100, 10, false, true), // ~10 seconds +- 5 seconds
-      Arguments.of(500L, 10_000 * 4, 10_000, false, true)
-    );
-  }
-
-  @ParameterizedTest(name = "with delay {0}ms, {1} tasks, {2} partitions and random partition assignment {3}, rate limiter enabled {4}")
-  @MethodSource("inputArgs")
-  public void consumeOneByOne(final long delay, final int tasks, final int partitions, final boolean randomAssignment,
-                              final boolean rateLimiterEnabled, final Vertx vertx) throws InterruptedException {
-    final var topic = "topic1";
-    final Random random = new Random();
-    final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
-
-    // Mock the record dispatcher to count down the latch and save the received records order
-    CountDownLatch latch = new CountDownLatch(tasks);
-    final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>(partitions);
-    final var recordDispatcher = mock(RecordDispatcherImpl.class);
-    when(recordDispatcher.dispatch(any())).then(invocation -> {
-      final ConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
-      return recordDispatcherLogicMock(vertx, random, delay, latch, record, receivedRecords);
-    });
-    when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
-
-    final var verticle = createConsumerVerticle(
-      FakeConsumerVerticleContext.get(
-        DataPlaneContract.Resource.newBuilder(CoreObjects.resource1()).clearTopics().addTopics(topic).build(),
-        CoreObjects.egress1()
-      ),
-      (vx, consumerVerticle) -> {
-        consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
-        consumerVerticle.setRecordDispatcher(recordDispatcher);
-        consumerVerticle.setCloser(Future::succeededFuture);
-
-        return Future.succeededFuture();
-      }
-    );
-
-    // Deploy the verticle
-    CountDownLatch deployLatch = new CountDownLatch(1);
-    vertx.deployVerticle(verticle).onComplete(v -> deployLatch.countDown());
-    deployLatch.await();
-
-    assertThat(consumer.subscription())
-      .containsExactlyInAnyOrder(topic);
-    assertThat(consumer.closed())
-      .isFalse();
-
-    // Assign partitions to consumer (required to add records)
-    consumer.updateEndOffsets(
-      IntStream.range(0, partitions)
-        .mapToObj(partition -> new TopicPartition(topic, partition))
-        .collect(Collectors.toMap(Function.identity(), v -> 0L))
-    );
-    consumer.rebalance(
-      IntStream.range(0, partitions)
-        .mapToObj(partition -> new TopicPartition(topic, partition))
-        .collect(Collectors.toList())
-    );
-
-    // Add the records
-    Map<Integer, Long> lastCommitted = new HashMap<>(partitions);
-    for (int i = 0; i < tasks; i++) {
-      int partition = randomAssignment ?
-        (int) Math.round(Math.floor(random.nextDouble() * partitions)) :
-        i % partitions;
-      long offset = lastCommitted.getOrDefault(partition, -1L);
-      offset++;
-      consumer.addRecord(record(topic, partition, offset));
-      lastCommitted.put(partition, offset);
+    private static Stream<Arguments> inputArgs() {
+        return Stream.of(
+                Arguments.of(0L, 10, 10, true, false),
+                Arguments.of(0L, 100, 10, true, false),
+                Arguments.of(0L, 1_000, 10, true, false),
+                Arguments.of(0L, 10_000, 10, true, false),
+                Arguments.of(50L, 500, 10, true, false),
+                Arguments.of(50L, 100_000, 1_000, true, false),
+                Arguments.of(50L, 100_000, 1_000, false, false),
+                Arguments.of(100L, 10, 10, true, false),
+                Arguments.of(100L, 100, 10, true, false),
+                Arguments.of(1000L, 10, 10, true, false),
+                Arguments.of(1000L, 100, 10, false, false), // ~10 seconds +- 5 seconds
+                Arguments.of(500L, 10_000 * 4, 10_000, false, false),
+                Arguments.of(0L, 10, 10, true, true),
+                Arguments.of(0L, 100, 10, true, true),
+                Arguments.of(0L, 1_000, 10, true, true),
+                Arguments.of(0L, 10_000, 10, true, true),
+                Arguments.of(0L, 10_000, 10, false, true),
+                Arguments.of(50L, 500, 10, true, true),
+                Arguments.of(50L, 100_000, 1_000, true, true),
+                Arguments.of(50L, 100_000, 1_000, false, true),
+                Arguments.of(100L, 10, 10, true, true),
+                Arguments.of(100L, 100, 10, true, true),
+                Arguments.of(1000L, 10, 10, true, true),
+                Arguments.of(1000L, 100, 10, false, true), // ~10 seconds +- 5 seconds
+                Arguments.of(500L, 10_000 * 4, 10_000, false, true));
     }
 
-    // Wait for all records to be processed
-    assertThat(
-      latch.await(60, TimeUnit.SECONDS)
-    ).isTrue();
+    @ParameterizedTest(
+            name =
+                    "with delay {0}ms, {1} tasks, {2} partitions and random partition assignment {3}, rate limiter enabled {4}")
+    @MethodSource("inputArgs")
+    public void consumeOneByOne(
+            final long delay,
+            final int tasks,
+            final int partitions,
+            final boolean randomAssignment,
+            final boolean rateLimiterEnabled,
+            final Vertx vertx)
+            throws InterruptedException {
+        final var topic = "topic1";
+        final Random random = new Random();
+        final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
-    // Check they were received in order
-    for (Map.Entry<TopicPartition, List<Long>> e : receivedRecords.entrySet()) {
-      // Check if tasks were received in order
-      List<Long> committed = e.getValue();
-      LongStream.range(0, committed.size())
-        .forEach(i -> {
-          long actual = committed.get((int) i);
-          assertThat(actual)
-            .isEqualTo(i);
+        // Mock the record dispatcher to count down the latch and save the received records order
+        CountDownLatch latch = new CountDownLatch(tasks);
+        final Map<TopicPartition, List<Long>> receivedRecords = new HashMap<>(partitions);
+        final var recordDispatcher = mock(RecordDispatcherImpl.class);
+        when(recordDispatcher.dispatch(any())).then(invocation -> {
+            final ConsumerRecord<String, CloudEvent> record = invocation.getArgument(0);
+            return recordDispatcherLogicMock(vertx, random, delay, latch, record, receivedRecords);
         });
+        when(recordDispatcher.close()).thenReturn(Future.succeededFuture());
+
+        final var verticle = createConsumerVerticle(
+                FakeConsumerVerticleContext.get(
+                        DataPlaneContract.Resource.newBuilder(CoreObjects.resource1())
+                                .clearTopics()
+                                .addTopics(topic)
+                                .build(),
+                        CoreObjects.egress1()),
+                (vx, consumerVerticle) -> {
+                    consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
+                    consumerVerticle.setRecordDispatcher(recordDispatcher);
+                    consumerVerticle.setCloser(Future::succeededFuture);
+
+                    return Future.succeededFuture();
+                });
+
+        // Deploy the verticle
+        CountDownLatch deployLatch = new CountDownLatch(1);
+        vertx.deployVerticle(verticle).onComplete(v -> deployLatch.countDown());
+        deployLatch.await();
+
+        assertThat(consumer.subscription()).containsExactlyInAnyOrder(topic);
+        assertThat(consumer.closed()).isFalse();
+
+        // Assign partitions to consumer (required to add records)
+        consumer.updateEndOffsets(IntStream.range(0, partitions)
+                .mapToObj(partition -> new TopicPartition(topic, partition))
+                .collect(Collectors.toMap(Function.identity(), v -> 0L)));
+        consumer.rebalance(IntStream.range(0, partitions)
+                .mapToObj(partition -> new TopicPartition(topic, partition))
+                .collect(Collectors.toList()));
+
+        // Add the records
+        Map<Integer, Long> lastCommitted = new HashMap<>(partitions);
+        for (int i = 0; i < tasks; i++) {
+            int partition =
+                    randomAssignment ? (int) Math.round(Math.floor(random.nextDouble() * partitions)) : i % partitions;
+            long offset = lastCommitted.getOrDefault(partition, -1L);
+            offset++;
+            consumer.addRecord(record(topic, partition, offset));
+            lastCommitted.put(partition, offset);
+        }
+
+        // Wait for all records to be processed
+        assertThat(latch.await(60, TimeUnit.SECONDS)).isTrue();
+
+        // Check they were received in order
+        for (Map.Entry<TopicPartition, List<Long>> e : receivedRecords.entrySet()) {
+            // Check if tasks were received in order
+            List<Long> committed = e.getValue();
+            LongStream.range(0, committed.size()).forEach(i -> {
+                long actual = committed.get((int) i);
+                assertThat(actual).isEqualTo(i);
+            });
+        }
+
+        // Check they are all received
+        assertThat(receivedRecords.values().stream().mapToInt(List::size).sum()).isEqualTo(tasks);
     }
 
-    // Check they are all received
-    assertThat(
-      receivedRecords
-        .values()
-        .stream()
-        .mapToInt(List::size)
-        .sum()
-    ).isEqualTo(tasks);
-  }
-
-  ConsumerVerticle createConsumerVerticle(final ConsumerVerticleContext context,
-                                          final ConsumerVerticle.Initializer initializer) {
-    return new OrderedConsumerVerticle(context, initializer);
-  }
-
-  protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {
-    return new ConsumerRecord<>(
-      topic,
-      partition,
-      offset,
-      null,
-      null
-    );
-  }
-
-  private Future<Void> recordDispatcherLogicMock(
-    Vertx vertx,
-    Random random,
-    long millis,
-    CountDownLatch latch,
-    ConsumerRecord<String, CloudEvent> record,
-    Map<TopicPartition, List<Long>> receivedRecords) {
-    if (millis == 0) {
-      receivedRecords
-        .computeIfAbsent(new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
-        .add(record.offset());
-      latch.countDown();
-      return Future.succeededFuture();
-    } else {
-      // Some random number around the provided millis
-      long delay = Math.round(Math.ceil(millis + (random.nextDouble() * millis * 0.5)));
-
-      Promise<Void> prom = Promise.promise();
-      vertx.setTimer(delay, v -> {
-        receivedRecords
-          .computeIfAbsent(new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
-          .add(record.offset());
-        latch.countDown();
-        prom.complete();
-      });
-      return prom.future();
+    ConsumerVerticle createConsumerVerticle(
+            final ConsumerVerticleContext context, final ConsumerVerticle.Initializer initializer) {
+        return new OrderedConsumerVerticle(context, initializer);
     }
-  }
 
+    protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {
+        return new ConsumerRecord<>(topic, partition, offset, null, null);
+    }
+
+    private Future<Void> recordDispatcherLogicMock(
+            Vertx vertx,
+            Random random,
+            long millis,
+            CountDownLatch latch,
+            ConsumerRecord<String, CloudEvent> record,
+            Map<TopicPartition, List<Long>> receivedRecords) {
+        if (millis == 0) {
+            receivedRecords
+                    .computeIfAbsent(new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
+                    .add(record.offset());
+            latch.countDown();
+            return Future.succeededFuture();
+        } else {
+            // Some random number around the provided millis
+            long delay = Math.round(Math.ceil(millis + (random.nextDouble() * millis * 0.5)));
+
+            Promise<Void> prom = Promise.promise();
+            vertx.setTimer(delay, v -> {
+                receivedRecords
+                        .computeIfAbsent(
+                                new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
+                        .add(record.offset());
+                latch.countDown();
+                prom.complete();
+            });
+            return prom.future();
+        }
+    }
 }

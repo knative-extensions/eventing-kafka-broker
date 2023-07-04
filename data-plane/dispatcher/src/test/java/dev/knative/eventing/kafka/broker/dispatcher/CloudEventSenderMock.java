@@ -24,28 +24,26 @@ import java.util.function.Supplier;
 
 public class CloudEventSenderMock implements CloudEventSender {
 
-  private final Supplier<Future<Void>> onClose;
-  private final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend;
+    private final Supplier<Future<Void>> onClose;
+    private final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend;
 
-  public CloudEventSenderMock(
-    final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend) {
-    this(onSend, null);
-  }
+    public CloudEventSenderMock(final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend) {
+        this(onSend, null);
+    }
 
-  public CloudEventSenderMock(
-    final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend,
-    final Supplier<Future<Void>> onClose) {
-    this.onSend = onSend;
-    this.onClose = onClose != null ? onClose : Future::succeededFuture;
-  }
+    public CloudEventSenderMock(
+            final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend, final Supplier<Future<Void>> onClose) {
+        this.onSend = onSend;
+        this.onClose = onClose != null ? onClose : Future::succeededFuture;
+    }
 
-  @Override
-  public Future<HttpResponse<Buffer>> send(CloudEvent event) {
-    return this.onSend.apply(event);
-  }
+    @Override
+    public Future<HttpResponse<Buffer>> send(CloudEvent event) {
+        return this.onSend.apply(event);
+    }
 
-  @Override
-  public Future<Void> close() {
-    return this.onClose.get();
-  }
+    @Override
+    public Future<Void> close() {
+        return this.onClose.get();
+    }
 }

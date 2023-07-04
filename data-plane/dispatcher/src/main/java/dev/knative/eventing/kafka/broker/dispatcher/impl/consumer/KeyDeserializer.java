@@ -16,13 +16,12 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import java.util.Map;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
 import org.apache.kafka.common.serialization.FloatDeserializer;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-
-import java.util.Map;
 
 /**
  * Deserializer for the key of Kafka records.
@@ -45,66 +44,66 @@ import java.util.Map;
  */
 public class KeyDeserializer implements Deserializer<Object> {
 
-  public static final String KEY_TYPE = "cloudevent.key.deserializer.type";
+    public static final String KEY_TYPE = "cloudevent.key.deserializer.type";
 
-  private DataPlaneContract.KeyType keyType;
+    private DataPlaneContract.KeyType keyType;
 
-  private FloatDeserializer floatDeserializer;
-  private DoubleDeserializer doubleDeserializer;
-  private StringDeserializer stringDeserializer;
-  private IntegerDeserializer integerDeserializer;
+    private FloatDeserializer floatDeserializer;
+    private DoubleDeserializer doubleDeserializer;
+    private StringDeserializer stringDeserializer;
+    private IntegerDeserializer integerDeserializer;
 
-  @Override
-  public void configure(Map<String, ?> configs, boolean isKey) {
-    if (isKey && configs.containsKey(KEY_TYPE)) {
-      final var keyType = configs.get(KEY_TYPE);
-      if (keyType != null) {
-        this.keyType = (DataPlaneContract.KeyType) keyType;
-      }
+    @Override
+    public void configure(Map<String, ?> configs, boolean isKey) {
+        if (isKey && configs.containsKey(KEY_TYPE)) {
+            final var keyType = configs.get(KEY_TYPE);
+            if (keyType != null) {
+                this.keyType = (DataPlaneContract.KeyType) keyType;
+            }
+        }
+
+        floatDeserializer = new FloatDeserializer();
+        floatDeserializer.configure(configs, isKey);
+        doubleDeserializer = new DoubleDeserializer();
+        doubleDeserializer.configure(configs, isKey);
+        stringDeserializer = new StringDeserializer();
+        stringDeserializer.configure(configs, isKey);
+        integerDeserializer = new IntegerDeserializer();
+        integerDeserializer.configure(configs, isKey);
     }
 
-    floatDeserializer = new FloatDeserializer();
-    floatDeserializer.configure(configs, isKey);
-    doubleDeserializer = new DoubleDeserializer();
-    doubleDeserializer.configure(configs, isKey);
-    stringDeserializer = new StringDeserializer();
-    stringDeserializer.configure(configs, isKey);
-    integerDeserializer = new IntegerDeserializer();
-    integerDeserializer.configure(configs, isKey);
-  }
+    @Override
+    public Object deserialize(final String topic, final byte[] data) {
+        if (data == null || data.length == 0) {
+            return null;
+        }
+        if (keyType == null) {
+            return stringDeserializer.deserialize(topic, data);
+        }
+        return switch (keyType) {
+            case Double -> deserializeFloatingPoint(topic, data);
+            case Integer -> deserializeInteger(topic, data);
+            case ByteArray -> data;
+            default -> stringDeserializer.deserialize(topic, data);
+        };
+    }
 
-  @Override
-  public Object deserialize(final String topic, final byte[] data) {
-    if (data == null || data.length == 0) {
-      return null;
+    private Object deserializeInteger(String topic, byte[] data) {
+        if (data.length == 4) {
+            return integerDeserializer.deserialize(topic, data);
+        }
+        // Fall back to string deserializer.
+        return stringDeserializer.deserialize(topic, data);
     }
-    if (keyType == null) {
-      return stringDeserializer.deserialize(topic, data);
-    }
-    return switch (keyType) {
-      case Double -> deserializeFloatingPoint(topic, data);
-      case Integer -> deserializeInteger(topic, data);
-      case ByteArray -> data;
-      default -> stringDeserializer.deserialize(topic, data);
-    };
-  }
 
-  private Object deserializeInteger(String topic, byte[] data) {
-    if (data.length == 4) {
-      return integerDeserializer.deserialize(topic, data);
+    private Object deserializeFloatingPoint(String topic, byte[] data) {
+        if (data.length == 4) {
+            return floatDeserializer.deserialize(topic, data);
+        }
+        if (data.length == 8) {
+            return doubleDeserializer.deserialize(topic, data);
+        }
+        // Fall back to string deserializer.
+        return stringDeserializer.deserialize(topic, data);
     }
-    // Fall back to string deserializer.
-    return stringDeserializer.deserialize(topic, data);
-  }
-
-  private Object deserializeFloatingPoint(String topic, byte[] data) {
-    if (data.length == 4) {
-      return floatDeserializer.deserialize(topic, data);
-    }
-    if (data.length == 8) {
-      return doubleDeserializer.deserialize(topic, data);
-    }
-    // Fall back to string deserializer.
-    return stringDeserializer.deserialize(topic, data);
-  }
 }

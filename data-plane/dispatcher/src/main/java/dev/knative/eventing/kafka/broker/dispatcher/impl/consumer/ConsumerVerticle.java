@@ -24,85 +24,79 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import java.util.Objects;
+import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-import java.util.function.BiFunction;
-
 public abstract class ConsumerVerticle extends AbstractVerticle {
 
+    public interface Initializer extends BiFunction<Vertx, ConsumerVerticle, Future<Void>> {}
 
-  public interface Initializer extends BiFunction<Vertx, ConsumerVerticle, Future<Void>> {
-  }
+    private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticle.class);
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticle.class);
+    private final Initializer initializer;
 
-  private final Initializer initializer;
+    private final ConsumerVerticleContext consumerVerticleContext;
 
-  private final ConsumerVerticleContext consumerVerticleContext;
+    ReactiveKafkaConsumer<Object, CloudEvent> consumer;
+    RecordDispatcher recordDispatcher;
+    private AsyncCloseable closeable;
 
-  ReactiveKafkaConsumer<Object, CloudEvent> consumer;
-  RecordDispatcher recordDispatcher;
-  private AsyncCloseable closeable;
+    public ConsumerVerticle(final ConsumerVerticleContext consumerVerticleContext, final Initializer initializer) {
+        Objects.requireNonNull(consumerVerticleContext);
 
-  public ConsumerVerticle(final ConsumerVerticleContext consumerVerticleContext,
-                          final Initializer initializer) {
-    Objects.requireNonNull(consumerVerticleContext);
-
-    this.consumerVerticleContext = consumerVerticleContext;
-    this.initializer = initializer;
-  }
-
-  abstract void startConsumer(Promise<Void> startPromise);
-
-  @Override
-  public void start(Promise<Void> startPromise) {
-    this.initializer.apply(vertx, this)
-      .onFailure(startPromise::fail)
-      .onSuccess(v -> {
-        this.consumer.exceptionHandler(this::exceptionHandler);
-
-        startConsumer(startPromise);
-      });
-  }
-
-  @Override
-  public void stop(Promise<Void> stopPromise) {
-    logger.info("Stopping consumer {}", consumerVerticleContext.getLoggingKeyValue());
-
-    AsyncCloseable
-      .compose(this.recordDispatcher, this.closeable, this.consumer::close)
-      .close()
-      .onComplete(r -> logger.info("Consumer verticle closed {}", consumerVerticleContext.getLoggingKeyValue()));
-
-    stopPromise.tryComplete();
-  }
-
-  public void setConsumer(ReactiveKafkaConsumer<Object, CloudEvent> consumer) {
-    this.consumer = consumer;
-  }
-
-  public void setRecordDispatcher(RecordDispatcher recordDispatcher) {
-    this.recordDispatcher = recordDispatcher;
-  }
-
-  public void setCloser(AsyncCloseable closeable) {
-    this.closeable = closeable;
-  }
-
-  void exceptionHandler(Throwable cause) {
-    logger.error("Consumer exception {}", consumerVerticleContext.getLoggingKeyValue(), cause);
-
-    // Propagate exception to the verticle exception handler.
-    if (super.context.exceptionHandler() != null) {
-      super.context.exceptionHandler().handle(cause);
+        this.consumerVerticleContext = consumerVerticleContext;
+        this.initializer = initializer;
     }
-  }
 
-  protected ConsumerVerticleContext getConsumerVerticleContext() {
-    return consumerVerticleContext;
-  }
+    abstract void startConsumer(Promise<Void> startPromise);
 
-  public abstract PartitionRevokedHandler getPartitionRevokedHandler();
+    @Override
+    public void start(Promise<Void> startPromise) {
+        this.initializer.apply(vertx, this).onFailure(startPromise::fail).onSuccess(v -> {
+            this.consumer.exceptionHandler(this::exceptionHandler);
+
+            startConsumer(startPromise);
+        });
+    }
+
+    @Override
+    public void stop(Promise<Void> stopPromise) {
+        logger.info("Stopping consumer {}", consumerVerticleContext.getLoggingKeyValue());
+
+        AsyncCloseable.compose(this.recordDispatcher, this.closeable, this.consumer::close)
+                .close()
+                .onComplete(
+                        r -> logger.info("Consumer verticle closed {}", consumerVerticleContext.getLoggingKeyValue()));
+
+        stopPromise.tryComplete();
+    }
+
+    public void setConsumer(ReactiveKafkaConsumer<Object, CloudEvent> consumer) {
+        this.consumer = consumer;
+    }
+
+    public void setRecordDispatcher(RecordDispatcher recordDispatcher) {
+        this.recordDispatcher = recordDispatcher;
+    }
+
+    public void setCloser(AsyncCloseable closeable) {
+        this.closeable = closeable;
+    }
+
+    void exceptionHandler(Throwable cause) {
+        logger.error("Consumer exception {}", consumerVerticleContext.getLoggingKeyValue(), cause);
+
+        // Propagate exception to the verticle exception handler.
+        if (super.context.exceptionHandler() != null) {
+            super.context.exceptionHandler().handle(cause);
+        }
+    }
+
+    protected ConsumerVerticleContext getConsumerVerticleContext() {
+        return consumerVerticleContext;
+    }
+
+    public abstract PartitionRevokedHandler getPartitionRevokedHandler();
 }

@@ -26,24 +26,23 @@ import io.cloudevents.core.builder.CloudEventBuilder;
  */
 public class CloudEventOverridesMutator implements CloudEventMutator {
 
-  private final DataPlaneContract.CloudEventOverrides cloudEventOverrides;
+    private final DataPlaneContract.CloudEventOverrides cloudEventOverrides;
 
-  public CloudEventOverridesMutator(final DataPlaneContract.CloudEventOverrides cloudEventOverrides) {
-    this.cloudEventOverrides = cloudEventOverrides;
-  }
-
-  @Override
-  public CloudEvent apply(CloudEvent cloudEvent) {
-    if (cloudEventOverrides.getExtensionsMap().isEmpty()) {
-      return cloudEvent;
+    public CloudEventOverridesMutator(final DataPlaneContract.CloudEventOverrides cloudEventOverrides) {
+        this.cloudEventOverrides = cloudEventOverrides;
     }
-    final var builder = CloudEventBuilder.from(cloudEvent);
-    applyCloudEventOverrides(builder);
-    return builder.build();
-  }
 
-  private void applyCloudEventOverrides(CloudEventBuilder builder) {
-    cloudEventOverrides.getExtensionsMap()
-      .forEach(builder::withExtension);
-  }
+    @Override
+    public CloudEvent apply(CloudEvent cloudEvent) {
+        if (cloudEventOverrides.getExtensionsMap().isEmpty()) {
+            return cloudEvent;
+        }
+        final var builder = CloudEventBuilder.from(cloudEvent);
+        applyCloudEventOverrides(builder);
+        return builder.build();
+    }
+
+    private void applyCloudEventOverrides(CloudEventBuilder builder) {
+        cloudEventOverrides.getExtensionsMap().forEach(builder::withExtension);
+    }
 }

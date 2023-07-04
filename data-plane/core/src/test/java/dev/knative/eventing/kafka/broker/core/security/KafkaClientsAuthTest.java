@@ -34,164 +34,173 @@ import org.junit.jupiter.api.Test;
 
 public class KafkaClientsAuthTest {
 
-  @Test
-  public void shouldConfigureSaslScram512Ssl() {
-    shouldConfigureSaslSsl(ScramLoginModule.class, "SCRAM-SHA-512");
-  }
-
-  @Test
-  public void shouldConfigureSaslScram256Ssl() {
-    shouldConfigureSaslSsl(ScramLoginModule.class, "SCRAM-SHA-256");
-  }
-
-  @Test
-  public void shouldConfigureSaslPlainSsl() {
-    shouldConfigureSaslSsl(PlainLoginModule.class, "PLAIN");
-  }
-
-  @Test
-  public void shouldConfigureSaslDefaultedPlainSsl() {
-    shouldConfigureSaslSsl(PlainLoginModule.class, null);
-  }
-
-  private static void shouldConfigureSaslSsl(final Class<? extends LoginModule> module, final String mechanism) {
-    final var props = new Properties();
-
-    final var credentials = mock(Credentials.class);
-    when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credentials.caCertificates()).thenReturn("xyz");
-    if(mechanism != null) {
-      when(credentials.SASLMechanism()).thenReturn(mechanism);
+    @Test
+    public void shouldConfigureSaslScram512Ssl() {
+        shouldConfigureSaslSsl(ScramLoginModule.class, "SCRAM-SHA-512");
     }
-    when(credentials.SASLUsername()).thenReturn("aaa");
-    when(credentials.SASLPassword()).thenReturn("bbb");
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials)).doesNotThrowAnyException();
-
-    final var expected = new Properties();
-    expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name());
-    expected.setProperty(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
-    expected.setProperty(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, "xyz");
-    if(mechanism != null) {
-      expected.setProperty(SaslConfigs.SASL_MECHANISM, mechanism);
-    } else {
-      expected.setProperty(SaslConfigs.SASL_MECHANISM, "PLAIN"); // it is defaulted
-
+    @Test
+    public void shouldConfigureSaslScram256Ssl() {
+        shouldConfigureSaslSsl(ScramLoginModule.class, "SCRAM-SHA-256");
     }
-    expected.setProperty(
-      SaslConfigs.SASL_JAAS_CONFIG,
-      module.getName() + " required username=\"" + credentials.SASLUsername() + "\" password=\"" +
-        credentials.SASLPassword() + "\";"
-    );
 
-    assertThat(props).isEqualTo(expected);
+    @Test
+    public void shouldConfigureSaslPlainSsl() {
+        shouldConfigureSaslSsl(PlainLoginModule.class, "PLAIN");
+    }
 
-    final var producerConfigs = new HashMap<String, Object>();
-    final var consumerConfigs = new HashMap<String, Object>();
+    @Test
+    public void shouldConfigureSaslDefaultedPlainSsl() {
+        shouldConfigureSaslSsl(PlainLoginModule.class, null);
+    }
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials)).doesNotThrowAnyException();
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials)).doesNotThrowAnyException();
+    private static void shouldConfigureSaslSsl(final Class<? extends LoginModule> module, final String mechanism) {
+        final var props = new Properties();
 
-    assertThat(producerConfigs).isEqualTo(expected);
-    assertThat(consumerConfigs).isEqualTo(expected);
-  }
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credentials.caCertificates()).thenReturn("xyz");
+        if (mechanism != null) {
+            when(credentials.SASLMechanism()).thenReturn(mechanism);
+        }
+        when(credentials.SASLUsername()).thenReturn("aaa");
+        when(credentials.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void shouldConfigureSsl() {
-    final var props = new Properties();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials))
+                .doesNotThrowAnyException();
 
-    final var credentials = mock(Credentials.class);
-    when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credentials.userCertificate()).thenReturn("abc");
-    when(credentials.userKey()).thenReturn("key");
-    when(credentials.caCertificates()).thenReturn("xyz");
+        final var expected = new Properties();
+        expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_SSL.name());
+        expected.setProperty(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+        expected.setProperty(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, "xyz");
+        if (mechanism != null) {
+            expected.setProperty(SaslConfigs.SASL_MECHANISM, mechanism);
+        } else {
+            expected.setProperty(SaslConfigs.SASL_MECHANISM, "PLAIN"); // it is defaulted
+        }
+        expected.setProperty(
+                SaslConfigs.SASL_JAAS_CONFIG,
+                module.getName() + " required username=\"" + credentials.SASLUsername() + "\" password=\""
+                        + credentials.SASLPassword() + "\";");
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials)).doesNotThrowAnyException();
+        assertThat(props).isEqualTo(expected);
 
-    final var expected = new Properties();
-    expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
-    expected.setProperty(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
-    expected.setProperty(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, "xyz");
-    expected.setProperty(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
-    expected.setProperty(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, "abc");
-    expected.setProperty(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, "key");
+        final var producerConfigs = new HashMap<String, Object>();
+        final var consumerConfigs = new HashMap<String, Object>();
 
-    assertThat(props).isEqualTo(expected);
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials))
+                .doesNotThrowAnyException();
 
-    final var producerConfigs = new HashMap<String, Object>();
-    final var consumerConfigs = new HashMap<String, Object>();
+        assertThat(producerConfigs).isEqualTo(expected);
+        assertThat(consumerConfigs).isEqualTo(expected);
+    }
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials)).doesNotThrowAnyException();
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials)).doesNotThrowAnyException();
+    @Test
+    public void shouldConfigureSsl() {
+        final var props = new Properties();
 
-    assertThat(producerConfigs).isEqualTo(expected);
-    assertThat(consumerConfigs).isEqualTo(expected);
-  }
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SSL);
+        when(credentials.userCertificate()).thenReturn("abc");
+        when(credentials.userKey()).thenReturn("key");
+        when(credentials.caCertificates()).thenReturn("xyz");
 
-  @Test
-  public void shouldConfigureSaslPlaintextScram512() {
-    shouldConfigureSaslPlaintext("SCRAM-SHA-512");
-  }
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials))
+                .doesNotThrowAnyException();
 
-  @Test
-  public void shouldConfigureSaslPlaintextScram256() {
-    shouldConfigureSaslPlaintext("SCRAM-SHA-256");
-  }
+        final var expected = new Properties();
+        expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SSL.name());
+        expected.setProperty(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+        expected.setProperty(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, "xyz");
+        expected.setProperty(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+        expected.setProperty(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, "abc");
+        expected.setProperty(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, "key");
 
-  @Test
-  public void shouldConfigurePlaintext() {
-    final var props = new Properties();
+        assertThat(props).isEqualTo(expected);
 
-    final var credentials = mock(Credentials.class);
-    when(credentials.securityProtocol()).thenReturn(SecurityProtocol.PLAINTEXT);
+        final var producerConfigs = new HashMap<String, Object>();
+        final var consumerConfigs = new HashMap<String, Object>();
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials)).doesNotThrowAnyException();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials))
+                .doesNotThrowAnyException();
 
-    final var expected = new Properties();
-    expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.PLAINTEXT.name());
+        assertThat(producerConfigs).isEqualTo(expected);
+        assertThat(consumerConfigs).isEqualTo(expected);
+    }
 
-    assertThat(props).isEqualTo(expected);
+    @Test
+    public void shouldConfigureSaslPlaintextScram512() {
+        shouldConfigureSaslPlaintext("SCRAM-SHA-512");
+    }
 
-    final var producerConfigs = new HashMap<String, Object>();
-    final var consumerConfigs = new HashMap<String, Object>();
+    @Test
+    public void shouldConfigureSaslPlaintextScram256() {
+        shouldConfigureSaslPlaintext("SCRAM-SHA-256");
+    }
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials)).doesNotThrowAnyException();
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials)).doesNotThrowAnyException();
+    @Test
+    public void shouldConfigurePlaintext() {
+        final var props = new Properties();
 
-    assertThat(producerConfigs).isEqualTo(expected);
-    assertThat(consumerConfigs).isEqualTo(expected);
-  }
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.PLAINTEXT);
 
-  private static void shouldConfigureSaslPlaintext(final String mechanism) {
-    final var props = new Properties();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials))
+                .doesNotThrowAnyException();
 
-    final var credentials = mock(Credentials.class);
-    when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credentials.SASLMechanism()).thenReturn(mechanism);
-    when(credentials.SASLUsername()).thenReturn("aaa");
-    when(credentials.SASLPassword()).thenReturn("bbb");
+        final var expected = new Properties();
+        expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.PLAINTEXT.name());
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials)).doesNotThrowAnyException();
+        assertThat(props).isEqualTo(expected);
 
-    final var expected = new Properties();
+        final var producerConfigs = new HashMap<String, Object>();
+        final var consumerConfigs = new HashMap<String, Object>();
 
-    expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_PLAINTEXT.name());
-    expected.setProperty(SaslConfigs.SASL_MECHANISM, mechanism);
-    expected.setProperty(
-      SaslConfigs.SASL_JAAS_CONFIG,
-      ScramLoginModule.class.getName() + " required username=\"" + credentials.SASLUsername() + "\" password=\"" +
-        credentials.SASLPassword() + "\";"
-    );
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials))
+                .doesNotThrowAnyException();
 
-    assertThat(props).isEqualTo(expected);
+        assertThat(producerConfigs).isEqualTo(expected);
+        assertThat(consumerConfigs).isEqualTo(expected);
+    }
 
-    final var producerConfigs = new HashMap<String, Object>();
-    final var consumerConfigs = new HashMap<String, Object>();
+    private static void shouldConfigureSaslPlaintext(final String mechanism) {
+        final var props = new Properties();
 
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials)).doesNotThrowAnyException();
-    assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials)).doesNotThrowAnyException();
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+        when(credentials.SASLMechanism()).thenReturn(mechanism);
+        when(credentials.SASLUsername()).thenReturn("aaa");
+        when(credentials.SASLPassword()).thenReturn("bbb");
 
-    assertThat(producerConfigs).isEqualTo(expected);
-    assertThat(consumerConfigs).isEqualTo(expected);
-  }
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(props, credentials))
+                .doesNotThrowAnyException();
+
+        final var expected = new Properties();
+
+        expected.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SecurityProtocol.SASL_PLAINTEXT.name());
+        expected.setProperty(SaslConfigs.SASL_MECHANISM, mechanism);
+        expected.setProperty(
+                SaslConfigs.SASL_JAAS_CONFIG,
+                ScramLoginModule.class.getName() + " required username=\"" + credentials.SASLUsername()
+                        + "\" password=\"" + credentials.SASLPassword() + "\";");
+
+        assertThat(props).isEqualTo(expected);
+
+        final var producerConfigs = new HashMap<String, Object>();
+        final var consumerConfigs = new HashMap<String, Object>();
+
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(producerConfigs, credentials))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> KafkaClientsAuth.attachCredentials(consumerConfigs, credentials))
+                .doesNotThrowAnyException();
+
+        assertThat(producerConfigs).isEqualTo(expected);
+        assertThat(consumerConfigs).isEqualTo(expected);
+    }
 }

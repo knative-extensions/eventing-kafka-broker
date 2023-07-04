@@ -15,6 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -45,23 +50,17 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
+import java.net.URI;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public abstract class ReceiverVerticleTracingTest {
 
@@ -83,37 +82,32 @@ public abstract class ReceiverVerticleTracingTest {
         BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
     }
 
-  public abstract ReactiveProducerFactory<String, CloudEvent> createProducerFactory();
+    public abstract ReactiveProducerFactory<String, CloudEvent> createProducerFactory();
 
-  @BeforeEach
-  public void setup() throws ExecutionException, InterruptedException {
-    this.spanExporter = InMemorySpanExporter.create();
-    SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
-      .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
-      .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
-      // Uncomment this line if you want to try locally
-      //.addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
-      .setSampler(Sampler.alwaysOn())
-      .build();
-    OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
-      .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-      .setTracerProvider(tracerProvider)
-      .build();
+    @BeforeEach
+    public void setup() throws ExecutionException, InterruptedException {
+        this.spanExporter = InMemorySpanExporter.create();
+        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+                .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
+                .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
+                // Uncomment this line if you want to try locally
+                // .addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
+                .setSampler(Sampler.alwaysOn())
+                .build();
+        OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
+                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+                .setTracerProvider(tracerProvider)
+                .build();
 
         this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
-        this.webClient = WebClient.create(vertx,
-                (WebClientOptions) new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
-        this.mockProducer = new MockProducer<>(
-                true,
-                new StringSerializer(),
-                new CloudEventSerializerMock());
+        this.webClient = WebClient.create(
+                vertx, (WebClientOptions) new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
+        this.mockProducer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
 
-    this.store = new IngressProducerReconcilableStore(
-      AuthProvider.noAuth(),
-      new Properties(),
-      properties -> createProducerFactory().create(vertx, mockProducer)
-    );
+        this.store = new IngressProducerReconcilableStore(
+                AuthProvider.noAuth(), new Properties(), properties -> createProducerFactory()
+                        .create(vertx, mockProducer));
 
         final var env = mock(ReceiverEnv.class);
         when(env.getLivenessProbePath()).thenReturn("/healthz");
@@ -128,32 +122,22 @@ public abstract class ReceiverVerticleTracingTest {
         httpsServerOptions.setPort(PORT_TLS);
         httpsServerOptions.setHost(HOST);
         httpsServerOptions.setSsl(true);
-        httpsServerOptions.setPemKeyCertOptions(new PemKeyCertOptions()
-                .setCertPath(TLS_KEY_FILE_PATH)
-                .setKeyPath(TLS_CRT_FILE_PATH));
+        httpsServerOptions.setPemKeyCertOptions(
+                new PemKeyCertOptions().setCertPath(TLS_KEY_FILE_PATH).setKeyPath(TLS_CRT_FILE_PATH));
 
         final var verticle = new ReceiverVerticle(
                 env,
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-                new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(),
-                        Metrics.getRegistry()));
+                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()));
 
-        vertx.deployVerticle(verticle)
-                .toCompletionStage()
-                .toCompletableFuture()
-                .get();
+        vertx.deployVerticle(verticle).toCompletionStage().toCompletableFuture().get();
     }
 
     @AfterEach
     public void tearDown() throws ExecutionException, InterruptedException {
-        vertx
-                .close()
-                .toCompletionStage()
-                .toCompletableFuture()
-                .get();
+        vertx.close().toCompletionStage().toCompletableFuture().get();
     }
 
     @Test
@@ -173,27 +157,25 @@ public abstract class ReceiverVerticleTracingTest {
 
         String path = "/broker-ns/broker-name";
 
-        this.store.onNewIngress(contract, contract.getIngress())
+        this.store
+                .onNewIngress(contract, contract.getIngress())
                 .toCompletionStage()
                 .toCompletableFuture()
                 .get();
 
         HttpResponse<Buffer> response = vertx.<HttpResponse<Buffer>>executeBlocking(promise -> {
-            VertxMessageFactory
-                    .createWriter(webClient.post(PORT, HOST, path))
-                    .writeBinary(inputEvent)
-                    .onComplete(promise);
-        }).toCompletionStage()
+                    VertxMessageFactory.createWriter(webClient.post(PORT, HOST, path))
+                            .writeBinary(inputEvent)
+                            .onComplete(promise);
+                })
+                .toCompletionStage()
                 .toCompletableFuture()
                 .get(TIMEOUT, TimeUnit.SECONDS);
 
-        assertThat(response.statusCode())
-                .isEqualTo(ACCEPTED.code());
+        assertThat(response.statusCode()).isEqualTo(ACCEPTED.code());
 
         if (mockProducer.history().size() > 0) {
-            assertThat(mockProducer.history())
-                    .extracting(ProducerRecord::value)
-                    .containsExactlyInAnyOrder(inputEvent);
+            assertThat(mockProducer.history()).extracting(ProducerRecord::value).containsExactlyInAnyOrder(inputEvent);
 
             assertThat(mockProducer.history())
                     .extracting(ProducerRecord::headers)
@@ -202,7 +184,6 @@ public abstract class ReceiverVerticleTracingTest {
                     .isNotEmpty();
         }
 
-        assertThat(spanExporter.getFinishedSpanItems())
-                .hasSize(3);
+        assertThat(spanExporter.getFinishedSpanItems()).hasSize(3);
     }
 }

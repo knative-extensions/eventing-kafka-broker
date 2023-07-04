@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
@@ -52,225 +54,223 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.producer.KafkaProducer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.common.TopicPartition;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.common.TopicPartition;
 
 public class ConsumerVerticleBuilder {
 
-  private final static CloudEventSender NO_DEAD_LETTER_SINK_SENDER = CloudEventSender.noop("No dead letter sink set");
+    private static final CloudEventSender NO_DEAD_LETTER_SINK_SENDER = CloudEventSender.noop("No dead letter sink set");
 
-  private final ConsumerVerticleContext consumerVerticleContext;
+    private final ConsumerVerticleContext consumerVerticleContext;
 
-  public ConsumerVerticleBuilder(final ConsumerVerticleContext consumerVerticleContext) {
-    this.consumerVerticleContext = consumerVerticleContext;
-  }
+    public ConsumerVerticleBuilder(final ConsumerVerticleContext consumerVerticleContext) {
+        this.consumerVerticleContext = consumerVerticleContext;
+    }
 
-  public ConsumerVerticle build() {
-    return createConsumerVerticle(getInitializer());
-  }
+    public ConsumerVerticle build() {
+        return createConsumerVerticle(getInitializer());
+    }
 
-  private ConsumerVerticle.Initializer getInitializer() {
-    return (vertx, consumerVerticle) -> consumerVerticleContext.getAuthProvider()
-      .getCredentials(consumerVerticleContext.getResource())
-      .onSuccess(credentials -> build(vertx, consumerVerticle, credentials))
-      .mapEmpty();
-  }
+    private ConsumerVerticle.Initializer getInitializer() {
+        return (vertx, consumerVerticle) -> consumerVerticleContext
+                .getAuthProvider()
+                .getCredentials(consumerVerticleContext.getResource())
+                .onSuccess(credentials -> build(vertx, consumerVerticle, credentials))
+                .mapEmpty();
+    }
 
-  private void build(final Vertx vertx, final ConsumerVerticle consumerVerticle, final Credentials credentials) {
-    KafkaClientsAuth.attachCredentials(consumerVerticleContext.getConsumerConfigs(), credentials);
-    KafkaClientsAuth.attachCredentials(consumerVerticleContext.getProducerConfigs(), credentials);
+    private void build(final Vertx vertx, final ConsumerVerticle consumerVerticle, final Credentials credentials) {
+        KafkaClientsAuth.attachCredentials(consumerVerticleContext.getConsumerConfigs(), credentials);
+        KafkaClientsAuth.attachCredentials(consumerVerticleContext.getProducerConfigs(), credentials);
 
-    final ReactiveKafkaConsumer<Object, CloudEvent> consumer = this.consumerVerticleContext
-      .getConsumerFactory()
-      .create(vertx, consumerVerticleContext.getConsumerConfigs());
-    consumerVerticle.setConsumer(consumer);
+        final ReactiveKafkaConsumer<Object, CloudEvent> consumer = this.consumerVerticleContext
+                .getConsumerFactory()
+                .create(vertx, consumerVerticleContext.getConsumerConfigs());
+        consumerVerticle.setConsumer(consumer);
 
-    final var metricsCloser = Metrics.register(consumer.unwrap());
-    consumerVerticle.setCloser(metricsCloser);
+        final var metricsCloser = Metrics.register(consumer.unwrap());
+        consumerVerticle.setCloser(metricsCloser);
 
-    final var egressSubscriberSender = createConsumerRecordSender(vertx);
-    final var egressDeadLetterSender = createDeadLetterSinkRecordSender(vertx);
-    final var responseHandler = createResponseHandler(vertx);
+        final var egressSubscriberSender = createConsumerRecordSender(vertx);
+        final var egressDeadLetterSender = createDeadLetterSinkRecordSender(vertx);
+        final var responseHandler = createResponseHandler(vertx);
 
-    final var offsetManager = new OffsetManager(
-      vertx,
-      consumer,
-      (v) -> {
-      },
-      getCommitIntervalMs()
-    );
+        final var offsetManager = new OffsetManager(vertx, consumer, (v) -> {}, getCommitIntervalMs());
 
-    final var recordDispatcher = new RecordDispatcherMutatorChain(
-      new RecordDispatcherImpl(
-        consumerVerticleContext,
-        getFilter(),
-        egressSubscriberSender,
-        egressDeadLetterSender,
-        responseHandler,
-        offsetManager,
-        ConsumerTracer.create(((VertxInternal) vertx).tracer(),
-          new KafkaClientOptions().setConfig(consumerVerticleContext.getConsumerConfigs())
-            // Make sure the policy is propagate for the manually instantiated consumer tracer
-            .setTracingPolicy(TracingPolicy.PROPAGATE)), Metrics.getRegistry()),
+        final var recordDispatcher = new RecordDispatcherMutatorChain(
+                new RecordDispatcherImpl(
+                        consumerVerticleContext,
+                        getFilter(),
+                        egressSubscriberSender,
+                        egressDeadLetterSender,
+                        responseHandler,
+                        offsetManager,
+                        ConsumerTracer.create(
+                                ((VertxInternal) vertx).tracer(),
+                                new KafkaClientOptions()
+                                        .setConfig(consumerVerticleContext.getConsumerConfigs())
+                                        // Make sure the policy is propagate for the manually instantiated consumer
+                                        // tracer
+                                        .setTracingPolicy(TracingPolicy.PROPAGATE)),
+                        Metrics.getRegistry()),
+                new CloudEventOverridesMutator(
+                        consumerVerticleContext.getResource().getCloudEventOverrides()));
+        consumerVerticle.setRecordDispatcher(recordDispatcher);
 
-      new CloudEventOverridesMutator(consumerVerticleContext.getResource().getCloudEventOverrides())
-    );
-    consumerVerticle.setRecordDispatcher(recordDispatcher);
+        final var partitionRevokedHandlers =
+                List.of(consumerVerticle.getPartitionRevokedHandler(), offsetManager.getPartitionRevokedHandler());
+        this.consumerVerticleContext.withConsumerRebalanceListener(createRebalanceListener(partitionRevokedHandlers));
+    }
 
-    final var partitionRevokedHandlers = List.of(
-      consumerVerticle.getPartitionRevokedHandler(),
-      offsetManager.getPartitionRevokedHandler()
-    );
-    this.consumerVerticleContext.withConsumerRebalanceListener(createRebalanceListener(partitionRevokedHandlers));
-  }
-
-  private ConsumerVerticle createConsumerVerticle(final ConsumerVerticle.Initializer initializer) {
-    return switch (DeliveryOrder.fromContract(consumerVerticleContext.getEgress().getDeliveryOrder())) {
-      case ORDERED -> new OrderedConsumerVerticle(consumerVerticleContext, initializer);
-      case UNORDERED -> new UnorderedConsumerVerticle(consumerVerticleContext, initializer);
-    };
-  }
+    private ConsumerVerticle createConsumerVerticle(final ConsumerVerticle.Initializer initializer) {
+        return switch (DeliveryOrder.fromContract(
+                consumerVerticleContext.getEgress().getDeliveryOrder())) {
+            case ORDERED -> new OrderedConsumerVerticle(consumerVerticleContext, initializer);
+            case UNORDERED -> new UnorderedConsumerVerticle(consumerVerticleContext, initializer);
+        };
+    }
 
     /**
-   * For each handler call partitionRevoked and wait for the future to complete.
-   *
-   * @param partitionRevokedHandlers partition revoked handlers
-   * @return ConsumerRebalanceListener object with the partition revoked handler running on onPartitionsRevoked
-   */
-  private ConsumerRebalanceListener createRebalanceListener(final List<PartitionRevokedHandler> partitionRevokedHandlers) {
-    return new ConsumerRebalanceListener() {
-        @Override
-        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            ConsumerVerticleContext.logger.info("Received revoke partitions for consumer {} {}",
-                    consumerVerticleContext.getLoggingKeyValue(),
-                    keyValue("partitions", partitions)
-            );
+     * For each handler call partitionRevoked and wait for the future to complete.
+     *
+     * @param partitionRevokedHandlers partition revoked handlers
+     * @return ConsumerRebalanceListener object with the partition revoked handler running on onPartitionsRevoked
+     */
+    private ConsumerRebalanceListener createRebalanceListener(
+            final List<PartitionRevokedHandler> partitionRevokedHandlers) {
+        return new ConsumerRebalanceListener() {
+            @Override
+            public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                ConsumerVerticleContext.logger.info(
+                        "Received revoke partitions for consumer {} {}",
+                        consumerVerticleContext.getLoggingKeyValue(),
+                        keyValue("partitions", partitions));
 
-            final var futures = new ArrayList<Future<Void>>(partitionRevokedHandlers.size());
-            for (PartitionRevokedHandler partitionRevokedHandler : partitionRevokedHandlers) {
-                futures.add(partitionRevokedHandler.partitionRevoked(partitions));
-            }
+                final var futures = new ArrayList<Future<Void>>(partitionRevokedHandlers.size());
+                for (PartitionRevokedHandler partitionRevokedHandler : partitionRevokedHandlers) {
+                    futures.add(partitionRevokedHandler.partitionRevoked(partitions));
+                }
 
-            for (final var future : futures) {
-                try {
-                    future.toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS);
-                } catch (final Exception ignored) {
-                    ConsumerVerticleContext.logger.warn("Partition revoked handler failed {} {}",
-                            consumerVerticleContext.getLoggingKeyValue(),
-                            keyValue("partitions", partitions)
-                    );
+                for (final var future : futures) {
+                    try {
+                        future.toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS);
+                    } catch (final Exception ignored) {
+                        ConsumerVerticleContext.logger.warn(
+                                "Partition revoked handler failed {} {}",
+                                consumerVerticleContext.getLoggingKeyValue(),
+                                keyValue("partitions", partitions));
+                    }
                 }
             }
+
+            @Override
+            public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                ConsumerVerticleContext.logger.info(
+                        "Received assign partitions for consumer {} {}",
+                        consumerVerticleContext.getLoggingKeyValue(),
+                        keyValue("partitions", partitions));
+            }
+        };
+    }
+
+    private Filter getFilter() {
+        // Dialected filters should override the attributes filter
+        if (consumerVerticleContext.getEgress().getDialectedFilterCount() > 0) {
+            return getFilter(consumerVerticleContext.getEgress().getDialectedFilterList());
+        } else if (consumerVerticleContext.getEgress().hasFilter()) {
+            return new ExactFilter(
+                    consumerVerticleContext.getEgress().getFilter().getAttributesMap());
+        }
+        return Filter.noop();
+    }
+
+    private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
+        return new AllFilter(
+                filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
+    }
+
+    private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
+        return switch (filter.getFilterCase()) {
+            case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
+            case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
+            case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
+            case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
+            case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
+                    .map(ConsumerVerticleBuilder::getFilter)
+                    .collect(Collectors.toSet()));
+            case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
+                    .map(ConsumerVerticleBuilder::getFilter)
+                    .collect(Collectors.toSet()));
+            case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
+            default -> Filter.noop();
+        };
+    }
+
+    private ResponseHandler createResponseHandler(final Vertx vertx) {
+        if (consumerVerticleContext.getEgress().hasReplyUrl()) {
+            return new ResponseToHttpEndpointHandler(new WebClientCloudEventSender(
+                    vertx,
+                    WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
+                    consumerVerticleContext.getEgress().getReplyUrl(),
+                    consumerVerticleContext,
+                    Metrics.Tags.senderContext("reply")));
         }
 
-        @Override
-        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-            ConsumerVerticleContext.logger.info("Received assign partitions for consumer {} {}",
-                    consumerVerticleContext.getLoggingKeyValue(),
-                    keyValue("partitions", partitions)
-            );
+        if (consumerVerticleContext.getEgress().hasDiscardReply()) {
+            return new NoopResponseHandler();
         }
-    };
-  }
 
-  private Filter getFilter() {
-    // Dialected filters should override the attributes filter
-    if (consumerVerticleContext.getEgress().getDialectedFilterCount() > 0) {
-      return getFilter(consumerVerticleContext.getEgress().getDialectedFilterList());
-    } else if (consumerVerticleContext.getEgress().hasFilter()) {
-      return new ExactFilter(consumerVerticleContext.getEgress().getFilter().getAttributesMap());
-    }
-    return Filter.noop();
-  }
-
-  private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
-    return new AllFilter(filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
-  }
-
-  private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
-    return switch (filter.getFilterCase()) {
-      case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
-      case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
-      case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
-      case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
-      case ANY ->
-        new AnyFilter(filter.getAny().getFiltersList().stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
-      case ALL ->
-        new AllFilter(filter.getAll().getFiltersList().stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
-      case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
-      default -> Filter.noop();
-    };
-  }
-
-  private ResponseHandler createResponseHandler(final Vertx vertx) {
-    if (consumerVerticleContext.getEgress().hasReplyUrl()) {
-      return new ResponseToHttpEndpointHandler(new WebClientCloudEventSender(
-        vertx,
-        WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
-        consumerVerticleContext.getEgress().getReplyUrl(),
-        consumerVerticleContext,
-        Metrics.Tags.senderContext("reply")
-      ));
+        final KafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
+                .getProducerFactory()
+                .create(vertx, consumerVerticleContext.getProducerConfigs());
+        return new ResponseToKafkaTopicHandler(
+                producer, consumerVerticleContext.getResource().getTopics(0));
     }
 
-    if (consumerVerticleContext.getEgress().hasDiscardReply()) {
-      return new NoopResponseHandler();
+    private CloudEventSender createConsumerRecordSender(final Vertx vertx) {
+        return new WebClientCloudEventSender(
+                vertx,
+                WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
+                consumerVerticleContext.getEgress().getDestination(),
+                consumerVerticleContext,
+                Metrics.Tags.senderContext("subscriber"));
     }
 
-    final KafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
-      .getProducerFactory()
-      .create(vertx, consumerVerticleContext.getProducerConfigs());
-    return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));
-  }
+    private CloudEventSender createDeadLetterSinkRecordSender(final Vertx vertx) {
+        if (hasDeadLetterSink(consumerVerticleContext.getEgressConfig())) {
+            var webClientOptions = consumerVerticleContext.getWebClientOptions();
+            // TODO use numPartitions for ordered delivery or max.poll.records for unordered delivery
+            // if (egress.getVReplicas() > 0) {
+            //   webClientOptions = new WebClientOptions(this.webClientOptions);
+            //   webClientOptions.setMaxPoolSize(egress.getVReplicas());
+            // }
+            return new WebClientCloudEventSender(
+                    vertx,
+                    WebClient.create(vertx, webClientOptions),
+                    consumerVerticleContext.getEgressConfig().getDeadLetter(),
+                    consumerVerticleContext,
+                    Metrics.Tags.senderContext("deadlettersink"));
+        }
 
-  private CloudEventSender createConsumerRecordSender(final Vertx vertx) {
-    return new WebClientCloudEventSender(
-      vertx,
-      WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
-      consumerVerticleContext.getEgress().getDestination(),
-      consumerVerticleContext,
-      Metrics.Tags.senderContext("subscriber")
-    );
-  }
-
-  private CloudEventSender createDeadLetterSinkRecordSender(final Vertx vertx) {
-    if (hasDeadLetterSink(consumerVerticleContext.getEgressConfig())) {
-      var webClientOptions = consumerVerticleContext.getWebClientOptions();
-      // TODO use numPartitions for ordered delivery or max.poll.records for unordered delivery
-      // if (egress.getVReplicas() > 0) {
-      //   webClientOptions = new WebClientOptions(this.webClientOptions);
-      //   webClientOptions.setMaxPoolSize(egress.getVReplicas());
-      // }
-      return new WebClientCloudEventSender(
-        vertx,
-        WebClient.create(vertx, webClientOptions),
-        consumerVerticleContext.getEgressConfig().getDeadLetter(),
-        consumerVerticleContext,
-        Metrics.Tags.senderContext("deadlettersink")
-      );
+        return NO_DEAD_LETTER_SINK_SENDER;
     }
 
-    return NO_DEAD_LETTER_SINK_SENDER;
-  }
-
-  private int getCommitIntervalMs() {
-    final var commitInterval = consumerVerticleContext.getConsumerConfigs().get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG);
-    if (commitInterval == null) {
-      return 5000;
+    private int getCommitIntervalMs() {
+        final var commitInterval =
+                consumerVerticleContext.getConsumerConfigs().get(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG);
+        if (commitInterval == null) {
+            return 5000;
+        }
+        return Integer.parseInt(String.valueOf(commitInterval));
     }
-    return Integer.parseInt(String.valueOf(commitInterval));
-  }
 
-  private static boolean hasDeadLetterSink(final DataPlaneContract.EgressConfig egressConfig) {
-    return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
-  }
+    private static boolean hasDeadLetterSink(final DataPlaneContract.EgressConfig egressConfig) {
+        return !(egressConfig == null || egressConfig.getDeadLetter().isEmpty());
+    }
 }

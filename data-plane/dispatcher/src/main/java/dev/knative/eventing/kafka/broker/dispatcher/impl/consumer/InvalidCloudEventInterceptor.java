@@ -16,17 +16,12 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils.copyRecordAssigningValue;
+import static io.cloudevents.kafka.PartitionKeyExtensionInterceptor.PARTITION_KEY_EXTENSION;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
-import org.apache.kafka.clients.consumer.ConsumerInterceptor;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.header.Header;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -38,10 +33,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils.copyRecordAssigningValue;
-import static io.cloudevents.kafka.PartitionKeyExtensionInterceptor.PARTITION_KEY_EXTENSION;
+import org.apache.kafka.clients.consumer.ConsumerInterceptor;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link InvalidCloudEventInterceptor} is a {@link ConsumerInterceptor}.
@@ -56,201 +55,194 @@ import static io.cloudevents.kafka.PartitionKeyExtensionInterceptor.PARTITION_KE
  */
 public class InvalidCloudEventInterceptor implements ConsumerInterceptor<Object, CloudEvent> {
 
-  private static final Logger logger = LoggerFactory.getLogger(InvalidCloudEventInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(InvalidCloudEventInterceptor.class);
 
-  public static final String KIND_PLURAL_CONFIG = "cloudevent.invalid.kind.plural";
-  public static final String SOURCE_NAMESPACE_CONFIG = "cloudevent.invalid.source.namespace";
-  public static final String SOURCE_NAME_CONFIG = "cloudevent.invalid.source.name";
+    public static final String KIND_PLURAL_CONFIG = "cloudevent.invalid.kind.plural";
+    public static final String SOURCE_NAMESPACE_CONFIG = "cloudevent.invalid.source.namespace";
+    public static final String SOURCE_NAME_CONFIG = "cloudevent.invalid.source.name";
 
-  public static final String TYPE = "dev.knative.kafka.event";
+    public static final String TYPE = "dev.knative.kafka.event";
 
-  private static final String CONTENT_TYPE_HEADER_KEY = "content-type";
+    private static final String CONTENT_TYPE_HEADER_KEY = "content-type";
 
-  private static final String KEY_EXTENSION = "key";
-  private static final String KAFKA_HEADER_EXTENSION_PREFIX = "kafkaheader";
+    private static final String KEY_EXTENSION = "key";
+    private static final String KAFKA_HEADER_EXTENSION_PREFIX = "kafkaheader";
 
-  private String kindPlural;
-  private String sourceNamespace;
-  private String sourceName;
+    private String kindPlural;
+    private String sourceNamespace;
+    private String sourceName;
 
-  private boolean isEnabled = false;
+    private boolean isEnabled = false;
 
-  @Override
-  public void configure(final Map<String, ?> configs) {
-    this.kindPlural = getOrDefault(configs, KIND_PLURAL_CONFIG);
-    this.sourceName = getOrDefault(configs, SOURCE_NAME_CONFIG);
-    this.sourceNamespace = getOrDefault(configs, SOURCE_NAMESPACE_CONFIG);
+    @Override
+    public void configure(final Map<String, ?> configs) {
+        this.kindPlural = getOrDefault(configs, KIND_PLURAL_CONFIG);
+        this.sourceName = getOrDefault(configs, SOURCE_NAME_CONFIG);
+        this.sourceNamespace = getOrDefault(configs, SOURCE_NAMESPACE_CONFIG);
 
-    if (configs.containsKey(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED)) {
-      final var enabled = configs.get(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED);
-      if (enabled != null) {
-        isEnabled = Boolean.parseBoolean(enabled.toString());
-      }
+        if (configs.containsKey(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED)) {
+            final var enabled = configs.get(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED);
+            if (enabled != null) {
+                isEnabled = Boolean.parseBoolean(enabled.toString());
+            }
+        }
+
+        // Enable interceptor when all variables are defined.
+        isEnabled = isEnabled && isNotBlank(kindPlural) && isNotBlank(sourceName) && isNotBlank(sourceNamespace);
+
+        logger.info(
+                "Interceptor config {} {} {} {}",
+                keyValue("enabled", isEnabled),
+                keyValue(KIND_PLURAL_CONFIG, kindPlural),
+                keyValue(SOURCE_NAME_CONFIG, sourceName),
+                keyValue(SOURCE_NAMESPACE_CONFIG, sourceNamespace));
     }
 
-    // Enable interceptor when all variables are defined.
-    isEnabled = isEnabled &&
-      isNotBlank(kindPlural) &&
-      isNotBlank(sourceName) &&
-      isNotBlank(sourceNamespace);
+    @Override
+    public ConsumerRecords<Object, CloudEvent> onConsume(final ConsumerRecords<Object, CloudEvent> records) {
+        if (!this.isEnabled || records == null || records.isEmpty()) {
+            return records;
+        }
 
-    logger.info("Interceptor config {} {} {} {}",
-      keyValue("enabled", isEnabled),
-      keyValue(KIND_PLURAL_CONFIG, kindPlural),
-      keyValue(SOURCE_NAME_CONFIG, sourceName),
-      keyValue(SOURCE_NAMESPACE_CONFIG, sourceNamespace)
-    );
-  }
-
-  @Override
-  public ConsumerRecords<Object, CloudEvent> onConsume(final ConsumerRecords<Object, CloudEvent> records) {
-    if (!this.isEnabled || records == null || records.isEmpty()) {
-      return records;
+        final Map<TopicPartition, List<ConsumerRecord<Object, CloudEvent>>> validRecords =
+                new HashMap<>(records.count());
+        for (final var record : records) {
+            final var tp = new TopicPartition(record.topic(), record.partition());
+            if (!validRecords.containsKey(tp)) {
+                validRecords.put(tp, new ArrayList<>());
+            }
+            validRecords.get(tp).add(validRecord(record));
+        }
+        return new ConsumerRecords<>(validRecords);
     }
 
-    final Map<TopicPartition, List<ConsumerRecord<Object, CloudEvent>>> validRecords = new HashMap<>(records.count());
-    for (final var record : records) {
-      final var tp = new TopicPartition(record.topic(), record.partition());
-      if (!validRecords.containsKey(tp)) {
-        validRecords.put(tp, new ArrayList<>());
-      }
-      validRecords.get(tp).add(validRecord(record));
-    }
-    return new ConsumerRecords<>(validRecords);
-  }
-
-  @Override
-  public void onCommit(Map<TopicPartition, OffsetAndMetadata> offsets) {
-    // Intentionally left blank.
-  }
-
-  @Override
-  public void close() {
-    // Intentionally left blank.
-  }
-
-  private static String getOrDefault(final Map<String, ?> configs, final String key) {
-    if (configs.containsKey(key)) {
-      return (String) configs.get(key);
-    }
-    return null;
-  }
-
-  private ConsumerRecord<Object, CloudEvent> validRecord(final ConsumerRecord<Object, CloudEvent> record) {
-    if (!(record.value() instanceof InvalidCloudEvent)) {
-      return record; // Valid CloudEvent
+    @Override
+    public void onCommit(Map<TopicPartition, OffsetAndMetadata> offsets) {
+        // Intentionally left blank.
     }
 
-    logger.debug("Transforming invalid CloudEvent for topic {}", record.topic());
-
-    final var invalidEvent = (InvalidCloudEvent) record.value();
-    // Handle invalid CloudEvents.
-    // Create CloudEvent from the record metadata (topic, partition, offset, etc) and use received data as data field.
-    // The record to CloudEvent conversion is compatible with eventing-kafka.
-    final var value = new CloudEventBuilder()
-      .withId(id(record))
-      .withTime(time(record))
-      .withType(type())
-      .withSource(source(record))
-      .withSubject(subject(record));
-
-    setKey(value, record.key());
-
-    // Put headers as event extensions.
-    Header contentTypeHeader = null;
-    for (Header h : record.headers()) {
-      if (h.key().equalsIgnoreCase(CONTENT_TYPE_HEADER_KEY)) {
-        // Let's skip the content-type, we already transport it with datacontenttype field.
-        contentTypeHeader = h;
-        continue;
-      }
-      value.withExtension(KAFKA_HEADER_EXTENSION_PREFIX + replaceBadChars(h.key()), new String(h.value(), StandardCharsets.UTF_8));
-    }
-    if (contentTypeHeader != null) {
-      value.withDataContentType(new String(contentTypeHeader.value(), StandardCharsets.UTF_8).toLowerCase());
+    @Override
+    public void close() {
+        // Intentionally left blank.
     }
 
-    if (invalidEvent.data() != null) {
-      value.withData(invalidEvent.data());
+    private static String getOrDefault(final Map<String, ?> configs, final String key) {
+        if (configs.containsKey(key)) {
+            return (String) configs.get(key);
+        }
+        return null;
     }
 
-    // Copy consumer record and set value to a valid CloudEvent.
-    return copyRecordAssigningValue(record, value.build());
-  }
+    private ConsumerRecord<Object, CloudEvent> validRecord(final ConsumerRecord<Object, CloudEvent> record) {
+        if (!(record.value() instanceof InvalidCloudEvent)) {
+            return record; // Valid CloudEvent
+        }
 
-  private static void setKey(CloudEventBuilder value, final Object key) {
-    if (key instanceof String) {
-      final var keyCasted = (String) key;
-      value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
-      value.withExtension(KEY_EXTENSION, keyCasted);
-    } else if (key instanceof Number) {
-      final var keyCasted = (Number) key;
-      value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
-      value.withExtension(KEY_EXTENSION, keyCasted);
-    } else if (key instanceof byte[]) {
-      final var keyCasted = (byte[]) key;
-      value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
-      value.withExtension(KEY_EXTENSION, keyCasted);
-    } else if (key != null) {
-      throw new IllegalStateException("Unknown key type: " + key);
+        logger.debug("Transforming invalid CloudEvent for topic {}", record.topic());
+
+        final var invalidEvent = (InvalidCloudEvent) record.value();
+        // Handle invalid CloudEvents.
+        // Create CloudEvent from the record metadata (topic, partition, offset, etc) and use received data as data
+        // field.
+        // The record to CloudEvent conversion is compatible with eventing-kafka.
+        final var value = new CloudEventBuilder()
+                .withId(id(record))
+                .withTime(time(record))
+                .withType(type())
+                .withSource(source(record))
+                .withSubject(subject(record));
+
+        setKey(value, record.key());
+
+        // Put headers as event extensions.
+        Header contentTypeHeader = null;
+        for (Header h : record.headers()) {
+            if (h.key().equalsIgnoreCase(CONTENT_TYPE_HEADER_KEY)) {
+                // Let's skip the content-type, we already transport it with datacontenttype field.
+                contentTypeHeader = h;
+                continue;
+            }
+            value.withExtension(
+                    KAFKA_HEADER_EXTENSION_PREFIX + replaceBadChars(h.key()),
+                    new String(h.value(), StandardCharsets.UTF_8));
+        }
+        if (contentTypeHeader != null) {
+            value.withDataContentType(new String(contentTypeHeader.value(), StandardCharsets.UTF_8).toLowerCase());
+        }
+
+        if (invalidEvent.data() != null) {
+            value.withData(invalidEvent.data());
+        }
+
+        // Copy consumer record and set value to a valid CloudEvent.
+        return copyRecordAssigningValue(record, value.build());
     }
-  }
 
-  private static String replaceBadChars(String value) {
-    // Since we're doing casting, the final collector is valid for
-    // any possible result type, assign the result of the pipeline
-    // to a typed variable, so that we're sure that our variable is
-    // actually a Stream of Characters.
-    final Stream<Character> validChars = value.chars()
-      // The CE spec allows only lower case english letters,
-      // therefore transform to lower case so that we can preserve
-      // as many characters as possible.
-      .mapToObj(c -> Character.toLowerCase((char) c))
-      .filter(InvalidCloudEventInterceptor::allowedChar);
+    private static void setKey(CloudEventBuilder value, final Object key) {
+        if (key instanceof String) {
+            final var keyCasted = (String) key;
+            value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
+            value.withExtension(KEY_EXTENSION, keyCasted);
+        } else if (key instanceof Number) {
+            final var keyCasted = (Number) key;
+            value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
+            value.withExtension(KEY_EXTENSION, keyCasted);
+        } else if (key instanceof byte[]) {
+            final var keyCasted = (byte[]) key;
+            value.withExtension(PARTITION_KEY_EXTENSION, keyCasted);
+            value.withExtension(KEY_EXTENSION, keyCasted);
+        } else if (key != null) {
+            throw new IllegalStateException("Unknown key type: " + key);
+        }
+    }
 
-    return validChars
-      .collect(Collector.of(
-        StringBuilder::new,
-        StringBuilder::append,
-        StringBuilder::append,
-        StringBuilder::toString
-      ));
-  }
+    private static String replaceBadChars(String value) {
+        // Since we're doing casting, the final collector is valid for
+        // any possible result type, assign the result of the pipeline
+        // to a typed variable, so that we're sure that our variable is
+        // actually a Stream of Characters.
+        final Stream<Character> validChars = value.chars()
+                // The CE spec allows only lower case english letters,
+                // therefore transform to lower case so that we can preserve
+                // as many characters as possible.
+                .mapToObj(c -> Character.toLowerCase((char) c))
+                .filter(InvalidCloudEventInterceptor::allowedChar);
 
-  private static boolean allowedChar(final char c) {
-    return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
-  }
+        return validChars.collect(Collector.of(
+                StringBuilder::new, StringBuilder::append, StringBuilder::append, StringBuilder::toString));
+    }
 
-  private static String subject(final ConsumerRecord<Object, CloudEvent> record) {
-    return "partition:" + record.partition() + "#" + record.offset();
-  }
+    private static boolean allowedChar(final char c) {
+        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+    }
 
-  private URI source(final ConsumerRecord<Object, CloudEvent> record) {
-    return URI.create(
-      "/apis/v1/namespaces/" +
-        this.sourceNamespace +
-        "/" +
-        this.kindPlural +
-        "/" +
-        this.sourceName +
-        "#" +
-        record.topic()
-    );
-  }
+    private static String subject(final ConsumerRecord<Object, CloudEvent> record) {
+        return "partition:" + record.partition() + "#" + record.offset();
+    }
 
-  private static String type() {
-    return TYPE;
-  }
+    private URI source(final ConsumerRecord<Object, CloudEvent> record) {
+        return URI.create("/apis/v1/namespaces/" + this.sourceNamespace
+                + "/"
+                + this.kindPlural
+                + "/"
+                + this.sourceName
+                + "#"
+                + record.topic());
+    }
 
-  private static OffsetDateTime time(final ConsumerRecord<Object, CloudEvent> record) {
-    return OffsetDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneId.of("UTC"));
-  }
+    private static String type() {
+        return TYPE;
+    }
 
-  private static String id(final ConsumerRecord<Object, CloudEvent> record) {
-    return "partition:" + record.partition() + "/offset:" + record.offset();
-  }
+    private static OffsetDateTime time(final ConsumerRecord<Object, CloudEvent> record) {
+        return OffsetDateTime.ofInstant(Instant.ofEpochMilli(record.timestamp()), ZoneId.of("UTC"));
+    }
 
-  private static boolean isNotBlank(final String s) {
-    return s != null && !s.isBlank();
-  }
+    private static String id(final ConsumerRecord<Object, CloudEvent> record) {
+        return "partition:" + record.partition() + "/offset:" + record.offset();
+    }
+
+    private static boolean isNotBlank(final String s) {
+        return s != null && !s.isBlank();
+    }
 }

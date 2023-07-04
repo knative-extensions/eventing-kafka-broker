@@ -20,23 +20,21 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public final class KafkaConsumerRecordUtils {
 
-  private KafkaConsumerRecordUtils() {
-  }
+    private KafkaConsumerRecordUtils() {}
 
-  public static <T> ConsumerRecord<T, CloudEvent> copyRecordAssigningValue(final ConsumerRecord<T, CloudEvent> record,
-                                                                           final CloudEvent value) {
-    return new ConsumerRecord<>(
-      record.topic(),
-      record.partition(),
-      record.offset(),
-      record.timestamp(),
-      record.timestampType(),
-      record.serializedKeySize(),
-      record.serializedValueSize(),
-      record.key(),
-      value,
-      record.headers(),
-      record.leaderEpoch()
-    );
-  }
+    public static <T> ConsumerRecord<T, CloudEvent> copyRecordAssigningValue(
+            final ConsumerRecord<T, CloudEvent> record, final CloudEvent value) {
+        return new ConsumerRecord<>(
+                record.topic(),
+                record.partition(),
+                record.offset(),
+                record.timestamp(),
+                record.timestampType(),
+                record.serializedKeySize(),
+                record.serializedValueSize(),
+                record.key(),
+                value,
+                record.headers(),
+                record.leaderEpoch());
+    }
 }

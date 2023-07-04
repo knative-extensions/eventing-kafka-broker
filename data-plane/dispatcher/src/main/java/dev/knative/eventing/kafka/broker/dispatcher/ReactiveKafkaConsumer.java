@@ -15,17 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
-
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 
 /**
  * A reactive Kafka consumer interface for handling Kafka communication.
@@ -105,5 +104,4 @@ public interface ReactiveKafkaConsumer<K, V> {
      * @return This consumer instance with the exception handler set.
      */
     ReactiveKafkaConsumer<K, V> exceptionHandler(Handler<Throwable> handler);
-
 }

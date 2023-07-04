@@ -22,6 +22,5 @@ import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListen
  */
 public interface IngressRequestHandler extends IngressReconcilerListener {
 
-  void handle(RequestContext request, IngressProducer producer);
-
+    void handle(RequestContext request, IngressProducer producer);
 }

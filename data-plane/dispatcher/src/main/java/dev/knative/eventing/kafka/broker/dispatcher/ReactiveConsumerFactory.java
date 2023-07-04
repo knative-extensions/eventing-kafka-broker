@@ -15,9 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import java.util.Map;
-
 import io.vertx.core.Vertx;
+import java.util.Map;
 
 /**
  * A factory interface for creating reactive Kafka consumers.

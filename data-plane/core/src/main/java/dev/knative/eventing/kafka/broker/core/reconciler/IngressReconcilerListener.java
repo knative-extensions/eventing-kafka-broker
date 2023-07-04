@@ -18,57 +18,53 @@ package dev.knative.eventing.kafka.broker.core.reconciler;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 public interface IngressReconcilerListener {
 
-  Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
+    Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
 
-  Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
+    Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
 
-  Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
+    Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress);
 
-  static IngressReconcilerListener all(final IngressReconcilerListener... listeners) {
-    return new CompositeIngressReconcilerLister(listeners);
-  }
+    static IngressReconcilerListener all(final IngressReconcilerListener... listeners) {
+        return new CompositeIngressReconcilerLister(listeners);
+    }
 }
 
 class CompositeIngressReconcilerLister implements IngressReconcilerListener {
 
-  private IngressReconcilerListener[] listeners;
+    private IngressReconcilerListener[] listeners;
 
-  public CompositeIngressReconcilerLister(final IngressReconcilerListener... listeners) {
-    Objects.requireNonNull(listeners);
-    this.listeners = listeners;
-  }
+    public CompositeIngressReconcilerLister(final IngressReconcilerListener... listeners) {
+        Objects.requireNonNull(listeners);
+        this.listeners = listeners;
+    }
 
-  @Override
-  public Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
-    return CompositeFuture.all(
-      Arrays.stream(listeners)
-        .map(l -> l.onNewIngress(resource, ingress))
-        .collect(Collectors.toList())
-    ).mapEmpty();
-  }
+    @Override
+    public Future<Void> onNewIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
+        return CompositeFuture.all(Arrays.stream(listeners)
+                        .map(l -> l.onNewIngress(resource, ingress))
+                        .collect(Collectors.toList()))
+                .mapEmpty();
+    }
 
-  @Override
-  public Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
-    return CompositeFuture.all(
-      Arrays.stream(listeners)
-        .map(l -> l.onUpdateIngress(resource, ingress))
-        .collect(Collectors.toList())
-    ).mapEmpty();
-  }
+    @Override
+    public Future<Void> onUpdateIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
+        return CompositeFuture.all(Arrays.stream(listeners)
+                        .map(l -> l.onUpdateIngress(resource, ingress))
+                        .collect(Collectors.toList()))
+                .mapEmpty();
+    }
 
-  @Override
-  public Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
-    return CompositeFuture.all(
-      Arrays.stream(listeners)
-        .map(l -> l.onDeleteIngress(resource, ingress))
-        .collect(Collectors.toList())
-    ).mapEmpty();
-  }
+    @Override
+    public Future<Void> onDeleteIngress(DataPlaneContract.Resource resource, DataPlaneContract.Ingress ingress) {
+        return CompositeFuture.all(Arrays.stream(listeners)
+                        .map(l -> l.onDeleteIngress(resource, ingress))
+                        .collect(Collectors.toList()))
+                .mapEmpty();
+    }
 }

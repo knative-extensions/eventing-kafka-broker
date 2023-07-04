@@ -3,9 +3,9 @@
 The data-plane uses [Vertx](https://vertx.io/) and is composed of two components:
 
 - [**Receiver**](#receiver), it's responsible for accepting incoming events and send them to the appropriate Kafka
-  topic. It acts as Kafka producers and broker ingress.
+topic. It acts as Kafka producers and broker ingress.
 - [**Dispatcher**](#dispatcher), it's responsible for consuming events and send them to Triggers' subscribers. It acts
-  as Kafka consumer.
+as Kafka consumer.
 
 ## Receiver
 
@@ -39,5 +39,5 @@ update another one will be created. This allows to not block or use locks.
 - `core` directory contains the core module, in particular, it contains classes for representing Eventing objects
 - `dispatcher` directory contains the [_Dispatcher_](#dispatcher) application.
 - `contract` directory contains a module in which the protobuf compiler (`protoc`) generates code. Git ignores the
-  generated code.
+generated code.
 - `receiver` directory contains the [_Receiver_](#receiver) application.

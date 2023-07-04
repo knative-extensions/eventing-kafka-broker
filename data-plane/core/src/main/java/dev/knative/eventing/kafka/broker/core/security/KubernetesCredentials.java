@@ -15,186 +15,183 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import io.fabric8.kubernetes.api.model.Secret;
+import java.util.Base64;
+import java.util.Map;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Base64;
-import java.util.Map;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-
 class KubernetesCredentials implements Credentials {
 
-  private final static Logger logger = LoggerFactory.getLogger(KubernetesCredentials.class);
+    private static final Logger logger = LoggerFactory.getLogger(KubernetesCredentials.class);
 
-  static final String CA_CERTIFICATE_KEY = "ca.crt";
+    static final String CA_CERTIFICATE_KEY = "ca.crt";
 
-  static final String USER_CERTIFICATE_KEY = "user.crt";
-  static final String USER_KEY_KEY = "user.key";
-  static final String USER_SKIP_KEY = "user.skip";
+    static final String USER_CERTIFICATE_KEY = "user.crt";
+    static final String USER_KEY_KEY = "user.key";
+    static final String USER_SKIP_KEY = "user.skip";
 
-  static final String USERNAME_KEY = "user";
-  static final String PASSWORD_KEY = "password";
+    static final String USERNAME_KEY = "user";
+    static final String PASSWORD_KEY = "password";
 
-  static final String SECURITY_PROTOCOL = "protocol";
-  static final String SASL_MECHANISM = "sasl.mechanism";
+    static final String SECURITY_PROTOCOL = "protocol";
+    static final String SASL_MECHANISM = "sasl.mechanism";
 
-  private final Secret secret;
+    private final Secret secret;
 
-  private String caCertificates;
-  private String userCertificate;
-  private String userKey;
-  private Boolean skipUser;
-  private SecurityProtocol securityProtocol;
-  private String SASLMechanism;
-  private String SASLUsername;
-  private String SASLPassword;
+    private String caCertificates;
+    private String userCertificate;
+    private String userKey;
+    private Boolean skipUser;
+    private SecurityProtocol securityProtocol;
+    private String SASLMechanism;
+    private String SASLUsername;
+    private String SASLPassword;
 
-  KubernetesCredentials(final Secret secret) {
-    this.secret = secret;
-  }
-
-  KubernetesCredentials(final Map<String, String> secretData) {
-    this.secret = new Secret();
-    this.secret.setData(secretData);
-  }
-
-  @Override
-  public String caCertificates() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    KubernetesCredentials(final Secret secret) {
+        this.secret = secret;
     }
-    if (caCertificates == null) {
-      final var truststore = secret.getData().get(CA_CERTIFICATE_KEY);
-      if (truststore == null) {
-        return null;
-      }
-      this.caCertificates = new String(Base64.getDecoder().decode(truststore));
-    }
-    return this.caCertificates;
-  }
 
-  @Override
-  public boolean skipClientAuth() {
-    if (secret == null || secret.getData() == null) {
-      return false;
+    KubernetesCredentials(final Map<String, String> secretData) {
+        this.secret = new Secret();
+        this.secret.setData(secretData);
     }
-    if (skipUser == null) {
-      final var skip = secret.getData().get(USER_SKIP_KEY);
-      if (skip == null) {
-        this.skipUser = false;
-      } else {
-        try {
-          final var skipAsString = new String(Base64.getDecoder().decode(skip));
-          this.skipUser = Boolean.parseBoolean(skipAsString);
-        } catch (final Exception ex) {
-          this.skipUser = false;
+
+    @Override
+    public String caCertificates() {
+        if (secret == null || secret.getData() == null) {
+            return null;
         }
-      }
+        if (caCertificates == null) {
+            final var truststore = secret.getData().get(CA_CERTIFICATE_KEY);
+            if (truststore == null) {
+                return null;
+            }
+            this.caCertificates = new String(Base64.getDecoder().decode(truststore));
+        }
+        return this.caCertificates;
     }
-    return this.skipUser;
-  }
 
-  @Override
-  public String userCertificate() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    @Override
+    public boolean skipClientAuth() {
+        if (secret == null || secret.getData() == null) {
+            return false;
+        }
+        if (skipUser == null) {
+            final var skip = secret.getData().get(USER_SKIP_KEY);
+            if (skip == null) {
+                this.skipUser = false;
+            } else {
+                try {
+                    final var skipAsString = new String(Base64.getDecoder().decode(skip));
+                    this.skipUser = Boolean.parseBoolean(skipAsString);
+                } catch (final Exception ex) {
+                    this.skipUser = false;
+                }
+            }
+        }
+        return this.skipUser;
     }
-    if (userCertificate == null) {
-      final var keystore = secret.getData().get(USER_CERTIFICATE_KEY);
-      if (keystore == null) {
-        return null;
-      }
-      this.userCertificate = new String(Base64.getDecoder().decode(keystore));
-    }
-    return userCertificate;
-  }
 
-  @Override
-  public String userKey() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    @Override
+    public String userCertificate() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (userCertificate == null) {
+            final var keystore = secret.getData().get(USER_CERTIFICATE_KEY);
+            if (keystore == null) {
+                return null;
+            }
+            this.userCertificate = new String(Base64.getDecoder().decode(keystore));
+        }
+        return userCertificate;
     }
-    if (userKey == null) {
-      final var userKey = secret.getData().get(USER_KEY_KEY);
-      if (userKey == null) {
-        return null;
-      }
-      this.userKey = new String(Base64.getDecoder().decode(userKey));
-    }
-    return userKey;
-  }
 
+    @Override
+    public String userKey() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (userKey == null) {
+            final var userKey = secret.getData().get(USER_KEY_KEY);
+            if (userKey == null) {
+                return null;
+            }
+            this.userKey = new String(Base64.getDecoder().decode(userKey));
+        }
+        return userKey;
+    }
 
-  @Override
-  public SecurityProtocol securityProtocol() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    @Override
+    public SecurityProtocol securityProtocol() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (securityProtocol == null) {
+            final var protocolStr = secret.getData().get(SECURITY_PROTOCOL);
+            if (protocolStr == null) {
+                return null;
+            }
+            final var protocol = new String(Base64.getDecoder().decode(protocolStr));
+            if (!SecurityProtocol.names().contains(protocol)) {
+                logger.debug("Security protocol {}", keyValue(SECURITY_PROTOCOL, protocol));
+                return null;
+            }
+            this.securityProtocol = SecurityProtocol.forName(protocol);
+        }
+        return this.securityProtocol;
     }
-    if (securityProtocol == null) {
-      final var protocolStr = secret.getData().get(SECURITY_PROTOCOL);
-      if (protocolStr == null) {
-        return null;
-      }
-      final var protocol = new String(Base64.getDecoder().decode(protocolStr));
-      if (!SecurityProtocol.names().contains(protocol)) {
-        logger.debug("Security protocol {}", keyValue(SECURITY_PROTOCOL, protocol));
-        return null;
-      }
-      this.securityProtocol = SecurityProtocol.forName(protocol);
-    }
-    return this.securityProtocol;
-  }
 
-  @Override
-  public String SASLMechanism() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    @Override
+    public String SASLMechanism() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (SASLMechanism == null) {
+            final var SASLMechanism = secret.getData().get(SASL_MECHANISM);
+            if (SASLMechanism == null) {
+                return null;
+            }
+            this.SASLMechanism = switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
+                case "PLAIN" -> "PLAIN";
+                case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
+                case "SCRAM-SHA-512" -> "SCRAM-SHA-512";
+                default -> null;};
+        }
+        return this.SASLMechanism;
     }
-    if (SASLMechanism == null) {
-      final var SASLMechanism = secret.getData().get(SASL_MECHANISM);
-      if (SASLMechanism == null) {
-        return null;
-      }
-      this.SASLMechanism = switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
-        case "PLAIN" -> "PLAIN";
-        case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
-        case "SCRAM-SHA-512" -> "SCRAM-SHA-512";
-        default -> null;
-      };
-    }
-    return this.SASLMechanism;
-  }
 
-  @Override
-  public String SASLUsername() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    @Override
+    public String SASLUsername() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (SASLUsername == null) {
+            final var SASLUsername = secret.getData().get(USERNAME_KEY);
+            if (SASLUsername == null) {
+                return null;
+            }
+            this.SASLUsername = new String(Base64.getDecoder().decode(SASLUsername));
+        }
+        return this.SASLUsername;
     }
-    if (SASLUsername == null) {
-      final var SASLUsername = secret.getData().get(USERNAME_KEY);
-      if (SASLUsername == null) {
-        return null;
-      }
-      this.SASLUsername = new String(Base64.getDecoder().decode(SASLUsername));
-    }
-    return this.SASLUsername;
-  }
 
-  @Override
-  public String SASLPassword() {
-    if (secret == null || secret.getData() == null) {
-      return null;
+    @Override
+    public String SASLPassword() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (SASLPassword == null) {
+            final var SASLPassword = secret.getData().get(PASSWORD_KEY);
+            if (SASLPassword == null) {
+                return null;
+            }
+            this.SASLPassword = new String(Base64.getDecoder().decode(SASLPassword));
+        }
+        return this.SASLPassword;
     }
-    if (SASLPassword == null) {
-      final var SASLPassword = secret.getData().get(PASSWORD_KEY);
-      if (SASLPassword == null) {
-        return null;
-      }
-      this.SASLPassword = new String(Base64.getDecoder().decode(SASLPassword));
-    }
-    return this.SASLPassword;
-  }
 }

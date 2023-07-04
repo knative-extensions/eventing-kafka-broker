@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core.eventbus;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
-
 import java.util.function.Consumer;
 
 /**
@@ -27,24 +26,23 @@ import java.util.function.Consumer;
  */
 public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, AutoCloseable {
 
-  private final static DeliveryOptions DELIVERY_OPTIONS = new DeliveryOptions()
-    .setLocalOnly(true);
+    private static final DeliveryOptions DELIVERY_OPTIONS = new DeliveryOptions().setLocalOnly(true);
 
-  private final EventBus eventBus;
-  private final String address;
+    private final EventBus eventBus;
+    private final String address;
 
-  public ContractPublisher(EventBus eventBus, String address) {
-    this.eventBus = eventBus;
-    this.address = address;
-  }
+    public ContractPublisher(EventBus eventBus, String address) {
+        this.eventBus = eventBus;
+        this.address = address;
+    }
 
-  @Override
-  public void accept(DataPlaneContract.Contract contract) {
-    eventBus.publish(address, contract, DELIVERY_OPTIONS);
-  }
+    @Override
+    public void accept(DataPlaneContract.Contract contract) {
+        eventBus.publish(address, contract, DELIVERY_OPTIONS);
+    }
 
-  @Override
-  public void close() throws Exception {
-    this.accept(DataPlaneContract.Contract.newBuilder().build());
-  }
+    @Override
+    public void close() throws Exception {
+        this.accept(DataPlaneContract.Contract.newBuilder().build());
+    }
 }
