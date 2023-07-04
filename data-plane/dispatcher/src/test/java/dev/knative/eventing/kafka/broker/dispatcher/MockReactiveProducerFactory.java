@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.kafka.clients.producer.Producer;
 
@@ -25,7 +26,10 @@ public class MockReactiveProducerFactory<K, V> implements ReactiveProducerFactor
 
     @Override
     public ReactiveKafkaProducer<K, V> create(Vertx vertx, Map<String, Object> configs) {
-        return new MockReactiveKafkaProducer<>();
+        Properties properties = new Properties();
+        properties.putAll(configs);
+
+        return new MockReactiveKafkaProducer<>(properties);
     }
 
     public ReactiveKafkaProducer<K, V> create(Vertx vertx, Producer<K, V> producer) {
