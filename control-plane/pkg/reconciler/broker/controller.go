@@ -19,7 +19,6 @@ package broker
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -95,18 +94,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: reconciler.DataPlaneNamespace, Name: env.IngressName})
+
 	features := feature.FromContext(ctx)
-	if features.IsPermissiveTransportEncryption() || features.IsDisabledTransportEncryption() {
-		reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, IPsLister, impl.EnqueueKey)
-	} else {
-		caCerts, err := reconciler.getCaCerts()
-		if err != nil {
-			logger.Fatal("Failed to get CA certs in Strict Transport Encryption", zap.Error(err))
-		}
-		reconciler.Prober, err = prober.NewAsyncWithTLS(ctx, env.IngressPodPort, IPsLister, impl.EnqueueKey, &caCerts)
-		if err != nil {
-			logger.Fatal("Failed to create a TLS enabled prober in Strict Transport Encryption", zap.Error(err))
-		}
+	caCerts, err := reconciler.getCaCerts()
+	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
+		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
+		logger.Warn("Failed to get CA certs when at least one address uses TLS", zap.Error(err))
+	}
+
+	reconciler.Prober, err = prober.NewComposite(ctx, env.IngressPodPort, env.IngressPodTlsPort, IPsLister, impl.EnqueueKey, &caCerts)
+	if err != nil {
+		logger.Fatal("Failed to created prober", zap.Error(err))
 	}
 
 	brokerInformer := brokerinformer.Get(ctx)
@@ -128,8 +126,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	rotateCACerts := func(obj interface{}) {
 		newCerts, err := reconciler.getCaCerts()
-		if err != nil {
-			logger.Fatal("Failed to get new CA certs while rotating CA certs in Strict Transport Encryption", zap.Error(err))
+		if err != nil && (features.IsPermissiveTransportEncryption() || features.IsStrictTransportEncryption()) {
+			// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
+			logger.Warn("Failed to get new CA certs while rotating CA certs when at least one address uses TLS", zap.Error(err))
 		}
 		reconciler.Prober.RotateRootCaCerts(&newCerts)
 		globalResync(obj)
