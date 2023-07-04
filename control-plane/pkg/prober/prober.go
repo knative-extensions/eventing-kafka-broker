@@ -80,6 +80,16 @@ func (p Func) RotateRootCaCerts(caCerts *string) error {
 	return nil
 }
 
+type NewFunc func(ctx context.Context, addressable NewAddressable, expected Status) Status
+
+func (p NewFunc) Probe(ctx context.Context, addressable NewAddressable, expected Status) Status {
+	return p(ctx, addressable, expected)
+}
+
+func (p NewFunc) RotateRootCaCerts(caCerts *string) error {
+	return nil
+}
+
 // httpClient interface is an interface for an HTTP client.
 type httpClient interface {
 	Do(r *http.Request) (*http.Response, error)
