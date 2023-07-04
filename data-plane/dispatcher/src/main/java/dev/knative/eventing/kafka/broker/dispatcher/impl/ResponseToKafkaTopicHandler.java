@@ -47,7 +47,7 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
   /**
    * All args constructor.
    *
-   * @param producer Kafka producer.
+   * @param producer ReactiveKafkaProducer.
    * @param topic    topic to produce records.
    */
   public ResponseToKafkaTopicHandler(final ReactiveKafkaProducer<String, CloudEvent> producer, final String topic) {

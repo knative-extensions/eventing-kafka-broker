@@ -15,11 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx.impl;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import org.junit.jupiter.api.Test;
-
 import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticleTracingTest;
 import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
