@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
@@ -23,7 +24,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
   private final ConsumerVerticleContext consumerVerticleContext;
 
-  KafkaConsumer<Object, CloudEvent> consumer;
+  ReactiveKafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
   private AsyncCloseable closeable;
 
@@ -79,7 +79,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     stopPromise.tryComplete();
   }
 
-  public void setConsumer(KafkaConsumer<Object, CloudEvent> consumer) {
+  public void setConsumer(ReactiveKafkaConsumer<Object, CloudEvent> consumer) {
     this.consumer = consumer;
   }
 
@@ -104,5 +104,5 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     return consumerVerticleContext;
   }
 
-  public abstract PartitionRevokedHandler getPartitionsRevokedHandler();
+  public abstract PartitionRevokedHandler getPartitionRevokedHandler();
 }

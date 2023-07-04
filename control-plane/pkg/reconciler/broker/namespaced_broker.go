@@ -46,6 +46,7 @@ import (
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -86,6 +87,8 @@ type NamespacedReconciler struct {
 	ManifestivalClient mf.Client
 
 	DataplaneLifecycleLocksByNamespace util.LockMap[string]
+
+	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -238,6 +241,7 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		BootstrapServers:           r.BootstrapServers,
 		Prober:                     r.Prober,
 		Counter:                    r.Counter,
+		KafkaFeatureFlags:          r.KafkaFeatureFlags,
 	}
 }
 

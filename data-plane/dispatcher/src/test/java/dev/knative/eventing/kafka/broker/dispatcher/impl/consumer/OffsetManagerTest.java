@@ -15,14 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Counter;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.OffsetAndMetadata;
+
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -49,7 +50,7 @@ import static org.mockito.Mockito.when;
 public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
   @Override
-  RecordDispatcherListener createOffsetManager(final Vertx vertx, final KafkaConsumer<?, ?> consumer) {
+  RecordDispatcherListener createOffsetManager(final Vertx vertx, final ReactiveKafkaConsumer<?, ?> consumer) {
     return new OffsetManager(vertx, consumer, null, 100L);
   }
 
@@ -301,7 +302,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
   @Test
   @SuppressWarnings("unchecked")
   public void recordReceived(final Vertx vertx) {
-    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
+    final ReactiveKafkaConsumer<String, CloudEvent> consumer = mock(ReactiveKafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
     new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L).recordReceived(record("aaa", 0, 0));
 
@@ -313,7 +314,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
   @Test
   @SuppressWarnings("unchecked")
   public void failedToSendToDeadLetterSink(final Vertx vertx) {
-    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
+    final ReactiveKafkaConsumer<String, CloudEvent> consumer = mock(ReactiveKafkaConsumer.class);
     final Counter eventsSentCounter = mock(Counter.class);
 
     OffsetManager strategy = new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L);
@@ -331,8 +332,8 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
     final var counter = new AtomicInteger(0);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
-    when(consumer.commit((Map<io.vertx.kafka.client.common.TopicPartition, OffsetAndMetadata>) any())).then(invocationOnMock -> {
+    final ReactiveKafkaConsumer<String, CloudEvent> consumer = mock(ReactiveKafkaConsumer.class);
+    when(consumer.commit((Map<TopicPartition, OffsetAndMetadata>) any())).then(invocationOnMock -> {
       if (counter.incrementAndGet() == 1) {
         return Future.failedFuture(new RuntimeException());
       }
@@ -347,7 +348,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     final var offset = strategy.
       getOffsetTrackers().
-      get(new io.vertx.kafka.client.common.TopicPartition(r.topic(), r.partition()));
+      get(new TopicPartition(r.topic(), r.partition()));
 
     await()
       .timeout(Duration.ofSeconds(1))
@@ -360,8 +361,8 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
     final var counter = new AtomicInteger(0);
     final Counter eventsSentCounter = mock(Counter.class);
 
-    final KafkaConsumer<String, CloudEvent> consumer = mock(KafkaConsumer.class);
-    when(consumer.commit((Map<io.vertx.kafka.client.common.TopicPartition, OffsetAndMetadata>) any()))
+    final ReactiveKafkaConsumer<String, CloudEvent> consumer = mock(ReactiveKafkaConsumer.class);
+    when(consumer.commit((Map<TopicPartition, OffsetAndMetadata>) any()))
       .then(invocationOnMock -> Future.failedFuture(new RuntimeException()));
 
     final var r = record("aaa", 0, 0);
@@ -372,7 +373,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     final var offset = strategy.
       getOffsetTrackers().
-      get(new io.vertx.kafka.client.common.TopicPartition(r.topic(), r.partition()));
+      get(new TopicPartition(r.topic(), r.partition()));
 
     await()
       .timeout(Duration.ofSeconds(1))

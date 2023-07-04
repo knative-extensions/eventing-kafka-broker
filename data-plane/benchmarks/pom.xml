@@ -52,7 +52,7 @@
 
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>dispatcher</artifactId>
+      <artifactId>dispatcher-vertx</artifactId>
       <version>${project.version}</version>
       <exclusions> <!-- Exclude logging and noop -->
         <exclusion>

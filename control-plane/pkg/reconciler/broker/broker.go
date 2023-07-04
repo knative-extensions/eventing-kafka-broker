@@ -37,6 +37,7 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
@@ -50,9 +51,6 @@ import (
 )
 
 const (
-	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>).
-	TopicPrefix = "knative-broker-"
-
 	// ExternalTopicAnnotation for using external kafka topic for the broker
 	ExternalTopicAnnotation = "kafka.eventing.knative.dev/external.topic"
 
@@ -82,8 +80,9 @@ type Reconciler struct {
 
 	BootstrapServers string
 
-	Prober  prober.Prober
-	Counter *counter.Counter
+	Prober            prober.Prober
+	Counter           *counter.Counter
+	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -313,7 +312,15 @@ func (r *Reconciler) reconcileBrokerTopic(broker *eventing.Broker, securityOptio
 		}
 	} else {
 		// no external topic, we create it
-		topicName = kafka.BrokerTopic(TopicPrefix, broker)
+		var existingTopic bool
+		// check if the broker already has reconciled with a topic name and use that if it exists
+		// otherwise, we create a new topic name from the broker topic template
+		if topicName, existingTopic = broker.Status.Annotations[kafka.TopicAnnotation]; !existingTopic {
+			topicName, err = r.KafkaFeatureFlags.ExecuteBrokersTopicTemplate(broker.ObjectMeta)
+			if err != nil {
+				return "", statusConditionManager.TopicsNotPresentOrInvalidErr([]string{topicName}, err)
+			}
+		}
 
 		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 		if err != nil {
@@ -505,7 +512,11 @@ func (r *Reconciler) finalizeNonExternalBrokerTopic(broker *eventing.Broker, sec
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.BrokerTopic(TopicPrefix, broker))
+	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
+	if !ok {
+		return fmt.Errorf("no topic annotated on broker")
+	}
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
 		return err
 	}
