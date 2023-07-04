@@ -119,9 +119,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
     this.inFlightRecords.addAndGet(records.count());
     isPollInFlight.compareAndSet(true, false);
 
-    var recordIterator = records.iterator();
-    while(recordIterator.hasNext()){
-      var record = recordIterator.next();
+    for(var record: records){
       this.recordDispatcher.dispatch(record)
         .onComplete(v -> {
           this.inFlightRecords.decrementAndGet();
