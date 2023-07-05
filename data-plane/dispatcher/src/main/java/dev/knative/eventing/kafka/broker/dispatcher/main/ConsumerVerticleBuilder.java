@@ -46,9 +46,12 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEven
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -211,11 +214,29 @@ public class ConsumerVerticleBuilder {
     };
   }
 
+  private WebClientOptions createWebClientOptionsFromCACerts(String CACerts) {
+    if (!CACerts.isEmpty()) {
+      return consumerVerticleContext
+        .getWebClientOptions()
+        .setPemTrustOptions(
+          new PemTrustOptions().addCertValue(
+            Buffer.buffer(CACerts)
+          )
+        );
+    }
+    return consumerVerticleContext.getWebClientOptions();
+  }
+
   private ResponseHandler createResponseHandler(final Vertx vertx) {
     if (consumerVerticleContext.getEgress().hasReplyUrl()) {
       return new ResponseToHttpEndpointHandler(new WebClientCloudEventSender(
         vertx,
-        WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
+        WebClient.create(
+          vertx,
+          createWebClientOptionsFromCACerts(
+            consumerVerticleContext.getEgress().getReplyUrlCACerts()
+          )
+        ),
         consumerVerticleContext.getEgress().getReplyUrl(),
         consumerVerticleContext,
         Metrics.Tags.senderContext("reply")
@@ -235,7 +256,12 @@ public class ConsumerVerticleBuilder {
   private CloudEventSender createConsumerRecordSender(final Vertx vertx) {
     return new WebClientCloudEventSender(
       vertx,
-      WebClient.create(vertx, consumerVerticleContext.getWebClientOptions()),
+      WebClient.create(
+        vertx,
+        createWebClientOptionsFromCACerts(
+          consumerVerticleContext.getEgress().getDestinationCACerts()
+        )
+      ),
       consumerVerticleContext.getEgress().getDestination(),
       consumerVerticleContext,
       Metrics.Tags.senderContext("subscriber")
@@ -244,7 +270,6 @@ public class ConsumerVerticleBuilder {
 
   private CloudEventSender createDeadLetterSinkRecordSender(final Vertx vertx) {
     if (hasDeadLetterSink(consumerVerticleContext.getEgressConfig())) {
-      var webClientOptions = consumerVerticleContext.getWebClientOptions();
       // TODO use numPartitions for ordered delivery or max.poll.records for unordered delivery
       // if (egress.getVReplicas() > 0) {
       //   webClientOptions = new WebClientOptions(this.webClientOptions);
@@ -252,7 +277,12 @@ public class ConsumerVerticleBuilder {
       // }
       return new WebClientCloudEventSender(
         vertx,
-        WebClient.create(vertx, webClientOptions),
+        WebClient.create(
+          vertx,
+          createWebClientOptionsFromCACerts(
+            consumerVerticleContext.getEgressConfig().getDeadLetterCACerts()
+          )
+        ),
         consumerVerticleContext.getEgressConfig().getDeadLetter(),
         consumerVerticleContext,
         Metrics.Tags.senderContext("deadlettersink")
