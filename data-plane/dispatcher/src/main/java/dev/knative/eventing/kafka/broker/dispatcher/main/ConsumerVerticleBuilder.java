@@ -16,14 +16,14 @@
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
@@ -54,11 +54,13 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.TopicPartition;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -226,9 +228,18 @@ public class ConsumerVerticleBuilder {
       return new NoopResponseHandler();
     }
 
+    final Properties producerConfigs = new Properties();
+    producerConfigs.putAll(consumerVerticleContext.getProducerConfigs());
+
+    //print producer configs
+    ConsumerVerticleContext.logger.info("Producer configs {} {}",
+      consumerVerticleContext.getLoggingKeyValue(),
+      keyValue("producerConfigs", producerConfigs)
+    );
+
     final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
       .getProducerFactory()
-      .create(vertx, consumerVerticleContext.getProducerConfigs());
+      .create(vertx, new KafkaProducer<>(producerConfigs));
     return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));
   }
 

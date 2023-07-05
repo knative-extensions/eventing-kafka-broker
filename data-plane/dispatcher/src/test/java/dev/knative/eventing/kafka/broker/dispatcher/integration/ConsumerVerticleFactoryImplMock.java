@@ -16,11 +16,11 @@
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
@@ -37,6 +37,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -54,7 +55,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
   }
 
   private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
-                                                           Map<String, Object> producerConfigs) {
+                                                           Producer<String, CloudEvent> producerConfigs) {
     return new MockReactiveKafkaProducer<>(vertx, new MockProducer<>(
       true,
       new StringSerializer(),

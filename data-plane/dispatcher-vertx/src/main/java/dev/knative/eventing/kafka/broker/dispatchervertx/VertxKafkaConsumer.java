@@ -27,7 +27,8 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;

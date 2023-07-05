@@ -32,7 +32,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 
 import java.time.Duration;
 import java.util.Collection;

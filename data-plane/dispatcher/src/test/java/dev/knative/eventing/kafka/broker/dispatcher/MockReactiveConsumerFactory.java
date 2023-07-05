@@ -17,6 +17,8 @@ package dev.knative.eventing.kafka.broker.dispatcher;
 
 import java.util.Map;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import io.vertx.core.Vertx;
 
 public class MockReactiveConsumerFactory<K, V> implements ReactiveConsumerFactory<K, V> {

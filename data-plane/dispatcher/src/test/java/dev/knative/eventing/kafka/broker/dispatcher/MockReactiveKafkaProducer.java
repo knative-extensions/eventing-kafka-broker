@@ -20,6 +20,9 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -59,6 +62,12 @@ public class MockReactiveKafkaProducer<K, V> implements ReactiveKafkaProducer<K,
     @Override
     public Producer<K, V> unwrap() {
         return producer;
+    }
+
+    @Override
+    public Future<Void> flush() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'flush'");
     }
     
 }
