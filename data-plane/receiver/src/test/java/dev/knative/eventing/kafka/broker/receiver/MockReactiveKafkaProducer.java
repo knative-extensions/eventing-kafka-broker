@@ -22,6 +22,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;

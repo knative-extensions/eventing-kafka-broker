@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -23,7 +24,6 @@ import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcile
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
-import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;

@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.core;
 
 import org.apache.kafka.clients.producer.Producer;
+
 import io.vertx.core.Vertx;
 
 /**
@@ -24,6 +25,7 @@ import io.vertx.core.Vertx;
  * @param <K> the key type
  * @param <V> the value type
  */
+@FunctionalInterface
 public interface ReactiveProducerFactory<K, V> {
 
     /**

@@ -16,11 +16,11 @@
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;

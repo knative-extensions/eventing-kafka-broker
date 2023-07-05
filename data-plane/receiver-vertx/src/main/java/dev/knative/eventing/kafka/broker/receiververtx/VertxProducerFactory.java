@@ -15,8 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx;
 
-import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+
 import org.apache.kafka.clients.producer.Producer;
 import io.vertx.core.Vertx;
 

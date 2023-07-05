@@ -15,12 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx;
 
-import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
-
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
@@ -32,7 +31,7 @@ public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final KafkaProducer<K, V> producer;
 
-    VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
+    public VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = KafkaProducer.create(v, producer);
     }
 

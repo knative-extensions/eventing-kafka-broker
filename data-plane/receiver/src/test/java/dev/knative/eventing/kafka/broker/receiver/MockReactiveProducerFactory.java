@@ -19,6 +19,8 @@ import java.util.Properties;
 
 import org.apache.kafka.clients.producer.Producer;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
 
