@@ -66,8 +66,8 @@ public class MockReactiveKafkaProducer<K, V> implements ReactiveKafkaProducer<K,
 
     @Override
     public Future<Void> flush() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'flush'");
+        producer.flush();
+        return Future.succeededFuture();
     }
     
 }

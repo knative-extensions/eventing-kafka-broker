@@ -231,12 +231,6 @@ public class ConsumerVerticleBuilder {
     final Properties producerConfigs = new Properties();
     producerConfigs.putAll(consumerVerticleContext.getProducerConfigs());
 
-    //print producer configs
-    ConsumerVerticleContext.logger.info("Producer configs {} {}",
-      consumerVerticleContext.getLoggingKeyValue(),
-      keyValue("producerConfigs", producerConfigs)
-    );
-
     final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
       .getProducerFactory()
       .create(vertx, new KafkaProducer<>(producerConfigs));
