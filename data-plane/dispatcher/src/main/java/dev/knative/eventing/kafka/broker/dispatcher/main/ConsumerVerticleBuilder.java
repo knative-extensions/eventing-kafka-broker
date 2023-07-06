@@ -215,9 +215,8 @@ public class ConsumerVerticleBuilder {
   }
 
   private WebClientOptions createWebClientOptionsFromCACerts(String CACerts) {
-    if (!CACerts.isEmpty()) {
-      return consumerVerticleContext
-        .getWebClientOptions()
+    if (CACerts != null && !CACerts.isEmpty()) {
+      return new WebClientOptions(consumerVerticleContext.getWebClientOptions())
         .setPemTrustOptions(
           new PemTrustOptions().addCertValue(
             Buffer.buffer(CACerts)
