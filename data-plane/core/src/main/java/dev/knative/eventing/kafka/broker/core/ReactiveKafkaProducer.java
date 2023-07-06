@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.clients.producer.Producer;
-
 import io.vertx.core.Future;
 
 /**

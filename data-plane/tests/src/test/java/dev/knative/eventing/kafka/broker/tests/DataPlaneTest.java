@@ -393,7 +393,7 @@ public class DataPlaneTest {
       v -> new IngressProducerReconcilableStore(
         AuthProvider.noAuth(),
         producerConfigs(),
-        properties ->  new VertxKafkaProducer<>(vertx, new KafkaProducer<>(properties))
+        properties -> new VertxKafkaProducer<>(vertx, new KafkaProducer<>(properties))
       ),
       new IngressRequestHandlerImpl(
         StrictRequestToRecordMapper.getInstance(),

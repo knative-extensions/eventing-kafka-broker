@@ -112,7 +112,7 @@ public class ReceiverVerticleTest {
         true,
         new StringSerializer(),
         new CloudEventSerializerMock());
-    ReactiveKafkaProducer<String, CloudEvent> producer = new MockReactiveKafkaProducer<>(mockProducer); 
+    ReactiveKafkaProducer<String, CloudEvent> producer = new MockReactiveKafkaProducer<>(mockProducer);
 
     store = new IngressProducerReconcilableStore(
         AuthProvider.noAuth(),

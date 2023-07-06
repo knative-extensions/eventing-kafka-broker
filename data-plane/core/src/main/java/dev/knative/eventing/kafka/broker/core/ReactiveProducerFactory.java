@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import java.util.Properties;
-
 import io.vertx.core.Vertx;
 
 /**

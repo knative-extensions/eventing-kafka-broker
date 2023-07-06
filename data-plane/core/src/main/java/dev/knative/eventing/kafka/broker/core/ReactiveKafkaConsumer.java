@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
-
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
