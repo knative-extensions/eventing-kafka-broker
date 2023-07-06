@@ -18,7 +18,6 @@ package broker
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
@@ -33,7 +32,6 @@ import (
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
-	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection"
@@ -117,14 +115,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	reconciler.IPsLister = prober.NewIPListerWithMapping()
 
-	features := feature.FromContext(ctx)
-	caCerts, err := reconciler.getCaCerts()
-	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
-		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
-		logger.Warn("Failed to get CA certs when at least one address uses TLS", zap.Error(err))
-	}
-
-	reconciler.Prober, err = prober.NewComposite(ctx, env.IngressPodPort, env.IngressPodTlsPort, reconciler.IPsLister.List, impl.EnqueueKey, &caCerts)
+	reconciler.Prober, err = prober.NewCompositeNoTLS(ctx, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to created prober", zap.Error(err))
 	}
@@ -223,16 +214,4 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	})
 
 	return impl
-}
-
-func (r *NamespacedReconciler) getCaCerts() (string, error) {
-	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(brokerIngressTLSSecretName)
-	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
-	}
-	caCerts, ok := secret.Data[caCertsSecretKey]
-	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, brokerIngressTLSSecretName, caCertsSecretKey)
-	}
-	return string(caCerts), nil
 }
