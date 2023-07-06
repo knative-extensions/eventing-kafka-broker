@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and post it to a URL.
  */
-public class ResponseToHttpEndpointHandler extends BaseResponseHandler implements ResponseHandler {
+public class ResponseToHttpEndpointHandler extends BaseResponseHandler {
 
   private final CloudEventSender cloudEventSender;
 

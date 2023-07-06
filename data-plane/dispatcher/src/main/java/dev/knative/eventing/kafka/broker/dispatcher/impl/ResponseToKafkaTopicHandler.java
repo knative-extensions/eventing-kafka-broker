@@ -34,7 +34,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 /**
  * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to a Kafka topic.
  */
-public final class ResponseToKafkaTopicHandler extends BaseResponseHandler implements ResponseHandler {
+public final class ResponseToKafkaTopicHandler extends BaseResponseHandler {
 
   private final String topic;
   private final ReactiveKafkaProducer<String, CloudEvent> producer;

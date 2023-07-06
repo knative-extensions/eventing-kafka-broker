@@ -24,7 +24,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
