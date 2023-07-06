@@ -29,6 +29,7 @@ import io.vertx.core.Vertx;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,7 +38,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -54,8 +54,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
     mockConsumer = new ConcurrentHashMap<>();
   }
 
-  private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
-                                                           Producer<String, CloudEvent> producerConfigs) {
+  private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx, Properties producerConfigs) {
     return new MockReactiveKafkaProducer<>(vertx, new MockProducer<>(
       true,
       new StringSerializer(),
@@ -69,7 +68,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
    * @return
    */
   private ReactiveKafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
-                                                           Map<String, Object> consumerConfigs) {
+                                                                   Map<String, Object> consumerConfigs) {
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
     consumer.schedulePollTask(() -> {

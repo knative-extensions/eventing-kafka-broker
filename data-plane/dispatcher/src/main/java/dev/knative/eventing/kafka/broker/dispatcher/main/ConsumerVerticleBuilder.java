@@ -54,7 +54,6 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.TopicPartition;
 
 import java.util.ArrayList;
@@ -233,7 +232,7 @@ public class ConsumerVerticleBuilder {
 
     final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
       .getProducerFactory()
-      .create(vertx, new KafkaProducer<>(producerConfigs));
+      .create(vertx, producerConfigs);
     return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));
   }
 

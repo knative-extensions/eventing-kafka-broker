@@ -42,6 +42,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.net.URI;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 import static org.mockito.Mockito.mock;
@@ -67,7 +68,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
+      new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC
     );
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -88,7 +89,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
+      new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC
     );
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -111,7 +112,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
+      new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC
     );
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -134,7 +135,7 @@ public class ResponseToKafkaTopicHandlerTest {
       new CloudEventSerializerMock()
     );
     final var handler = new ResponseToKafkaTopicHandler(
-      new MockReactiveProducerFactory<String, CloudEvent>().create(vertx, producer), TOPIC
+      new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC
     );
 
     final var event = new CloudEventBuilder()
