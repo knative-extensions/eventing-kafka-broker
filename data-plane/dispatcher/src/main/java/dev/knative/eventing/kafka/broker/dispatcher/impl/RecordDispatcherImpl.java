@@ -38,7 +38,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+// import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -82,8 +82,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private static final int KN_ERROR_DATA_MAX_BYTES = 1024;
 
   private final Filter filter;
-  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
-  private final Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> dlsSender;
+  private final Function<ConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
+  private final Function<ConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> dlsSender;
   private final RecordDispatcherListener recordDispatcherListener;
   private final AsyncCloseable closeable;
   private final ConsumerTracer consumerTracer;
@@ -140,7 +140,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
    * @param record record to handle.
    */
   @Override
-  public Future<Void> dispatch(KafkaConsumerRecord<Object, CloudEvent> record) {
+  public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record) {
     if (closed.get()) {
       return Future.failedFuture("Dispatcher closed");
     }
@@ -168,7 +168,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
      */
     final var recordContext = new ConsumerRecordContext(record);
 
-    if (record.record().value() instanceof InvalidCloudEvent) {
+    if (record.value() instanceof InvalidCloudEvent) {
       incrementDiscardedRecord(recordContext);
       final var msg = String.format("Invalid record received topic %s, partition %d, offset %d", record.topic(), record.partition(), record.offset());
       logger.error(msg);
@@ -323,22 +323,20 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     final var transformedCloudEvent = builder.build();
 
     final var cr = new ConsumerRecord<>(
-      recordContext.getRecord().record().topic(),
-      recordContext.getRecord().record().partition(),
-      recordContext.getRecord().record().offset(),
-      recordContext.getRecord().record().timestamp(),
-      recordContext.getRecord().record().timestampType(),
-      recordContext.getRecord().record().serializedKeySize(),
-      recordContext.getRecord().record().serializedValueSize(),
-      recordContext.getRecord().record().key(),
+      recordContext.getRecord().topic(),
+      recordContext.getRecord().partition(),
+      recordContext.getRecord().offset(),
+      recordContext.getRecord().timestamp(),
+      recordContext.getRecord().timestampType(),
+      recordContext.getRecord().serializedKeySize(),
+      recordContext.getRecord().serializedValueSize(),
+      recordContext.getRecord().key(),
       transformedCloudEvent,
-      recordContext.getRecord().record().headers(),
-      recordContext.getRecord().record().leaderEpoch()
+      recordContext.getRecord().headers(),
+      recordContext.getRecord().leaderEpoch()
     );
 
-    final var kcr = new KafkaConsumerRecordImpl<>(cr);
-
-    return new ConsumerRecordContext(kcr);
+    return new ConsumerRecordContext(cr);
   }
 
   private void onDeadLetterSinkSuccess(final ConsumerRecordContext recordContext,
@@ -369,12 +367,12 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     // That means that we get a record with a null value and some CE
     // headers even though the record is a valid CloudEvent.
     logDebug("Value is null", recordContext.getRecord());
-    final var value = cloudEventDeserializer.deserialize(recordContext.getRecord().record().topic(), recordContext.getRecord().record().headers(), null);
-    recordContext.setRecord(new KafkaConsumerRecordImpl<>(KafkaConsumerRecordUtils.copyRecordAssigningValue(recordContext.getRecord().record(), value)));
+    final var value = cloudEventDeserializer.deserialize(recordContext.getRecord().topic(), recordContext.getRecord().headers(), null);
+    recordContext.setRecord(KafkaConsumerRecordUtils.copyRecordAssigningValue(recordContext.getRecord(), value));
     return recordContext;
   }
 
-  private Function<KafkaConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
+  private Function<ConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
     CloudEventSender sender, ResponseHandler sinkHandler, String senderType) {
     return rec -> sender.send(rec.value())
       .onFailure(ex -> logError("Failed to send event to " + senderType, rec, ex))
@@ -446,7 +444,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   }
 
   private Tags getTags(final ConsumerRecordContext recordContext) {
-    if (recordContext.getRecord().record().value() instanceof InvalidCloudEvent) {
+    if (recordContext.getRecord().value() instanceof InvalidCloudEvent) {
       return this.consumerVerticleContext.getTags().and(INVALID_EVENT_TYPE_TAG);
     }
     return this.consumerVerticleContext.getTags().and(
@@ -456,7 +454,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void logError(
     final String msg,
-    final KafkaConsumerRecord<Object, CloudEvent> record,
+    final ConsumerRecord<Object, CloudEvent> record,
     final Throwable cause) {
 
     if (logger.isDebugEnabled()) {
@@ -482,7 +480,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private void logDebug(
     final String msg,
-    final KafkaConsumerRecord<Object, CloudEvent> record) {
+    final ConsumerRecord<Object, CloudEvent> record) {
 
     logger.debug(msg + " {} {} {} {} {} {} {}",
       consumerVerticleContext.getLoggingKeyValue(),
@@ -497,7 +495,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
   private ConsumerTracer.StartedSpan getStartedSpan(ConsumerRecordContext recordContext, Context context) {
     if (consumerTracer != null) {
-      return consumerTracer.prepareMessageReceived(context, recordContext.getRecord().record());
+      return consumerTracer.prepareMessageReceived(context, recordContext.getRecord());
     }
     return null;
   }

@@ -39,8 +39,6 @@ import io.vertx.core.http.HttpVersion;
 import io.vertx.ext.web.client.impl.HttpResponseImpl;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -280,7 +278,7 @@ public class RecordDispatcherTest {
     final var record = record();
     dispatcherHandler.dispatch(record);
 
-    ArgumentCaptor<KafkaConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(KafkaConsumerRecord.class);
+    ArgumentCaptor<ConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(ConsumerRecord.class);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -290,7 +288,7 @@ public class RecordDispatcherTest {
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
 
-    KafkaConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
+    ConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
     assertEquals(record.topic(), failedRecord.topic());
     assertEquals(record.partition(), failedRecord.partition());
     assertEquals(record.offset(), failedRecord.offset());
@@ -343,7 +341,7 @@ public class RecordDispatcherTest {
     final var record = record();
     dispatcherHandler.dispatch(record);
 
-    ArgumentCaptor<KafkaConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(KafkaConsumerRecord.class);
+    ArgumentCaptor<ConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(ConsumerRecord.class);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -353,7 +351,7 @@ public class RecordDispatcherTest {
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
 
-    KafkaConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
+    ConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
     assertEquals(record.topic(), failedRecord.topic());
     assertEquals(record.partition(), failedRecord.partition());
     assertEquals(record.offset(), failedRecord.offset());
@@ -406,7 +404,7 @@ public class RecordDispatcherTest {
     final var record = record();
     dispatcherHandler.dispatch(record);
 
-    ArgumentCaptor<KafkaConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(KafkaConsumerRecord.class);
+    ArgumentCaptor<ConsumerRecord<Object, CloudEvent>> captor = ArgumentCaptor.forClass(ConsumerRecord.class);
 
     assertTrue(subscriberSenderSendCalled.get());
     assertTrue(dlsSenderSendCalled.get());
@@ -416,7 +414,7 @@ public class RecordDispatcherTest {
     verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
     verify(receiver, never()).recordDiscarded(any());
 
-    KafkaConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
+    ConsumerRecord<Object, CloudEvent> failedRecord = captor.getValue();
     assertEquals(record.topic(), failedRecord.topic());
     assertEquals(record.partition(), failedRecord.partition());
     assertEquals(record.offset(), failedRecord.offset());
@@ -550,13 +548,13 @@ public class RecordDispatcherTest {
     assertNoEventDispatchLatency();
   }
 
-  private static KafkaConsumerRecord<Object, CloudEvent> record() {
-    return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event()));
+  private static ConsumerRecord<Object, CloudEvent> record() {
+    return new ConsumerRecord<>("", 0, 0L, "", CoreObjects.event());
   }
 
 
-  private static KafkaConsumerRecord<Object, CloudEvent> invalidRecord() {
-    return new KafkaConsumerRecordImpl<>(new ConsumerRecord<>("", 0, 0L, "", new InvalidCloudEvent(new byte[]{1, 4})));
+  private static ConsumerRecord<Object, CloudEvent> invalidRecord() {
+    return new ConsumerRecord<>("", 0, 0L, "", new InvalidCloudEvent(new byte[]{1, 4}));
   }
 
   public static RecordDispatcherListener offsetManagerMock() {

@@ -71,6 +71,9 @@ func EgressConfigFromDelivery(
 			return nil, fmt.Errorf("failed to resolve Spec.Delivery.DeadLetterSink: %w", err)
 		}
 		egressConfig.DeadLetter = deadLetterSinkAddr.URL.String()
+		if deadLetterSinkAddr.CACerts != nil {
+			egressConfig.DeadLetterCACerts = *deadLetterSinkAddr.CACerts
+		}
 	}
 
 	if delivery.Retry != nil {

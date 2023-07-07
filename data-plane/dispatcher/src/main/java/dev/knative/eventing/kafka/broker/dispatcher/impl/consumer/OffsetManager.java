@@ -15,23 +15,22 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.common.TopicPartition;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -45,7 +44,7 @@ public final class OffsetManager implements RecordDispatcherListener {
 
   private static final Logger logger = LoggerFactory.getLogger(OffsetManager.class);
 
-  private final KafkaConsumer<?, ?> consumer;
+  private final ReactiveKafkaConsumer<?, ?> consumer;
 
   private final Map<TopicPartition, OffsetTracker> offsetTrackers;
 
@@ -61,7 +60,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * @param onCommit Callback invoked when an offset is actually committed
    */
   public OffsetManager(final Vertx vertx,
-                       final KafkaConsumer<?, ?> consumer,
+                       final ReactiveKafkaConsumer<?, ?> consumer,
                        final Consumer<Integer> onCommit,
                        final long commitIntervalMs) {
     Objects.requireNonNull(consumer, "provide consumer");
@@ -101,7 +100,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * @return
    */
   @Override
-  public void recordReceived(final KafkaConsumerRecord<?, ?> record) {
+  public void recordReceived(final ConsumerRecord<?, ?> record) {
     final var tp = new TopicPartition(record.topic(), record.partition());
     if (!offsetTrackers.containsKey(tp)) {
       // Initialize offset tracker for the given record's topic/partition.
@@ -113,7 +112,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public void successfullySentToSubscriber(final KafkaConsumerRecord<?, ?> record) {
+  public void successfullySentToSubscriber(final ConsumerRecord<?, ?> record) {
     commit(record);
   }
 
@@ -121,7 +120,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public void successfullySentToDeadLetterSink(final KafkaConsumerRecord<?, ?> record) {
+  public void successfullySentToDeadLetterSink(final ConsumerRecord<?, ?> record) {
     commit(record);
   }
 
@@ -129,7 +128,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public void failedToSendToDeadLetterSink(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
+  public void failedToSendToDeadLetterSink(final ConsumerRecord<?, ?> record, final Throwable ex) {
     commit(record);
   }
 
@@ -137,11 +136,11 @@ public final class OffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public void recordDiscarded(final KafkaConsumerRecord<?, ?> record) {
+  public void recordDiscarded(final ConsumerRecord<?, ?> record) {
     commit(record);
   }
 
-  private void commit(final KafkaConsumerRecord<?, ?> record) {
+  private void commit(final ConsumerRecord<?, ?> record) {
     // We need to handle the case when the offset tracker was removed from our Map since when partitions are revoked we
     // remove the associated offset tracker, however, we may get a response from the sink for a previously owned
     // partition after a partition has been revoked.
@@ -199,7 +198,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    *
    * @return succeeded or failed future.
    */
-  private Future<Void> commit(final Set<TopicPartition> partitions) {
+  private Future<Void> commit(final Collection<TopicPartition> partitions) {
     return CompositeFuture.all(
       this.offsetTrackers.entrySet()
         .stream()
@@ -312,7 +311,7 @@ public final class OffsetManager implements RecordDispatcherListener {
   }
 
   private static void logPartitions(final String context,
-                                    final Set<TopicPartition> tps) {
+                                    final Collection<TopicPartition> tps) {
     logger.info("Partitions " + context + " {}", keyValue("partitions", tps));
   }
 

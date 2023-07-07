@@ -326,6 +326,11 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 			Name:      trigger.GetName(),
 		},
 	}
+
+	if destination.CACerts != nil {
+		egress.DestinationCACerts = *destination.CACerts
+	}
+
 	newFiltersEnabled := func() bool {
 		r.FlagsLock.RLock()
 		defer r.FlagsLock.RUnlock()

@@ -176,7 +176,9 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     return VertxMessageFactory
       .createWriter(client.postAbs(target)
         .timeout(this.consumerVerticleContext.getEgressConfig().getTimeout() <= 0 ? DEFAULT_TIMEOUT_MS : this.consumerVerticleContext.getEgressConfig().getTimeout())
-        .putHeader("Prefer", "reply"))
+        .putHeader("Prefer", "reply")
+        .putHeader("Kn-Namespace", this.consumerVerticleContext.getEgress().getReference().getNamespace())
+      )
       .writeBinary(event)
       .onFailure(ex -> {
         logError(event, ex);
