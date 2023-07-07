@@ -56,7 +56,7 @@ public final class OffsetManager implements RecordDispatcherListener {
   /**
    * All args constructor.
    *
-   * @param consumer Kafka consumer.
+   * @param consumer Reactive Kafka consumer.
    * @param onCommit Callback invoked when an offset is actually committed
    */
   public OffsetManager(final Vertx vertx,

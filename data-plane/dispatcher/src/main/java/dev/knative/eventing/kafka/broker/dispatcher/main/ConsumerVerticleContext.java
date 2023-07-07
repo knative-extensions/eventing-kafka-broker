@@ -28,7 +28,6 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +63,6 @@ public class ConsumerVerticleContext {
   private ConsumerVerticleLoggingContext loggingContext;
 
   private Tags tags;
-
-  private ConsumerRebalanceListener consumerRebalanceListener;
 
   public ConsumerVerticleContext withConsumerConfigs(final Map<String, Object> consumerConfigs) {
     this.consumerConfigs = new HashMap<>(consumerConfigs);
@@ -149,15 +146,6 @@ public class ConsumerVerticleContext {
   public ConsumerVerticleContext withProducerFactory(final ProducerFactory<String, CloudEvent> producerFactory) {
     this.producerFactory = producerFactory;
     return this;
-  }
-
-  public ConsumerVerticleContext withConsumerRebalanceListener(final ConsumerRebalanceListener consumerRebalanceListener) {
-    this.consumerRebalanceListener = consumerRebalanceListener;
-    return this;
-  }
-
-  public ConsumerRebalanceListener getConsumerRebalanceListener() {
-    return consumerRebalanceListener;
   }
    
   public DataPlaneContract.Resource getResource() {

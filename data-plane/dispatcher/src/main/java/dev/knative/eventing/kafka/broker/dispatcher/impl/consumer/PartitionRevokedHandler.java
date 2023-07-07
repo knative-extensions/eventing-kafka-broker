@@ -26,6 +26,7 @@ import java.util.Collection;
  * {@link PartitionRevokedHandler} is the handler called when some partitions are revoked to a
  * {@link org.apache.kafka.clients.consumer.Consumer}
  */
+@FunctionalInterface
 public interface PartitionRevokedHandler {
 
   /**
