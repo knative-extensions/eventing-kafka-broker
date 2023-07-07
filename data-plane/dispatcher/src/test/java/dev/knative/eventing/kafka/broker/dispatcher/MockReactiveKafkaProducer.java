@@ -15,26 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import java.util.Properties;
-
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
-
-import org.apache.kafka.clients.producer.KafkaProducer;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 
 public class MockReactiveKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V>{
 
-    private Producer<K, V> producer;
-
-    public MockReactiveKafkaProducer(Properties config) {
-        producer = new KafkaProducer<>(config);
-    }
+    private final Producer<K, V> producer;
 
     public MockReactiveKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = producer;

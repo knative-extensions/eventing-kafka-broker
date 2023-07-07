@@ -30,8 +30,8 @@ public interface ReactiveProducerFactory<K, V> {
     /**
      * Create a new ReactiveKafkaProducer
      *
-     * @param v        the Vertx instance used when creating the vertx KafkaProducer
-     * @param producer the Kafka producer
+     * @param v the Vertx instance used when creating the vertx KafkaProducer
+     * @param config the KafkaProducer configuration
      * @return a new ReactiveKafkaProducer
      */
     ReactiveKafkaProducer<K, V> create(Vertx v, Properties configs);
