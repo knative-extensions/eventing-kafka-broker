@@ -97,9 +97,9 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
   @Override
   void startConsumer(Promise<Void> startPromise) {
-    Objects.requireNonNull(getConsumerVerticleContext().getConsumerRebalanceListener());
+    Objects.requireNonNull(getConsumerRebalanceListener());
     // We need to sub first, then we can start the polling loop
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()),getConsumerVerticleContext().getConsumerRebalanceListener())
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()),getConsumerRebalanceListener())
       .onFailure(startPromise::fail)
       .onSuccess(v -> {
         if (this.pollTimer.compareAndSet(-1, 0)) {

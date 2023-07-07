@@ -42,6 +42,8 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
   private final ConsumerVerticleContext consumerVerticleContext;
 
+  private final ConsumerRebalanceListenerImpl consumerRebalanceListener;
+
   ReactiveKafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
   private AsyncCloseable closeable;
@@ -52,6 +54,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
     this.consumerVerticleContext = consumerVerticleContext;
     this.initializer = initializer;
+    this.consumerRebalanceListener = new ConsumerRebalanceListenerImpl(this.consumerVerticleContext);
   }
 
   abstract void startConsumer(Promise<Void> startPromise);
@@ -83,6 +86,10 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     this.consumer = consumer;
   }
 
+  public void addPartitionRevokedHandler(PartitionRevokedHandler partitionRevokedHandler) {
+    this.consumerRebalanceListener.addPartitionRevokedHandler(partitionRevokedHandler);
+  }
+
   public void setRecordDispatcher(RecordDispatcher recordDispatcher) {
     this.recordDispatcher = recordDispatcher;
   }
@@ -104,5 +111,10 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     return consumerVerticleContext;
   }
 
+  protected ConsumerRebalanceListenerImpl getConsumerRebalanceListener() {
+    return consumerRebalanceListener;
+  }
+
   public abstract PartitionRevokedHandler getPartitionRevokedHandler();
+  
 }

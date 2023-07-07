@@ -33,7 +33,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOver
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.PartitionRevokedHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AnyFilter;
@@ -44,7 +43,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.tracing.TracingPolicy;
@@ -53,16 +51,9 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.common.TopicPartition;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public class ConsumerVerticleBuilder {
 
@@ -126,59 +117,15 @@ public class ConsumerVerticleBuilder {
     );
     consumerVerticle.setRecordDispatcher(recordDispatcher);
 
-    final var partitionRevokedHandlers = List.of(
-      consumerVerticle.getPartitionRevokedHandler(),
-      offsetManager.getPartitionRevokedHandler()
-    );
-    this.consumerVerticleContext.withConsumerRebalanceListener(createRebalanceListener(partitionRevokedHandlers));
+    consumerVerticle.addPartitionRevokedHandler(consumerVerticle.getPartitionRevokedHandler());
+    consumerVerticle.addPartitionRevokedHandler(offsetManager.getPartitionRevokedHandler());
+
   }
 
   private ConsumerVerticle createConsumerVerticle(final ConsumerVerticle.Initializer initializer) {
     return switch (DeliveryOrder.fromContract(consumerVerticleContext.getEgress().getDeliveryOrder())) {
       case ORDERED -> new OrderedConsumerVerticle(consumerVerticleContext, initializer);
       case UNORDERED -> new UnorderedConsumerVerticle(consumerVerticleContext, initializer);
-    };
-  }
-
-    /**
-   * For each handler call partitionRevoked and wait for the future to complete.
-   *
-   * @param partitionRevokedHandlers partition revoked handlers
-   * @return ConsumerRebalanceListener object with the partition revoked handler running on onPartitionsRevoked
-   */
-  private ConsumerRebalanceListener createRebalanceListener(final List<PartitionRevokedHandler> partitionRevokedHandlers) {
-    return new ConsumerRebalanceListener() {
-        @Override
-        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            ConsumerVerticleContext.logger.info("Received revoke partitions for consumer {} {}",
-                    consumerVerticleContext.getLoggingKeyValue(),
-                    keyValue("partitions", partitions)
-            );
-
-            final var futures = new ArrayList<Future<Void>>(partitionRevokedHandlers.size());
-            for (PartitionRevokedHandler partitionRevokedHandler : partitionRevokedHandlers) {
-                futures.add(partitionRevokedHandler.partitionRevoked(partitions));
-            }
-
-            for (final var future : futures) {
-                try {
-                    future.toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS);
-                } catch (final Exception ignored) {
-                    ConsumerVerticleContext.logger.warn("Partition revoked handler failed {} {}",
-                            consumerVerticleContext.getLoggingKeyValue(),
-                            keyValue("partitions", partitions)
-                    );
-                }
-            }
-        }
-
-        @Override
-        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-            ConsumerVerticleContext.logger.info("Received assign partitions for consumer {} {}",
-                    consumerVerticleContext.getLoggingKeyValue(),
-                    keyValue("partitions", partitions)
-            );
-        }
     };
   }
 
