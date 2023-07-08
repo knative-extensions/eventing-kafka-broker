@@ -61,7 +61,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
   void startConsumer(final Promise<Void> startPromise) {
     Objects.requireNonNull(getConsumerRebalanceListener());
 
-    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), (getConsumerRebalanceListener()))
+    this.consumer.subscribe(Set.copyOf(getConsumerVerticleContext().getResource().getTopicsList()), getConsumerRebalanceListener())
     .onFailure(startPromise::tryFail)
     .onSuccess(startPromise::tryComplete)
     .onSuccess(v -> poll());
