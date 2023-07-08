@@ -24,11 +24,18 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public abstract class ConsumerVerticle extends AbstractVerticle {
 
@@ -42,7 +49,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
   private final ConsumerVerticleContext consumerVerticleContext;
 
-  private final ConsumerRebalanceListenerImpl consumerRebalanceListener;
+  private final Collection<PartitionRevokedHandler> partitionRevokedHandlers;
 
   ReactiveKafkaConsumer<Object, CloudEvent> consumer;
   RecordDispatcher recordDispatcher;
@@ -54,7 +61,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
     this.consumerVerticleContext = consumerVerticleContext;
     this.initializer = initializer;
-    this.consumerRebalanceListener = new ConsumerRebalanceListenerImpl(this.consumerVerticleContext);
+    this.partitionRevokedHandlers = new ArrayList<>();
   }
 
   abstract void startConsumer(Promise<Void> startPromise);
@@ -87,7 +94,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
   }
 
   public void addPartitionRevokedHandler(PartitionRevokedHandler partitionRevokedHandler) {
-    this.consumerRebalanceListener.addPartitionRevokedHandler(partitionRevokedHandler);
+    this.partitionRevokedHandlers.add(partitionRevokedHandler);
   }
 
   public void setRecordDispatcher(RecordDispatcher recordDispatcher) {
@@ -111,8 +118,40 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     return consumerVerticleContext;
   }
 
-  protected ConsumerRebalanceListenerImpl getConsumerRebalanceListener() {
-    return consumerRebalanceListener;
+  protected ConsumerRebalanceListener getConsumerRebalanceListener() {
+    return new ConsumerRebalanceListener() {
+      @Override
+      public void onPartitionsRevoked(java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {
+        ConsumerVerticleContext.logger.info("Received revoke partitions for consumer {} {}",
+                consumerVerticleContext.getLoggingKeyValue(),
+                keyValue("partitions", partitions)
+        );
+
+        final var futures = new ArrayList<Future<Void>>(partitionRevokedHandlers.size());
+        for (PartitionRevokedHandler partitionRevokedHandler : partitionRevokedHandlers) {
+            futures.add(partitionRevokedHandler.partitionRevoked(partitions));
+        }
+
+        for (final var future : futures) {
+            try {
+                future.toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS);
+            } catch (final Exception ignored) {
+                ConsumerVerticleContext.logger.warn("Partition revoked handler failed {} {}",
+                        consumerVerticleContext.getLoggingKeyValue(),
+                        keyValue("partitions", partitions)
+                );
+            }
+        }
+      }
+
+      @Override
+      public void onPartitionsAssigned(java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {
+        ConsumerVerticleContext.logger.info("Received assign partitions for consumer {} {}",
+                consumerVerticleContext.getLoggingKeyValue(),
+                keyValue("partitions", partitions)
+        );
+      }
+    };
   }
 
   public abstract PartitionRevokedHandler getPartitionRevokedHandler();
