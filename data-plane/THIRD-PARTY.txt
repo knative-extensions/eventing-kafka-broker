@@ -1,5 +1,6 @@
 
 Lists of 228 third-party dependencies.
+
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.11 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.11 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.11.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -34,6 +35,7 @@ Lists of 228 third-party dependencies.
      (Unknown license) contract (dev.knative.eventing.kafka.broker:contract:1.0-SNAPSHOT - no url defined)
      (Unknown license) core (dev.knative.eventing.kafka.broker:core:1.0-SNAPSHOT - no url defined)
      (Unknown license) dispatcher (dev.knative.eventing.kafka.broker:dispatcher:1.0-SNAPSHOT - no url defined)
+     (Unknown license) dispatcher-vertx (dev.knative.eventing.kafka.broker:dispatcher-vertx:1.0-SNAPSHOT - no url defined)
      (Unknown license) receiver (dev.knative.eventing.kafka.broker:receiver:1.0-SNAPSHOT - no url defined)
      (The Apache Software License, Version 2.0) CloudEvents - API (io.cloudevents:cloudevents-api:2.5.0 - https://cloudevents.github.io/sdk-java/cloudevents-api/)
      (The Apache Software License, Version 2.0) CloudEvents - Core (io.cloudevents:cloudevents-core:2.5.0 - https://cloudevents.github.io/sdk-java/cloudevents-core/)

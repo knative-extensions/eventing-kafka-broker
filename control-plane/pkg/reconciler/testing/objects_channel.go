@@ -17,8 +17,10 @@
 package testing
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,14 +34,14 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 
 	subscriptionv1 "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
@@ -62,7 +64,21 @@ const (
 
 func ChannelTopic() string {
 	c := NewChannel()
-	return kafka.ChannelTopic(TopicPrefix, c)
+	topicName, err := apisconfig.DefaultFeaturesConfig().ExecuteChannelsTopicTemplate(c.ObjectMeta)
+	if err != nil {
+		panic("Failed to create channel topic name")
+	}
+	return topicName
+}
+
+func CustomTopic(template *template.Template) string {
+	c := NewChannel()
+	var result bytes.Buffer
+	err := template.Execute(&result, c.ObjectMeta)
+	if err != nil {
+		panic("Failed to create custom topic name")
+	}
+	return result.String()
 }
 
 func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
@@ -73,6 +89,10 @@ func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 			UID:       ChannelUUID,
 		},
 	}
+	return applyOptionsToChannel(c, options...)
+}
+
+func applyOptionsToChannel(c *messagingv1beta1.KafkaChannel, options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	for _, opt := range options {
 		opt(c)
 	}
@@ -221,6 +241,16 @@ func ChannelAddressable(env *config.Env) func(obj duckv1.KRShaped) {
 		channel.Status.Addresses = []duckv1.Addressable{*httpAddress}
 
 		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func WithChannelTopicStatusAnnotation(topicName string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		channel := obj.(*messagingv1beta1.KafkaChannel)
+		if channel.Status.Annotations == nil {
+			channel.Status.Annotations = make(map[string]string, 1)
+		}
+		channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 	}
 }
 

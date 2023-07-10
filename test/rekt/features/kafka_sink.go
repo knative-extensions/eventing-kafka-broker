@@ -24,7 +24,7 @@ import (
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -34,8 +34,6 @@ import (
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
@@ -63,13 +61,6 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 	sink := feature.MakeRandomK8sName("sink")
 	verifyMessagesJobName := feature.MakeRandomK8sName("verify-messages-job")
 
-	topic := kafka.BrokerTopic(brokerreconciler.TopicPrefix, &eventingv1.Broker{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      brokerName,
-			Namespace: env.Namespace(),
-		},
-	})
-
 	trigger1FilterType := "trigger-1"
 	trigger2FilterType := "trigger-2"
 
@@ -84,6 +75,10 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 	eventTrigger2.SetType(trigger2FilterType)
 
 	f := feature.NewFeatureNamed("Trigger with KafkaSink")
+	topic, err := apisconfig.DefaultFeaturesConfig().ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Name: brokerName, Namespace: env.Namespace()})
+	if err != nil {
+		panic("failed to create broker topic name")
+	}
 
 	f.Setup("Install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
 	f.Setup("Broker is ready", broker.IsReady(brokerName))

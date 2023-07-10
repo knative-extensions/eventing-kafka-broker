@@ -37,18 +37,20 @@ import (
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	"knative.dev/pkg/configmap"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
-func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
 
@@ -74,6 +76,7 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 		Env:                        configs,
 		ConfigMapLister:            configmapInformer.Lister(),
 		ServiceLister:              serviceInformer.Lister(),
+		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -92,6 +95,12 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	channelInformer := kafkachannelinformer.Get(ctx)
+
+	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
+		reconciler.KafkaFeatureFlags.Reset(value)
+		impl.GlobalResync(channelInformer.Informer())
+	})
+	kafkaConfigStore.WatchConfigs(watcher)
 
 	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 

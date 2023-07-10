@@ -166,6 +166,11 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 			EnableOrderedExecutorMetrics: r.KafkaFeatureFlags.IsDispatcherOrderedExecutorMetricsEnabled(),
 		},
 	}
+
+	if destinationAddr.CACerts != nil {
+		egress.DestinationCACerts = *destinationAddr.CACerts
+	}
+
 	if c.Spec.Configs.KeyType != nil {
 		egress.KeyType = coreconfig.KeyTypeFromString(*c.Spec.Configs.KeyType)
 	}
@@ -275,6 +280,9 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 		}
 		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
 			ReplyUrl: destination.URL.String(),
+		}
+		if destination.CACerts != nil {
+			egress.ReplyUrlCACerts = *destination.CACerts
 		}
 		return nil
 	}
