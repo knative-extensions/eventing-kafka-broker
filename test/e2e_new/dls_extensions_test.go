@@ -161,7 +161,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			sinkAddress, _ := service.Address(ctx, sinkName)
-			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
+			return cetest.HasExtension("knativeerrordest", sinkAddress.URL.String())
 		},
 
 		func(ctx context.Context) cetest.EventMatcher {
@@ -222,7 +222,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			sinkAddress, _ := service.Address(ctx, sinkName)
-			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
+			return cetest.HasExtension("knativeerrordest", sinkAddress.URL.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
 			return cetest.HasExtension("knativeerrorcode", "422")
@@ -286,7 +286,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			sinkAddress, _ := service.Address(ctx, sinkName)
-			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
+			return cetest.HasExtension("knativeerrordest", sinkAddress.URL.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
 			return cetest.HasExtension("knativeerrorcode", "422")
@@ -349,7 +349,7 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			sinkAddress, _ := service.Address(ctx, sinkName)
-			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
+			return cetest.HasExtension("knativeerrordest", sinkAddress.URL.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
 			return cetest.HasExtension("knativeerrorcode", "404")
@@ -413,7 +413,7 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 		deadLetterSinkName,
 		func(ctx context.Context) cetest.EventMatcher {
 			sinkAddress, _ := service.Address(ctx, sinkName)
-			return cetest.HasExtension("knativeerrordest", sinkAddress.String())
+			return cetest.HasExtension("knativeerrordest", sinkAddress.URL.String())
 		},
 		func(ctx context.Context) cetest.EventMatcher {
 			return cetest.HasExtension("knativeerrorcode", "422")
