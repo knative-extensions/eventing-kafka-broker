@@ -703,6 +703,7 @@ type DialectedFilter struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Filter:
+	//
 	//	*DialectedFilter_Exact
 	//	*DialectedFilter_Prefix
 	//	*DialectedFilter_Suffix
@@ -1008,6 +1009,7 @@ type Egress struct {
 	// destination CA Cert is the CA Cert used for HTTPS communication through destination
 	DestinationCACerts string `protobuf:"bytes,15,opt,name=destinationCACerts,proto3" json:"destinationCACerts,omitempty"`
 	// Types that are assignable to ReplyStrategy:
+	//
 	//	*Egress_ReplyUrl
 	//	*Egress_ReplyToOriginalTopic
 	//	*Egress_DiscardReply
@@ -1653,7 +1655,8 @@ type Resource struct {
 	Uid string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
 	// Topics name
 	// Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-	//  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
+	//
+	//	if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
 	Topics []string `protobuf:"bytes,2,rep,name=topics,proto3" json:"topics,omitempty"`
 	// A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
 	// Note: we're using a comma separated list simply because that's how java kafka client likes it.
@@ -1665,6 +1668,7 @@ type Resource struct {
 	// Optional egresses for this topic
 	Egresses []*Egress `protobuf:"bytes,6,rep,name=egresses,proto3" json:"egresses,omitempty"`
 	// Types that are assignable to Auth:
+	//
 	//	*Resource_AbsentAuth
 	//	*Resource_AuthSecret
 	//	*Resource_MultiAuthSecret
@@ -1809,34 +1813,34 @@ type Resource_AuthSecret struct {
 	//
 	// Secret format:
 	//
-	//   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-	//   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
-	//   ca.crt: <CA PEM certificate>
-	//   user.crt: <User PEM certificate>
-	//   user.key: <User PEM key>
-	//   user: <SASL username>
-	//   password: <SASL password>
+	//	protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+	//	sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+	//	ca.crt: <CA PEM certificate>
+	//	user.crt: <User PEM certificate>
+	//	user.key: <User PEM key>
+	//	user: <SASL username>
+	//	password: <SASL password>
 	//
 	// Validation:
 	//   - protocol=PLAINTEXT
 	//   - protocol=SSL
-	//     - required:
-	//       - ca.crt
-	//       - user.crt
-	//       - user.key
+	//   - required:
+	//   - ca.crt
+	//   - user.crt
+	//   - user.key
 	//   - protocol=SASL_PLAINTEXT
-	//     - required:
-	//       - sasl.mechanism
-	//       - user
-	//       - password
+	//   - required:
+	//   - sasl.mechanism
+	//   - user
+	//   - password
 	//   - protocol=SASL_SSL
-	//     - required:
-	//       - sasl.mechanism
-	//       - ca.crt
-	//       - user.crt
-	//       - user.key
-	//       - user
-	//       - password
+	//   - required:
+	//   - sasl.mechanism
+	//   - ca.crt
+	//   - user.crt
+	//   - user.key
+	//   - user
+	//   - password
 	AuthSecret *Reference `protobuf:"bytes,8,opt,name=authSecret,proto3,oneof"`
 }
 

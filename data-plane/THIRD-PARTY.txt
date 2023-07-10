@@ -1,6 +1,5 @@
 
-Lists of 228 third-party dependencies.
-
+Lists of 229 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.2.11 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.2.11 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.11.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
