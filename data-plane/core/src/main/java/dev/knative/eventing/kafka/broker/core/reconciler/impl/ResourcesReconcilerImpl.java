@@ -250,7 +250,10 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
       && Objects.equals(e1.getEgressConfig(), e2.getEgressConfig())
       && Objects.equals(e1.getFilter(), e2.getFilter())
       && Objects.equals(e1.getKeyType(), e2.getKeyType())
-      && Objects.equals(e1.getDialectedFilterList(), e2.getDialectedFilterList());
+      && Objects.equals(e1.getDialectedFilterList(), e2.getDialectedFilterList())
+      && Objects.equals(e1.getDestinationCACerts(), e2.getDestinationCACerts())
+      && Objects.equals(e1.getReplyUrlCACerts(), e2.getReplyUrlCACerts())
+      && Objects.equals(e1.getEgressConfig().getDeadLetterCACerts(), e2.getEgressConfig().getDeadLetterCACerts());
   }
 
   private static void logFailure(final String msg, final DataPlaneContract.Egress egress, final Throwable cause, final long generation) {
