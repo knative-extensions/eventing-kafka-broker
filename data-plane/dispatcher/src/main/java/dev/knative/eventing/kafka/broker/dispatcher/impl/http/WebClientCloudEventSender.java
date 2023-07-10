@@ -32,6 +32,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+
+import org.apache.kafka.common.Metric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,9 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -60,6 +65,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
   private final AtomicBoolean closed = new AtomicBoolean(false);
   private final AtomicInteger inFlightRequests = new AtomicInteger(0);
 
+  private final MeterRegistry meterRegistry;
+  private final Tags noResponseResourceTags;
+  
+  private static final Tag NO_RESPONSE_CODE_CLASS_TAG = Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx");
   /**
    * All args constructor.
    *
@@ -72,7 +81,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                                    final WebClient client,
                                    final String target,
                                    final ConsumerVerticleContext consumerVerticleContext,
-                                   final Tags additionalTags) {
+                                   final Tags additionalTags,
+                                   final MeterRegistry meterRegistry) {
     Objects.requireNonNull(vertx);
     Objects.requireNonNull(client, "provide client");
     Objects.requireNonNull(additionalTags, "provide additional tags");
@@ -88,6 +98,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     this.target = target;
     this.consumerVerticleContext = consumerVerticleContext;
     this.retryPolicyFunc = computeRetryPolicy(consumerVerticleContext.getEgressConfig());
+    this.noResponseResourceTags = this.consumerVerticleContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
+    this.meterRegistry = meterRegistry;
 
     Metrics.
       eventDispatchInFlightCount(additionalTags.and(consumerVerticleContext.getTags()), this.inFlightRequests::get)
@@ -139,22 +151,36 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       cause -> {
         if (cause instanceof ResponseFailureException) {
           final var response = ((ResponseFailureException) cause).getResponse();
+
+          Tags tags;
+          if (response == null) {
+            tags = this.noResponseResourceTags;
+          } else {
+            tags = this.consumerVerticleContext.getTags().and(
+              Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
+              Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())));
+          }
+
           if (isRetryableStatusCode(response.statusCode()) && retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
-            return retry(retryCounter, event);
+            return retry(retryCounter, event, tags);
           }
           return Future.failedFuture(cause);
         }
 
         if (retryCounter < consumerVerticleContext.getEgressConfig().getRetry()) {
-          return retry(retryCounter, event);
+          return retry(retryCounter, event, this.consumerVerticleContext.getTags());
         }
 
         return Future.failedFuture(cause);
-      }
-    );
+      });
   }
 
-  private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event) {
+  private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event, Tags tags) {
+
+    Metrics
+    .eventCount(tags)
+    .register(meterRegistry)
+    .increment();
     Promise<HttpResponse<Buffer>> r = Promise.promise();
     final var delay = retryPolicyFunc.apply(retryCounter + 1);
     vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));

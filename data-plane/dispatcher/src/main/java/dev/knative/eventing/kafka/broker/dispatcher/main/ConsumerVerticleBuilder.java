@@ -238,7 +238,8 @@ public class ConsumerVerticleBuilder {
         ),
         consumerVerticleContext.getEgress().getReplyUrl(),
         consumerVerticleContext,
-        Metrics.Tags.senderContext("reply")
+        Metrics.Tags.senderContext("reply"),
+        consumerVerticleContext.getMetricsRegistry()
       ));
     }
 
@@ -263,7 +264,8 @@ public class ConsumerVerticleBuilder {
       ),
       consumerVerticleContext.getEgress().getDestination(),
       consumerVerticleContext,
-      Metrics.Tags.senderContext("subscriber")
+      Metrics.Tags.senderContext("subscriber"),
+      consumerVerticleContext.getMetricsRegistry()
     );
   }
 
@@ -284,7 +286,8 @@ public class ConsumerVerticleBuilder {
         ),
         consumerVerticleContext.getEgressConfig().getDeadLetter(),
         consumerVerticleContext,
-        Metrics.Tags.senderContext("deadlettersink")
+        Metrics.Tags.senderContext("deadlettersink"),
+        consumerVerticleContext.getMetricsRegistry()
       );
     }
 

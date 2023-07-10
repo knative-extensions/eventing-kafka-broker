@@ -115,6 +115,12 @@ public class Metrics {
 
   /**
    * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+   * @see Metrics#eventDispatchRetryCount(io.micrometer.core.instrument.Tags)
+   */
+  public static final String EVENT_DISPATCH_RETRY = "event_dispatch_retry_count";
+
+  /**
+   * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
    * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
    */
   public static final String EVENT_PROCESSING_LATENCY = "event_processing_latencies";
@@ -308,13 +314,15 @@ public class Metrics {
       .baseUnit(Metrics.Units.DIMENSIONLESS);
   }
 
-  public static Collection<Meter> searchResourceMeters(final MeterRegistry registry, final DataPlaneContract.Reference ref) {
+  public static Collection<Meter> searchResourceMeters(final MeterRegistry registry,
+      final DataPlaneContract.Reference ref) {
     return Search.in(registry)
       .tags(resourceRefTags(ref))
       .meters();
   }
 
-  public static Collection<Meter> searchEgressMeters(final MeterRegistry registry, final DataPlaneContract.Reference ref) {
+  public static Collection<Meter> searchEgressMeters(final MeterRegistry registry,
+      final DataPlaneContract.Reference ref) {
     return Search.in(registry)
       .tags(egressRefTags(ref))
       .meters();
@@ -347,6 +355,14 @@ public class Metrics {
       .serviceLevelObjectives(LATENCY_SLOs);
   }
 
+  public static Counter.Builder eventDispatchRetryCount(final io.micrometer.core.instrument.Tags tags) {
+    return Counter
+      .builder(EVENT_DISPATCH_RETRY)
+      .description("Number of retries for dispatch operations")
+      .tags(tags)
+      .baseUnit(Metrics.Units.DIMENSIONLESS);
+  }
+
   public static Counter.Builder discardedEventCount(final io.micrometer.core.instrument.Tags tags) {
     return Counter
       .builder(DISCARDED_EVENTS_COUNT)
@@ -363,7 +379,6 @@ public class Metrics {
       .baseUnit(BaseUnits.MILLISECONDS)
       .serviceLevelObjectives(LATENCY_SLOs);
   }
-
 
   public static Gauge.Builder<Supplier<Number>> queueLength(final io.micrometer.core.instrument.Tags tags,
                                                             final Supplier<Number> queueSize) {
