@@ -23,6 +23,9 @@ import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
+import io.fabric8.kubernetes.client.*;
+import io.fabric8.kubernetes.client.Watcher.Action;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
@@ -50,20 +53,20 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 /**
  * This verticle is responsible for implementing the logic of the receiver.
- * <p>
- * The receiver is the component responsible for mapping incoming
- * {@link io.cloudevents.CloudEvent} requests to specific Kafka topics.
- * In order to do so, this component:
+ *
+ * <p>The receiver is the component responsible for mapping incoming {@link
+ * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do so, this component:
+ *
  * <ul>
- * <li>Starts two {@link HttpServer}, one with http, and one with https,
- * listening for incoming events</li>
- * <li>Starts a {@link ResourcesReconciler}, listen on the event bus for
- * reconciliation events and keeps track of the
- * {@link dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress}
- * objects and their {@code path => (topic, producer)} mapping</li>
- * <li>Implements a request handler that invokes a series of {@code preHandlers}
- * (which are assumed to complete synchronously) and then a final
- * {@link IngressRequestHandler} to publish the record to Kafka</li>
+ *   <li>Starts two {@link HttpServer}, one with http, and one with https, listening for incoming
+ *       events
+ *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and
+ *       keeps track of the {@link
+ *       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their
+ *       {@code path => (topic, producer)} mapping
+ *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are
+ *       assumed to complete synchronously) and then a final {@link IngressRequestHandler} to
+ *       publish the record to Kafka
  * </ul>
  */
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
@@ -84,7 +87,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   private MessageConsumer<Object> messageConsumer;
   private IngressProducerReconcilableStore ingressProducerStore;
 
-  public ReceiverVerticle(final ReceiverEnv env,
+  public ReceiverVerticle(
+      final ReceiverEnv env,
       final HttpServerOptions httpServerOptions,
       final HttpServerOptions httpsServerOptions,
       final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
@@ -96,7 +100,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     Objects.requireNonNull(ingressRequestHandler);
 
     this.env = env;
-    this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
+    this.httpServerOptions =
+        httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
     this.httpsServerOptions = httpsServerOptions;
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
     this.ingressRequestHandler = ingressRequestHandler;
@@ -104,11 +109,15 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
   @Override
   public void start(final Promise<Void> startPromise) {
+    KubernetesClient client = new DefaultKubernetesClient();
+
     this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
-    this.messageConsumer = ResourcesReconciler
-        .builder()
-        .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
-        .buildAndListen(vertx);
+    this.messageConsumer =
+        ResourcesReconciler.builder()
+            .watchIngress(
+                IngressReconcilerListener.all(
+                    this.ingressProducerStore, this.ingressRequestHandler))
+            .buildAndListen(vertx);
 
     this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
@@ -121,46 +130,118 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
       File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
 
       if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-        PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-            .setKeyPath(TLS_KEY_FILE_PATH)
-            .setCertPath(TLS_CRT_FILE_PATH);
-        this.httpsServerOptions
-            .setSsl(true)
-            .setPemKeyCertOptions(keyCertOptions);
+        PemKeyCertOptions keyCertOptions =
+            new PemKeyCertOptions().setKeyPath(TLS_KEY_FILE_PATH).setCertPath(TLS_CRT_FILE_PATH);
+        this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
 
         this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
       }
     }
 
-    final var handler = new ProbeHandler(
-        env.getLivenessProbePath(),
-        env.getReadinessProbePath(),
-        new MethodNotAllowedHandler(this));
+    final var handler =
+        new ProbeHandler(
+            env.getLivenessProbePath(),
+            env.getReadinessProbePath(),
+            new MethodNotAllowedHandler(this));
 
     if (this.httpsServer != null) {
       CompositeFuture.all(
-          this.httpServer.requestHandler(handler)
-              .exceptionHandler(startPromise::tryFail)
-              .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
-
-          this.httpsServer.requestHandler(handler)
-              .exceptionHandler(startPromise::tryFail)
-              .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
-          .<Void>mapEmpty().onComplete(startPromise);
+              this.httpServer
+                  .requestHandler(handler)
+                  .exceptionHandler(startPromise::tryFail)
+                  .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
+              this.httpsServer
+                  .requestHandler(handler)
+                  .exceptionHandler(startPromise::tryFail)
+                  .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
+          .<Void>mapEmpty()
+          .onComplete(startPromise);
     } else {
-      this.httpServer.requestHandler(handler)
+      this.httpServer
+          .requestHandler(handler)
           .exceptionHandler(startPromise::tryFail)
           .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
-          .<Void>mapEmpty().onComplete(startPromise);
+          .<Void>mapEmpty()
+          .onComplete(startPromise);
     }
+    vertx.<Watch>executeBlocking(
+        promise -> {
+          Watch watch =
+              client
+                  .secrets()
+                  .inNamespace("knative-eventing")
+                  .withName("receiver-tls-secret")
+                  .watch(
+                      new Watcher<Secret>() {
+
+                        @Override
+                        public void eventReceived(Action action, Secret secret) {
+                          // This block will be called when the Secret is added, modified, or
+                          // deleted.
+                          // You can update your server configuration accordingly here.
+
+                          //                    // Update SSL configuration
+                          //                    PemKeyCertOptions keyCertOptions =
+                          //                        new PemKeyCertOptions()
+                          //                            .setKeyPath(TLS_KEY_FILE_PATH)
+                          //                            .setCertPath(TLS_CRT_FILE_PATH);
+                          //                    ReceiverVerticle.this
+                          //                        .httpsServerOptions
+                          //                        .setSsl(true)
+                          //                        .setPemKeyCertOptions(keyCertOptions);
+                          //
+                          //                    // Restart server
+                          //                    ReceiverVerticle.this.httpsServer.close();
+                          //                    ReceiverVerticle.this.httpsServer =
+                          //
+                          // vertx.createHttpServer(ReceiverVerticle.this.httpsServerOptions);
+                          //                    ReceiverVerticle.this
+                          //                        .httpsServer
+                          //                        .requestHandler(handler)
+                          //                        .exceptionHandler(startPromise::tryFail)
+                          //                        .listen(
+                          //
+                          // ReceiverVerticle.this.httpsServerOptions.getPort(),
+                          //
+                          // ReceiverVerticle.this.httpsServerOptions.getHost());
+                          //                  }
+                          // print hello world
+                          assert 1 == 1;
+                        }
+
+                        @Override
+                        public void onClose(WatcherException cause) {
+                          if (cause != null) {
+                            logger.error("Watcher onClose with exception", cause);
+                          }
+                        }
+                      });
+
+          promise.complete(watch);
+        },
+        res -> {
+          if (res.succeeded()) {
+            Watch watch = res.result();
+            // Store this `watch` reference somewhere in order to be able to close it in the future
+          } else {
+            logger.error("Watcher exception", res.cause());
+          }
+        });
   }
 
   @Override
   public void stop(Promise<Void> stopPromise) {
     CompositeFuture.all(
-        (this.httpServer != null ? this.httpServer.close().mapEmpty() : Future.succeededFuture()),
-        (this.httpsServer != null ? this.httpsServer.close().mapEmpty() : Future.succeededFuture()),
-        (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture())).<Void>mapEmpty()
+            (this.httpServer != null
+                ? this.httpServer.close().mapEmpty()
+                : Future.succeededFuture()),
+            (this.httpsServer != null
+                ? this.httpsServer.close().mapEmpty()
+                : Future.succeededFuture()),
+            (this.messageConsumer != null
+                ? this.messageConsumer.unregister()
+                : Future.succeededFuture()))
+        .<Void>mapEmpty()
         .onComplete(stopPromise);
   }
 
@@ -173,7 +254,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     IngressProducer producer = this.ingressProducerStore.resolve(request.host(), request.path());
     if (producer == null) {
       request.response().setStatusCode(NOT_FOUND.code()).end();
-      logger.warn("Resource not found {} {} {}",
+      logger.warn(
+          "Resource not found {} {} {}",
           keyValue("path", request.path()),
           keyValue("host", request.host()),
           keyValue("hostHeader", request.getHeader("Host")));
@@ -181,9 +263,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     }
 
     if (isControlPlaneProbeRequest(request)) {
-      request.response()
+      request
+          .response()
           .putHeader(PROBE_HASH_HEADER_NAME, request.getHeader(PROBE_HASH_HEADER_NAME))
-          .setStatusCode(OK.code()).end();
+          .setStatusCode(OK.code())
+          .end();
       return;
     }
 
