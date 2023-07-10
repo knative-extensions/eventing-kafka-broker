@@ -111,7 +111,7 @@ func TestCompositeProber(t *testing.T) {
 			},
 			responseStatusCode:       http.StatusOK,
 			wantStatus:               StatusReady,
-			wantRequeueCountMin:      0,
+			wantRequeueCountMin:      1,
 			wantHttpRequestCountMin:  0,
 			wantHttpsRequestCountMin: 1,
 		},
