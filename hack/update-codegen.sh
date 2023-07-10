@@ -84,7 +84,7 @@ if ! ${GITHUB_ACTIONS:-false}; then
 
   # Run maven command to apply spotless formatting
   pushd "${REPO_ROOT_DIR}/data-plane"
-  mvn spotless:apply
+  ./mvnw spotless:apply
   popd
 fi
 
