@@ -41,5 +41,5 @@ func TestBrokerWithManyTriggers(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.Test(ctx, t, broker.BrokerWithManyTriggers())
+	env.TestSet(ctx, t, broker.ManyTriggers())
 }
