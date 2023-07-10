@@ -402,10 +402,10 @@ func TestCompositeProberNoTLS(t *testing.T) {
 			}
 
 			httpUrl, _ := url.Parse(httpServer.URL)
-			wantRequeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))
+			requeueCountMin := atomic.NewInt64(int64(0))
 			prober, err := NewCompositeNoTLS(ctx, httpUrl.Port(), IPsLister, func(key types.NamespacedName) {
-				//t.Logf("Requeing prober, requeCount: %d", wantRequeueCountMin.Load())
-				wantRequeueCountMin.Dec()
+				requeueCountMin.Inc()
+				t.Logf("Requeing prober, requeueCount: %d", requeueCountMin.Load())
 			})
 			require.NoError(t, err)
 
@@ -418,7 +418,9 @@ func TestCompositeProberNoTLS(t *testing.T) {
 			require.Eventuallyf(t, probeFunc, 5*time.Second, 250*time.Millisecond, "")
 			require.Eventuallyf(t, func() bool { return wantHttpRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantHttpRequestCountMin.Load())
 			require.Eventuallyf(t, func() bool { return wantHttpsRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantHttpsRequestCountMin.Load())
-			require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
+			// As we are expecting some of these tests to never resolve to Ready, the prober will potentially requeue more than the min number of times during the test period
+			// So, we want to test that we got at least as many requeues as the min we expect
+			require.Eventuallyf(t, func() bool { return requeueCountMin.Load() >= int64(tc.wantRequeueCountMin) }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", requeueCountMin.Load())
 
 		})
 	}
