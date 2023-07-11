@@ -15,8 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatchervertx;
 
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import io.vertx.core.Vertx;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.common.KafkaClientOptions;

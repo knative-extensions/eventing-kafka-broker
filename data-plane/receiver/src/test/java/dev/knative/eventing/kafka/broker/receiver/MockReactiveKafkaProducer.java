@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
