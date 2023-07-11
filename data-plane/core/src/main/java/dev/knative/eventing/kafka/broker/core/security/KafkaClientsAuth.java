@@ -15,6 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.BiConsumer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
@@ -22,76 +25,74 @@ import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.security.scram.ScramLoginModule;
 import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.BiConsumer;
-
 public class KafkaClientsAuth {
 
-  public static Properties attachCredentials(final Properties properties, final Credentials credentials) {
-    clientsProperties(properties::setProperty, credentials);
-    return properties;
-  }
+    public static Properties attachCredentials(final Properties properties, final Credentials credentials) {
+        clientsProperties(properties::setProperty, credentials);
+        return properties;
+    }
 
-  public static Map<String, Object> attachCredentials(final Map<String, Object> configs,
-                                                      final Credentials credentials) {
-    clientsProperties(configs::put, credentials);
-    return configs;
-  }
+    public static Map<String, Object> attachCredentials(
+            final Map<String, Object> configs, final Credentials credentials) {
+        clientsProperties(configs::put, credentials);
+        return configs;
+    }
 
-  private static void clientsProperties(final BiConsumer<String, String> propertiesSetter,
-                                        final Credentials credentials) {
-    final var protocol = credentials.securityProtocol();
+    private static void clientsProperties(
+            final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
+        final var protocol = credentials.securityProtocol();
 
-    if (protocol != null) {
-      propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
-      switch (protocol) {
-        case SSL -> ssl(propertiesSetter, credentials);
-        case SASL_PLAINTEXT -> sasl(propertiesSetter, credentials);
-        case SASL_SSL -> {
-          ssl(propertiesSetter, credentials);
-          sasl(propertiesSetter, credentials);
+        if (protocol != null) {
+            propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
+            switch (protocol) {
+                case SSL -> ssl(propertiesSetter, credentials);
+                case SASL_PLAINTEXT -> sasl(propertiesSetter, credentials);
+                case SASL_SSL -> {
+                    ssl(propertiesSetter, credentials);
+                    sasl(propertiesSetter, credentials);
+                }
+            }
         }
-      }
     }
-  }
 
-  private static void sasl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
-    final String mechanism;
-    final var saslMechanism = credentials.SASLMechanism();
-    if (saslMechanism == null) {
-      mechanism = "PLAIN";
-    } else {
-      mechanism = saslMechanism;
+    private static void sasl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
+        final String mechanism;
+        final var saslMechanism = credentials.SASLMechanism();
+        if (saslMechanism == null) {
+            mechanism = "PLAIN";
+        } else {
+            mechanism = saslMechanism;
+        }
+        propertiesSetter.accept(SaslConfigs.SASL_MECHANISM, mechanism);
+        if ("PLAIN".equals(mechanism)) {
+            propertiesSetter.accept(
+                    SaslConfigs.SASL_JAAS_CONFIG,
+                    String.format(
+                            PlainLoginModule.class.getName() + " required username=\"%s\" password=\"%s\";",
+                            credentials.SASLUsername(),
+                            credentials.SASLPassword()));
+        } else {
+            propertiesSetter.accept(
+                    SaslConfigs.SASL_JAAS_CONFIG,
+                    String.format(
+                            ScramLoginModule.class.getName() + " required username=\"%s\" password=\"%s\";",
+                            credentials.SASLUsername(),
+                            credentials.SASLPassword()));
+        }
     }
-    propertiesSetter.accept(SaslConfigs.SASL_MECHANISM, mechanism);
-    if ("PLAIN".equals(mechanism)) {
-      propertiesSetter.accept(SaslConfigs.SASL_JAAS_CONFIG, String.format(
-        PlainLoginModule.class.getName() + " required username=\"%s\" password=\"%s\";",
-        credentials.SASLUsername(),
-        credentials.SASLPassword()
-      ));
-    } else {
-      propertiesSetter.accept(SaslConfigs.SASL_JAAS_CONFIG, String.format(
-        ScramLoginModule.class.getName() + " required username=\"%s\" password=\"%s\";",
-        credentials.SASLUsername(),
-        credentials.SASLPassword()
-      ));
-    }
-  }
 
-  private static void ssl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
-    final var caCert = credentials.caCertificates();
-    if (caCert != null) {
-      propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
-      propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, caCert);
+    private static void ssl(final BiConsumer<String, String> propertiesSetter, final Credentials credentials) {
+        final var caCert = credentials.caCertificates();
+        if (caCert != null) {
+            propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+            propertiesSetter.accept(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, caCert);
+        }
+        final var userCert = credentials.userCertificate();
+        final var userKey = credentials.userKey();
+        if (userCert != null && userKey != null) {
+            propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
+            propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, userCert);
+            propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, userKey);
+        }
     }
-    final var userCert = credentials.userCertificate();
-    final var userKey = credentials.userKey();
-    if (userCert != null && userKey != null) {
-      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, DefaultSslEngineFactory.PEM_TYPE);
-      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, userCert);
-      propertiesSetter.accept(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, userKey);
-    }
-  }
 }

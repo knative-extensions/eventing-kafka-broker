@@ -20,12 +20,12 @@ import java.util.Map;
 
 public class ExactFilter extends AttributesFilter {
 
-  public ExactFilter(Map<String, String> attributes) {
-    super(attributes);
-  }
+    public ExactFilter(Map<String, String> attributes) {
+        super(attributes);
+    }
 
-  @Override
-  public boolean match(String given, String wanted) {
-    return given.equals(wanted);
-  }
+    @Override
+    public boolean match(String given, String wanted) {
+        return given.equals(wanted);
+    }
 }

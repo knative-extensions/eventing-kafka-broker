@@ -27,13 +27,13 @@ import io.vertx.ext.web.client.HttpResponse;
  */
 public class NoopResponseHandler implements ResponseHandler {
 
-  @Override
-  public Future<Void> handle(final HttpResponse<Buffer> response) {
-    return Future.succeededFuture();
-  }
+    @Override
+    public Future<Void> handle(final HttpResponse<Buffer> response) {
+        return Future.succeededFuture();
+    }
 
-  @Override
-  public Future<Void> close() {
-    return Future.succeededFuture();
-  }
+    @Override
+    public Future<Void> close() {
+        return Future.succeededFuture();
+    }
 }

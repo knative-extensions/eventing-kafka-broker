@@ -25,18 +25,18 @@ import io.vertx.core.Future;
 @FunctionalInterface
 public interface AuthProvider {
 
-  static AuthProvider kubernetes() {
-    return new KubernetesAuthProvider(new DefaultKubernetesClient());
-  }
+    static AuthProvider kubernetes() {
+        return new KubernetesAuthProvider(new DefaultKubernetesClient());
+    }
 
-  static AuthProvider noAuth() {
-    return resource -> Future.succeededFuture(new PlaintextCredentials());
-  }
+    static AuthProvider noAuth() {
+        return resource -> Future.succeededFuture(new PlaintextCredentials());
+    }
 
-  /**
-   * Get credentials from given a resource.
-   *
-   * @return A failed or succeeded future with valid credentials.
-   */
-  Future<Credentials> getCredentials(final DataPlaneContract.Resource resource);
+    /**
+     * Get credentials from given a resource.
+     *
+     * @return A failed or succeeded future with valid credentials.
+     */
+    Future<Credentials> getCredentials(final DataPlaneContract.Resource resource);
 }

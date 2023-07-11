@@ -15,65 +15,61 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.core.builder.CloudEventBuilder;
-import org.junit.jupiter.api.Test;
-
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 public class CloudEventOverridesMutatorTest {
 
-  @Test
-  public void shouldAddExtensions() {
-    final var extensions = Map.of(
-      "a", "foo",
-      "b", "bar"
-    );
-    final var ceOverrides = DataPlaneContract.CloudEventOverrides
-      .newBuilder()
-      .putAllExtensions(extensions)
-      .build();
+    @Test
+    public void shouldAddExtensions() {
+        final var extensions = Map.of(
+                "a", "foo",
+                "b", "bar");
+        final var ceOverrides = DataPlaneContract.CloudEventOverrides.newBuilder()
+                .putAllExtensions(extensions)
+                .build();
 
-    final var mutator = new CloudEventOverridesMutator(ceOverrides);
+        final var mutator = new CloudEventOverridesMutator(ceOverrides);
 
-    final var given = CloudEventBuilder.v1()
-      .withId(UUID.randomUUID().toString())
-      .withSource(URI.create("/v1/api"))
-      .withTime(OffsetDateTime.MIN)
-      .withType("foo")
-      .build();
+        final var given = CloudEventBuilder.v1()
+                .withId(UUID.randomUUID().toString())
+                .withSource(URI.create("/v1/api"))
+                .withTime(OffsetDateTime.MIN)
+                .withType("foo")
+                .build();
 
-    final var expected = CloudEventBuilder.from(given);
-    extensions.forEach(expected::withExtension);
+        final var expected = CloudEventBuilder.from(given);
+        extensions.forEach(expected::withExtension);
 
-    final var got = mutator.apply(given);
+        final var got = mutator.apply(given);
 
-    assertThat(got).isEqualTo(expected.build());
-  }
+        assertThat(got).isEqualTo(expected.build());
+    }
 
-  @Test
-  public void shouldNotMutateRecordWhenNoOverrides() {
-    final var ceOverrides = DataPlaneContract.CloudEventOverrides
-      .newBuilder()
-      .putAllExtensions(Map.of())
-      .build();
+    @Test
+    public void shouldNotMutateRecordWhenNoOverrides() {
+        final var ceOverrides = DataPlaneContract.CloudEventOverrides.newBuilder()
+                .putAllExtensions(Map.of())
+                .build();
 
-    final var mutator = new CloudEventOverridesMutator(ceOverrides);
+        final var mutator = new CloudEventOverridesMutator(ceOverrides);
 
-    final var given = CloudEventBuilder.v1()
-      .withId(UUID.randomUUID().toString())
-      .withSource(URI.create("/v1/api"))
-      .withTime(OffsetDateTime.MIN)
-      .withType("foo")
-      .build();
+        final var given = CloudEventBuilder.v1()
+                .withId(UUID.randomUUID().toString())
+                .withSource(URI.create("/v1/api"))
+                .withTime(OffsetDateTime.MIN)
+                .withType("foo")
+                .build();
 
-    final var got = mutator.apply(given);
+        final var got = mutator.apply(given);
 
-    assertThat(got).isSameAs(given);
-  }
+        assertThat(got).isSameAs(given);
+    }
 }

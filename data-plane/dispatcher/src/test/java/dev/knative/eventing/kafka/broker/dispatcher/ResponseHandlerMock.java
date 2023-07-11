@@ -23,30 +23,30 @@ import java.util.function.Supplier;
 
 public class ResponseHandlerMock implements ResponseHandler {
 
-  private final Supplier<Future<Void>> onClose;
-  private final Function<HttpResponse<Buffer>, Future<Void>> onSend;
+    private final Supplier<Future<Void>> onClose;
+    private final Function<HttpResponse<Buffer>, Future<Void>> onSend;
 
-  public ResponseHandlerMock(final Function<HttpResponse<Buffer>, Future<Void>> onSend,
-                             final Supplier<Future<Void>> onClose) {
-    this.onSend = onSend != null ? onSend : r -> Future.succeededFuture();
-    this.onClose = onClose != null ? onClose : Future::succeededFuture;
-  }
+    public ResponseHandlerMock(
+            final Function<HttpResponse<Buffer>, Future<Void>> onSend, final Supplier<Future<Void>> onClose) {
+        this.onSend = onSend != null ? onSend : r -> Future.succeededFuture();
+        this.onClose = onClose != null ? onClose : Future::succeededFuture;
+    }
 
-  public ResponseHandlerMock(final Function<HttpResponse<Buffer>, Future<Void>> onSend) {
-    this(onSend, null);
-  }
+    public ResponseHandlerMock(final Function<HttpResponse<Buffer>, Future<Void>> onSend) {
+        this(onSend, null);
+    }
 
-  public ResponseHandlerMock() {
-    this(null, null);
-  }
+    public ResponseHandlerMock() {
+        this(null, null);
+    }
 
-  @Override
-  public Future<Void> handle(HttpResponse<Buffer> response) {
-    return this.onSend.apply(response);
-  }
+    @Override
+    public Future<Void> handle(HttpResponse<Buffer> response) {
+        return this.onSend.apply(response);
+    }
 
-  @Override
-  public Future<Void> close() {
-    return this.onClose.get();
-  }
+    @Override
+    public Future<Void> close() {
+        return this.onClose.get();
+    }
 }

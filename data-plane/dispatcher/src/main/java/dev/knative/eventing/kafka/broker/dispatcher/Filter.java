@@ -24,10 +24,10 @@ import java.util.function.Predicate;
 @FunctionalInterface
 public interface Filter extends Predicate<CloudEvent> {
 
-  /**
-   * @return noop implementation that always returns true
-   */
-  static Filter noop() {
-    return ce -> true;
-  }
+    /**
+     * @return noop implementation that always returns true
+     */
+    static Filter noop() {
+        return ce -> true;
+    }
 }

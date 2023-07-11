@@ -16,11 +16,8 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.vertx.core.Future;
-import org.apache.kafka.common.TopicPartition;
-
 import java.util.Collection;
-
-
+import org.apache.kafka.common.TopicPartition;
 
 /**
  * {@link PartitionRevokedHandler} is the handler called when some partitions are revoked to a
@@ -28,9 +25,9 @@ import java.util.Collection;
  */
 public interface PartitionRevokedHandler {
 
-  /**
-   * @param partitions revoked partitions
-   * @return a successful or a failed future
-   */
-  Future<Void> partitionRevoked(final Collection<TopicPartition> partitions);
+    /**
+     * @param partitions revoked partitions
+     * @return a successful or a failed future
+     */
+    Future<Void> partitionRevoked(final Collection<TopicPartition> partitions);
 }

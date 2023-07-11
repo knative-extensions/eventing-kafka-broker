@@ -15,15 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.isControlPlaneProbeRequest;
+import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
+
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.isControlPlaneProbeRequest;
-import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
 
 /**
  * Handler checking that the provided method is allowed.
@@ -32,21 +32,21 @@ import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
  */
 public class MethodNotAllowedHandler implements Handler<HttpServerRequest> {
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodNotAllowedHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(MethodNotAllowedHandler.class);
 
-  private final Handler<HttpServerRequest> next;
+    private final Handler<HttpServerRequest> next;
 
-  public MethodNotAllowedHandler(final Handler<HttpServerRequest> next) {
-    this.next = next;
-  }
-
-  @Override
-  public void handle(final HttpServerRequest request) {
-    if (HttpMethod.POST.equals(request.method()) || isControlPlaneProbeRequest(request)) {
-      this.next.handle(request);
-      return;
+    public MethodNotAllowedHandler(final Handler<HttpServerRequest> next) {
+        this.next = next;
     }
-    request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
-    logger.warn("Method not allowed: {}", keyValue("method", request.method()));
-  }
+
+    @Override
+    public void handle(final HttpServerRequest request) {
+        if (HttpMethod.POST.equals(request.method()) || isControlPlaneProbeRequest(request)) {
+            this.next.handle(request);
+            return;
+        }
+        request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
+        logger.warn("Method not allowed: {}", keyValue("method", request.method()));
+    }
 }

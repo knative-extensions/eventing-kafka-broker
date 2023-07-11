@@ -15,12 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import java.util.Properties;
-
-import org.apache.kafka.clients.producer.Producer;
-
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
+import org.apache.kafka.clients.producer.Producer;
 
 public class MockReactiveProducerFactory implements ReactiveProducerFactory<String, CloudEvent> {
 
@@ -28,5 +25,4 @@ public class MockReactiveProducerFactory implements ReactiveProducerFactory<Stri
     public ReactiveKafkaProducer<String, CloudEvent> create(Vertx v, Producer<String, CloudEvent> producer) {
         return new MockReactiveKafkaProducer<String, CloudEvent>(producer);
     }
-
 }

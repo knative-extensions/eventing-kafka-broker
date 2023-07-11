@@ -21,121 +21,118 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.clients.producer.MockProducer;
-import org.assertj.core.api.AssertionInfo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.stream.Collectors;
-
 @ExtendWith(VertxExtension.class)
 public class MetricsTest {
 
-  static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
-  }
+    static {
+        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    }
 
-  @Test
-  public void get() {
-    final var metricsOptions = Metrics.getOptions(new BaseEnv(s -> "1"));
-    assertThat(metricsOptions.isEnabled()).isTrue();
-  }
+    @Test
+    public void get() {
+        final var metricsOptions = Metrics.getOptions(new BaseEnv(s -> "1"));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
 
-  @Test
-  public void shouldRegisterAndCloseProducerMetricsThread()
-    throws Exception {
-    final var meterBinder = Metrics.register(new MockProducer<>());
-    meterBinder.close();
-  }
+    @Test
+    public void shouldRegisterAndCloseProducerMetricsThread() throws Exception {
+        final var meterBinder = Metrics.register(new MockProducer<>());
+        meterBinder.close();
+    }
 
-  @Test
-  public void shouldRegisterAndCloseConsumerMetricsThread()
-    throws Exception {
-    final var meterBinder = Metrics.register(new MockConsumer<>(OffsetResetStrategy.LATEST));
-    meterBinder.close();
-  }
+    @Test
+    public void shouldRegisterAndCloseConsumerMetricsThread() throws Exception {
+        final var meterBinder = Metrics.register(new MockConsumer<>(OffsetResetStrategy.LATEST));
+        meterBinder.close();
+    }
 
-  @Test
-  public void searchShouldReturnMetersWithAdditionalTags() {
+    @Test
+    public void searchShouldReturnMetersWithAdditionalTags() {
 
-    final var registry = Metrics.getRegistry();
+        final var registry = Metrics.getRegistry();
 
-    Metrics.eventCount(Tags.of(
-        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")
-      ))
-      .register(registry)
-      .increment();
+        Metrics.eventCount(Tags.of(
+                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")))
+                .register(registry)
+                .increment();
 
-    Metrics.eventDispatchLatency(Tags.of(
-        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
-        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")
-      ))
-      .register(registry)
-      .record(10);
+        Metrics.eventDispatchLatency(Tags.of(
+                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
+                        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")))
+                .register(registry)
+                .record(10);
 
-    Metrics.eventProcessingLatency(Tags.of(
-        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
-        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")
-      ))
-      .register(registry)
-      .record(10);
+        Metrics.eventProcessingLatency(Tags.of(
+                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
+                        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")))
+                .register(registry)
+                .record(10);
 
-    Metrics.eventDispatchLatency(Tags.of(
-        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
-        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "other-namespace")
-      ))
-      .register(registry)
-      .record(10);
+        Metrics.eventDispatchLatency(Tags.of(
+                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
+                        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
+                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "other-namespace")))
+                .register(registry)
+                .record(10);
 
-    final var expectedResourceMetersCount = 3;
-    final var expectedEgressMetersCount = 2;
+        final var expectedResourceMetersCount = 3;
+        final var expectedEgressMetersCount = 2;
 
-    final var resourceMeters = Metrics.searchResourceMeters(registry, DataPlaneContract.Reference.newBuilder()
-      .setName("name")
-      .setNamespace("namespace")
-      .build()
-    );
+        final var resourceMeters = Metrics.searchResourceMeters(
+                registry,
+                DataPlaneContract.Reference.newBuilder()
+                        .setName("name")
+                        .setNamespace("namespace")
+                        .build());
 
-    final var egressMeters = Metrics.searchEgressMeters(registry, DataPlaneContract.Reference.newBuilder()
-      .setName("cname")
-      .setNamespace("namespace")
-      .build()
-    );
+        final var egressMeters = Metrics.searchEgressMeters(
+                registry,
+                DataPlaneContract.Reference.newBuilder()
+                        .setName("cname")
+                        .setNamespace("namespace")
+                        .build());
 
-    Assertions.assertThat(resourceMeters).hasSize(expectedResourceMetersCount);
-    Assertions.assertThat(egressMeters).hasSize(expectedEgressMetersCount);
+        Assertions.assertThat(resourceMeters).hasSize(expectedResourceMetersCount);
+        Assertions.assertThat(egressMeters).hasSize(expectedEgressMetersCount);
 
-    Assertions.assertThat(
-      resourceMeters.stream().filter(m -> m.getId().getName().equals(Metrics.EVENTS_COUNT)).collect(Collectors.toList())
-    ).hasSize(1);
-    Assertions.assertThat(
-      resourceMeters.stream().filter(m -> m.getId().getName().equals(Metrics.EVENT_DISPATCH_LATENCY)).collect(Collectors.toList())
-    ).hasSize(1);
-    Assertions.assertThat(
-      resourceMeters.stream().filter(m -> m.getId().getName().equals(Metrics.EVENT_PROCESSING_LATENCY)).collect(Collectors.toList())
-    ).hasSize(1);
+        Assertions.assertThat(resourceMeters.stream()
+                        .filter(m -> m.getId().getName().equals(Metrics.EVENTS_COUNT))
+                        .collect(Collectors.toList()))
+                .hasSize(1);
+        Assertions.assertThat(resourceMeters.stream()
+                        .filter(m -> m.getId().getName().equals(Metrics.EVENT_DISPATCH_LATENCY))
+                        .collect(Collectors.toList()))
+                .hasSize(1);
+        Assertions.assertThat(resourceMeters.stream()
+                        .filter(m -> m.getId().getName().equals(Metrics.EVENT_PROCESSING_LATENCY))
+                        .collect(Collectors.toList()))
+                .hasSize(1);
 
-    Assertions.assertThat(
-      egressMeters.stream().filter(m -> m.getId().getName().equals(Metrics.EVENT_DISPATCH_LATENCY)).collect(Collectors.toList())
-    ).hasSize(1);
-    Assertions.assertThat(
-      egressMeters.stream().filter(m -> m.getId().getName().equals(Metrics.EVENT_PROCESSING_LATENCY)).collect(Collectors.toList())
-    ).hasSize(1);
-  }
+        Assertions.assertThat(egressMeters.stream()
+                        .filter(m -> m.getId().getName().equals(Metrics.EVENT_DISPATCH_LATENCY))
+                        .collect(Collectors.toList()))
+                .hasSize(1);
+        Assertions.assertThat(egressMeters.stream()
+                        .filter(m -> m.getId().getName().equals(Metrics.EVENT_PROCESSING_LATENCY))
+                        .collect(Collectors.toList()))
+                .hasSize(1);
+    }
 }

@@ -31,29 +31,27 @@ import org.apache.kafka.clients.producer.ProducerRecord;
  */
 public class StrictRequestToRecordMapper implements RequestToRecordMapper {
 
-  private static class SingletonContainer {
-    private static final StrictRequestToRecordMapper INSTANCE = new StrictRequestToRecordMapper();
-  }
+    private static class SingletonContainer {
+        private static final StrictRequestToRecordMapper INSTANCE = new StrictRequestToRecordMapper();
+    }
 
-  public static RequestToRecordMapper getInstance() {
-    return StrictRequestToRecordMapper.SingletonContainer.INSTANCE;
-  }
+    public static RequestToRecordMapper getInstance() {
+        return StrictRequestToRecordMapper.SingletonContainer.INSTANCE;
+    }
 
-  private StrictRequestToRecordMapper() {
-  }
+    private StrictRequestToRecordMapper() {}
 
-  @Override
-  public Future<ProducerRecord<String, CloudEvent>> requestToRecord(
-    final HttpServerRequest request,
-    final String topic) {
+    @Override
+    public Future<ProducerRecord<String, CloudEvent>> requestToRecord(
+            final HttpServerRequest request, final String topic) {
 
-    return VertxMessageFactory.createReader(request)
-      .map(MessageReader::toEvent)
-      .map(event -> {
-        if (event == null) {
-          throw new IllegalArgumentException("event cannot be null");
-        }
-        return new ProducerRecord<String, CloudEvent>(topic, event);
-      });
-  }
+        return VertxMessageFactory.createReader(request)
+                .map(MessageReader::toEvent)
+                .map(event -> {
+                    if (event == null) {
+                        throw new IllegalArgumentException("event cannot be null");
+                    }
+                    return new ProducerRecord<String, CloudEvent>(topic, event);
+                });
+    }
 }

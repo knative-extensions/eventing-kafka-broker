@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.receiververtx;
 
 import java.io.IOException;
 
-
 public class Main {
     public static void main(String[] args) throws IOException {
         dev.knative.eventing.kafka.broker.receiver.main.Main.start(args, new VertxProducerFactory());

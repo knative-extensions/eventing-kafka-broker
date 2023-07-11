@@ -22,48 +22,49 @@ import org.junit.jupiter.api.Test;
 
 public class ConfigurationsTest {
 
-  private final static String FILE_NAME = "configurations.properties";
-  private final static String IDLE_TIMEOUT_KEY = "idleTimeout";
-  private final static String HANDLE_100_CONTINUE_AUTOMATICALLY_KEY = "handle100ContinueAutomatically";
+    private static final String FILE_NAME = "configurations.properties";
+    private static final String IDLE_TIMEOUT_KEY = "idleTimeout";
+    private static final String HANDLE_100_CONTINUE_AUTOMATICALLY_KEY = "handle100ContinueAutomatically";
 
-  @Test
-  public void shouldGetPropertiesFromFilePath() {
+    @Test
+    public void shouldGetPropertiesFromFilePath() {
 
-    final var config = Configurations.readPropertiesSync(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+        final var config = Configurations.readPropertiesSync(
+                Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME))
+                        .getFile());
 
-    final var idleTimeout = config.get(IDLE_TIMEOUT_KEY);
-    final var handle100ContinueAutomatically = config.get(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
+        final var idleTimeout = config.get(IDLE_TIMEOUT_KEY);
+        final var handle100ContinueAutomatically = config.get(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
 
-    Assertions.assertThat(idleTimeout).isEqualTo("42");
-    Assertions.assertThat(handle100ContinueAutomatically).isEqualTo("true");
-  }
+        Assertions.assertThat(idleTimeout).isEqualTo("42");
+        Assertions.assertThat(handle100ContinueAutomatically).isEqualTo("true");
+    }
 
-  @Test
-  public void shouldGetPropertiesFromFilePathAsJsonObject() {
+    @Test
+    public void shouldGetPropertiesFromFilePathAsJsonObject() {
 
-    final var config = Configurations.readPropertiesAsJsonSync(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+        final var config = Configurations.readPropertiesAsJsonSync(
+                Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME))
+                        .getFile());
 
-    final var idleTimeout = config.getInteger(IDLE_TIMEOUT_KEY);
-    final var handle100ContinueAutomatically = config.getBoolean(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
+        final var idleTimeout = config.getInteger(IDLE_TIMEOUT_KEY);
+        final var handle100ContinueAutomatically = config.getBoolean(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
 
-    Assertions.assertThat(idleTimeout).isEqualTo(42);
-    Assertions.assertThat(handle100ContinueAutomatically).isTrue();
-  }
+        Assertions.assertThat(idleTimeout).isEqualTo(42);
+        Assertions.assertThat(handle100ContinueAutomatically).isTrue();
+    }
 
-  @Test
-  public void shouldSetHttpServerOptions() {
+    @Test
+    public void shouldSetHttpServerOptions() {
 
-    final var config = Configurations.readPropertiesAsJsonSync(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+        final var config = Configurations.readPropertiesAsJsonSync(
+                Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME))
+                        .getFile());
 
-    final var httpServerOptions = new HttpServerOptions(config);
+        final var httpServerOptions = new HttpServerOptions(config);
 
-    Assertions.assertThat(httpServerOptions.getIdleTimeout()).isEqualTo(42);
-    Assertions.assertThat(httpServerOptions.isHandle100ContinueAutomatically()).isTrue();
-  }
+        Assertions.assertThat(httpServerOptions.getIdleTimeout()).isEqualTo(42);
+        Assertions.assertThat(httpServerOptions.isHandle100ContinueAutomatically())
+                .isTrue();
+    }
 }

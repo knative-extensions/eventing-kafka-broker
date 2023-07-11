@@ -15,24 +15,23 @@
  */
 package dev.knative.eventing.kafka.broker.dispatchervertx;
 
-import java.time.Duration;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
 import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 
 public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
@@ -46,17 +45,21 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     public Future<Map<TopicPartition, OffsetAndMetadata>> commit(Map<TopicPartition, OffsetAndMetadata> offset) {
 
         final var vertxOffset = offset.entrySet().stream()
-            .collect(Collectors.toMap(
-                entry -> new io.vertx.kafka.client.common.TopicPartition(entry.getKey().topic(),entry.getKey().partition()),
-                entry -> new io.vertx.kafka.client.consumer.OffsetAndMetadata(entry.getValue().offset(),entry.getValue().metadata())
-            ));
+                .collect(Collectors.toMap(
+                        entry -> new io.vertx.kafka.client.common.TopicPartition(
+                                entry.getKey().topic(), entry.getKey().partition()),
+                        entry -> new io.vertx.kafka.client.consumer.OffsetAndMetadata(
+                                entry.getValue().offset(), entry.getValue().metadata())));
 
-        return consumer.commit(vertxOffset).map(vertxOffset.entrySet().stream()
-            .collect(Collectors.toMap(
-                entry -> new TopicPartition(entry.getKey().getTopic(), entry.getKey().getPartition()),
-                entry -> new OffsetAndMetadata(entry.getValue().getOffset(), entry.getValue().getMetadata())
-            ))
-        );
+        return consumer.commit(vertxOffset)
+                .map(vertxOffset.entrySet().stream()
+                        .collect(Collectors.toMap(
+                                entry -> new TopicPartition(
+                                        entry.getKey().getTopic(),
+                                        entry.getKey().getPartition()),
+                                entry -> new OffsetAndMetadata(
+                                        entry.getValue().getOffset(),
+                                        entry.getValue().getMetadata()))));
     }
 
     @Override
@@ -67,8 +70,9 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     @Override
     public Future<Void> pause(Collection<TopicPartition> partitions) {
         var vertxTopicPartitions = partitions.stream()
-            .map(topicPartition -> new io.vertx.kafka.client.common.TopicPartition(topicPartition.topic(),topicPartition.partition()))
-            .collect(Collectors.toSet());
+                .map(topicPartition -> new io.vertx.kafka.client.common.TopicPartition(
+                        topicPartition.topic(), topicPartition.partition()))
+                .collect(Collectors.toSet());
 
         return consumer.pause(vertxTopicPartitions);
     }
@@ -81,8 +85,9 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     @Override
     public Future<Void> resume(Collection<TopicPartition> partitions) {
         var vertxTopicPartitions = partitions.stream()
-            .map(topicPartition -> new io.vertx.kafka.client.common.TopicPartition(topicPartition.topic(),topicPartition.partition()))
-            .collect(Collectors.toSet());
+                .map(topicPartition -> new io.vertx.kafka.client.common.TopicPartition(
+                        topicPartition.topic(), topicPartition.partition()))
+                .collect(Collectors.toSet());
 
         return consumer.resume(vertxTopicPartitions);
     }
@@ -117,5 +122,4 @@ public class VertxKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         consumer = consumer.exceptionHandler(handler);
         return this;
     }
-
 }

@@ -16,17 +16,14 @@
 package dev.knative.eventing.kafka.broker.receiververtx;
 
 import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
-
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.TopicPartition;
-
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import io.vertx.core.Vertx;
-
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 
 public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
@@ -38,10 +35,15 @@ public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record) {
-        return this.producer.send(KafkaProducerRecord.create(record.topic(), record.value())).map(
-            vertxRecordMetadata -> new RecordMetadata(
-                    new TopicPartition(record.topic(), vertxRecordMetadata.getPartition()),
-                        vertxRecordMetadata.getOffset(),0,vertxRecordMetadata.getTimestamp(),-1,-1));
+        return this.producer
+                .send(KafkaProducerRecord.create(record.topic(), record.value()))
+                .map(vertxRecordMetadata -> new RecordMetadata(
+                        new TopicPartition(record.topic(), vertxRecordMetadata.getPartition()),
+                        vertxRecordMetadata.getOffset(),
+                        0,
+                        vertxRecordMetadata.getTimestamp(),
+                        -1,
+                        -1));
     }
 
     @Override
@@ -55,8 +57,7 @@ public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     }
 
     @Override
-    public Producer<K,V> unwrap() {
+    public Producer<K, V> unwrap() {
         return producer.unwrap();
     }
-    
 }

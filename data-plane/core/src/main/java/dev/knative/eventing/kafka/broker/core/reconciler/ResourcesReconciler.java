@@ -22,10 +22,9 @@ import io.vertx.core.Future;
 @FunctionalInterface
 public interface ResourcesReconciler {
 
-  Future<Void> reconcile(DataPlaneContract.Contract resources);
+    Future<Void> reconcile(DataPlaneContract.Contract resources);
 
-  static ResourcesReconcilerBuilder builder() {
-    return new ResourcesReconcilerBuilder();
-  }
-
+    static ResourcesReconcilerBuilder builder() {
+        return new ResourcesReconcilerBuilder();
+    }
 }

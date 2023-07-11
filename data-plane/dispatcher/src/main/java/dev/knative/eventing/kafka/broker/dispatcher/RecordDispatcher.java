@@ -15,25 +15,22 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
-
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
  * This interface performs the dispatch of consumed records.
  */
 public interface RecordDispatcher extends AsyncCloseable {
 
-  /**
-   * Handle the given record and returns a future that completes when the dispatch is completed and the offset is committed.
-   * This fails only if a catastrophic failure happened.
-   *
-   * @param record record to handle.
-   * @return the completion future.
-   */
-  Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record);
-
+    /**
+     * Handle the given record and returns a future that completes when the dispatch is completed and the offset is committed.
+     * This fails only if a catastrophic failure happened.
+     *
+     * @param record record to handle.
+     * @return the completion future.
+     */
+    Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record);
 }
