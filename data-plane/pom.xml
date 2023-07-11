@@ -61,7 +61,8 @@
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.3.2</jib.version>
     <quarkus.version>3.1.2.Final</quarkus.version>
-    <antlr.version>4.9.2</antlr.version>
+    <antlr.version>4.9.2
+    </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
   </properties>
 
   <modules>
@@ -592,7 +593,7 @@
       <plugin>
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
-        <version>${antlr.version}</version><!-- keep it aligned with the runtime bom-->
+        <version>${antlr.version}</version>
       </plugin>
     </plugins>
   </build>
