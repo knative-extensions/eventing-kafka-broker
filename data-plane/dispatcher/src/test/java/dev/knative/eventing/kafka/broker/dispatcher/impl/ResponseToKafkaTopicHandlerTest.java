@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
@@ -33,7 +34,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.net.URI;
@@ -60,7 +60,7 @@ public class ResponseToKafkaTopicHandlerTest {
     @Test
     public void shouldSucceedOnUnknownEncodingAndEmptyResponse(final Vertx vertx, final VertxTestContext context) {
         final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-        final var handler = new ResponseToKafkaTopicHandler(KafkaProducer.create(vertx, producer), TOPIC);
+        final var handler = new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC);
 
         final HttpResponse<Buffer> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(202);
@@ -73,7 +73,7 @@ public class ResponseToKafkaTopicHandlerTest {
     @Test
     public void shouldSucceedOnUnknownEncodingAndNullResponseBody(final Vertx vertx, final VertxTestContext context) {
         final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-        final var handler = new ResponseToKafkaTopicHandler(KafkaProducer.create(vertx, producer), TOPIC);
+        final var handler = new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC);
 
         final HttpResponse<Buffer> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(202);
@@ -87,7 +87,7 @@ public class ResponseToKafkaTopicHandlerTest {
     public void shouldFailOnUnknownEncodingAndNonEmptyResponse(final Vertx vertx, final VertxTestContext context) {
 
         final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-        final var handler = new ResponseToKafkaTopicHandler(KafkaProducer.create(vertx, producer), TOPIC);
+        final var handler = new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC);
 
         final HttpResponse<Buffer> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(202);
@@ -102,7 +102,7 @@ public class ResponseToKafkaTopicHandlerTest {
     @Test
     public void shouldSendRecord(final Vertx vertx, final VertxTestContext context) throws InterruptedException {
         final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-        final var handler = new ResponseToKafkaTopicHandler(KafkaProducer.create(vertx, producer), TOPIC);
+        final var handler = new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(vertx, producer), TOPIC);
 
         final var event = new CloudEventBuilder()
                 .withId("1234")
@@ -132,7 +132,7 @@ public class ResponseToKafkaTopicHandlerTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldCloseProducer(final Vertx vertx, final VertxTestContext context) {
-        final KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
+        final MockReactiveKafkaProducer<String, CloudEvent> producer = mock(MockReactiveKafkaProducer.class);
         when(producer.close()).thenReturn(Future.succeededFuture());
         final var mockProducer = new MockProducer<String, CloudEvent>();
         when(producer.unwrap()).thenReturn(mockProducer);

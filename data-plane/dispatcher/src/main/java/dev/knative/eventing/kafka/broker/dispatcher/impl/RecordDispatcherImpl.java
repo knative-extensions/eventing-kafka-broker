@@ -40,7 +40,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
-// import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;

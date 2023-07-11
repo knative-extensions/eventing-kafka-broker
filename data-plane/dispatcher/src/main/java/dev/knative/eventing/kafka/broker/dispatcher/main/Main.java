@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.main;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -62,7 +63,7 @@ public class Main {
      *
      * @param args command line arguments.
      */
-    public static void start(final String[] args, final ReactiveConsumerFactory reactiveConsumerFactory)
+    public static void start(final String[] args, final ReactiveConsumerFactory reactiveConsumerFactory, final ReactiveProducerFactory reactiveProducerFactory)
             throws IOException {
         DispatcherEnv env = new DispatcherEnv(System::getenv);
 
@@ -108,7 +109,8 @@ public class Main {
                             producerConfig,
                             AuthProvider.kubernetes(),
                             Metrics.getRegistry(),
-                            reactiveConsumerFactory),
+                            reactiveConsumerFactory,
+                            reactiveProducerFactory),
                     env.getEgressesInitialCapacity());
 
             // Deploy the consumer deployer

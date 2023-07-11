@@ -18,24 +18,25 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.Objects;
 import java.util.function.Function;
+
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.LoggerFactory;
 
 /**
  * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to a Kafka topic.
  */
-public final class ResponseToKafkaTopicHandler extends BaseResponseHandler implements ResponseHandler {
+public final class ResponseToKafkaTopicHandler extends BaseResponseHandler {
 
     private final String topic;
-    private final KafkaProducer<String, CloudEvent> producer;
+    private final ReactiveKafkaProducer<String, CloudEvent> producer;
     private final AsyncCloseable producerMeterBinder;
 
     private int inFlightEvents = 0;
@@ -45,10 +46,10 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
     /**
      * All args constructor.
      *
-     * @param producer Kafka producer.
+     * @param producer Reactive Kafka producer.
      * @param topic    topic to produce records.
      */
-    public ResponseToKafkaTopicHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
+    public ResponseToKafkaTopicHandler(final ReactiveKafkaProducer<String, CloudEvent> producer, final String topic) {
         super(LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class));
 
         Objects.requireNonNull(topic, "provide topic");
@@ -68,7 +69,7 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler imple
         eventReceived();
 
         final Future<Void> f =
-                producer.send(KafkaProducerRecord.create(topic, event)).mapEmpty();
+                producer.send(new ProducerRecord<>(topic, event)).mapEmpty();
 
         f.onComplete(v -> eventProduced());
 

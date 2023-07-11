@@ -19,6 +19,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
@@ -56,10 +57,10 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -240,9 +241,12 @@ public class ConsumerVerticleBuilder {
             return new NoopResponseHandler();
         }
 
-        final KafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
+        final Properties producerConfigs = new Properties();
+            producerConfigs.putAll(consumerVerticleContext.getProducerConfigs());
+
+        final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
                 .getProducerFactory()
-                .create(vertx, consumerVerticleContext.getProducerConfigs());
+                .create(vertx, producerConfigs);
         return new ResponseToKafkaTopicHandler(
                 producer, consumerVerticleContext.getResource().getTopics(0));
     }

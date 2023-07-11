@@ -17,16 +17,18 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -50,8 +52,8 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
         mockConsumer = new ConcurrentHashMap<>();
     }
 
-    private KafkaProducer<String, CloudEvent> createProducer(Vertx vertx, Map<String, Object> producerConfigs) {
-        return KafkaProducer.create(
+    private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx, Properties producerConfigs) {
+        return new MockReactiveKafkaProducer<>(
                 vertx,
                 new MockProducer<>(
                         true,

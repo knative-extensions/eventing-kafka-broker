@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatchervertx;
+package dev.knative.eventing.kafka.broker.dispatcher;
 
-import java.io.IOException;
+import java.util.Properties;
+import org.apache.kafka.clients.producer.MockProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import io.vertx.core.Vertx;
 
-import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
+public class MockReactiveProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
 
-public class Main {
-    public static void main(String[] args) throws IOException {
-        dev.knative.eventing.kafka.broker.dispatcher.main.Main.start(args, new VertxConsumerFactory<>(), new VertxProducerFactory<>());
+    @Override
+    public ReactiveKafkaProducer<K, V> create(Vertx v, Properties configs) {
+        return new MockReactiveKafkaProducer<>(v, new MockProducer<>(true, null, null));
     }
+
 }
