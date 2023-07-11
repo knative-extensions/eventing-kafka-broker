@@ -20,12 +20,12 @@ import java.util.Map;
 
 public class SuffixFilter extends AttributesFilter {
 
-  public SuffixFilter(Map<String, String> attributes) {
-    super(attributes);
-  }
+    public SuffixFilter(Map<String, String> attributes) {
+        super(attributes);
+    }
 
-  @Override
-  public boolean match(String given, String wanted) {
-    return given.endsWith(wanted);
-  }
+    @Override
+    public boolean match(String given, String wanted) {
+        return given.endsWith(wanted);
+    }
 }

@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -44,87 +46,88 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-
 public class Main {
 
-  static {
-    System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
-  }
-
-  private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-  /**
-   * Start receiver.
-   *
-   * @param args command line arguments.
-   */
-  public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory) throws IOException {
-    ReceiverEnv env = new ReceiverEnv(System::getenv);
-
-    OpenTelemetrySdk openTelemetry = TracingConfig.fromDir(env.getConfigTracingPath()).setup();
-
-    // Read producer properties and override some defaults
-    Properties producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
-    producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
-    producerConfigs.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
-
-    logger.info("Starting Receiver {}", keyValue("env", env));
-
-    // Start Vertx
-    Vertx vertx = Vertx.vertx(
-        new VertxOptions()
-            .setMetricsOptions(Metrics.getOptions(env))
-            .setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
-
-    // Register Contract message codec
-    ContractMessageCodec.register(vertx.eventBus());
-
-    // Read http server configuration and merge it with port from env
-    HttpServerOptions httpServerOptions = new HttpServerOptions(
-        Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath()));
-    httpServerOptions.setPort(env.getIngressPort());
-    httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-
-    // Read https server configuration and merge it with port from env
-    HttpServerOptions httpsServerOptions = new HttpServerOptions(
-        Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath()));
-
-    // Set the TLS port to a different port so that they don't have conflicts
-    httpsServerOptions.setPort(env.getIngressTLSPort());
-    httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-
-    // Configure the verticle to deploy and the deployment options
-    final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
-        env,
-        producerConfigs,
-        Metrics.getRegistry(),
-        httpServerOptions,
-        httpsServerOptions,
-        kafkaProducerFactory);
-    DeploymentOptions deploymentOptions = new DeploymentOptions()
-        .setInstances(Runtime.getRuntime().availableProcessors());
-
-    try {
-      // Deploy the receiver verticles
-      vertx.deployVerticle(receiverVerticleFactory, deploymentOptions)
-          .toCompletionStage()
-          .toCompletableFuture()
-          .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
-      logger.info("Receiver started");
-
-      ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-      FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
-      fileWatcher.start();
-
-      // Register shutdown hook for graceful shutdown.
-      Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
-
-    } catch (final Exception ex) {
-      logger.error("Failed to startup the receiver", ex);
-      Shutdown.closeVertxSync(vertx);
-      System.exit(1);
+    static {
+        System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
     }
-  }
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
+    /**
+     * Start receiver.
+     *
+     * @param args command line arguments.
+     */
+    public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory)
+            throws IOException {
+        ReceiverEnv env = new ReceiverEnv(System::getenv);
+
+        OpenTelemetrySdk openTelemetry =
+                TracingConfig.fromDir(env.getConfigTracingPath()).setup();
+
+        // Read producer properties and override some defaults
+        Properties producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
+        producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        producerConfigs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class);
+        producerConfigs.put(
+                ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
+
+        logger.info("Starting Receiver {}", keyValue("env", env));
+
+        // Start Vertx
+        Vertx vertx = Vertx.vertx(new VertxOptions()
+                .setMetricsOptions(Metrics.getOptions(env))
+                .setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
+
+        // Register Contract message codec
+        ContractMessageCodec.register(vertx.eventBus());
+
+        // Read http server configuration and merge it with port from env
+        HttpServerOptions httpServerOptions =
+                new HttpServerOptions(Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath()));
+        httpServerOptions.setPort(env.getIngressPort());
+        httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+        // Read https server configuration and merge it with port from env
+        HttpServerOptions httpsServerOptions =
+                new HttpServerOptions(Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath()));
+
+        // Set the TLS port to a different port so that they don't have conflicts
+        httpsServerOptions.setPort(env.getIngressTLSPort());
+        httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+        // Configure the verticle to deploy and the deployment options
+        final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
+                env,
+                producerConfigs,
+                Metrics.getRegistry(),
+                httpServerOptions,
+                httpsServerOptions,
+                kafkaProducerFactory);
+        DeploymentOptions deploymentOptions =
+                new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
+
+        try {
+            // Deploy the receiver verticles
+            vertx.deployVerticle(receiverVerticleFactory, deploymentOptions)
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(env.getWaitStartupSeconds(), TimeUnit.SECONDS);
+            logger.info("Receiver started");
+
+            ContractPublisher publisher =
+                    new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+            FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
+            fileWatcher.start();
+
+            // Register shutdown hook for graceful shutdown.
+            Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
+
+        } catch (final Exception ex) {
+            logger.error("Failed to startup the receiver", ex);
+            Shutdown.closeVertxSync(vertx);
+            System.exit(1);
+        }
+    }
 }

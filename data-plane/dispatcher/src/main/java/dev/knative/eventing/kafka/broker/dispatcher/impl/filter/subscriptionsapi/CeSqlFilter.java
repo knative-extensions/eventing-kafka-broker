@@ -27,27 +27,31 @@ import org.slf4j.LoggerFactory;
 
 public class CeSqlFilter implements Filter {
 
-  private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
 
-  private final Expression expression;
-  private final EvaluationRuntime runtime;
+    private final Expression expression;
+    private final EvaluationRuntime runtime;
 
-  public CeSqlFilter(String sqlExpression) {
-    this.expression = Parser.parseDefault(sqlExpression);
-    this.runtime = EvaluationRuntime.getDefault();
-  }
-
-  @Override
-  public boolean test(CloudEvent cloudEvent) {
-    try {
-      logger.debug("Testing event against CESQL expression. Expression {} - Event {}", this.expression, cloudEvent);
-      Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
-      logger.debug("CESQL evaluation succeeded. Expression {} - Event {} - Result {}", expression, cloudEvent, value);
-      return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
-    } catch (EvaluationException evaluationException) {
-      logger.error("Exception while evaluating CESQL expression. Test failed. Expression {} - Exception {}",
-        this.expression, evaluationException);
-      return false;
+    public CeSqlFilter(String sqlExpression) {
+        this.expression = Parser.parseDefault(sqlExpression);
+        this.runtime = EvaluationRuntime.getDefault();
     }
-  }
+
+    @Override
+    public boolean test(CloudEvent cloudEvent) {
+        try {
+            logger.debug(
+                    "Testing event against CESQL expression. Expression {} - Event {}", this.expression, cloudEvent);
+            Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
+            logger.debug(
+                    "CESQL evaluation succeeded. Expression {} - Event {} - Result {}", expression, cloudEvent, value);
+            return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
+        } catch (EvaluationException evaluationException) {
+            logger.error(
+                    "Exception while evaluating CESQL expression. Test failed. Expression {} - Exception {}",
+                    this.expression,
+                    evaluationException);
+            return false;
+        }
+    }
 }

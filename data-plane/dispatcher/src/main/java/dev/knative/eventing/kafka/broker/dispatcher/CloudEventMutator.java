@@ -16,12 +16,10 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.cloudevents.CloudEvent;
-
 import java.util.function.Function;
 
 /**
  * A CloudEventMutator mutates a given CloudEvent.
  */
 @FunctionalInterface
-public interface CloudEventMutator extends Function<CloudEvent, CloudEvent> {
-}
+public interface CloudEventMutator extends Function<CloudEvent, CloudEvent> {}

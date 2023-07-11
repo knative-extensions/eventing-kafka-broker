@@ -20,12 +20,12 @@ import java.util.Map;
 
 public class PrefixFilter extends AttributesFilter {
 
-  public PrefixFilter(Map<String, String> attributes) {
-    super(attributes);
-  }
+    public PrefixFilter(Map<String, String> attributes) {
+        super(attributes);
+    }
 
-  @Override
-  public boolean match(String given, String wanted) {
-    return given.startsWith(wanted);
-  }
+    @Override
+    public boolean match(String given, String wanted) {
+        return given.startsWith(wanted);
+    }
 }

@@ -15,102 +15,93 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import org.slf4j.LoggerFactory;
-
 import java.util.Objects;
 import java.util.function.Function;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class implements a {@link ResponseHandler} that will convert the sink response into a {@link CloudEvent} and push it to a Kafka topic.
  */
 public final class ResponseToKafkaTopicHandler extends BaseResponseHandler implements ResponseHandler {
 
-  private final String topic;
-  private final KafkaProducer<String, CloudEvent> producer;
-  private final AsyncCloseable producerMeterBinder;
+    private final String topic;
+    private final KafkaProducer<String, CloudEvent> producer;
+    private final AsyncCloseable producerMeterBinder;
 
-  private int inFlightEvents = 0;
-  private boolean closed = false;
-  private final Promise<Void> closePromise = Promise.promise();
+    private int inFlightEvents = 0;
+    private boolean closed = false;
+    private final Promise<Void> closePromise = Promise.promise();
 
-  /**
-   * All args constructor.
-   *
-   * @param producer Kafka producer.
-   * @param topic    topic to produce records.
-   */
-  public ResponseToKafkaTopicHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
-    super(LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class));
+    /**
+     * All args constructor.
+     *
+     * @param producer Kafka producer.
+     * @param topic    topic to produce records.
+     */
+    public ResponseToKafkaTopicHandler(final KafkaProducer<String, CloudEvent> producer, final String topic) {
+        super(LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class));
 
-    Objects.requireNonNull(topic, "provide topic");
-    Objects.requireNonNull(producer, "provide producer");
+        Objects.requireNonNull(topic, "provide topic");
+        Objects.requireNonNull(producer, "provide producer");
 
-    this.topic = topic;
-    this.producer = producer;
-    this.producerMeterBinder = Metrics.register(this.producer.unwrap());
-  }
-
-  @Override
-  protected Future<Void> doHandleEvent(CloudEvent event) {
-    if (closed) {
-      return Future.failedFuture("Response for Kafka topic handler closed");
+        this.topic = topic;
+        this.producer = producer;
+        this.producerMeterBinder = Metrics.register(this.producer.unwrap());
     }
 
-    eventReceived();
+    @Override
+    protected Future<Void> doHandleEvent(CloudEvent event) {
+        if (closed) {
+            return Future.failedFuture("Response for Kafka topic handler closed");
+        }
 
-    final Future<Void> f = producer
-      .send(KafkaProducerRecord.create(topic, event))
-      .mapEmpty();
+        eventReceived();
 
-    f.onComplete(v -> eventProduced());
+        final Future<Void> f =
+                producer.send(KafkaProducerRecord.create(topic, event)).mapEmpty();
 
-    return f;
-  }
+        f.onComplete(v -> eventProduced());
 
-  private void eventReceived() {
-    inFlightEvents++;
-  }
-
-  private void eventProduced() {
-    inFlightEvents--;
-
-    if (closed && inFlightEvents == 0) {
-      closePromise.tryComplete(null);
-    }
-  }
-
-  @Override
-  public Future<Void> close() {
-    this.closed = true;
-
-    logger.info("Closing response handler {} {}",
-      keyValue("topic", topic),
-      keyValue("inFlightEvents", inFlightEvents)
-    );
-
-    if (inFlightEvents == 0) {
-      closePromise.tryComplete(null);
+        return f;
     }
 
-    final Function<Void, Future<Void>> closeF = v -> AsyncCloseable
-      .compose(producerMeterBinder, this.producer::close)
-      .close();
+    private void eventReceived() {
+        inFlightEvents++;
+    }
 
-    return closePromise.future()
-      .compose(
-        v -> closeF.apply(null),
-        v -> closeF.apply(null)
-      );
-  }
+    private void eventProduced() {
+        inFlightEvents--;
+
+        if (closed && inFlightEvents == 0) {
+            closePromise.tryComplete(null);
+        }
+    }
+
+    @Override
+    public Future<Void> close() {
+        this.closed = true;
+
+        logger.info(
+                "Closing response handler {} {}", keyValue("topic", topic), keyValue("inFlightEvents", inFlightEvents));
+
+        if (inFlightEvents == 0) {
+            closePromise.tryComplete(null);
+        }
+
+        final Function<Void, Future<Void>> closeF =
+                v -> AsyncCloseable.compose(producerMeterBinder, this.producer::close)
+                        .close();
+
+        return closePromise.future().compose(v -> closeF.apply(null), v -> closeF.apply(null));
+    }
 }

@@ -23,25 +23,25 @@ import org.slf4j.LoggerFactory;
 
 public class AnyFilter implements Filter {
 
-  private static final Logger logger = LoggerFactory.getLogger(AnyFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(AnyFilter.class);
 
-  private final Set<Filter> filters;
+    private final Set<Filter> filters;
 
-  public AnyFilter(Set<Filter> filters) {
-    this.filters = filters;
-  }
-
-  @Override
-  public boolean test(CloudEvent cloudEvent) {
-    logger.debug("Testing event against ANY filter. Event {}", cloudEvent);
-
-    for (Filter filter : filters) {
-      if (filter.test(cloudEvent)) {
-        logger.debug("Test succeeded. Filter {} Event {}", filter, cloudEvent);
-        return true;
-      }
+    public AnyFilter(Set<Filter> filters) {
+        this.filters = filters;
     }
-    logger.debug("Test failed. All filters failed. Event {}", cloudEvent);
-    return false;
-  }
+
+    @Override
+    public boolean test(CloudEvent cloudEvent) {
+        logger.debug("Testing event against ANY filter. Event {}", cloudEvent);
+
+        for (Filter filter : filters) {
+            if (filter.test(cloudEvent)) {
+                logger.debug("Test succeeded. Filter {} Event {}", filter, cloudEvent);
+                return true;
+            }
+        }
+        logger.debug("Test failed. All filters failed. Event {}", cloudEvent);
+        return false;
+    }
 }

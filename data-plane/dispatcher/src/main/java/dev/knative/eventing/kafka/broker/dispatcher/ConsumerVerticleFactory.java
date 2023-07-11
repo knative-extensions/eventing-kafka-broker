@@ -24,11 +24,11 @@ import io.vertx.core.AbstractVerticle;
 @FunctionalInterface
 public interface ConsumerVerticleFactory {
 
-  /**
-   * Get a new consumer verticle.
-   *
-   * @param egress trigger data.
-   * @return a new consumer verticle.
-   */
-  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress);
+    /**
+     * Get a new consumer verticle.
+     *
+     * @param egress trigger data.
+     * @return a new consumer verticle.
+     */
+    AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress);
 }

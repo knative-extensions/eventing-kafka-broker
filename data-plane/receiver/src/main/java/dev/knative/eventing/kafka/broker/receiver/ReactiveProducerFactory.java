@@ -15,12 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import org.apache.kafka.clients.producer.Producer;
 import io.vertx.core.Vertx;
+import org.apache.kafka.clients.producer.Producer;
 
 /**
  * Factory for creating ReactiveKafkaProducer
- * 
+ *
  * @param <K> the key type
  * @param <V> the value type
  */
@@ -34,5 +34,4 @@ public interface ReactiveProducerFactory<K, V> {
      * @return a new ReactiveKafkaProducer
      */
     ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer);
-
 }

@@ -26,31 +26,31 @@ import io.vertx.ext.web.client.HttpResponse;
  */
 public interface CloudEventSender extends AsyncCloseable {
 
-  /**
-   * Send the given event. (the event passed the filter)
-   *
-   * @param event event to send
-   * @return a successful future or a failed future.
-   */
-  Future<HttpResponse<Buffer>> send(CloudEvent event);
+    /**
+     * Send the given event. (the event passed the filter)
+     *
+     * @param event event to send
+     * @return a successful future or a failed future.
+     */
+    Future<HttpResponse<Buffer>> send(CloudEvent event);
 
-  /**
-   * Create a noop {@link CloudEventSender} that fails every send with the specified message.
-   *
-   * @param failureMessage future failure message when invoking send.
-   * @return An implementation of this interface that always fails the send invocations with the specified message and always succeeds the close invocations.
-   */
-  static CloudEventSender noop(String failureMessage) {
-    return new CloudEventSender() {
-      @Override
-      public Future<HttpResponse<Buffer>> send(CloudEvent event) {
-        return Future.failedFuture(failureMessage);
-      }
+    /**
+     * Create a noop {@link CloudEventSender} that fails every send with the specified message.
+     *
+     * @param failureMessage future failure message when invoking send.
+     * @return An implementation of this interface that always fails the send invocations with the specified message and always succeeds the close invocations.
+     */
+    static CloudEventSender noop(String failureMessage) {
+        return new CloudEventSender() {
+            @Override
+            public Future<HttpResponse<Buffer>> send(CloudEvent event) {
+                return Future.failedFuture(failureMessage);
+            }
 
-      @Override
-      public Future<Void> close() {
-        return Future.succeededFuture();
-      }
-    };
-  }
+            @Override
+            public Future<Void> close() {
+                return Future.succeededFuture();
+            }
+        };
+    }
 }

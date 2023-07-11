@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -27,34 +29,26 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class NotFilterTest {
-  final static CloudEvent event = CloudEventBuilder.v1()
-    .withId("123-42")
-    .withDataContentType("application/cloudevents+json")
-    .withDataSchema(URI.create("/api/schema"))
-    .withSource(URI.create("/api/some-source"))
-    .withSubject("a-subject-42")
-    .withType("type")
-    .withTime(OffsetDateTime.of(
-      1985, 4, 12,
-      23, 20, 50, 0,
-      ZoneOffset.UTC
-    ))
-    .build();
+    static final CloudEvent event = CloudEventBuilder.v1()
+            .withId("123-42")
+            .withDataContentType("application/cloudevents+json")
+            .withDataSchema(URI.create("/api/schema"))
+            .withSource(URI.create("/api/some-source"))
+            .withSubject("a-subject-42")
+            .withType("type")
+            .withTime(OffsetDateTime.of(1985, 4, 12, 23, 20, 50, 0, ZoneOffset.UTC))
+            .build();
 
-  @ParameterizedTest
-  @MethodSource(value = {"testCases"})
-  public void match(CloudEvent event, Filter filter, boolean shouldMatch) {
-    assertThat(filter.test(event))
-      .isEqualTo(shouldMatch);
-  }
+    @ParameterizedTest
+    @MethodSource(value = {"testCases"})
+    public void match(CloudEvent event, Filter filter, boolean shouldMatch) {
+        assertThat(filter.test(event)).isEqualTo(shouldMatch);
+    }
 
-  static Stream<Arguments> testCases() {
-    return Stream.of(
-      Arguments.of(event, new NotFilter(new ExactFilter(Map.of("id", "123-42"))), false),
-      Arguments.of(event, new NotFilter(new ExactFilter(Map.of("source", "/api/wrong-source"))), true)
-    );
-  }
+    static Stream<Arguments> testCases() {
+        return Stream.of(
+                Arguments.of(event, new NotFilter(new ExactFilter(Map.of("id", "123-42"))), false),
+                Arguments.of(event, new NotFilter(new ExactFilter(Map.of("source", "/api/wrong-source"))), true));
+    }
 }

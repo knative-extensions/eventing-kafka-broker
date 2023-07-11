@@ -22,7 +22,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.ConsumerVerticle;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.ext.web.client.WebClientOptions;
-
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,68 +31,65 @@ import java.util.stream.Collectors;
 
 public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
-  private final Map<String, Object> consumerConfigs;
-  private final WebClientOptions webClientOptions;
-  private final Map<String, Object> producerConfigs;
-  private final AuthProvider authProvider;
-  private final MeterRegistry metricsRegistry;
-  private final ReactiveConsumerFactory reactiveConsumerFactory;
+    private final Map<String, Object> consumerConfigs;
+    private final WebClientOptions webClientOptions;
+    private final Map<String, Object> producerConfigs;
+    private final AuthProvider authProvider;
+    private final MeterRegistry metricsRegistry;
+    private final ReactiveConsumerFactory reactiveConsumerFactory;
 
-  /**
-   * All args constructor.
-   *
-   * @param consumerConfigs  base consumer configurations.
-   * @param webClientOptions web client options.
-   * @param producerConfigs  base producer configurations.
-   * @param authProvider     auth provider.
-   * @param metricsRegistry  meter registry to use to create metricsRegistry.
-   */
-  public ConsumerVerticleFactoryImpl(
-    final Properties consumerConfigs,
-    final WebClientOptions webClientOptions,
-    final Properties producerConfigs,
-    final AuthProvider authProvider,
-    final MeterRegistry metricsRegistry,
-    final ReactiveConsumerFactory reactiveConsumerFactory) {
+    /**
+     * All args constructor.
+     *
+     * @param consumerConfigs  base consumer configurations.
+     * @param webClientOptions web client options.
+     * @param producerConfigs  base producer configurations.
+     * @param authProvider     auth provider.
+     * @param metricsRegistry  meter registry to use to create metricsRegistry.
+     */
+    public ConsumerVerticleFactoryImpl(
+            final Properties consumerConfigs,
+            final WebClientOptions webClientOptions,
+            final Properties producerConfigs,
+            final AuthProvider authProvider,
+            final MeterRegistry metricsRegistry,
+            final ReactiveConsumerFactory reactiveConsumerFactory) {
 
-    Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
-    Objects.requireNonNull(webClientOptions, "provide webClientOptions");
-    Objects.requireNonNull(producerConfigs, "provide producerConfigs");
+        Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
+        Objects.requireNonNull(webClientOptions, "provide webClientOptions");
+        Objects.requireNonNull(producerConfigs, "provide producerConfigs");
 
-    this.consumerConfigs = consumerConfigs.entrySet()
-      .stream()
-      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    this.producerConfigs = producerConfigs.entrySet()
-      .stream()
-      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue().toString()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        this.consumerConfigs = consumerConfigs.entrySet().stream()
+                .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        this.producerConfigs = producerConfigs.entrySet().stream()
+                .map(e -> new SimpleImmutableEntry<>(
+                        e.getKey().toString(), e.getValue().toString()))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
-    this.webClientOptions = webClientOptions;
-    this.authProvider = authProvider;
-    this.metricsRegistry = metricsRegistry;
-    this.reactiveConsumerFactory = reactiveConsumerFactory;
-  }
+        this.webClientOptions = webClientOptions;
+        this.authProvider = authProvider;
+        this.metricsRegistry = metricsRegistry;
+        this.reactiveConsumerFactory = reactiveConsumerFactory;
+    }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public ConsumerVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
-    Objects.requireNonNull(resource, "provide resource");
-    Objects.requireNonNull(egress, "provide egress");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConsumerVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
+        Objects.requireNonNull(resource, "provide resource");
+        Objects.requireNonNull(egress, "provide egress");
 
-    return new ConsumerVerticleBuilder(
-      new ConsumerVerticleContext()
-        .withConsumerConfigs(consumerConfigs)
-        .withProducerConfigs(producerConfigs)
-        .withWebClientOptions(webClientOptions)
-        .withAuthProvider(authProvider)
-        .withMeterRegistry(metricsRegistry)
-        .withResource(resource, egress)
-        .withConsumerFactory(reactiveConsumerFactory)
-        .withProducerFactory(ProducerFactory.defaultFactory())
-    )
-      .build();
-  }
+        return new ConsumerVerticleBuilder(new ConsumerVerticleContext()
+                        .withConsumerConfigs(consumerConfigs)
+                        .withProducerConfigs(producerConfigs)
+                        .withWebClientOptions(webClientOptions)
+                        .withAuthProvider(authProvider)
+                        .withMeterRegistry(metricsRegistry)
+                        .withResource(resource, egress)
+                        .withConsumerFactory(reactiveConsumerFactory)
+                        .withProducerFactory(ProducerFactory.defaultFactory()))
+                .build();
+    }
 }

@@ -15,42 +15,42 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.io.Closeable;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 public class ShutdownTest {
 
-  @Test
-  public void run() throws IOException {
-    final var vertx = mockVertxClose();
-    final var closeable = mock(Closeable.class);
+    @Test
+    public void run() throws IOException {
+        final var vertx = mockVertxClose();
+        final var closeable = mock(Closeable.class);
 
-    Shutdown.createRunnable(vertx, closeable).run();
+        Shutdown.createRunnable(vertx, closeable).run();
 
-    verify(vertx, times(1)).close();
-    verify(closeable).close();
-  }
+        verify(vertx, times(1)).close();
+        verify(closeable).close();
+    }
 
-  @Test
-  public void closeVertxSync() {
-    final var vertx = mockVertxClose();
+    @Test
+    public void closeVertxSync() {
+        final var vertx = mockVertxClose();
 
-    Shutdown.closeVertxSync(vertx);
+        Shutdown.closeVertxSync(vertx);
 
-    verify(vertx).close();
-  }
+        verify(vertx).close();
+    }
 
-  private Vertx mockVertxClose() {
-    final var vertx = mock(Vertx.class);
-    doReturn(Future.succeededFuture()).when(vertx).close();
-    return vertx;
-  }
+    private Vertx mockVertxClose() {
+        final var vertx = mock(Vertx.class);
+        doReturn(Future.succeededFuture()).when(vertx).close();
+        return vertx;
+    }
 }

@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import io.vertx.core.json.JsonObject;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,76 +25,74 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-
 public class Configurations {
 
-  private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
+    private static final Logger logger = LoggerFactory.getLogger(Configurations.class);
 
-  /**
-   * Retrieve a properties file.
-   * <p>
-   * Note: this method is blocking, thus it shouldn't be called on the event loop.
-   */
-  public static Properties readPropertiesSync(final String path) {
-    if (path == null) {
-      return new Properties();
+    /**
+     * Retrieve a properties file.
+     * <p>
+     * Note: this method is blocking, thus it shouldn't be called on the event loop.
+     */
+    public static Properties readPropertiesSync(final String path) {
+        if (path == null) {
+            return new Properties();
+        }
+
+        final var props = new Properties();
+        try (final var configReader = new FileReader(path)) {
+            props.load(configReader);
+        } catch (IOException e) {
+            logger.error("failed to load configurations from file {}", keyValue("path", path), e);
+        }
+
+        return props;
     }
 
-    final var props = new Properties();
-    try (final var configReader = new FileReader(path)) {
-      props.load(configReader);
-    } catch (IOException e) {
-      logger.error("failed to load configurations from file {}", keyValue("path", path), e);
+    /**
+     * Retrieve a properties file and translates it to json.
+     * <p>
+     * Note: this method is blocking, thus it shouldn't be called on the event loop.
+     */
+    public static JsonObject readPropertiesAsJsonSync(final String path) {
+        final var props = readPropertiesSync(path);
+
+        final JsonObject json = new JsonObject();
+        props.stringPropertyNames().forEach(name -> json.put(name, convert(props.getProperty(name))));
+        return json;
     }
 
-    return props;
-  }
+    private static Object convert(String value) {
+        Objects.requireNonNull(value);
 
-  /**
-   * Retrieve a properties file and translates it to json.
-   * <p>
-   * Note: this method is blocking, thus it shouldn't be called on the event loop.
-   */
-  public static JsonObject readPropertiesAsJsonSync(final String path) {
-    final var props = readPropertiesSync(path);
+        Boolean bool = asBoolean(value);
+        if (bool != null) {
+            return bool;
+        }
 
-    final JsonObject json = new JsonObject();
-    props.stringPropertyNames().forEach(name -> json.put(name, convert(props.getProperty(name))));
-    return json;
-  }
+        Double integer = asNumber(value);
+        if (integer != null) {
+            return integer;
+        }
 
-  private static Object convert(String value) {
-    Objects.requireNonNull(value);
-
-    Boolean bool = asBoolean(value);
-    if (bool != null) {
-      return bool;
+        return value;
     }
 
-    Double integer = asNumber(value);
-    if (integer != null) {
-      return integer;
+    private static Double asNumber(String s) {
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException nfe) {
+            return null;
+        }
     }
 
-    return value;
-  }
-
-  private static Double asNumber(String s) {
-    try {
-      return Double.parseDouble(s);
-    } catch (NumberFormatException nfe) {
-      return null;
+    private static Boolean asBoolean(String s) {
+        if (s.equalsIgnoreCase("true")) {
+            return Boolean.TRUE;
+        } else if (s.equalsIgnoreCase("false")) {
+            return Boolean.FALSE;
+        } else {
+            return null;
+        }
     }
-  }
-
-  private static Boolean asBoolean(String s) {
-    if (s.equalsIgnoreCase("true")) {
-      return Boolean.TRUE;
-    } else if (s.equalsIgnoreCase("false")) {
-      return Boolean.FALSE;
-    } else {
-      return null;
-    }
-  }
 }

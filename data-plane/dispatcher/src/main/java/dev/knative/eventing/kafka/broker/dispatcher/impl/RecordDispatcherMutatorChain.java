@@ -27,36 +27,33 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
  */
 public class RecordDispatcherMutatorChain implements RecordDispatcher {
 
-  private final RecordDispatcher next;
-  private final CloudEventMutator cloudEventMutator;
+    private final RecordDispatcher next;
+    private final CloudEventMutator cloudEventMutator;
 
-  public RecordDispatcherMutatorChain(final RecordDispatcher next,
-                                      final CloudEventMutator cloudEventMutator) {
-    this.next = next;
-    this.cloudEventMutator = cloudEventMutator;
-  }
+    public RecordDispatcherMutatorChain(final RecordDispatcher next, final CloudEventMutator cloudEventMutator) {
+        this.next = next;
+        this.cloudEventMutator = cloudEventMutator;
+    }
 
-  @Override
-  public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record) {
-      final var newRecord = new ConsumerRecord<>(
-      record.topic(),
-      record.partition(),
-      record.offset(),
-      record.timestamp(),
-      record.timestampType(),
-      record.serializedKeySize(),
-      record.serializedValueSize(),
-      record.key(),
-      cloudEventMutator.apply(record.value()),
-      record.headers(),
-      record.leaderEpoch()
-    );
-    return next.dispatch(newRecord);
-  }
+    @Override
+    public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record) {
+        final var newRecord = new ConsumerRecord<>(
+                record.topic(),
+                record.partition(),
+                record.offset(),
+                record.timestamp(),
+                record.timestampType(),
+                record.serializedKeySize(),
+                record.serializedValueSize(),
+                record.key(),
+                cloudEventMutator.apply(record.value()),
+                record.headers(),
+                record.leaderEpoch());
+        return next.dispatch(newRecord);
+    }
 
-  @Override
-  public Future<Void> close() {
-    return next.close();
-  }
-
+    @Override
+    public Future<Void> close() {
+        return next.close();
+    }
 }

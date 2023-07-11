@@ -25,28 +25,28 @@ import io.vertx.ext.web.client.HttpResponse;
  */
 public interface ResponseHandler extends AsyncCloseable {
 
-  /**
-   * Handle the response.
-   *
-   * @param response Response to handle.
-   * @return A succeeded or failed future.
-   */
-  Future<Void> handle(final HttpResponse<Buffer> response);
+    /**
+     * Handle the response.
+     *
+     * @param response Response to handle.
+     * @return A succeeded or failed future.
+     */
+    Future<Void> handle(final HttpResponse<Buffer> response);
 
-  /**
-   * @return a noop response handler.
-   */
-  static ResponseHandler noop() {
-    return new ResponseHandler() {
-      @Override
-      public Future<Void> handle(HttpResponse<Buffer> response) {
-        return Future.succeededFuture();
-      }
+    /**
+     * @return a noop response handler.
+     */
+    static ResponseHandler noop() {
+        return new ResponseHandler() {
+            @Override
+            public Future<Void> handle(HttpResponse<Buffer> response) {
+                return Future.succeededFuture();
+            }
 
-      @Override
-      public Future<Void> close() {
-        return Future.succeededFuture();
-      }
-    };
-  }
+            @Override
+            public Future<Void> close() {
+                return Future.succeededFuture();
+            }
+        };
+    }
 }
