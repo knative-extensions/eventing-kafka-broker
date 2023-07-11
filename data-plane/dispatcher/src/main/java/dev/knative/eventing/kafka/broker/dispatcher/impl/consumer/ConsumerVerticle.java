@@ -26,7 +26,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import java.util.Objects;
 import java.util.function.BiFunction;
-
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
