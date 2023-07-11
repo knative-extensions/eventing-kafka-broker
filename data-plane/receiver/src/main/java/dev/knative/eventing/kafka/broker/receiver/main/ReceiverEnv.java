@@ -15,65 +15,65 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
+import static java.util.Objects.requireNonNull;
+
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import java.util.function.Function;
 
-import static java.util.Objects.requireNonNull;
-
 public class ReceiverEnv extends BaseEnv {
 
-  public static final String INGRESS_PORT = "INGRESS_PORT";
-  private final int ingressPort;
+    public static final String INGRESS_PORT = "INGRESS_PORT";
+    private final int ingressPort;
 
-  public static final String INGRESS_TLS_PORT = "INGRESS_TLS_PORT";
-  private final int ingressTLSPort;
+    public static final String INGRESS_TLS_PORT = "INGRESS_TLS_PORT";
+    private final int ingressTLSPort;
 
-  public static final String LIVENESS_PROBE_PATH = "LIVENESS_PROBE_PATH";
-  private final String livenessProbePath;
+    public static final String LIVENESS_PROBE_PATH = "LIVENESS_PROBE_PATH";
+    private final String livenessProbePath;
 
-  public static final String READINESS_PROBE_PATH = "READINESS_PROBE_PATH";
-  private final String readinessProbePath;
+    public static final String READINESS_PROBE_PATH = "READINESS_PROBE_PATH";
+    private final String readinessProbePath;
 
-  public static final String HTTPSERVER_CONFIG_FILE_PATH = "HTTPSERVER_CONFIG_FILE_PATH";
-  private final String httpServerConfigFilePath;
+    public static final String HTTPSERVER_CONFIG_FILE_PATH = "HTTPSERVER_CONFIG_FILE_PATH";
+    private final String httpServerConfigFilePath;
 
-  public ReceiverEnv(final Function<String, String> envProvider) {
-    super(envProvider);
+    public ReceiverEnv(final Function<String, String> envProvider) {
+        super(envProvider);
 
-    this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
-    this.ingressTLSPort = Integer.parseInt(envProvider.apply(INGRESS_TLS_PORT));
-    this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
-    this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
-    this.httpServerConfigFilePath = requireNonNull(envProvider.apply(HTTPSERVER_CONFIG_FILE_PATH));
-  }
+        this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
+        this.ingressTLSPort = Integer.parseInt(envProvider.apply(INGRESS_TLS_PORT));
+        this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
+        this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
+        this.httpServerConfigFilePath = requireNonNull(envProvider.apply(HTTPSERVER_CONFIG_FILE_PATH));
+    }
 
-  public int getIngressPort() {
-    return ingressPort;
-  }
+    public int getIngressPort() {
+        return ingressPort;
+    }
 
-  public int getIngressTLSPort() {
-    return ingressTLSPort;
-  }
+    public int getIngressTLSPort() {
+        return ingressTLSPort;
+    }
 
-  public String getLivenessProbePath() {
-    return livenessProbePath;
-  }
+    public String getLivenessProbePath() {
+        return livenessProbePath;
+    }
 
-  public String getReadinessProbePath() {
-    return readinessProbePath;
-  }
+    public String getReadinessProbePath() {
+        return readinessProbePath;
+    }
 
-  public String getHttpServerConfigFilePath() {
-    return httpServerConfigFilePath;
-  }
+    public String getHttpServerConfigFilePath() {
+        return httpServerConfigFilePath;
+    }
 
-  @Override
-  public String toString() {
-    return "ReceiverEnv{" +
-      "ingressPort=" + ingressPort +
-      ", livenessProbePath='" + livenessProbePath + '\'' +
-      ", readinessProbePath='" + readinessProbePath + '\'' +
-      ", httpServerConfigFilePath='" + httpServerConfigFilePath + '\'' +
-      "} " + super.toString();
-  }
+    @Override
+    public String toString() {
+        return "ReceiverEnv{" + "ingressPort="
+                + ingressPort + ", livenessProbePath='"
+                + livenessProbePath + '\'' + ", readinessProbePath='"
+                + readinessProbePath + '\'' + ", httpServerConfigFilePath='"
+                + httpServerConfigFilePath + '\'' + "} "
+                + super.toString();
+    }
 }

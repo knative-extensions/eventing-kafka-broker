@@ -22,12 +22,11 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
-import org.apache.kafka.common.TopicPartition;
-
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import org.apache.kafka.common.TopicPartition;
 
 /**
  * This executor performs an ordered execution of the enqueued tasks.
@@ -36,108 +35,105 @@ import java.util.function.Supplier;
  */
 public class OrderedAsyncExecutor {
 
-  private final Queue<Task> queue;
+    private final Queue<Task> queue;
 
-  private final AtomicBoolean isStopped;
-  private final AtomicBoolean inFlight;
-  private final MeterRegistry meterRegistry;
-  private final DistributionSummary executorLatency;
-  private final Gauge executorQueueLength;
-  private final DataPlaneContract.Egress egress;
+    private final AtomicBoolean isStopped;
+    private final AtomicBoolean inFlight;
+    private final MeterRegistry meterRegistry;
+    private final DistributionSummary executorLatency;
+    private final Gauge executorQueueLength;
+    private final DataPlaneContract.Egress egress;
 
-  public OrderedAsyncExecutor(final TopicPartition topicPartition,
-                              final MeterRegistry meterRegistry,
-                              final DataPlaneContract.Egress egress) {
-    this.meterRegistry = meterRegistry;
-    this.queue = new ArrayDeque<>();
-    this.isStopped = new AtomicBoolean(false);
-    this.inFlight = new AtomicBoolean(false);
-    this.egress = egress;
+    public OrderedAsyncExecutor(
+            final TopicPartition topicPartition,
+            final MeterRegistry meterRegistry,
+            final DataPlaneContract.Egress egress) {
+        this.meterRegistry = meterRegistry;
+        this.queue = new ArrayDeque<>();
+        this.isStopped = new AtomicBoolean(false);
+        this.inFlight = new AtomicBoolean(false);
+        this.egress = egress;
 
-    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
-      final var tags = Tags.of(
-        Metrics.Tags.PARTITION_ID, topicPartition.partition() + "",
-        Metrics.Tags.TOPIC_ID, topicPartition.topic(),
-        Metrics.Tags.CONSUMER_NAME, egress.getReference().getName(),
-        Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace()
-      );
-      this.executorLatency = Metrics
-        .executorQueueLatency(tags)
-        .register(meterRegistry);
-      this.executorQueueLength = Metrics
-        .queueLength(tags, this.queue::size)
-        .register(meterRegistry);
-    } else {
-      this.executorLatency = null;
-      this.executorQueueLength = null;
+        if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
+            final var tags = Tags.of(
+                    Metrics.Tags.PARTITION_ID, topicPartition.partition() + "",
+                    Metrics.Tags.TOPIC_ID, topicPartition.topic(),
+                    Metrics.Tags.CONSUMER_NAME, egress.getReference().getName(),
+                    Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace());
+            this.executorLatency = Metrics.executorQueueLatency(tags).register(meterRegistry);
+            this.executorQueueLength =
+                    Metrics.queueLength(tags, this.queue::size).register(meterRegistry);
+        } else {
+            this.executorLatency = null;
+            this.executorQueueLength = null;
+        }
     }
-  }
 
-  /**
-   * Offer a new task to the executor. The executor will start the task as soon as possible.
-   *
-   * @param task the task to offer
-   */
-  public void offer(Supplier<Future<?>> task) {
-    if (this.isStopped.get()) {
-      // Executor is stopped, return without adding the task to the queue.
-      return;
-    }
-    boolean wasEmpty = this.queue.isEmpty();
-    this.queue.offer(new Task(task));
-    if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
-      this.executorQueueLength.value();
-    }
-    if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
-      consume();
-    }
-  }
-
-  private void consume() {
-    if (queue.isEmpty() || this.inFlight.get() || this.isStopped.get()) {
-      return;
-    }
-    if (this.inFlight.compareAndSet(false, true)) {
-      final var task = this.queue.remove();
-      task.task
-        .get()
-        .onComplete(ar -> {
-          this.inFlight.set(false);
-          if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics() && !this.isStopped.get()) {
-            this.executorLatency.record(System.currentTimeMillis() - task.queueTimestamp);
+    /**
+     * Offer a new task to the executor. The executor will start the task as soon as possible.
+     *
+     * @param task the task to offer
+     */
+    public void offer(Supplier<Future<?>> task) {
+        if (this.isStopped.get()) {
+            // Executor is stopped, return without adding the task to the queue.
+            return;
+        }
+        boolean wasEmpty = this.queue.isEmpty();
+        this.queue.offer(new Task(task));
+        if (egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
             this.executorQueueLength.value();
-          }
-          consume();
-        });
+        }
+        if (wasEmpty) { // If no elements in the queue, then we need to start consuming it
+            consume();
+        }
     }
 
-  }
-
-  public boolean isWaitingForTasks() {
-    // TODO To perform this flag would be nice to take into account also the time that it takes for a sink to process a
-    //  message so that we can fetch records in advance and keep queues busy.
-    return this.queue.isEmpty();
-  }
-
-  /**
-   * Stop the executor. This won't stop the actual in-flight task, but it will prevent queued tasks to be executed.
-   */
-  public void stop() {
-    this.isStopped.set(true);
-    this.queue.clear();
-    if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
-      this.meterRegistry.remove(executorLatency);
-      this.meterRegistry.remove(executorQueueLength);
+    private void consume() {
+        if (queue.isEmpty() || this.inFlight.get() || this.isStopped.get()) {
+            return;
+        }
+        if (this.inFlight.compareAndSet(false, true)) {
+            final var task = this.queue.remove();
+            task.task.get().onComplete(ar -> {
+                this.inFlight.set(false);
+                if (egress != null
+                        && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()
+                        && !this.isStopped.get()) {
+                    this.executorLatency.record(System.currentTimeMillis() - task.queueTimestamp);
+                    this.executorQueueLength.value();
+                }
+                consume();
+            });
+        }
     }
-  }
 
-  private static final class Task {
-
-    private final Supplier<Future<?>> task;
-    private final long queueTimestamp = System.currentTimeMillis();
-
-    Task(final Supplier<Future<?>> task) {
-      this.task = task;
+    public boolean isWaitingForTasks() {
+        // TODO To perform this flag would be nice to take into account also the time that it takes for a sink to
+        // process a
+        //  message so that we can fetch records in advance and keep queues busy.
+        return this.queue.isEmpty();
     }
-  }
+
+    /**
+     * Stop the executor. This won't stop the actual in-flight task, but it will prevent queued tasks to be executed.
+     */
+    public void stop() {
+        this.isStopped.set(true);
+        this.queue.clear();
+        if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
+            this.meterRegistry.remove(executorLatency);
+            this.meterRegistry.remove(executorQueueLength);
+        }
+    }
+
+    private static final class Task {
+
+        private final Supplier<Future<?>> task;
+        private final long queueTimestamp = System.currentTimeMillis();
+
+        Task(final Supplier<Future<?>> task) {
+            this.task = task;
+        }
+    }
 }

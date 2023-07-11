@@ -23,56 +23,49 @@ import org.slf4j.LoggerFactory;
 
 public final class Shutdown {
 
-  private static final Logger logger = LoggerFactory.getLogger(Shutdown.class);
+    private static final Logger logger = LoggerFactory.getLogger(Shutdown.class);
 
-  private Shutdown() {
-  }
+    private Shutdown() {}
 
-  /**
-   * Register a set of {@link AutoCloseable} in the runtime shutdown hook.
-   * This is going to shutdown the set of provided autocloseable, and then the vertx instance.
-   *
-   * @param vertx      the vertx instance to shutdown
-   * @param closeables the set of auto closeable to shutdown
-   */
-  public static void registerHook(final Vertx vertx, final AutoCloseable... closeables) {
-    Runtime.getRuntime()
-      .addShutdownHook(new Thread(
-        Shutdown.createRunnable(vertx, closeables)
-      ));
-  }
-
-  /**
-   * Force closing the provided {@link Vertx} instance synchronously.
-   * This method is infallible and will log any eventual error.
-   *
-   * @param vertx the vertx instance to close
-   */
-  public static void closeVertxSync(final Vertx vertx) {
-    logger.info("Closing Vert.x");
-    try {
-      vertx.close()
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(2, TimeUnit.MINUTES);
-    } catch (TimeoutException e) {
-      logger.error("Timeout waiting for Vertx::close", e);
-    } catch (Throwable e) {
-      logger.error("Error while closing Vertx instance", e);
+    /**
+     * Register a set of {@link AutoCloseable} in the runtime shutdown hook.
+     * This is going to shutdown the set of provided autocloseable, and then the vertx instance.
+     *
+     * @param vertx      the vertx instance to shutdown
+     * @param closeables the set of auto closeable to shutdown
+     */
+    public static void registerHook(final Vertx vertx, final AutoCloseable... closeables) {
+        Runtime.getRuntime().addShutdownHook(new Thread(Shutdown.createRunnable(vertx, closeables)));
     }
-  }
 
-  static Runnable createRunnable(final Vertx vertx, final AutoCloseable... closeables) {
-    return () -> {
-      logger.info("Running shutdown hook");
-      for (AutoCloseable closeable : closeables) {
+    /**
+     * Force closing the provided {@link Vertx} instance synchronously.
+     * This method is infallible and will log any eventual error.
+     *
+     * @param vertx the vertx instance to close
+     */
+    public static void closeVertxSync(final Vertx vertx) {
+        logger.info("Closing Vert.x");
         try {
-          closeable.close();
-        } catch (final Exception e) {
-          logger.error("Failed to close", e);
+            vertx.close().toCompletionStage().toCompletableFuture().get(2, TimeUnit.MINUTES);
+        } catch (TimeoutException e) {
+            logger.error("Timeout waiting for Vertx::close", e);
+        } catch (Throwable e) {
+            logger.error("Error while closing Vertx instance", e);
         }
-      }
-      closeVertxSync(vertx);
-    };
-  }
+    }
+
+    static Runnable createRunnable(final Vertx vertx, final AutoCloseable... closeables) {
+        return () -> {
+            logger.info("Running shutdown hook");
+            for (AutoCloseable closeable : closeables) {
+                try {
+                    closeable.close();
+                } catch (final Exception e) {
+                    logger.error("Failed to close", e);
+                }
+            }
+            closeVertxSync(vertx);
+        };
+    }
 }

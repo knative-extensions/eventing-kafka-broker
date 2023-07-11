@@ -20,40 +20,45 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import io.vertx.ext.web.client.WebClientOptions;
-
 import java.util.HashMap;
-
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 
 public class FakeConsumerVerticleContext {
 
-  public static ConsumerVerticleContext get() {
-    return new ConsumerVerticleContext()
-      .withProducerConfigs(new HashMap<>())
-      .withConsumerConfigs(new HashMap<>())
-      .withMeterRegistry(Metrics.getRegistry())
-      .withResource(CoreObjects.resource1(), CoreObjects.egress1())
-      .withConsumerRebalanceListener(new ConsumerRebalanceListener() {
-        @Override
-        public void onPartitionsRevoked(final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
-        @Override
-        public void onPartitionsAssigned(final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
-      });
-  }
+    public static ConsumerVerticleContext get() {
+        return new ConsumerVerticleContext()
+                .withProducerConfigs(new HashMap<>())
+                .withConsumerConfigs(new HashMap<>())
+                .withMeterRegistry(Metrics.getRegistry())
+                .withResource(CoreObjects.resource1(), CoreObjects.egress1())
+                .withConsumerRebalanceListener(new ConsumerRebalanceListener() {
+                    @Override
+                    public void onPartitionsRevoked(
+                            final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
 
-  public static ConsumerVerticleContext get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
-    return new ConsumerVerticleContext()
-      .withProducerConfigs(new HashMap<>())
-      .withConsumerConfigs(new HashMap<>())
-      .withAuthProvider(AuthProvider.noAuth())
-      .withWebClientOptions(new WebClientOptions())
-      .withMeterRegistry(Metrics.getRegistry())
-      .withResource(resource, egress)
-      .withConsumerRebalanceListener(new ConsumerRebalanceListener() {
-        @Override
-        public void onPartitionsRevoked(final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
-        @Override
-        public void onPartitionsAssigned(final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
-      });
-  }
+                    @Override
+                    public void onPartitionsAssigned(
+                            final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
+                });
+    }
+
+    public static ConsumerVerticleContext get(
+            final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
+        return new ConsumerVerticleContext()
+                .withProducerConfigs(new HashMap<>())
+                .withConsumerConfigs(new HashMap<>())
+                .withAuthProvider(AuthProvider.noAuth())
+                .withWebClientOptions(new WebClientOptions())
+                .withMeterRegistry(Metrics.getRegistry())
+                .withResource(resource, egress)
+                .withConsumerRebalanceListener(new ConsumerRebalanceListener() {
+                    @Override
+                    public void onPartitionsRevoked(
+                            final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
+
+                    @Override
+                    public void onPartitionsAssigned(
+                            final java.util.Collection<org.apache.kafka.common.TopicPartition> partitions) {}
+                });
+    }
 }

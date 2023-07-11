@@ -19,14 +19,14 @@ import io.vertx.ext.web.client.HttpResponse;
 
 public class ResponseFailureException extends RuntimeException {
 
-  private final HttpResponse<?> response;
+    private final HttpResponse<?> response;
 
-  public ResponseFailureException(final HttpResponse response, final String msg) {
-    super(msg);
-    this.response = response;
-  }
+    public ResponseFailureException(final HttpResponse response, final String msg) {
+        super(msg);
+        this.response = response;
+    }
 
-  public HttpResponse<?> getResponse() {
-    return response;
-  }
+    public HttpResponse<?> getResponse() {
+        return response;
+    }
 }

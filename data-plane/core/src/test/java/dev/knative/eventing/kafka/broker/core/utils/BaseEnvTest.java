@@ -22,67 +22,67 @@ import org.junit.jupiter.api.Test;
 
 public class BaseEnvTest {
 
-  private static final Function<String, String> provider = s -> switch (s) {
-    case "PRODUCER_CONFIG_FILE_PATH" -> "/tmp/config";
-    case "DATA_PLANE_CONFIG_FILE_PATH" -> "/tmp/config-data";
-    case "METRICS_PORT" -> "9092";
-    case "METRICS_PATH" -> "/path";
-    case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
-    case "CONFIG_TRACING_PATH" -> "/etc/tracing";
-    case "METRICS_JVM_ENABLED" -> "false";
-    case "WAIT_STARTUP_SECONDS" -> "1";
-    default -> null;
-  };
+    private static final Function<String, String> provider = s -> switch (s) {
+        case "PRODUCER_CONFIG_FILE_PATH" -> "/tmp/config";
+        case "DATA_PLANE_CONFIG_FILE_PATH" -> "/tmp/config-data";
+        case "METRICS_PORT" -> "9092";
+        case "METRICS_PATH" -> "/path";
+        case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
+        case "CONFIG_TRACING_PATH" -> "/etc/tracing";
+        case "METRICS_JVM_ENABLED" -> "false";
+        case "WAIT_STARTUP_SECONDS" -> "1";
+        default -> null;
+    };
 
-  @Test
-  public void shouldGetMetricsPort() {
-    final var metricsConfigs = new BaseEnv(provider);
-    final var port = metricsConfigs.getMetricsPort();
-    assertThat(port).isEqualTo(9092);
-  }
+    @Test
+    public void shouldGetMetricsPort() {
+        final var metricsConfigs = new BaseEnv(provider);
+        final var port = metricsConfigs.getMetricsPort();
+        assertThat(port).isEqualTo(9092);
+    }
 
-  @Test
-  public void shouldGetMetricsPath() {
-    final var metricsConfigs = new BaseEnv(provider);
-    final var path = metricsConfigs.getMetricsPath();
-    assertThat(path).isEqualTo("/path");
-  }
+    @Test
+    public void shouldGetMetricsPath() {
+        final var metricsConfigs = new BaseEnv(provider);
+        final var path = metricsConfigs.getMetricsPath();
+        assertThat(path).isEqualTo("/path");
+    }
 
-  @Test
-  public void shouldGetIsPublishQuantiles() {
-    final var metricsConfigs = new BaseEnv(provider);
-    final var isPublishQuantiles = metricsConfigs.isPublishQuantilesEnabled();
-    assertThat(isPublishQuantiles).isEqualTo(true);
-  }
+    @Test
+    public void shouldGetIsPublishQuantiles() {
+        final var metricsConfigs = new BaseEnv(provider);
+        final var isPublishQuantiles = metricsConfigs.isPublishQuantilesEnabled();
+        assertThat(isPublishQuantiles).isEqualTo(true);
+    }
 
-  @Test
-  public void shouldGetConfigTracingPath() {
-    final var metricsConfigs = new BaseEnv(provider);
-    final var configTracingPath = metricsConfigs.getConfigTracingPath();
-    assertThat(configTracingPath).isEqualTo("/etc/tracing");
-  }
+    @Test
+    public void shouldGetConfigTracingPath() {
+        final var metricsConfigs = new BaseEnv(provider);
+        final var configTracingPath = metricsConfigs.getConfigTracingPath();
+        assertThat(configTracingPath).isEqualTo("/etc/tracing");
+    }
 
-  @Test
-  public void shouldNotPrintAddress() {
-    final var metricsConfigs = new BaseEnv(provider);
-    assertThat(metricsConfigs.toString()).doesNotContain("@");
-  }
+    @Test
+    public void shouldNotPrintAddress() {
+        final var metricsConfigs = new BaseEnv(provider);
+        assertThat(metricsConfigs.toString()).doesNotContain("@");
+    }
 
-  @Test
-  public void shouldGetJvmMetricsEnabled() {
-    final var metricsConfigs = new BaseEnv(provider);
-    assertThat(metricsConfigs.isMetricsJvmEnabled()).isFalse();
-  }
+    @Test
+    public void shouldGetJvmMetricsEnabled() {
+        final var metricsConfigs = new BaseEnv(provider);
+        assertThat(metricsConfigs.isMetricsJvmEnabled()).isFalse();
+    }
 
-  @Test
-  public void shouldGetHttpClientMetricsDisabled() {
-    final var metricsConfigs = new BaseEnv(provider);
-    assertThat(metricsConfigs.isMetricsHTTPClientEnabled()).isFalse();
-  }
+    @Test
+    public void shouldGetHttpClientMetricsDisabled() {
+        final var metricsConfigs = new BaseEnv(provider);
+        assertThat(metricsConfigs.isMetricsHTTPClientEnabled()).isFalse();
+    }
 
-  @Test
-  public void shouldGetHttpServerMetricsDisabled() {
-    final var metricsConfigs = new BaseEnv(provider);
-    assertThat(metricsConfigs.isMetricsHTTPServerEnabled()).isFalse();
-  }
+    @Test
+    public void shouldGetHttpServerMetricsDisabled() {
+        final var metricsConfigs = new BaseEnv(provider);
+        assertThat(metricsConfigs.isMetricsHTTPServerEnabled()).isFalse();
+    }
 }

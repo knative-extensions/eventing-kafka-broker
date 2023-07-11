@@ -15,321 +15,320 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
-import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.junit.jupiter.api.Test;
+
 public class CredentialsValidatorTest {
 
-  @Test
-  public void securityProtocolPlaintextValid() {
-    final var credential = mock(Credentials.class);
+    @Test
+    public void securityProtocolPlaintextValid() {
+        final var credential = mock(Credentials.class);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.PLAINTEXT);
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.PLAINTEXT);
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
-
-  @Test
-  public void securityProtocolSslValid() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.userCertificate()).thenReturn("abc");
-    when(credential.userKey()).thenReturn("key");
-    when(credential.caCertificates()).thenReturn("xyz");
-
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
-
-  @Test
-  public void securityProtocolSslInvalidNoUserCert() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.userCertificate()).thenReturn("   ");
-    when(credential.userKey()).thenReturn("my-key");
-    when(credential.caCertificates()).thenReturn("xyz");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocolSslInvalidNoUserKey() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.userCertificate()).thenReturn("xyz");
-    when(credential.userKey()).thenReturn("  ");
-    when(credential.caCertificates()).thenReturn("my-cert");
-
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
-
-  @Test
-  public void securityProtocolSslNoCACert() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.userCertificate()).thenReturn("xyz");
-    when(credential.userKey()).thenReturn("my-key");
-    when(credential.caCertificates()).thenReturn(null);
-
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
-
-  @Test
-  public void securityProtocolSslNoCACertNoClientAuth() {
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
-    when(credential.skipClientAuth()).thenReturn(true);
-    when(credential.userCertificate()).thenReturn("  ");
-    when(credential.userKey()).thenReturn("  ");
-    when(credential.caCertificates()).thenReturn(null);
-
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
-
-
-  @Test
-  public void securityProtocolSaslPlaintextScramSha256Valid() {
-    securityProtocolSaslPlaintextValid("SCRAM-SHA-256");
-  }
-
-  @Test
-  public void securityProtocolSaslPlaintextScramSha512Valid() {
-    securityProtocolSaslPlaintextValid("SCRAM-SHA-512");
-  }
-
-  @Test
-  public void securityProtocolSaslPlaintextPlainValid() {
-    securityProtocolSaslPlaintextValid("PLAIN");
-  }
-
-  @Test
-  public void securityProtocolSaslPlaintextDefauledPlainValid() {
-    securityProtocolSaslPlaintextValid(null);
-  }
-
-  private static void securityProtocolSaslPlaintextValid(final String mechanism) {
-
-    final var credential = mock(Credentials.class);
-
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    if(mechanism != null) {
-      when(credential.SASLMechanism()).thenReturn(mechanism);
+        assertThat(CredentialsValidator.validate(credential)).isNull();
     }
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+    @Test
+    public void securityProtocolSslValid() {
+        final var credential = mock(Credentials.class);
 
-  @Test
-  public void securityProtocolSaslPlaintextScramSha513InValid() {
-    final var credential = mock(Credentials.class);
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
+        when(credential.userCertificate()).thenReturn("abc");
+        when(credential.userKey()).thenReturn("key");
+        when(credential.caCertificates()).thenReturn("xyz");
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-513");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+    @Test
+    public void securityProtocolSslInvalidNoUserCert() {
+        final var credential = mock(Credentials.class);
 
-  @Test
-  public void securityProtocolSaslPLAINTEXT_ScramSha51NoUsernameInValid() {
-    final var credential = mock(Credentials.class);
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
+        when(credential.userCertificate()).thenReturn("   ");
+        when(credential.userKey()).thenReturn("my-key");
+        when(credential.caCertificates()).thenReturn("xyz");
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("  ");
-    when(credential.SASLPassword()).thenReturn("bbb");
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+    @Test
+    public void securityProtocolSslInvalidNoUserKey() {
+        final var credential = mock(Credentials.class);
 
-  @Test
-  public void securityProtocolSaslPLAINTEXT_ScramSha51NoPasswordInValid() {
-    final var credential = mock(Credentials.class);
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
+        when(credential.userCertificate()).thenReturn("xyz");
+        when(credential.userKey()).thenReturn("  ");
+        when(credential.caCertificates()).thenReturn("my-cert");
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("  ");
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+    @Test
+    public void securityProtocolSslNoCACert() {
+        final var credential = mock(Credentials.class);
 
-  @Test
-  public void securityProtocolSaslSslScramSha256Valid() {
-    final var credential = mock(Credentials.class);
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
+        when(credential.userCertificate()).thenReturn("xyz");
+        when(credential.userKey()).thenReturn("my-key");
+        when(credential.caCertificates()).thenReturn(null);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+    @Test
+    public void securityProtocolSslNoCACertNoClientAuth() {
+        final var credential = mock(Credentials.class);
 
-  @Test
-  public void securityProtocolSaslPlainSslValid() {
-    final var credential = mock(Credentials.class);
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SSL);
+        when(credential.skipClientAuth()).thenReturn(true);
+        when(credential.userCertificate()).thenReturn("  ");
+        when(credential.userKey()).thenReturn("  ");
+        when(credential.caCertificates()).thenReturn(null);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("PLAIN");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+    @Test
+    public void securityProtocolSaslPlaintextScramSha256Valid() {
+        securityProtocolSaslPlaintextValid("SCRAM-SHA-256");
+    }
 
-  @Test
-  public void securityProtocolSaslDefaultedPlainSslValid() {
-    final var credential = mock(Credentials.class);
+    @Test
+    public void securityProtocolSaslPlaintextScramSha512Valid() {
+        securityProtocolSaslPlaintextValid("SCRAM-SHA-512");
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
+    @Test
+    public void securityProtocolSaslPlaintextPlainValid() {
+        securityProtocolSaslPlaintextValid("PLAIN");
+    }
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+    @Test
+    public void securityProtocolSaslPlaintextDefauledPlainValid() {
+        securityProtocolSaslPlaintextValid(null);
+    }
 
-  @Test
-  public void securityProtocolSaslSslScramSha513InValid() {
-    final var credential = mock(Credentials.class);
+    private static void securityProtocolSaslPlaintextValid(final String mechanism) {
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-513");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+        if (mechanism != null) {
+            when(credential.SASLMechanism()).thenReturn(mechanism);
+        }
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha51NoUsernameInValid() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.userCertificate()).thenReturn("abc");
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("  ");
-    when(credential.SASLPassword()).thenReturn("bbb");
+    @Test
+    public void securityProtocolSaslPlaintextScramSha513InValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-513");
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha51NoPasswordInValid() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.userCertificate()).thenReturn("abc");
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("  ");
+    @Test
+    public void securityProtocolSaslPLAINTEXT_ScramSha51NoUsernameInValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("  ");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha51EmptyCaCert() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("   ");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("ccc");
+    @Test
+    public void securityProtocolSaslPLAINTEXT_ScramSha51NoPasswordInValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("bbb");
+        when(credential.SASLPassword()).thenReturn("  ");
 
-  @Test
-  public void securityProtocolSaslSslScramSha51Valid() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.userCertificate()).thenReturn("abc");
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("aaa");
-    when(credential.SASLPassword()).thenReturn("bbb");
+    @Test
+    public void securityProtocolSaslSslScramSha256Valid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha256NoUsernameInValid() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.userCertificate()).thenReturn("abc");
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
-    when(credential.SASLUsername()).thenReturn("  ");
-    when(credential.SASLPassword()).thenReturn("bbb");
+    @Test
+    public void securityProtocolSaslPlainSslValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("PLAIN");
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha256NoPasswordInValid() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("xyz");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("  ");
+    @Test
+    public void securityProtocolSaslDefaultedPlainSslValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha256NoCaCert() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn(null);
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("ccc");
+    @Test
+    public void securityProtocolSaslSslScramSha513InValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-513");
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocolSaslSslScramSha256EmptyCACert() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
-    when(credential.caCertificates()).thenReturn("  ");
-    when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
-    when(credential.SASLUsername()).thenReturn("bbb");
-    when(credential.SASLPassword()).thenReturn("ccc");
+    @Test
+    public void securityProtocolSaslSslScramSha51NoUsernameInValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNull();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.userCertificate()).thenReturn("abc");
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("  ");
+        when(credential.SASLPassword()).thenReturn("bbb");
 
-  @Test
-  public void securityProtocol_nullInValid() {
-    final var credential = mock(Credentials.class);
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 
-    when(credential.securityProtocol()).thenReturn(null);
+    @Test
+    public void securityProtocolSaslSslScramSha51NoPasswordInValid() {
+        final var credential = mock(Credentials.class);
 
-    assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
-  }
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.userCertificate()).thenReturn("abc");
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("bbb");
+        when(credential.SASLPassword()).thenReturn("  ");
+
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
+
+    @Test
+    public void securityProtocolSaslSslScramSha51EmptyCaCert() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("   ");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("bbb");
+        when(credential.SASLPassword()).thenReturn("ccc");
+
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
+
+    @Test
+    public void securityProtocolSaslSslScramSha51Valid() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.userCertificate()).thenReturn("abc");
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("aaa");
+        when(credential.SASLPassword()).thenReturn("bbb");
+
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
+
+    @Test
+    public void securityProtocolSaslSslScramSha256NoUsernameInValid() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.userCertificate()).thenReturn("abc");
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-256");
+        when(credential.SASLUsername()).thenReturn("  ");
+        when(credential.SASLPassword()).thenReturn("bbb");
+
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
+
+    @Test
+    public void securityProtocolSaslSslScramSha256NoPasswordInValid() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("xyz");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("bbb");
+        when(credential.SASLPassword()).thenReturn("  ");
+
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
+
+    @Test
+    public void securityProtocolSaslSslScramSha256NoCaCert() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn(null);
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("bbb");
+        when(credential.SASLPassword()).thenReturn("ccc");
+
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
+
+    @Test
+    public void securityProtocolSaslSslScramSha256EmptyCACert() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.caCertificates()).thenReturn("  ");
+        when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credential.SASLUsername()).thenReturn("bbb");
+        when(credential.SASLPassword()).thenReturn("ccc");
+
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
+
+    @Test
+    public void securityProtocol_nullInValid() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(null);
+
+        assertThat(CredentialsValidator.validate(credential)).isNotEmpty();
+    }
 }

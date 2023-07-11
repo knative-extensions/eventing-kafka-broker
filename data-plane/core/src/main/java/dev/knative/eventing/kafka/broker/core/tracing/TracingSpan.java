@@ -15,25 +15,25 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
 import io.cloudevents.CloudEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-
 public class TracingSpan {
-  private static final AttributeKey<String> MESSAGING_MESSAGE_ID = stringKey("messaging.message_id");
-  private static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE = stringKey("messaging.message_source");
-  private static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_type");
+    private static final AttributeKey<String> MESSAGING_MESSAGE_ID = stringKey("messaging.message_id");
+    private static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE = stringKey("messaging.message_source");
+    private static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_type");
 
-  public static void decorateCurrentWithEvent(final CloudEvent event) {
-    Span span = Span.fromContextOrNull(Context.current());
-    if (span == null) {
-      return;
+    public static void decorateCurrentWithEvent(final CloudEvent event) {
+        Span span = Span.fromContextOrNull(Context.current());
+        if (span == null) {
+            return;
+        }
+        span.setAttribute(MESSAGING_MESSAGE_ID, event.getId());
+        span.setAttribute(MESSAGING_MESSAGE_SOURCE, event.getSource().toString());
+        span.setAttribute(MESSAGING_MESSAGE_TYPE, event.getType());
     }
-    span.setAttribute(MESSAGING_MESSAGE_ID, event.getId());
-    span.setAttribute(MESSAGING_MESSAGE_SOURCE, event.getSource().toString());
-    span.setAttribute(MESSAGING_MESSAGE_TYPE, event.getType());
-  }
 }

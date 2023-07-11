@@ -26,28 +26,27 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public interface IngressProducer {
 
-  /**
-   * Convenience method for {@link ReactiveKafkaProducer#send(ProducerRecord)}.
-   *
-   * @see ReactiveKafkaProducer#send(ProducerRecord)
-   */
-  default Future<RecordMetadata> send(ProducerRecord<String, CloudEvent> record) {
-    return getKafkaProducer().send(record);
-  }
+    /**
+     * Convenience method for {@link ReactiveKafkaProducer#send(ProducerRecord)}.
+     *
+     * @see ReactiveKafkaProducer#send(ProducerRecord)
+     */
+    default Future<RecordMetadata> send(ProducerRecord<String, CloudEvent> record) {
+        return getKafkaProducer().send(record);
+    }
 
-  /**
-   * @return the unwrapped kafka producer.
-   */
-  ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer();
+    /**
+     * @return the unwrapped kafka producer.
+     */
+    ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer();
 
-  /**
-   * @return the topic where the record should be sent to.
-   */
-  String getTopic();
+    /**
+     * @return the topic where the record should be sent to.
+     */
+    String getTopic();
 
-  /**
-   * @return the resource associated with this producer.
-   */
-  DataPlaneContract.Reference getReference();
-
+    /**
+     * @return the resource associated with this producer.
+     */
+    DataPlaneContract.Reference getReference();
 }

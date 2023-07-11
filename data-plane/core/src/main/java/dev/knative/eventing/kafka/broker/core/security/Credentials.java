@@ -19,61 +19,61 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 public interface Credentials {
 
-  /**
-   * @return CA certificate.
-   */
-  String caCertificates();
+    /**
+     * @return CA certificate.
+     */
+    String caCertificates();
 
-  /**
-   * Skip client auth.
-   *
-   * @return true if client auth should be skipped otherwise false
-   */
-  boolean skipClientAuth();
+    /**
+     * Skip client auth.
+     *
+     * @return true if client auth should be skipped otherwise false
+     */
+    boolean skipClientAuth();
 
-  /**
-   * @return user certificate.
-   */
-  String userCertificate();
+    /**
+     * @return user certificate.
+     */
+    String userCertificate();
 
-  /**
-   * @return user key.
-   */
-  String userKey();
+    /**
+     * @return user key.
+     */
+    String userKey();
 
-  /**
-   * Client key: security.protocol
-   *
-   * @return Security protocol or null if not specified.
-   */
-  SecurityProtocol securityProtocol();
+    /**
+     * Client key: security.protocol
+     *
+     * @return Security protocol or null if not specified.
+     */
+    SecurityProtocol securityProtocol();
 
-  /**
-   * Client key: sasl.mechanism
-   *
-   * @return SASL mechanism or null if not specified.
-   */
-  String SASLMechanism();
+    /**
+     * Client key: sasl.mechanism
+     *
+     * @return SASL mechanism or null if not specified.
+     */
+    String SASLMechanism();
 
-  /**
-   * Client config:
-   * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
-   * username="alice" \
-   * password="alice-secret";
-   *
-   * @return username.
-   * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
-   */
-  String SASLUsername();
+    /**
+     * Client config:
+     * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+     * username="alice" \
+     * password="alice-secret";
+     *
+     * @return username.
+     * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
+     */
+    String SASLUsername();
 
-  /**
-   * Client config:
-   * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
-   * username="alice" \
-   * password="alice-secret";
-   *
-   * @return password.
-   * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
-   */
-  String SASLPassword();
+    /**
+     * Client config:
+     * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+     * username="alice" \
+     * password="alice-secret";
+     *
+     * @return password.
+     * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
+     */
+    String SASLPassword();
 }

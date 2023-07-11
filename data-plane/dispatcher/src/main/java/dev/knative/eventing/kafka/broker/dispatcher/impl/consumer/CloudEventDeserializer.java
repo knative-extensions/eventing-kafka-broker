@@ -17,12 +17,11 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.cloudevents.CloudEvent;
+import java.util.Map;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 /**
  * CloudEventDeserializer is the deserializer used for deserializing {@link CloudEvent}.
@@ -35,53 +34,53 @@ import java.util.Map;
  */
 public class CloudEventDeserializer implements Deserializer<CloudEvent> {
 
-  private static final Logger logger = LoggerFactory.getLogger(CloudEventDeserializer.class);
+    private static final Logger logger = LoggerFactory.getLogger(CloudEventDeserializer.class);
 
-  public static final String INVALID_CE_WRAPPER_ENABLED = "cloudevent.invalid.transformer.enabled";
+    public static final String INVALID_CE_WRAPPER_ENABLED = "cloudevent.invalid.transformer.enabled";
 
-  private final io.cloudevents.kafka.CloudEventDeserializer internalDeserializer;
+    private final io.cloudevents.kafka.CloudEventDeserializer internalDeserializer;
 
-  public CloudEventDeserializer() {
-    internalDeserializer = new io.cloudevents.kafka.CloudEventDeserializer();
-  }
-
-  /**
-   * Configure this class.
-   *
-   * @param configs configs in key/value pairs
-   * @param isKey   whether is for key or value
-   */
-  @Override
-  public void configure(Map<String, ?> configs, boolean isKey) {
-    internalDeserializer.configure(configs, isKey);
-  }
-
-  @Override
-  public CloudEvent deserialize(final String topic, final byte[] data) {
-    logger.debug("Found invalid CloudEvent for topic {}", topic);
-    return new InvalidCloudEvent(data);
-  }
-
-  /**
-   * Deserialize a record value from a byte array into a CloudEvent.
-   *
-   * @param topic   topic associated with the data
-   * @param headers headers associated with the record; may be empty.
-   * @param data    serialized bytes; may be null;
-   *                implementations are recommended to handle null by returning a value or null rather than throwing an exception.
-   * @return deserialized typed data; may be null
-   */
-  @Override
-  public CloudEvent deserialize(final String topic, final Headers headers, byte[] data) {
-    try {
-      return internalDeserializer.deserialize(topic, headers, data);
-    } catch (final Throwable ignored) {
-      return new InvalidCloudEvent(data);
+    public CloudEventDeserializer() {
+        internalDeserializer = new io.cloudevents.kafka.CloudEventDeserializer();
     }
-  }
 
-  @Override
-  public void close() {
-    internalDeserializer.close();
-  }
+    /**
+     * Configure this class.
+     *
+     * @param configs configs in key/value pairs
+     * @param isKey   whether is for key or value
+     */
+    @Override
+    public void configure(Map<String, ?> configs, boolean isKey) {
+        internalDeserializer.configure(configs, isKey);
+    }
+
+    @Override
+    public CloudEvent deserialize(final String topic, final byte[] data) {
+        logger.debug("Found invalid CloudEvent for topic {}", topic);
+        return new InvalidCloudEvent(data);
+    }
+
+    /**
+     * Deserialize a record value from a byte array into a CloudEvent.
+     *
+     * @param topic   topic associated with the data
+     * @param headers headers associated with the record; may be empty.
+     * @param data    serialized bytes; may be null;
+     *                implementations are recommended to handle null by returning a value or null rather than throwing an exception.
+     * @return deserialized typed data; may be null
+     */
+    @Override
+    public CloudEvent deserialize(final String topic, final Headers headers, byte[] data) {
+        try {
+            return internalDeserializer.deserialize(topic, headers, data);
+        } catch (final Throwable ignored) {
+            return new InvalidCloudEvent(data);
+        }
+    }
+
+    @Override
+    public void close() {
+        internalDeserializer.close();
+    }
 }

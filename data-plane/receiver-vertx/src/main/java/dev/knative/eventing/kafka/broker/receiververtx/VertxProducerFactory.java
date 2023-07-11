@@ -17,14 +17,13 @@ package dev.knative.eventing.kafka.broker.receiververtx;
 
 import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
-import org.apache.kafka.clients.producer.Producer;
 import io.vertx.core.Vertx;
+import org.apache.kafka.clients.producer.Producer;
 
-public class VertxProducerFactory<K,V> implements ReactiveProducerFactory<K,V> {
+public class VertxProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
 
     @Override
     public ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer) {
         return new VertxKafkaProducer<>(v, producer);
     }
-    
 }

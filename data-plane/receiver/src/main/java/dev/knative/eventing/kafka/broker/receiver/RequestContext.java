@@ -19,19 +19,19 @@ import io.vertx.core.http.HttpServerRequest;
 
 public class RequestContext {
 
-  private final HttpServerRequest request;
-  private final long receivedAtMs;
+    private final HttpServerRequest request;
+    private final long receivedAtMs;
 
-  public RequestContext(final HttpServerRequest request) {
-    this.request = request;
-    this.receivedAtMs = System.currentTimeMillis();
-  }
+    public RequestContext(final HttpServerRequest request) {
+        this.request = request;
+        this.receivedAtMs = System.currentTimeMillis();
+    }
 
-  public long performLatency() {
-    return System.currentTimeMillis() - receivedAtMs;
-  }
+    public long performLatency() {
+        return System.currentTimeMillis() - receivedAtMs;
+    }
 
-  public HttpServerRequest getRequest() {
-    return request;
-  }
+    public HttpServerRequest getRequest() {
+        return request;
+    }
 }
