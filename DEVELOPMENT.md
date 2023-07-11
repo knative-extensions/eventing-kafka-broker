@@ -19,7 +19,8 @@ _Note: If you're not using `KinD`, you can skip this step._
 kind create cluster
 ```
 
-Alternatively you can use [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh) to setup a kind cluster with a local registry. This local registry will then be available by default at `localhost:5001`.
+Alternatively you can use [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh) to setup a kind cluster with a
+local registry. This local registry will then be available by default at `localhost:5001`.
 
 ```shell
 ./hack/create-kind-cluster.sh
@@ -44,7 +45,8 @@ export KO_DOCKER_REPO=docker.io/<username>
 
 _Note: replace `<username>` with your username._
 
-In case you setup `KinD` via [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh), the local registry is available at `localhost:5001`:
+In case you setup `KinD` via [./hack/create-kind-cluster.sh](hack/create-kind-cluster.sh), the local registry is
+available at `localhost:5001`:
 
 ```shell
 export KO_DOCKER_REPO=localhost:5001
@@ -173,6 +175,31 @@ Sometimes, before deploying the services it's required to run our code generator
 This step is required only if we're changing a protobuf definition file, or for some specific API changes.
 
 If you're unsure, whether you need to run it or not for your changes, run [our build tests](#run-build-tests).
+
+## Code Formatting
+
+### Go
+
+We are using [go fmt](https://pkg.go.dev/fmt) to format our Go code. To format your code, run the following
+command within the `control-plane` directory:
+
+```shell
+go fmt ./...
+```
+
+### Java
+
+We are using Spotless to format our Java code. To format your code, run the following command within the `data-plane`
+directory:
+
+```shell
+mvn spotless:apply
+```
+
+You can also configure it to your IDE. For more information, please refer
+to [Spotless](https://github.com/diffplug/spotless).
+
+This action is also performed **automatically** when you run `./hack/run.sh generate`.
 
 ## Teardown
 
