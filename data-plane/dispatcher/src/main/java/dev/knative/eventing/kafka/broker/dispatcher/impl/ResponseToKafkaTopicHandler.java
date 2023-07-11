@@ -26,7 +26,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import java.util.Objects;
 import java.util.function.Function;
-
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.LoggerFactory;
 
@@ -68,8 +67,7 @@ public final class ResponseToKafkaTopicHandler extends BaseResponseHandler {
 
         eventReceived();
 
-        final Future<Void> f =
-                producer.send(new ProducerRecord<>(topic, event)).mapEmpty();
+        final Future<Void> f = producer.send(new ProducerRecord<>(topic, event)).mapEmpty();
 
         f.onComplete(v -> eventProduced());
 

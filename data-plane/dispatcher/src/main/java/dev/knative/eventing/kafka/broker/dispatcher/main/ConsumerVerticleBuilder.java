@@ -242,11 +242,10 @@ public class ConsumerVerticleBuilder {
         }
 
         final Properties producerConfigs = new Properties();
-            producerConfigs.putAll(consumerVerticleContext.getProducerConfigs());
+        producerConfigs.putAll(consumerVerticleContext.getProducerConfigs());
 
-        final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
-                .getProducerFactory()
-                .create(vertx, producerConfigs);
+        final ReactiveKafkaProducer<String, CloudEvent> producer =
+                this.consumerVerticleContext.getProducerFactory().create(vertx, producerConfigs);
         return new ResponseToKafkaTopicHandler(
                 producer, consumerVerticleContext.getResource().getTopics(0));
     }

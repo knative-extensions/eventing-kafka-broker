@@ -18,9 +18,7 @@ package dev.knative.eventing.kafka.broker.receiververtx;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import io.vertx.core.Vertx;
-
 import java.util.Properties;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 
 public class VertxProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {

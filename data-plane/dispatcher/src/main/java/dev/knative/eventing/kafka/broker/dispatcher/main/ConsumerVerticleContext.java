@@ -153,7 +153,8 @@ public class ConsumerVerticleContext {
         return this;
     }
 
-    public ConsumerVerticleContext withProducerFactory(final ReactiveProducerFactory<String, CloudEvent> producerFactory) {
+    public ConsumerVerticleContext withProducerFactory(
+            final ReactiveProducerFactory<String, CloudEvent> producerFactory) {
         this.producerFactory = producerFactory;
         return this;
     }

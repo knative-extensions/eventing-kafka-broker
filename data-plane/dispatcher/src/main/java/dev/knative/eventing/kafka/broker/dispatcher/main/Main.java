@@ -63,7 +63,10 @@ public class Main {
      *
      * @param args command line arguments.
      */
-    public static void start(final String[] args, final ReactiveConsumerFactory reactiveConsumerFactory, final ReactiveProducerFactory reactiveProducerFactory)
+    public static void start(
+            final String[] args,
+            final ReactiveConsumerFactory reactiveConsumerFactory,
+            final ReactiveProducerFactory reactiveProducerFactory)
             throws IOException {
         DispatcherEnv env = new DispatcherEnv(System::getenv);
 

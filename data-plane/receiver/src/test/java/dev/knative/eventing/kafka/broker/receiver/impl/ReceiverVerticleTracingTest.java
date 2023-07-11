@@ -83,7 +83,8 @@ public abstract class ReceiverVerticleTracingTest {
         BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
     }
 
-    public abstract ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(Vertx vertx, Producer<String, CloudEvent> producer);
+    public abstract ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
+            Vertx vertx, Producer<String, CloudEvent> producer);
 
     @BeforeEach
     public void setup() throws ExecutionException, InterruptedException {

@@ -19,9 +19,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
-
 import java.util.Properties;
-
 import org.apache.kafka.clients.producer.MockProducer;
 
 public class MockReactiveProducerFactory implements ReactiveProducerFactory<String, CloudEvent> {
