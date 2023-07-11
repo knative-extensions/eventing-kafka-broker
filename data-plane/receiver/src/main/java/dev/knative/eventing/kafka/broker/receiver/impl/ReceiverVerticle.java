@@ -38,6 +38,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.Future;
 
+import io.vertx.core.net.SSLOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,35 +179,27 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         public void eventReceived(Action action, Secret secret) {
                           // This block will be called when the Secret is added, modified, or
                           // deleted.
-                          // You can update your server configuration accordingly here.
 
-                          //                    // Update SSL configuration
-                          //                    PemKeyCertOptions keyCertOptions =
-                          //                        new PemKeyCertOptions()
-                          //                            .setKeyPath(TLS_KEY_FILE_PATH)
-                          //                            .setCertPath(TLS_CRT_FILE_PATH);
-                          //                    ReceiverVerticle.this
-                          //                        .httpsServerOptions
-                          //                        .setSsl(true)
-                          //                        .setPemKeyCertOptions(keyCertOptions);
-                          //
-                          //                    // Restart server
-                          //                    ReceiverVerticle.this.httpsServer.close();
-                          //                    ReceiverVerticle.this.httpsServer =
-                          //
-                          // vertx.createHttpServer(ReceiverVerticle.this.httpsServerOptions);
-                          //                    ReceiverVerticle.this
-                          //                        .httpsServer
-                          //                        .requestHandler(handler)
-                          //                        .exceptionHandler(startPromise::tryFail)
-                          //                        .listen(
-                          //
-                          // ReceiverVerticle.this.httpsServerOptions.getPort(),
-                          //
-                          // ReceiverVerticle.this.httpsServerOptions.getHost());
-                          //                  }
-                          // print hello world
-                          assert 1 == 1;
+                          // Update SSL configuration by using updateSSLOptions
+                          PemKeyCertOptions keyCertOptions =
+                              new PemKeyCertOptions()
+                                  .setKeyPath(TLS_KEY_FILE_PATH)
+                                  .setCertPath(TLS_CRT_FILE_PATH);
+
+                          httpServer.updateSSLOptions(
+                              new SSLOptions().setKeyCertOptions(keyCertOptions));
+
+                          // Restart server
+                          ReceiverVerticle.this.httpsServer.close();
+                          ReceiverVerticle.this.httpsServer =
+                              vertx.createHttpServer(ReceiverVerticle.this.httpsServerOptions);
+                          ReceiverVerticle.this
+                              .httpsServer
+                              .requestHandler(handler)
+                              .exceptionHandler(startPromise::tryFail)
+                              .listen(
+                                  ReceiverVerticle.this.httpsServerOptions.getPort(),
+                                  ReceiverVerticle.this.httpsServerOptions.getHost());
                         }
 
                         @Override
