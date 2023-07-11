@@ -29,7 +29,7 @@ public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final KafkaProducer<K, V> producer;
 
-    VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
+    public VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = KafkaProducer.create(v, producer);
     }
 

@@ -34,6 +34,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
@@ -110,7 +111,7 @@ public class ReceiverVerticleTest {
         ReceiverVerticleTest.mockProducer =
                 new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
         ReactiveKafkaProducer<String, CloudEvent> producer =
-                new MockReactiveProducerFactory().create(vertx, mockProducer);
+                new MockReactiveKafkaProducer<>(mockProducer);
 
         store = new IngressProducerReconcilableStore(AuthProvider.noAuth(), new Properties(), properties -> producer);
 
