@@ -31,7 +31,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveConsumerFactory;
-import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.cloudevents.kafka.CloudEventDeserializer;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
@@ -73,7 +73,7 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new MockReactiveProducerFactory<>());
+                new dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory<>());
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")

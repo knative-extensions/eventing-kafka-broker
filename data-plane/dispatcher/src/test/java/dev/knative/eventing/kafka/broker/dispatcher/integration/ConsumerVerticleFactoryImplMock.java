@@ -20,9 +20,9 @@ import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
-import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
@@ -53,13 +53,11 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
     }
 
     private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx, Properties producerConfigs) {
-        return new MockReactiveKafkaProducer<>(
-                vertx,
-                new MockProducer<>(
-                        true,
-                        new StringSerializer(),
-                        (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
-                        ));
+        return new MockReactiveKafkaProducer<>(new MockProducer<>(
+                true,
+                new StringSerializer(),
+                (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
+                ));
     }
 
     /**
