@@ -117,7 +117,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 
 	reconciler.Prober, err = prober.NewCompositeNoTLS(ctx, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
 	if err != nil {
-		logger.Fatal("Failed to created prober", zap.Error(err))
+		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
 
 	brokerInformer := brokerinformer.Get(ctx)
