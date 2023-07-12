@@ -104,7 +104,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	reconciler.Prober, err = prober.NewComposite(ctx, env.IngressPodPort, env.IngressPodTlsPort, IPsLister, impl.EnqueueKey, &caCerts)
 	if err != nil {
-		logger.Fatal("Failed to created prober", zap.Error(err))
+		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
 
 	brokerInformer := brokerinformer.Get(ctx)
