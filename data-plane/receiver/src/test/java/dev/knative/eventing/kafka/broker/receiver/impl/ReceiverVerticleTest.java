@@ -59,6 +59,9 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -74,6 +77,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -134,6 +138,7 @@ public class ReceiverVerticleTest {
                 env,
                 httpServerOptions,
                 httpsServerOptions,
+                SECRET_VOLUME_PATH,
                 v -> store,
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), registry));
         vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
@@ -216,6 +221,28 @@ public class ReceiverVerticleTest {
         if (mockProducer.history().size() > 0) {
             assertThat(mockProducer.history()).containsExactlyInAnyOrder(tc.record);
         }
+    }
+
+    // Write the test to verify that when the secret is updated, the new secret is used
+    @Test
+    public void secretFileUpdated() throws InterruptedException {
+        // Modified the secret file in the test resources folder
+        File secretFile = new File(TLS_CRT_FILE_PATH);
+
+        // Write the new CA cert to the file
+        String new_CA_Cert = "1234";
+        try {
+            FileWriter myWriter = new FileWriter(secretFile);
+            //      myWriter.write(new_CA_Cert);
+            myWriter.close();
+            new_CA_Cert = "12345";
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+        // Wait for the secret to be updated
+
     }
 
     private static List<TestCase> getValidNonValidEvents() {

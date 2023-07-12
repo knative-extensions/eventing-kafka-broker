@@ -65,6 +65,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                 env,
                 httpServerOptions,
                 httpsServerOptions,
+                "",
                 v -> new IngressProducerReconcilableStore(
                         AuthProvider.kubernetes(),
                         producerConfigs,

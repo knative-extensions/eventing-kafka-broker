@@ -21,6 +21,7 @@ import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPla
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
+import dev.knative.eventing.kafka.broker.core.file.SecretWatcher;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -29,9 +30,7 @@ import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
-import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.*;
-import io.fabric8.kubernetes.client.Watcher.Action;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -45,6 +44,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.SSLOptions;
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -86,10 +86,15 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
 
+    private String testSecretVolumePath;
+
+    private SecretWatcher secretWatcher;
+
     public ReceiverVerticle(
             final ReceiverEnv env,
             final HttpServerOptions httpServerOptions,
             final HttpServerOptions httpsServerOptions,
+            final String testSecretVolumePath,
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler) {
         Objects.requireNonNull(env);
@@ -103,6 +108,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.httpsServerOptions = httpsServerOptions;
         this.ingressProducerStoreFactory = ingressProducerStoreFactory;
         this.ingressRequestHandler = ingressRequestHandler;
+        this.testSecretVolumePath = testSecretVolumePath;
     }
 
     @Override
@@ -154,56 +160,24 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                     .<Void>mapEmpty()
                     .onComplete(startPromise);
         }
-        vertx.<Watch>executeBlocking(
-                promise -> {
-                    Watch watch = client.secrets()
-                            .inNamespace("knative-eventing")
-                            .withName("receiver-tls-secret")
-                            .watch(new Watcher<Secret>() {
+        if (testSecretVolumePath != null) {
+            setupSecretWatcher(testSecretVolumePath);
+        } else {
+            setupSecretWatcher(SECRET_VOLUME_PATH);
+        }
+    }
 
-                                @Override
-                                public void eventReceived(Action action, Secret secret) {
-                                    // This block will be called when the Secret is added, modified, or
-                                    // deleted.
+    // the input parameter is a String, if it is passed in, it means that the test is running. If not,
+    // use the default value
+    public void setupSecretWatcher(String testSecretVolumePath) {
+        try {
+            this.secretWatcher = new SecretWatcher(testSecretVolumePath, this::updateServerConfig);
 
-                                    // Update SSL configuration by using updateSSLOptions
-                                    PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-                                            .setKeyPath(TLS_KEY_FILE_PATH)
-                                            .setCertPath(TLS_CRT_FILE_PATH);
-
-                                    httpServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-
-                                    // Restart server
-                                    ReceiverVerticle.this.httpsServer.close();
-                                    ReceiverVerticle.this.httpsServer =
-                                            vertx.createHttpServer(ReceiverVerticle.this.httpsServerOptions);
-                                    ReceiverVerticle.this
-                                            .httpsServer
-                                            .requestHandler(handler)
-                                            .exceptionHandler(startPromise::tryFail)
-                                            .listen(
-                                                    ReceiverVerticle.this.httpsServerOptions.getPort(),
-                                                    ReceiverVerticle.this.httpsServerOptions.getHost());
-                                }
-
-                                @Override
-                                public void onClose(WatcherException cause) {
-                                    if (cause != null) {
-                                        logger.error("Watcher onClose with exception", cause);
-                                    }
-                                }
-                            });
-
-                    promise.complete(watch);
-                },
-                res -> {
-                    if (res.succeeded()) {
-                        Watch watch = res.result();
-                        // Store this `watch` reference somewhere in order to be able to close it in the future
-                    } else {
-                        logger.error("Watcher exception", res.cause());
-                    }
-                });
+            logger.info("Starting SecretWatcher");
+            new Thread(this.secretWatcher).start();
+        } catch (IOException e) {
+            logger.error("Failed to start SecretWatcher", e);
+        }
     }
 
     @Override
@@ -214,6 +188,10 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
+
+        // close the watcher
+
+        //    this.secretWatcher.stop();
     }
 
     @Override
@@ -243,5 +221,21 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         // Invoke the ingress request handler
         this.ingressRequestHandler.handle(requestContext, producer);
+    }
+
+    public void updateServerConfig() {
+        // This function will be called when the secret volume is updated
+
+        // Check whether the tls.key and tls.crt files exist
+        File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
+        File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
+
+        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+
+            // Update SSL configuration by using updateSSLOptions
+            PemKeyCertOptions keyCertOptions =
+                    new PemKeyCertOptions().setKeyPath(TLS_KEY_FILE_PATH).setCertPath(TLS_CRT_FILE_PATH);
+            httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+        }
     }
 }
