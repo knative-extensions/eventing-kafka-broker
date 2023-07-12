@@ -15,6 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
@@ -31,12 +37,6 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
-
 /**
  * This class is responsible for watching a given file and reports update.
  * <p>
@@ -47,163 +47,162 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
  */
 public class FileWatcher implements AutoCloseable {
 
-  private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
-  private final File toWatch;
-  private final Consumer<DataPlaneContract.Contract> contractConsumer;
+    private final File toWatch;
+    private final Consumer<DataPlaneContract.Contract> contractConsumer;
 
-  private Thread watcherThread;
-  private WatchService watcher;
-  private long lastContract;
+    private Thread watcherThread;
+    private WatchService watcher;
+    private long lastContract;
 
-  /**
-   * All args constructor.
-   *
-   * @param contractConsumer updates receiver.
-   * @param file             file to watch
-   */
-  public FileWatcher(File file, Consumer<DataPlaneContract.Contract> contractConsumer) {
-    Objects.requireNonNull(file, "provide file");
-    Objects.requireNonNull(contractConsumer, "provide consumer");
+    /**
+     * All args constructor.
+     *
+     * @param contractConsumer updates receiver.
+     * @param file             file to watch
+     */
+    public FileWatcher(File file, Consumer<DataPlaneContract.Contract> contractConsumer) {
+        Objects.requireNonNull(file, "provide file");
+        Objects.requireNonNull(contractConsumer, "provide consumer");
 
-    this.contractConsumer = contractConsumer;
-    this.toWatch = file.getAbsoluteFile();
-    this.lastContract = -1;
-  }
-
-  /**
-   * Start the watcher thread.
-   * This is going to create a new deamon thread, which can be stopped using {@link #close()}.
-   *
-   * @throws IOException           if an error happened while starting to watch
-   * @throws IllegalStateException if the watcher is already running
-   */
-  public void start() throws IOException {
-    synchronized (this) {
-      if (this.watcherThread != null) {
-        throw new IllegalStateException("Watcher thread is already up and running");
-      }
-
-      // Start watching
-      this.watcher = FileSystems.getDefault().newWatchService();
-      toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-
-      // Start the watcher thread
-      this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
+        this.contractConsumer = contractConsumer;
+        this.toWatch = file.getAbsoluteFile();
+        this.lastContract = -1;
     }
 
-    this.watcherThread.start();
-  }
+    /**
+     * Start the watcher thread.
+     * This is going to create a new deamon thread, which can be stopped using {@link #close()}.
+     *
+     * @throws IOException           if an error happened while starting to watch
+     * @throws IllegalStateException if the watcher is already running
+     */
+    public void start() throws IOException {
+        synchronized (this) {
+            if (this.watcherThread != null) {
+                throw new IllegalStateException("Watcher thread is already up and running");
+            }
 
-  @Override
-  public synchronized void close() throws Exception {
-    if (this.watcherThread == null) {
-      throw new IllegalStateException("Watcher thread is not running");
-    }
-    this.watcherThread.interrupt();
-    this.watcherThread = null;
-  }
+            // Start watching
+            this.watcher = FileSystems.getDefault().newWatchService();
+            toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
-  private void run() {
-    try {
-      // register the given watch service.
-      // Note: this watch a directory and not the single file we're interested in, so that's the
-      // reason in #watch() we filter watch service events based on the updated file.
-      this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-    } catch (IOException e) {
-      logger.error("Error while starting watching the file", e);
-      return;
-    }
-    logger.info("Started watching {}", toWatch);
-
-    // If the container restarts, the mounted file never gets reconciled, so update as soon as we
-    // start watching
-    update();
-
-    while (!Thread.interrupted()) {
-      var shouldUpdate = false;
-
-      // Note: take() blocks
-      WatchKey key;
-      try {
-        key = watcher.take();
-        logger.debug("Contract updates");
-      } catch (InterruptedException e) {
-        break; // Looks good, this means Thread.interrupt was invoked
-      }
-
-      // this should be rare but it can actually happen so check watch key validity
-      if (!key.isValid()) {
-        logger.warn("Invalid key");
-        continue;
-      }
-
-      // loop through all watch service events and determine if an update we're interested in
-      // has occurred.
-      for (final var event : key.pollEvents()) {
-
-        final var kind = event.kind();
-
-        // check if we're interested in the updated file
-        if (kind != OVERFLOW) {
-          shouldUpdate = true;
-          break;
+            // Start the watcher thread
+            this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
         }
 
-      }
+        this.watcherThread.start();
+    }
 
-      if (shouldUpdate) {
+    @Override
+    public synchronized void close() throws Exception {
+        if (this.watcherThread == null) {
+            throw new IllegalStateException("Watcher thread is not running");
+        }
+        this.watcherThread.interrupt();
+        this.watcherThread = null;
+    }
+
+    private void run() {
+        try {
+            // register the given watch service.
+            // Note: this watch a directory and not the single file we're interested in, so that's the
+            // reason in #watch() we filter watch service events based on the updated file.
+            this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+        } catch (IOException e) {
+            logger.error("Error while starting watching the file", e);
+            return;
+        }
+        logger.info("Started watching {}", toWatch);
+
+        // If the container restarts, the mounted file never gets reconciled, so update as soon as we
+        // start watching
         update();
-      }
 
-      // reset the watch key, so that we receives new events
-      key.reset();
+        while (!Thread.interrupted()) {
+            var shouldUpdate = false;
+
+            // Note: take() blocks
+            WatchKey key;
+            try {
+                key = watcher.take();
+                logger.debug("Contract updates");
+            } catch (InterruptedException e) {
+                break; // Looks good, this means Thread.interrupt was invoked
+            }
+
+            // this should be rare but it can actually happen so check watch key validity
+            if (!key.isValid()) {
+                logger.warn("Invalid key");
+                continue;
+            }
+
+            // loop through all watch service events and determine if an update we're interested in
+            // has occurred.
+            for (final var event : key.pollEvents()) {
+
+                final var kind = event.kind();
+
+                // check if we're interested in the updated file
+                if (kind != OVERFLOW) {
+                    shouldUpdate = true;
+                    break;
+                }
+            }
+
+            if (shouldUpdate) {
+                update();
+            }
+
+            // reset the watch key, so that we receives new events
+            key.reset();
+        }
+
+        // Close the watcher
+        try {
+            this.watcher.close();
+        } catch (IOException e) {
+            logger.warn("Error while closing the file watcher", e);
+        }
     }
 
-    // Close the watcher
-    try {
-      this.watcher.close();
-    } catch (IOException e) {
-      logger.warn("Error while closing the file watcher", e);
+    private void update() {
+        if (Thread.interrupted()) {
+            return;
+        }
+        try (final var fileReader = new FileReader(toWatch);
+                final var bufferedReader = new BufferedReader(fileReader)) {
+            final var contract = parseFromJson(bufferedReader);
+            if (contract == null) {
+                return;
+            }
+            // The check, which is based only on the generation number, works because the control plane doesn't update
+            // the
+            // file if nothing changes.
+            final var previousLastContract = this.lastContract;
+            this.lastContract = contract.getGeneration();
+            if (contract.getGeneration() == previousLastContract) {
+                logger.debug(
+                        "Contract unchanged {} {}",
+                        keyValue("generation", contract.getGeneration()),
+                        keyValue("lastGeneration", previousLastContract));
+                return;
+            }
+            contractConsumer.accept(contract);
+        } catch (IOException e) {
+            logger.warn("Error reading the contract file, retrying...", e);
+        }
     }
-  }
 
-  private void update() {
-    if (Thread.interrupted()) {
-      return;
+    private DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
+        try {
+            final var contract = DataPlaneContract.Contract.newBuilder();
+            JsonFormat.parser().merge(content, contract);
+            return contract.build();
+        } catch (final InvalidProtocolBufferException ex) {
+            logger.debug("failed to parse from JSON", ex);
+        }
+        return null;
     }
-    try (
-      final var fileReader = new FileReader(toWatch);
-      final var bufferedReader = new BufferedReader(fileReader)) {
-      final var contract = parseFromJson(bufferedReader);
-      if (contract == null) {
-        return;
-      }
-      // The check, which is based only on the generation number, works because the control plane doesn't update the
-      // file if nothing changes.
-      final var previousLastContract = this.lastContract;
-      this.lastContract = contract.getGeneration();
-      if (contract.getGeneration() == previousLastContract) {
-        logger.debug("Contract unchanged {} {}",
-          keyValue("generation", contract.getGeneration()),
-          keyValue("lastGeneration", previousLastContract)
-        );
-        return;
-      }
-      contractConsumer.accept(contract);
-    } catch (IOException e) {
-      logger.warn("Error reading the contract file, retrying...", e);
-    }
-  }
-
-  private DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
-    try {
-      final var contract = DataPlaneContract.Contract.newBuilder();
-      JsonFormat.parser().merge(content, contract);
-      return contract.build();
-    } catch (final InvalidProtocolBufferException ex) {
-      logger.debug("failed to parse from JSON", ex);
-    }
-    return null;
-  }
 }

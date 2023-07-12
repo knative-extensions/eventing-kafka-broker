@@ -15,6 +15,11 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
@@ -24,89 +29,80 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
 public class ResourcesReconcilerMessageHandlerTest {
 
-  @Test
-  public void publishAndReceiveContractTest(Vertx vertx, VertxTestContext testContext) {
-    ContractMessageCodec.register(vertx.eventBus());
+    @Test
+    public void publishAndReceiveContractTest(Vertx vertx, VertxTestContext testContext) {
+        ContractMessageCodec.register(vertx.eventBus());
 
-    DataPlaneContract.Contract expected = CoreObjects.contract();
+        DataPlaneContract.Contract expected = CoreObjects.contract();
 
-    ResourcesReconcilerMessageHandler.start(vertx, contract -> {
-      testContext.verify(() ->
-        assertThat(contract)
-          .isEqualTo(expected)
-      );
-      testContext.completeNow();
-      return Future.succeededFuture();
-    });
+        ResourcesReconcilerMessageHandler.start(vertx, contract -> {
+            testContext.verify(() -> assertThat(contract).isEqualTo(expected));
+            testContext.completeNow();
+            return Future.succeededFuture();
+        });
 
-    ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-    publisher.accept(expected);
-  }
+        ContractPublisher publisher =
+                new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+        publisher.accept(expected);
+    }
 
-  @SuppressWarnings("unchecked")
-  @Test
-  public void shouldReconcileOnConcurrentEnqueue(final Vertx vertx) {
+    @SuppressWarnings("unchecked")
+    @Test
+    public void shouldReconcileOnConcurrentEnqueue(final Vertx vertx) {
 
-    final var reconcileCallsCounter = new AtomicInteger();
+        final var reconcileCallsCounter = new AtomicInteger();
 
-    final var duringReconcileLatch = new CountDownLatch(1);
-    final var newContractSetLatch = new CountDownLatch(1);
+        final var duringReconcileLatch = new CountDownLatch(1);
+        final var newContractSetLatch = new CountDownLatch(1);
 
-    final var handler = new ResourcesReconcilerMessageHandler(vertx, resources -> {
-      reconcileCallsCounter.incrementAndGet();
-      try {
-        duringReconcileLatch.countDown();
-        newContractSetLatch.await();
-      } catch (final InterruptedException e) {
-        e.printStackTrace();
-      }
-      return Future.succeededFuture();
-    });
+        final var handler = new ResourcesReconcilerMessageHandler(vertx, resources -> {
+            reconcileCallsCounter.incrementAndGet();
+            try {
+                duringReconcileLatch.countDown();
+                newContractSetLatch.await();
+            } catch (final InterruptedException e) {
+                e.printStackTrace();
+            }
+            return Future.succeededFuture();
+        });
 
-    final var contractGenerator = new AtomicInteger();
+        final var contractGenerator = new AtomicInteger();
 
-    final Runnable f = () -> {
-      final Message<Object> message = mock(Message.class);
-      when(message.body()).thenReturn(DataPlaneContract.Contract
-        .newBuilder()
-        .setGeneration(contractGenerator.getAndIncrement())
-        .build());
-      handler.handle(message);
-    };
+        final Runnable f = () -> {
+            final Message<Object> message = mock(Message.class);
+            when(message.body())
+                    .thenReturn(DataPlaneContract.Contract.newBuilder()
+                            .setGeneration(contractGenerator.getAndIncrement())
+                            .build());
+            handler.handle(message);
+        };
 
-    final var waitFirst = new CountDownLatch(1);
-    Executors.newSingleThreadExecutor().submit(() -> {
-      waitFirst.countDown();
-      f.run();
-    });
+        final var waitFirst = new CountDownLatch(1);
+        Executors.newSingleThreadExecutor().submit(() -> {
+            waitFirst.countDown();
+            f.run();
+        });
 
-    Executors.newSingleThreadExecutor().submit(() -> {
-      try {
-        waitFirst.await();
-        duringReconcileLatch.await();
-        f.run();
-        newContractSetLatch.countDown();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    });
+        Executors.newSingleThreadExecutor().submit(() -> {
+            try {
+                waitFirst.await();
+                duringReconcileLatch.await();
+                f.run();
+                newContractSetLatch.countDown();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
-    await()
-      .untilAsserted(() -> assertThat(reconcileCallsCounter.get()).isEqualTo(2));
-  }
+        await().untilAsserted(() -> assertThat(reconcileCallsCounter.get()).isEqualTo(2));
+    }
 }

@@ -19,7 +19,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
-
 import java.util.Objects;
 
 /**
@@ -29,40 +28,38 @@ import java.util.Objects;
  */
 public class ProbeHandler implements Handler<HttpServerRequest> {
 
-  protected static final int STATUS_OK = HttpResponseStatus.OK.code();
+    protected static final int STATUS_OK = HttpResponseStatus.OK.code();
 
-  private final String livenessPath;
-  private final String readinessPath;
-  private final Handler<HttpServerRequest> next;
+    private final String livenessPath;
+    private final String readinessPath;
+    private final Handler<HttpServerRequest> next;
 
-  /**
-   * All args constructor for creating a new instance of this class.
-   *
-   * @param livenessPath  request path at which respond to liveness checks.
-   * @param readinessPath request path at which respond to readiness checks.
-   * @param next          next handler
-   */
-  public ProbeHandler(final String livenessPath,
-                      final String readinessPath,
-                      final Handler<HttpServerRequest> next) {
-    Objects.requireNonNull(next);
+    /**
+     * All args constructor for creating a new instance of this class.
+     *
+     * @param livenessPath  request path at which respond to liveness checks.
+     * @param readinessPath request path at which respond to readiness checks.
+     * @param next          next handler
+     */
+    public ProbeHandler(final String livenessPath, final String readinessPath, final Handler<HttpServerRequest> next) {
+        Objects.requireNonNull(next);
 
-    this.livenessPath = livenessPath;
-    this.readinessPath = readinessPath;
-    this.next = next;
-  }
-
-  @Override
-  public void handle(final HttpServerRequest request) {
-    if (isProbeRequest(request)) {
-      request.response().setStatusCode(STATUS_OK).end();
-      return;
+        this.livenessPath = livenessPath;
+        this.readinessPath = readinessPath;
+        this.next = next;
     }
-    this.next.handle(request);
-  }
 
-  private boolean isProbeRequest(final HttpServerRequest request) {
-    return request.method().equals(HttpMethod.GET)
-      && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
-  }
+    @Override
+    public void handle(final HttpServerRequest request) {
+        if (isProbeRequest(request)) {
+            request.response().setStatusCode(STATUS_OK).end();
+            return;
+        }
+        this.next.handle(request);
+    }
+
+    private boolean isProbeRequest(final HttpServerRequest request) {
+        return request.method().equals(HttpMethod.GET)
+                && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
+    }
 }

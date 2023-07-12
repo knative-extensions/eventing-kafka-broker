@@ -23,15 +23,12 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 @FunctionalInterface
 public interface RequestToRecordMapper {
 
-  /**
-   * Map the given HTTP request to a Kafka record.
-   *
-   * @param request http request.
-   * @param topic   topic to send the event
-   * @return kafka record (record can be null).
-   */
-  Future<ProducerRecord<String, CloudEvent>> requestToRecord(
-    final HttpServerRequest request,
-    final String topic
-  );
+    /**
+     * Map the given HTTP request to a Kafka record.
+     *
+     * @param request http request.
+     * @param topic   topic to send the event
+     * @return kafka record (record can be null).
+     */
+    Future<ProducerRecord<String, CloudEvent>> requestToRecord(final HttpServerRequest request, final String topic);
 }

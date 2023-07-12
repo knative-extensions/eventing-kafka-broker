@@ -15,48 +15,48 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
+import static java.util.Objects.requireNonNull;
+
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import java.util.function.Function;
 
-import static java.util.Objects.requireNonNull;
-
 public class DispatcherEnv extends BaseEnv {
 
-  public static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
-  private final String consumerConfigFilePath;
+    public static final String CONSUMER_CONFIG_FILE_PATH = "CONSUMER_CONFIG_FILE_PATH";
+    private final String consumerConfigFilePath;
 
-  public static final String WEBCLIENT_CONFIG_FILE_PATH = "WEBCLIENT_CONFIG_FILE_PATH";
-  private final String webClientConfigFilePath;
+    public static final String WEBCLIENT_CONFIG_FILE_PATH = "WEBCLIENT_CONFIG_FILE_PATH";
+    private final String webClientConfigFilePath;
 
-  public static final String EGRESSES_INITIAL_CAPACITY = "EGRESSES_INITIAL_CAPACITY";
-  private final int egressesInitialCapacity;
+    public static final String EGRESSES_INITIAL_CAPACITY = "EGRESSES_INITIAL_CAPACITY";
+    private final int egressesInitialCapacity;
 
-  public DispatcherEnv(Function<String, String> envProvider) {
-    super(envProvider);
+    public DispatcherEnv(Function<String, String> envProvider) {
+        super(envProvider);
 
-    this.consumerConfigFilePath = requireNonNull(envProvider.apply(CONSUMER_CONFIG_FILE_PATH));
-    this.webClientConfigFilePath = requireNonNull(envProvider.apply(WEBCLIENT_CONFIG_FILE_PATH));
-    this.egressesInitialCapacity = Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
-  }
+        this.consumerConfigFilePath = requireNonNull(envProvider.apply(CONSUMER_CONFIG_FILE_PATH));
+        this.webClientConfigFilePath = requireNonNull(envProvider.apply(WEBCLIENT_CONFIG_FILE_PATH));
+        this.egressesInitialCapacity = Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
+    }
 
-  public String getConsumerConfigFilePath() {
-    return consumerConfigFilePath;
-  }
+    public String getConsumerConfigFilePath() {
+        return consumerConfigFilePath;
+    }
 
-  public String getWebClientConfigFilePath() {
-    return webClientConfigFilePath;
-  }
+    public String getWebClientConfigFilePath() {
+        return webClientConfigFilePath;
+    }
 
-  public int getEgressesInitialCapacity() {
-    return egressesInitialCapacity;
-  }
+    public int getEgressesInitialCapacity() {
+        return egressesInitialCapacity;
+    }
 
-  @Override
-  public String toString() {
-    return "DispatcherEnv{" +
-      "consumerConfigFilePath='" + consumerConfigFilePath + '\'' +
-      ", webClientConfigFilePath='" + webClientConfigFilePath + '\'' +
-      ", egressesInitialCapacity=" + egressesInitialCapacity +
-      "} " + super.toString();
-  }
+    @Override
+    public String toString() {
+        return "DispatcherEnv{" + "consumerConfigFilePath='"
+                + consumerConfigFilePath + '\'' + ", webClientConfigFilePath='"
+                + webClientConfigFilePath + '\'' + ", egressesInitialCapacity="
+                + egressesInitialCapacity + "} "
+                + super.toString();
+    }
 }

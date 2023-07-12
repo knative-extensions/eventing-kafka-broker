@@ -15,9 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import java.util.Map;
-
 import io.vertx.core.Vertx;
+import java.util.Map;
 
 public class MockReactiveConsumerFactory<K, V> implements ReactiveConsumerFactory<K, V> {
 
@@ -25,5 +24,4 @@ public class MockReactiveConsumerFactory<K, V> implements ReactiveConsumerFactor
     public ReactiveKafkaConsumer<K, V> create(Vertx vertx, Map<String, Object> configs) {
         return new MockReactiveKafkaConsumer<>(configs);
     }
-    
 }

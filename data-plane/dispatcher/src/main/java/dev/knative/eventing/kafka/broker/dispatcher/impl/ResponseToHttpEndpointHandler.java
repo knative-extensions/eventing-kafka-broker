@@ -26,20 +26,20 @@ import org.slf4j.LoggerFactory;
  */
 public class ResponseToHttpEndpointHandler extends BaseResponseHandler implements ResponseHandler {
 
-  private final CloudEventSender cloudEventSender;
+    private final CloudEventSender cloudEventSender;
 
-  public ResponseToHttpEndpointHandler(CloudEventSender cloudEventSender) {
-    super(LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class));
-    this.cloudEventSender = cloudEventSender;
-  }
+    public ResponseToHttpEndpointHandler(CloudEventSender cloudEventSender) {
+        super(LoggerFactory.getLogger(ResponseToKafkaTopicHandler.class));
+        this.cloudEventSender = cloudEventSender;
+    }
 
-  @Override
-  protected Future<Void> doHandleEvent(CloudEvent event) {
-    return cloudEventSender.send(event).mapEmpty();
-  }
+    @Override
+    protected Future<Void> doHandleEvent(CloudEvent event) {
+        return cloudEventSender.send(event).mapEmpty();
+    }
 
-  @Override
-  public Future<Void> close() {
-    return this.cloudEventSender.close().mapEmpty();
-  }
+    @Override
+    public Future<Void> close() {
+        return this.cloudEventSender.close().mapEmpty();
+    }
 }

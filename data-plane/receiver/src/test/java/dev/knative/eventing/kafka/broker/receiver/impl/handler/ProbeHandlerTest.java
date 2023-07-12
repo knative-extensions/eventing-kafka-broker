@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static org.mockito.Mockito.mock;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
@@ -22,37 +24,35 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.mock;
-
 public class ProbeHandlerTest extends PreHandlerTest {
 
-  private static final String LIVENESS_PATH = "/healthz";
-  private static final String READINESS_PATH = "/readyz";
-  private static final int OK = HttpResponseStatus.OK.code();
+    private static final String LIVENESS_PATH = "/healthz";
+    private static final String READINESS_PATH = "/readyz";
+    private static final int OK = HttpResponseStatus.OK.code();
 
-  @Test
-  public void testReadinessCheck(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, OK, HttpMethod.GET, READINESS_PATH);
-  }
+    @Test
+    public void testReadinessCheck(final VertxTestContext context) {
+        mustReceiveStatusCodeOnPath(context, OK, HttpMethod.GET, READINESS_PATH);
+    }
 
-  @Test
-  public void testLivenessCheck(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, OK, HttpMethod.GET, LIVENESS_PATH);
-  }
+    @Test
+    public void testLivenessCheck(final VertxTestContext context) {
+        mustReceiveStatusCodeOnPath(context, OK, HttpMethod.GET, LIVENESS_PATH);
+    }
 
-  @Test
-  public void notALivenessOrReadinessPath(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.GET, "/does-not-exists-42");
-  }
+    @Test
+    public void notALivenessOrReadinessPath(final VertxTestContext context) {
+        mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.GET, "/does-not-exists-42");
+    }
 
-  @Test
-  public void notAGetRequest(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.POST, "/does-not-exists-42");
-  }
+    @Test
+    public void notAGetRequest(final VertxTestContext context) {
+        mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.POST, "/does-not-exists-42");
+    }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Handler<HttpServerRequest> createHandler() {
-    return new ProbeHandler(LIVENESS_PATH, READINESS_PATH, mock(Handler.class));
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public Handler<HttpServerRequest> createHandler() {
+        return new ProbeHandler(LIVENESS_PATH, READINESS_PATH, mock(Handler.class));
+    }
 }

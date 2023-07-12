@@ -39,6 +39,7 @@
     <maven.enforcer.plugin.version>3.1.0</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
+    <spotless.plugin.version>2.37.0</spotless.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.4.4</vertx.version>
@@ -61,7 +62,9 @@
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.3.2</jib.version>
     <quarkus.version>3.1.2.Final</quarkus.version>
-    <antlr.version>4.9.2</antlr.version>
+    <antlr.version>4.9.2
+    </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
+    <palantirJavaFormat.version>2.33.0</palantirJavaFormat.version>
   </properties>
 
   <modules>
@@ -592,7 +595,33 @@
       <plugin>
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
-        <version>${antlr.version}</version><!-- keep it aligned with the runtime bom-->
+        <version>${antlr.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.plugin.version}</version>
+        <configuration>
+          <formats>
+            <format>
+              <includes>
+                <include>*.md</include>
+                <include>.gitignore</include>
+              </includes>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+              <indent>
+                <tabs>true</tabs>
+                <spacesPerTab>4</spacesPerTab>
+              </indent>
+            </format>
+          </formats>
+          <java>
+            <palantirJavaFormat>
+              <version>${palantirJavaFormat.version}</version>
+            </palantirJavaFormat>
+          </java>
+        </configuration>
       </plugin>
     </plugins>
   </build>

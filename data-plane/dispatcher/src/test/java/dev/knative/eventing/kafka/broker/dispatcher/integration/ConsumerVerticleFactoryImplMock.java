@@ -25,13 +25,11 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
@@ -41,83 +39,72 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory {
 
-  // trigger.id() -> Mock*er
-  private final Map<String, MockProducer<String, CloudEvent>> mockProducer;
-  private final Map<String, MockConsumer<String, CloudEvent>> mockConsumer;
+    // trigger.id() -> Mock*er
+    private final Map<String, MockProducer<String, CloudEvent>> mockProducer;
+    private final Map<String, MockConsumer<String, CloudEvent>> mockConsumer;
 
-  private List<ConsumerRecord<String, CloudEvent>> records;
+    private List<ConsumerRecord<String, CloudEvent>> records;
 
-  public ConsumerVerticleFactoryImplMock() {
-    mockProducer = new ConcurrentHashMap<>();
-    mockConsumer = new ConcurrentHashMap<>();
-  }
+    public ConsumerVerticleFactoryImplMock() {
+        mockProducer = new ConcurrentHashMap<>();
+        mockConsumer = new ConcurrentHashMap<>();
+    }
 
-  private KafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
-                                                           Map<String, Object> producerConfigs) {
-    return KafkaProducer.create(vertx, new MockProducer<>(
-      true,
-      new StringSerializer(),
-      (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
-    ));
-  }
+    private KafkaProducer<String, CloudEvent> createProducer(Vertx vertx, Map<String, Object> producerConfigs) {
+        return KafkaProducer.create(
+                vertx,
+                new MockProducer<>(
+                        true,
+                        new StringSerializer(),
+                        (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
+                        ));
+    }
 
-  /**
-   * @param vertx
-   * @param consumerConfigs
-   * @return
-   */
-  private ReactiveKafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
-                                                           Map<String, Object> consumerConfigs) {
-    final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
+    /**
+     * @param vertx
+     * @param consumerConfigs
+     * @return
+     */
+    private ReactiveKafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx, Map<String, Object> consumerConfigs) {
+        final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
-    consumer.schedulePollTask(() -> {
-      consumer.unsubscribe();
+        consumer.schedulePollTask(() -> {
+            consumer.unsubscribe();
 
-      consumer.assign(
-        records.stream()
-          .map(r -> new TopicPartition(r.topic(), r.partition()))
-          .distinct()
-          .collect(Collectors.toList())
-      );
+            consumer.assign(records.stream()
+                    .map(r -> new TopicPartition(r.topic(), r.partition()))
+                    .distinct()
+                    .collect(Collectors.toList()));
 
-      records.forEach(record -> consumer.addRecord(new ConsumerRecord<>(
-        record.topic(),
-        record.partition(),
-        record.offset(),
-        record.key(),
-        record.value()
-      )));
+            records.forEach(record -> consumer.addRecord(new ConsumerRecord<>(
+                    record.topic(), record.partition(), record.offset(), record.key(), record.value())));
 
-      consumer.updateEndOffsets(
-        records.stream()
-          .map(r -> new TopicPartition(r.topic(), r.partition()))
-          .distinct()
-          .collect(Collectors.toMap(Function.identity(), v -> 0L))
-      );
-    });
+            consumer.updateEndOffsets(records.stream()
+                    .map(r -> new TopicPartition(r.topic(), r.partition()))
+                    .distinct()
+                    .collect(Collectors.toMap(Function.identity(), v -> 0L)));
+        });
 
-    return new MockReactiveKafkaConsumer<Object, CloudEvent>(consumer);
-  }
+        return new MockReactiveKafkaConsumer<Object, CloudEvent>(consumer);
+    }
 
-  public void setRecords(final List<ConsumerRecord<String, CloudEvent>> records) {
-    this.records = records;
-  }
+    public void setRecords(final List<ConsumerRecord<String, CloudEvent>> records) {
+        this.records = records;
+    }
 
-  Map<String, MockProducer<String, CloudEvent>> producers() {
-    return mockProducer;
-  }
+    Map<String, MockProducer<String, CloudEvent>> producers() {
+        return mockProducer;
+    }
 
-  Map<String, MockConsumer<String, CloudEvent>> consumers() {
-    return mockConsumer;
-  }
+    Map<String, MockConsumer<String, CloudEvent>> consumers() {
+        return mockConsumer;
+    }
 
-  @Override
-  public AbstractVerticle get(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
-    return new ConsumerVerticleBuilder(
-      FakeConsumerVerticleContext.get(resource, egress)
-        .withConsumerFactory(this::createConsumer)
-        .withProducerFactory(this::createProducer)
-    )
-      .build();
-  }
+    @Override
+    public AbstractVerticle get(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
+        return new ConsumerVerticleBuilder(FakeConsumerVerticleContext.get(resource, egress)
+                        .withConsumerFactory(this::createConsumer)
+                        .withProducerFactory(this::createProducer))
+                .build();
+    }
 }

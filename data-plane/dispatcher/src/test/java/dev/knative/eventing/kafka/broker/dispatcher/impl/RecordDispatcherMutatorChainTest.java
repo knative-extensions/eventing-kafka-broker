@@ -15,17 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
-import io.cloudevents.CloudEvent;
-import io.cloudevents.core.builder.CloudEventBuilder;
-import io.vertx.core.Future;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -34,52 +23,55 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
+import io.vertx.core.Future;
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.Test;
+
 public class RecordDispatcherMutatorChainTest {
 
-  private final static CloudEvent expected = CloudEventBuilder.v1()
-    .withId(UUID.randomUUID().toString())
-    .withSource(URI.create("/v1/api"))
-    .withTime(OffsetDateTime.MIN)
-    .withType("foo")
-    .build();
+    private static final CloudEvent expected = CloudEventBuilder.v1()
+            .withId(UUID.randomUUID().toString())
+            .withSource(URI.create("/v1/api"))
+            .withTime(OffsetDateTime.MIN)
+            .withType("foo")
+            .build();
 
-  @Test
-  public void shouldChangeRecordValue() {
-    final var next = mock(RecordDispatcher.class);
-    final var chain = new RecordDispatcherMutatorChain(
-      next,
-      in -> expected
-    );
-    when(next.dispatch(any())).thenReturn(Future.succeededFuture());
+    @Test
+    public void shouldChangeRecordValue() {
+        final var next = mock(RecordDispatcher.class);
+        final var chain = new RecordDispatcherMutatorChain(next, in -> expected);
+        when(next.dispatch(any())).thenReturn(Future.succeededFuture());
 
-    final var givenRecord = new ConsumerRecord<>(
-        "t1",
-        0,
-        0,
-        (Object) "abc",
-        CloudEventBuilder.from(expected)
-          .withId(UUID.randomUUID().toString())
-          .build()
-      );
+        final var givenRecord = new ConsumerRecord<>(
+                "t1",
+                0,
+                0,
+                (Object) "abc",
+                CloudEventBuilder.from(expected)
+                        .withId(UUID.randomUUID().toString())
+                        .build());
 
-    final var succeeded = chain.dispatch(givenRecord);
+        final var succeeded = chain.dispatch(givenRecord);
 
-    assertThat(succeeded.succeeded()).isTrue();
-    verify(next, times(1)).dispatch(argThat(record -> record.value().equals(expected)));
-  }
+        assertThat(succeeded.succeeded()).isTrue();
+        verify(next, times(1)).dispatch(argThat(record -> record.value().equals(expected)));
+    }
 
-  @Test
-  public void shouldCloseInner() {
-    final var next = mock(RecordDispatcher.class);
-    final var chain = new RecordDispatcherMutatorChain(
-      next,
-      in -> expected
-    );
-    when(next.close()).thenReturn(Future.succeededFuture());
+    @Test
+    public void shouldCloseInner() {
+        final var next = mock(RecordDispatcher.class);
+        final var chain = new RecordDispatcherMutatorChain(next, in -> expected);
+        when(next.close()).thenReturn(Future.succeededFuture());
 
-    final var succeeded = chain.close();
+        final var succeeded = chain.close();
 
-    assertThat(succeeded.succeeded()).isTrue();
-    verify(next, times(1)).close();
-  }
+        assertThat(succeeded.succeeded()).isTrue();
+        verify(next, times(1)).close();
+    }
 }

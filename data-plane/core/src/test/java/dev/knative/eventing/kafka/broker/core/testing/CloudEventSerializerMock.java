@@ -21,10 +21,11 @@ import io.cloudevents.kafka.CloudEventSerializer;
 // Workaround:
 //  Kafka 2.7 producer mock calls serialize(topic, ce) because
 //  "just to throw ClassCastException if serializers are not the proper ones to serialize key/value"
-//  https://github.com/apache/kafka/blob/3db46769baa379a0775bcd76396d24d637a55768/clients/src/main/java/org/apache/kafka/clients/producer/MockProducer.java#L306-L308
+//
+// https://github.com/apache/kafka/blob/3db46769baa379a0775bcd76396d24d637a55768/clients/src/main/java/org/apache/kafka/clients/producer/MockProducer.java#L306-L308
 public class CloudEventSerializerMock extends CloudEventSerializer {
-  @Override
-  public byte[] serialize(final String topic, final CloudEvent data) {
-    return null;
-  }
+    @Override
+    public byte[] serialize(final String topic, final CloudEvent data) {
+        return null;
+    }
 }
