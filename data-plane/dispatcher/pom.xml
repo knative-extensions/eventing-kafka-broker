@@ -54,6 +54,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>receiver</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>

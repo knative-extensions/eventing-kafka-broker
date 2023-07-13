@@ -17,7 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;

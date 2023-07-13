@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import io.vertx.core.Vertx;
 import java.util.Map;
 

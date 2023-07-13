@@ -21,10 +21,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
-import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
@@ -56,6 +56,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterEach;
@@ -82,7 +83,8 @@ public abstract class ReceiverVerticleTracingTest {
         BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
     }
 
-    public abstract ReactiveProducerFactory<String, CloudEvent> createProducerFactory();
+    public abstract ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
+            Vertx vertx, Producer<String, CloudEvent> producer);
 
     @BeforeEach
     public void setup() throws ExecutionException, InterruptedException {
@@ -106,8 +108,7 @@ public abstract class ReceiverVerticleTracingTest {
         this.mockProducer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
 
         this.store = new IngressProducerReconcilableStore(
-                AuthProvider.noAuth(), new Properties(), properties -> createProducerFactory()
-                        .create(vertx, mockProducer));
+                AuthProvider.noAuth(), new Properties(), properties -> createKafkaProducer(vertx, mockProducer));
 
         final var env = mock(ReceiverEnv.class);
         when(env.getLivenessProbePath()).thenReturn("/healthz");

@@ -16,7 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;

@@ -48,19 +48,8 @@
     </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>receiver</artifactId>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
+      <artifactId>dispatcher-vertx</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>dispatcher</artifactId>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
-      <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>

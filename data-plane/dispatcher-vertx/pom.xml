@@ -34,6 +34,11 @@
       <artifactId>dispatcher</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>receiver-vertx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>

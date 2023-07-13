@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Vertx;
-import java.util.Map;
+import java.util.Properties;
 
 /**
- * A factory interface for creating reactive Kafka consumers.
+ * Factory for creating ReactiveKafkaProducer
  *
- * @param <K> The type of the Kafka message key.
- * @param <V> The type of the Kafka message value.
+ * @param <K> the key type
+ * @param <V> the value type
  */
 @FunctionalInterface
-public interface ReactiveConsumerFactory<K, V> {
+public interface ReactiveProducerFactory<K, V> {
 
     /**
-     * Creates a new reactive Kafka consumer using the provided Vertx instance and configuration.
+     * Create a new ReactiveKafkaProducer
      *
-     * @param vertx   The Vertx instance to be used by the vertx consumer only.
-     * @param configs The configuration options for the consumer.
-     * @return The created reactive Kafka consumer.
+     * @param v the Vertx instance used when creating the vertx KafkaProducer
+     * @param config the KafkaProducer configuration
+     * @return a new ReactiveKafkaProducer
      */
-    ReactiveKafkaConsumer<K, V> create(Vertx vertx, Map<String, Object> configs);
+    ReactiveKafkaProducer<K, V> create(Vertx v, Properties config);
 }
