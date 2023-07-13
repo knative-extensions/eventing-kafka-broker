@@ -15,6 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiverloom;
 
-public class LoomProducerFactory<K, V>{
-    //TODO implement
+public class LoomProducerFactory<K, V> {
+    // TODO implement
 }

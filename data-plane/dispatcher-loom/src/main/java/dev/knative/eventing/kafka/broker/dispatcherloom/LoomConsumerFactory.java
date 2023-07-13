@@ -16,5 +16,5 @@
 package dev.knative.eventing.kafka.broker.dispatcherloom;
 
 public class LoomConsumerFactory<K, V> {
-    //TODO implement 
+    // TODO implement
 }
