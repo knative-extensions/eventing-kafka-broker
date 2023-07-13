@@ -129,7 +129,7 @@ public class ConsumerVerticleBuilder {
 
         final var partitionRevokedHandlers =
                 List.of(consumerVerticle.getPartitionRevokedHandler(), offsetManager.getPartitionRevokedHandler());
-        this.consumerVerticleContext.withConsumerRebalanceListener(createRebalanceListener(partitionRevokedHandlers));
+        consumerVerticle.setRebalanceListener(createRebalanceListener(partitionRevokedHandlers));
     }
 
     private ConsumerVerticle createConsumerVerticle(final ConsumerVerticle.Initializer initializer) {
