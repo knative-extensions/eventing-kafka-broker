@@ -50,9 +50,9 @@
       <configuration>
         <source>${java.version}</source>
         <target>${java.version}</target>
-          <compilerArgs>
-            <arg>--enable-preview</arg>
-          </compilerArgs>
+        <compilerArgs>
+          <arg>--enable-preview</arg>
+        </compilerArgs>
       </configuration>
       </plugin>
       <plugin>
@@ -76,9 +76,11 @@
           <to>
             <image>${env.KO_DOCKER_REPO}/knative-kafka-broker-dispatcher-loom:${env.TAG}</image>
           </to>
-          <jvmFlags>
-            <jvmFlag>--enable-preview</jvmFlag>
-          </jvmFlags>
+          <container>
+            <jvmFlags>
+              <jvmFlag>--enable-preview</jvmFlag>
+            </jvmFlags>
+          </container>
         </configuration>
       </plugin>
       <plugin>
