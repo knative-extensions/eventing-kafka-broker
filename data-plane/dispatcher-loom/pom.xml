@@ -61,7 +61,7 @@
         <version>${jib.version}</version>
         <configuration>
           <from>
-            <image>eclipse-temurin:20</image>
+            <image>docker.io/library/eclipse-temurin:20-jre</image>
             <platforms>
               <platform>
                 <architecture>amd64</architecture>
