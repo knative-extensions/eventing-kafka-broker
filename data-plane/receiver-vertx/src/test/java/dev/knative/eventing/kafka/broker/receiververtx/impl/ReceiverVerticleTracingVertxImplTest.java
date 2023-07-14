@@ -15,15 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx.impl;
 
-import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticleTracingTest;
-import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
+import dev.knative.eventing.kafka.broker.receiververtx.VertxKafkaProducer;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Vertx;
+import org.apache.kafka.clients.producer.Producer;
 
 public class ReceiverVerticleTracingVertxImplTest extends ReceiverVerticleTracingTest {
 
     @Override
-    public ReactiveProducerFactory<String, CloudEvent> createProducerFactory() {
-        return new VertxProducerFactory<>();
+    public ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
+            Vertx vertx, Producer<String, CloudEvent> producer) {
+        return new VertxKafkaProducer<>(vertx, producer);
     }
 }

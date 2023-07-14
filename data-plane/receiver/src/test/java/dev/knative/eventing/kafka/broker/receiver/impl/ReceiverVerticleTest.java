@@ -27,14 +27,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
-import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
-import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -113,8 +113,7 @@ public class ReceiverVerticleTest {
         webClient = WebClient.create(vertx);
         ReceiverVerticleTest.mockProducer =
                 new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-        ReactiveKafkaProducer<String, CloudEvent> producer =
-                new MockReactiveProducerFactory().create(vertx, mockProducer);
+        ReactiveKafkaProducer<String, CloudEvent> producer = new MockReactiveKafkaProducer<>(mockProducer);
 
         store = new IngressProducerReconcilableStore(AuthProvider.noAuth(), new Properties(), properties -> producer);
 

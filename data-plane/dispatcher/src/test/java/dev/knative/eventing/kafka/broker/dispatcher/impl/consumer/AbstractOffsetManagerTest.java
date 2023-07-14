@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;

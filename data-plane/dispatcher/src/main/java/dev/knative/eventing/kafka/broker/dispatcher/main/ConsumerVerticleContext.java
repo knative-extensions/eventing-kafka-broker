@@ -18,9 +18,10 @@ package dev.knative.eventing.kafka.broker.dispatcher.main;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class ConsumerVerticleContext {
     private WebClientOptions webClientOptions;
 
     private ReactiveConsumerFactory<Object, CloudEvent> consumerFactory;
-    private ProducerFactory<String, CloudEvent> producerFactory;
+    private ReactiveProducerFactory<String, CloudEvent> producerFactory;
 
     private Integer maxPollRecords;
     private static final int DEFAULT_MAX_POLL_RECORDS = 50;
@@ -63,8 +63,6 @@ public class ConsumerVerticleContext {
     private ConsumerVerticleLoggingContext loggingContext;
 
     private Tags tags;
-
-    private ConsumerRebalanceListener consumerRebalanceListener;
 
     public ConsumerVerticleContext withConsumerConfigs(final Map<String, Object> consumerConfigs) {
         this.consumerConfigs = new HashMap<>(consumerConfigs);
@@ -152,19 +150,10 @@ public class ConsumerVerticleContext {
         return this;
     }
 
-    public ConsumerVerticleContext withProducerFactory(final ProducerFactory<String, CloudEvent> producerFactory) {
+    public ConsumerVerticleContext withProducerFactory(
+            final ReactiveProducerFactory<String, CloudEvent> producerFactory) {
         this.producerFactory = producerFactory;
         return this;
-    }
-
-    public ConsumerVerticleContext withConsumerRebalanceListener(
-            final ConsumerRebalanceListener consumerRebalanceListener) {
-        this.consumerRebalanceListener = consumerRebalanceListener;
-        return this;
-    }
-
-    public ConsumerRebalanceListener getConsumerRebalanceListener() {
-        return consumerRebalanceListener;
     }
 
     public DataPlaneContract.Resource getResource() {
@@ -226,7 +215,7 @@ public class ConsumerVerticleContext {
         return this.consumerFactory;
     }
 
-    public ProducerFactory<String, CloudEvent> getProducerFactory() {
+    public ReactiveProducerFactory<String, CloudEvent> getProducerFactory() {
         return this.producerFactory;
     }
 

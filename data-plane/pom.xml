@@ -74,6 +74,8 @@
     <module>dispatcher</module>
     <module>receiver-vertx</module>
     <module>dispatcher-vertx</module>
+    <module>receiver-loom</module>
+    <module>dispatcher-loom</module>
   </modules>
 
   <profiles>

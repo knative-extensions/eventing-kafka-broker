@@ -16,7 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
-import dev.knative.eventing.kafka.broker.dispatcher.ReactiveKafkaConsumer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
@@ -26,6 +26,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,7 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
     private final ConsumerVerticleContext consumerVerticleContext;
 
     ReactiveKafkaConsumer<Object, CloudEvent> consumer;
+    ConsumerRebalanceListener consumerRebalanceListener;
     RecordDispatcher recordDispatcher;
     private AsyncCloseable closeable;
 
@@ -85,6 +87,10 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
         this.closeable = closeable;
     }
 
+    public void setRebalanceListener(ConsumerRebalanceListener consumerRebalanceListener) {
+        this.consumerRebalanceListener = consumerRebalanceListener;
+    }
+
     void exceptionHandler(Throwable cause) {
         logger.error("Consumer exception {}", consumerVerticleContext.getLoggingKeyValue(), cause);
 
@@ -96,6 +102,10 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
     protected ConsumerVerticleContext getConsumerVerticleContext() {
         return consumerVerticleContext;
+    }
+
+    protected ConsumerRebalanceListener getConsumerRebalanceListener() {
+        return consumerRebalanceListener;
     }
 
     public abstract PartitionRevokedHandler getPartitionRevokedHandler();

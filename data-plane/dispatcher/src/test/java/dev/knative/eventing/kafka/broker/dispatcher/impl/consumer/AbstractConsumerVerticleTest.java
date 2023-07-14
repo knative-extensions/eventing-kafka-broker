@@ -44,6 +44,7 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -89,7 +90,13 @@ public abstract class AbstractConsumerVerticleTest {
             consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
             consumerVerticle.setRecordDispatcher(recordDispatcher);
             consumerVerticle.setCloser(Future::succeededFuture);
+            consumerVerticle.setRebalanceListener(new ConsumerRebalanceListener() {
+                @Override
+                public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {}
 
+                @Override
+                public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {}
+            });
             return Future.succeededFuture();
         });
 
@@ -130,6 +137,13 @@ public abstract class AbstractConsumerVerticleTest {
                     consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
                     consumerVerticle.setRecordDispatcher(recordDispatcher);
                     consumerVerticle.setCloser(Future::succeededFuture);
+                    consumerVerticle.setRebalanceListener(new ConsumerRebalanceListener() {
+                        @Override
+                        public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {}
+
+                        @Override
+                        public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {}
+                    });
 
                     return Future.succeededFuture();
                 });
@@ -207,7 +221,13 @@ public abstract class AbstractConsumerVerticleTest {
             consumerVerticle.setConsumer(consumer);
             consumerVerticle.setRecordDispatcher(recordDispatcher);
             consumerVerticle.setCloser(Future::succeededFuture);
+            consumerVerticle.setRebalanceListener(new ConsumerRebalanceListener() {
+                @Override
+                public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {}
 
+                @Override
+                public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {}
+            });
             return Future.succeededFuture();
         });
 

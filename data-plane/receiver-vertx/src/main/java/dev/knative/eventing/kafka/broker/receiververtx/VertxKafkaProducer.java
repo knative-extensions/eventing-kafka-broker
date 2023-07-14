@@ -15,7 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiververtx;
 
-import dev.knative.eventing.kafka.broker.receiver.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
@@ -29,7 +29,7 @@ public class VertxKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final KafkaProducer<K, V> producer;
 
-    VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
+    public VertxKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = KafkaProducer.create(v, producer);
     }
 
