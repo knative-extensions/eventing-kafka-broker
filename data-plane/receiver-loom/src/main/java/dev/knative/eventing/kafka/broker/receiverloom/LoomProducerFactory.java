@@ -15,6 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.receiverloom;
 
-public class LoomProducerFactory<K, V> {
-    // TODO implement
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import io.vertx.core.Vertx;
+import java.util.Properties;
+import org.apache.kafka.clients.producer.KafkaProducer;
+
+public class LoomProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
+
+    @Override
+    public ReactiveKafkaProducer<K, V> create(Vertx v, Properties config) {
+        return new LoomKafkaProducer<>(new KafkaProducer<>(config));
+    }
 }
