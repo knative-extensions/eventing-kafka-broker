@@ -53,13 +53,8 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         while (!queue.isEmpty()) {
             RecordPromise recordPromise = queue.poll();
             try {
-                producer.send(recordPromise.getRecord(), (metadata, exception) -> {
-                    if (exception != null) {
-                        recordPromise.getPromise().fail(exception);
-                    } else {
-                        recordPromise.getPromise().complete(metadata);
-                    }
-                });
+                var metadata = producer.send(recordPromise.getRecord());
+                recordPromise.getPromise().complete(metadata.get());
             } catch (Exception e) {
                 recordPromise.getPromise().fail(e);
             }
