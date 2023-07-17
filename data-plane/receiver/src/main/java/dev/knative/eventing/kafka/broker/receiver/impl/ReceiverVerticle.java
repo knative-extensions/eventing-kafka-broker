@@ -197,7 +197,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         // close the watcher
 
-        //    this.secretWatcher.stop();
+        this.secretWatcher.stop();
     }
 
     @Override
