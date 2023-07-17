@@ -21,19 +21,18 @@ import io.vertx.core.Promise;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
-    private final KafkaProducer<K, V> producer;
+    private final Producer<K, V> producer;
 
     private final Queue<RecordPromise> queue;
     private final AtomicBoolean isRunning;
 
-    public LoomKafkaProducer(KafkaProducer<K, V> producer) {
+    public LoomKafkaProducer(Producer<K, V> producer) {
         this.producer = producer;
         this.queue = new ConcurrentLinkedQueue<>();
         this.isRunning = new AtomicBoolean(false);
