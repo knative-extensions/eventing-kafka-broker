@@ -85,10 +85,10 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 		return StatusNotReady
 	}
 
-	// aggregatedCurrentKnownStatus keeps track of the current status in the cache excluding `StatusReady`
-	// since we just skip IPs that have `StatusReady`.
+	// aggregatedCurrentKnownStatus keeps track of the current status in the cache excluding the expected status
+	// since we just skip IPs that have the expected status. If all IPs have the expected status, this will be nil.
 	//
-	// If there is a status that is `StatusUnknown` the final status  we want to return is `StatusUnknown`,
+	// If there is a status that is `StatusUnknown` the final status we want to return is `StatusUnknown`,
 	// while we return `StatusNotReady` when the status is known and all probes returned `StatusNotReady`.
 	var aggregatedCurrentKnownStatus *Status
 
@@ -117,6 +117,8 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 			wg.Done()
 			continue
 		}
+		// The lower the value of the Status, the higher it's precedence.
+		// So, we update to the newer status only if it is higher precedence (and lower value)
 		if aggregatedCurrentKnownStatus == nil || *aggregatedCurrentKnownStatus > currentStatus {
 			aggregatedCurrentKnownStatus = &currentStatus
 		}
@@ -152,9 +154,10 @@ func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expect
 	}
 
 	if aggregatedCurrentKnownStatus == nil {
-		// Every status is ready, return ready.
+		// Every status is the expected value, return expected.
 		return expected
 	}
+	// At least one status was not expected, return the aggregated status
 	return *aggregatedCurrentKnownStatus
 }
 

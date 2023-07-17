@@ -39,10 +39,10 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/kedacore/keda/v2 v2.8.1
-	knative.dev/eventing v0.37.1-0.20230710082438-838274e151f5
-	knative.dev/hack v0.0.0-20230707105034-cc92cdb68f01
-	knative.dev/pkg v0.0.0-20230710013638-5ef4812a4fe9
-	knative.dev/reconciler-test v0.0.0-20230710082838-64bbb12e3e71
+	knative.dev/eventing v0.37.1-0.20230714071414-6833ee64374e
+	knative.dev/hack v0.0.0-20230712131415-ddae80293c43
+	knative.dev/pkg v0.0.0-20230712131115-7051d301e7f4
+	knative.dev/reconciler-test v0.0.0-20230710131439-3c924453f247
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
