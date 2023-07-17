@@ -28,6 +28,11 @@
 
   <artifactId>tests</artifactId>
 
+  <properties>
+    <java.version>20</java.version>
+    <argLine>--enable-preview</argLine>
+  </properties>
+
   <dependencies>
 
     <!-- These are added as runtime deps, so jacoco can see these -->
@@ -49,6 +54,11 @@
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>dispatcher-vertx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>receiver-loom</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -111,6 +121,18 @@
 
   <build>
     <plugins>
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <version>${maven.compiler.plugin.version}</version>
+      <configuration>
+        <source>${java.version}</source>
+        <target>${java.version}</target>
+        <compilerArgs>
+          <arg>--enable-preview</arg>
+        </compilerArgs>
+      </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
