@@ -373,6 +373,7 @@ public class DataPlaneTest {
                 env,
                 httpServerOptions,
                 httpsServerOptions,
+                "",
                 v -> new IngressProducerReconcilableStore(
                         AuthProvider.noAuth(),
                         producerConfigs(),

@@ -122,15 +122,21 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         // check whether the secret volume is mounted
         File secretVolume = new File(SECRET_VOLUME_PATH);
-        if (secretVolume.exists()) {
+        if (secretVolume.exists() || testSecretVolumePath != null) {
             // The secret volume is mounted, we should start the https server
             // check whether the tls.key and tls.crt files exist
             File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
             File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
 
+            // Under test, we use the testSecretVolumePath to store the tls.key and tls.crt files
+            if (testSecretVolumePath != null) {
+                tlsKeyFile = new File(testSecretVolumePath + "/tls.key");
+                tlsCrtFile = new File(testSecretVolumePath + "/tls.crt");
+            }
+
             if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
                 PemKeyCertOptions keyCertOptions =
-                        new PemKeyCertOptions().setKeyPath(TLS_KEY_FILE_PATH).setCertPath(TLS_CRT_FILE_PATH);
+                        new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
 
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
@@ -226,16 +232,31 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     public void updateServerConfig() {
         // This function will be called when the secret volume is updated
 
-        // Check whether the tls.key and tls.crt files exist
+        // print messge
+        logger.info("The secret volume is updated, the server configuration will be updated");
+
         File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
         File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
 
+        // Check whether the tls.key and tls.crt files exist
+        if (testSecretVolumePath != null) {
+            tlsKeyFile = new File(testSecretVolumePath + "/tls.key");
+            tlsCrtFile = new File(testSecretVolumePath + "/tls.crt");
+        }
         if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
 
             // Update SSL configuration by using updateSSLOptions
             PemKeyCertOptions keyCertOptions =
-                    new PemKeyCertOptions().setKeyPath(TLS_KEY_FILE_PATH).setCertPath(TLS_CRT_FILE_PATH);
-            httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+                    new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+            // print
+            logger.info("The keyCertOptions is {}", keyCertOptions);
+
+            // result is a Future object
+            Future result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+            // print the result
+            result.onComplete(ar -> {
+                logger.info("The result of updateSSLOptions is {}", result);
+            });
         }
     }
 }
