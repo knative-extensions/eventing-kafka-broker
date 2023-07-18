@@ -73,7 +73,7 @@ public class SecretWatcher implements Runnable {
         try {
             watcher.close();
         } catch (IOException e) {
-            logger.error("Could not close watcher", e);
+            logger.error("Failed to close secret watcher", e);
         }
     }
 }
