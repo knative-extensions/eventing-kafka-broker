@@ -174,7 +174,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   }
 
   // Set up the secret watcher
-  public void setupSecretWatcher() {
+  private void setupSecretWatcher() {
     try {
       this.secretWatcher = new SecretWatcher(SECRET_VOLUME_PATH, this::updateServerConfig);
 
