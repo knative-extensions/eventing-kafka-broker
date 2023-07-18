@@ -19,24 +19,34 @@ package featuressteps
 import (
 	"context"
 
+	"k8s.io/client-go/kubernetes/scheme"
+	ref "k8s.io/client-go/tools/reference"
 	"knative.dev/eventing/pkg/utils"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/logging"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 )
 
-func CopySecretInTestNamespace(namespace, name string) feature.StepFn {
+func CopySecretInTestNamespace(namespace, sourceSecretName, targetSecretName string) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
+		env := environment.FromContext(ctx)
 		tgtNs := environment.FromContext(ctx).Namespace()
-		_, err := utils.CopySecret(
+		secret, err := utils.CopySecretWithName(
 			kubeclient.Get(ctx).CoreV1(),
 			namespace,
-			name,
+			sourceSecretName,
 			tgtNs,
+			targetSecretName,
 			"default",
 		)
 		if err != nil {
-			t.Fatalf("failed to copy secret %s from %s to %s: %v", name, namespace, tgtNs, err)
+			t.Fatalf("Failed to copy secret %s from %s to %s: %v", sourceSecretName, namespace, tgtNs, err)
 		}
+		reference, err := ref.GetReference(scheme.Scheme, secret)
+		if err != nil {
+			logging.FromContext(ctx).Fatalf("Could not construct reference to: '%#v' due to: '%v'", secret, err)
+		}
+		env.Reference(*reference)
 	}
 }

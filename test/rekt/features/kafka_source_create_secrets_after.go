@@ -36,6 +36,8 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 	topicName := feature.MakeRandomK8sName("topic") // A k8s name is also a valid topic name.
 	name := feature.MakeRandomK8sName("source")
 	sink := feature.MakeRandomK8sName("sink")
+	saslSecretName := feature.MakeRandomK8sName("sasl-secret")
+	tlsSecretName := feature.MakeRandomK8sName("tls-secret")
 
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("install a service", service.Install(sink,
@@ -53,8 +55,8 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 	))
 	f.Setup("KafkaSource is not ready", k8s.IsNotReady(kafkasource.GVR(), name))
 
-	f.Requirement("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), tlsSecretName))
-	f.Requirement("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), saslSecretName))
+	f.Requirement("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), TLSSecretName, tlsSecretName))
+	f.Requirement("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), SASLSecretName, saslSecretName))
 
 	f.Assert("KafkaSource is ready", kafkasource.IsReady(name))
 
