@@ -16,8 +16,12 @@
 package dev.knative.eventing.kafka.broker.receiverloom;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.tracing.kafka.ProducerTracer;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
+import io.vertx.core.impl.VertxInternal;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,11 +35,21 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final Queue<RecordPromise> queue;
     private final AtomicBoolean isRunning;
+    private final ProducerTracer tracer;
+    private final VertxInternal vertx;
 
-    public LoomKafkaProducer(Producer<K, V> producer) {
+    public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = producer;
         this.queue = new ConcurrentLinkedQueue<>();
         this.isRunning = new AtomicBoolean(false);
+        this.vertx = (VertxInternal) v;
+
+        if (v != null) {
+            ContextInternal ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
+            this.tracer = ProducerTracer.create(ctxInt.tracer());
+        } else {
+            this.tracer = null;
+        }
     }
 
     @Override
@@ -51,11 +65,20 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     private void sendFromQueue() {
         while (!queue.isEmpty()) {
             RecordPromise recordPromise = queue.poll();
+            ContextInternal ctx = vertx.getOrCreateContext();
+            ProducerTracer.StartedSpan startedSpan =
+                    this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
             try {
                 var metadata = producer.send(recordPromise.getRecord());
                 recordPromise.getPromise().complete(metadata.get());
+                if (startedSpan != null) {
+                    startedSpan.finish(ctx);
+                }
             } catch (Exception e) {
                 recordPromise.getPromise().fail(e);
+                if (startedSpan != null) {
+                    startedSpan.fail(ctx, e);
+                }
             }
         }
         isRunning.set(false);

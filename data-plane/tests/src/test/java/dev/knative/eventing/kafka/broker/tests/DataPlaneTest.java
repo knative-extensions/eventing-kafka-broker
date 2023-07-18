@@ -112,11 +112,11 @@ public abstract class DataPlaneTest {
     private static ReceiverVerticle receiverVerticle;
 
     public abstract ReactiveProducerFactory<String, CloudEvent> getProducerFactory();
+
     public abstract ReactiveConsumerFactory<String, CloudEvent> getConsumerFactory();
 
     @BeforeAll
-    public void setUp(final Vertx vertx, final VertxTestContext context)
-            throws IOException, InterruptedException {
+    public void setUp(final Vertx vertx, final VertxTestContext context) throws IOException, InterruptedException {
         setUpKafkaCluster();
         ContractMessageCodec.register(vertx.eventBus());
         consumerDeployerVerticle = setUpDispatcher(vertx, context);
@@ -378,9 +378,8 @@ public abstract class DataPlaneTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> new IngressProducerReconcilableStore(
-                        AuthProvider.noAuth(),
-                        producerConfigs(),
-                        properties -> new VertxKafkaProducer<>(vertx, new KafkaProducer<>(properties))),
+                        AuthProvider.noAuth(), producerConfigs(), properties -> getProducerFactory()
+                                .create(v, properties)),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()));
 
         final CountDownLatch latch = new CountDownLatch(1);

@@ -33,14 +33,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
 public class LoomKafkaProducerTest {
 
     LoomKafkaProducer<String, Integer> producer;
 
     @BeforeEach
     public void setUp() {
-        producer = new LoomKafkaProducer<>(mockProducer());
+        producer = new LoomKafkaProducer<>(null, mockProducer());
     }
 
     @AfterEach
@@ -97,7 +96,7 @@ public class LoomKafkaProducerTest {
     private static java.util.concurrent.Future<RecordMetadata> sendDemoRecord() {
         CompletableFuture<RecordMetadata> future = new CompletableFuture<>();
         RecordMetadata metadata = new RecordMetadata(null, 0, 0, 0, -1, -1);
-        
+
         // Complete the future with the demo metadata
         future.complete(metadata);
         return future;

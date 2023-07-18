@@ -7,7 +7,7 @@ import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
 import io.cloudevents.CloudEvent;
 
 /*
- * This passes the Vertx Implementation of the ReactiveProducerFactory 
+ * This passes the Vertx Implementation of the ReactiveProducerFactory
  * and ReactiveConsumerFactory to the {@code DataPlaneTest}.
  */
 
@@ -22,5 +22,4 @@ public class DataPlaneVertxTest extends DataPlaneTest {
     public ReactiveConsumerFactory<String, CloudEvent> getConsumerFactory() {
         return new VertxConsumerFactory<>();
     }
-    
 }
