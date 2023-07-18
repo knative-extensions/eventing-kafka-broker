@@ -185,7 +185,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 .onComplete(stopPromise);
 
         // close the watcher
-        this.secretWatcher.stop();
+        if (this.secretWatcher != null) {
+            this.secretWatcher.stop();
+        }
     }
 
     @Override
