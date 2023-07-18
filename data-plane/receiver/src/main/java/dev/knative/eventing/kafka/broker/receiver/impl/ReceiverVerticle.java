@@ -31,12 +31,7 @@ import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedH
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.fabric8.kubernetes.client.*;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -71,9 +66,9 @@ import org.slf4j.LoggerFactory;
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
   private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
-  private static String SECRET_VOLUME_PATH = "/etc/receiver-secret-volume";
-  private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
-  private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+  public static String SECRET_VOLUME_PATH = "/etc/receiver-secret-volume";
+  private static String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
+  private static String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
 
   private final HttpServerOptions httpServerOptions;
   private final HttpServerOptions httpsServerOptions;
@@ -90,6 +85,12 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
   public void setSecretVolumePath(String path) {
     this.SECRET_VOLUME_PATH = path;
+    this.TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
+    this.TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+  }
+
+  public HttpServerOptions getHttpsServerOptions() {
+    return httpsServerOptions;
   }
 
   public ReceiverVerticle(
@@ -177,8 +178,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   private void setupSecretWatcher() {
     try {
       this.secretWatcher = new SecretWatcher(SECRET_VOLUME_PATH, this::updateServerConfig);
-
-      logger.info("Starting SecretWatcher");
       new Thread(this.secretWatcher).start();
     } catch (IOException e) {
       logger.error("Failed to start SecretWatcher", e);
@@ -201,7 +200,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         .onComplete(stopPromise);
 
     // close the watcher
-
     this.secretWatcher.stop();
   }
 
@@ -238,9 +236,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   public void updateServerConfig() {
     // This function will be called when the secret volume is updated
 
-    // print messge
-    logger.info("The secret volume is updated, the server configuration will be updated");
-
     File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
     File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
 
@@ -253,16 +248,18 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
           new PemKeyCertOptions()
               .setKeyPath(tlsKeyFile.getPath())
               .setCertPath(tlsCrtFile.getPath());
-      // print
-      logger.info("The keyCertOptions is {}", keyCertOptions);
 
       // result is a Future object
-      Future result =
+      Future<Void> result =
           httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
       // print the result
       result.onComplete(
-          ar -> {
-            logger.info("The result of updateSSLOptions is {}", result);
+          (AsyncResult<Void> ar) -> {
+            if (ar.succeeded()) {
+              logger.info("Succeeded to updateSSLOptions");
+            } else {
+              logger.error("Failed to updateSSLOptions", ar.cause());
+            }
           });
     }
   }

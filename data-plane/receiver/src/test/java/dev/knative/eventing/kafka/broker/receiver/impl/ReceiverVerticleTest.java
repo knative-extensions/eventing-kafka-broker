@@ -20,9 +20,12 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.FloatNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -30,6 +33,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.file.SecretWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -83,8 +87,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Logger;
+
 @ExtendWith(VertxExtension.class)
 public class ReceiverVerticleTest {
+
+  // Set up the logger that is connected to ReceiverVerticle
+  private static final Logger logger = (Logger) LoggerFactory.getLogger(ReceiverVerticle.class);
+  private ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
   private static final int TIMEOUT = 10;
   private static final int PORT = 8082;
@@ -95,8 +106,6 @@ public class ReceiverVerticleTest {
   private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
 
   private static WebClient webClient;
-
-  private static ReceiverVerticle receiverVerticle;
 
   private static MockProducer<String, CloudEvent> mockProducer;
   private static IngressProducerReconcilableStore store;
@@ -151,7 +160,9 @@ public class ReceiverVerticleTest {
 
     verticle.setSecretVolumePath(SECRET_VOLUME_PATH);
 
-    receiverVerticle = verticle;
+    // Connect to the logger in ReceiverVerticle
+    listAppender.start();
+    logger.addAppender(listAppender);
   }
 
   @BeforeEach
@@ -246,7 +257,7 @@ public class ReceiverVerticleTest {
     }
   }
 
-  // Write the test to verify that when the secret is updated, the new secret is used
+  // Write the test to verify that when the secret is updated
   @Test
   public void secretFileUpdated() throws InterruptedException {
     // Modified the secret file in the test resources folder
@@ -333,11 +344,7 @@ QCDcINom+skQGHJlbPdrpwNW
       e.printStackTrace();
     }
 
-    // TODO: Check whether the vertle server config is updated
-    // Detect if the log said "The secret volume is updated", then print the msg "update success"
-    // else print the msg "update failed"
-
-    // Sleep 1 sec
+    // Sleep 1 sec to make sure the file is updated
     try {
       Thread.sleep(1000);
     } catch (InterruptedException e) {
@@ -357,6 +364,11 @@ QCDcINom+skQGHJlbPdrpwNW
       System.out.println("An error occurred.");
       e.printStackTrace();
     }
+
+    // Check the logger to see if the message "The secret volume is updated" is printed by using
+    // logger
+    List<ILoggingEvent> logList = listAppender.list;
+    assertEquals("Succeeded to updateSSLOptions", logList.get(0).getMessage());
   }
 
   private static List<TestCase> getValidNonValidEvents() {
