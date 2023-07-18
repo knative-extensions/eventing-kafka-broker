@@ -28,8 +28,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoomKafkaProducer.class);
 
     private final Producer<K, V> producer;
 
@@ -37,6 +41,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     private final AtomicBoolean isRunning;
     private final ProducerTracer tracer;
     private final VertxInternal vertx;
+    private final ContextInternal ctx;
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = producer;
@@ -47,8 +52,10 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         if (v != null) {
             ContextInternal ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
             this.tracer = ProducerTracer.create(ctxInt.tracer());
+            this.ctx = vertx.getOrCreateContext();
         } else {
             this.tracer = null;
+            this.ctx = null;
         }
     }
 
@@ -65,11 +72,12 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     private void sendFromQueue() {
         while (!queue.isEmpty()) {
             RecordPromise recordPromise = queue.poll();
-            ContextInternal ctx = vertx.getOrCreateContext();
             ProducerTracer.StartedSpan startedSpan =
                     this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
+            logger.info("Mylog, span created: {}", startedSpan);
             try {
                 var metadata = producer.send(recordPromise.getRecord());
+                logger.info("Mylog, send complete: {}", metadata);
                 recordPromise.getPromise().complete(metadata.get());
                 if (startedSpan != null) {
                     startedSpan.finish(ctx);
