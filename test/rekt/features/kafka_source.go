@@ -57,8 +57,8 @@ import (
 )
 
 const (
-	saslSecretName = "strimzi-sasl-secret"
-	tlsSecretName  = "strimzi-tls-secret"
+	SASLSecretName = "strimzi-sasl-secret"
+	TLSSecretName  = "strimzi-tls-secret"
 	SASLMech       = "sasl"
 	TLSMech        = "tls"
 	PlainMech      = "plain"
@@ -300,6 +300,7 @@ func kafkaSourceFeature(name string,
 
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
+	secretName := feature.MakeRandomK8sName("secret")
 
 	f.Setup("install kafka topic", kafkatopic.Install(kafkaSourceCfg.topic))
 	f.Setup("topic is ready", kafkatopic.IsReady(kafkaSourceCfg.topic))
@@ -320,23 +321,23 @@ func kafkaSourceFeature(name string,
 
 	switch kafkaSourceCfg.authMech {
 	case TLSMech:
-		f.Setup("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), tlsSecretName))
+		f.Setup("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), TLSSecretName, secretName))
 		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslArr),
-			kafkasource.WithTLSCACert(tlsSecretName, "ca.crt"),
-			kafkasource.WithTLSCert(tlsSecretName, "user.crt"),
-			kafkasource.WithTLSKey(tlsSecretName, "user.key"),
+			kafkasource.WithTLSCACert(secretName, "ca.crt"),
+			kafkasource.WithTLSCert(secretName, "user.crt"),
+			kafkasource.WithTLSKey(secretName, "user.key"),
 			kafkasource.WithTLSEnabled(),
-			kafkasource.WithTLSCACert(tlsSecretName, "ca.crt"),
+			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 		)
 	case SASLMech:
-		f.Setup("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), saslSecretName))
+		f.Setup("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), SASLSecretName, secretName))
 		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),
 			kafkasource.WithSASLEnabled(),
-			kafkasource.WithSASLUser(saslSecretName, "user"),
-			kafkasource.WithSASLPassword(saslSecretName, "password"),
-			kafkasource.WithSASLType(saslSecretName, "saslType"),
+			kafkasource.WithSASLUser(secretName, "user"),
+			kafkasource.WithSASLPassword(secretName, "password"),
+			kafkasource.WithSASLType(secretName, "saslType"),
 			kafkasource.WithTLSEnabled(),
-			kafkasource.WithTLSCACert(saslSecretName, "ca.crt"),
+			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 		)
 	default:
 		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr))
