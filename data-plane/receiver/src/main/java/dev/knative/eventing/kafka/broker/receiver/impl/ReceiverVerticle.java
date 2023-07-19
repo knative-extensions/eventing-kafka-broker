@@ -235,14 +235,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
             // result is a Future object
             Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-            // print the result
-            result.onComplete((AsyncResult<Void> ar) -> {
-                if (ar.succeeded()) {
-                    logger.info("Succeeded to updateSSLOptions");
-                } else {
-                    logger.error("Failed to update TLS key pair", ar.cause());
-                }
-            });
+
+            result.onSuccess(v -> {
+                        logger.info("Succeeded to update TLS key pair");
+                    })
+                    .onFailure(e -> {
+                        logger.error("Failed to update TLS key pair", e);
+                    });
         }
     }
 }
