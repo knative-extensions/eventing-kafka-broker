@@ -27,59 +27,55 @@ import org.slf4j.LoggerFactory;
 
 /** Watches a directory for changes to TLS secrets. */
 public class SecretWatcher implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(SecretWatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(SecretWatcher.class);
 
-    private final String dir; // directory to watch
-    private final WatchService watcher; // watch service
-    private final Runnable updateAction; // action to run when a change is detected
+  private final String dir; // directory to watch
+  private final WatchService watcher; // watch service
+  private final Runnable updateAction; // action to run when a change is detected
 
-    private static String KEY_FILE = "tls.key";
-    private static String CRT_FILE = "tls.crt";
+  private static String KEY_FILE = "tls.key";
+  private static String CRT_FILE = "tls.crt";
 
-    //
-    public SecretWatcher(String dir, Runnable updateAction) throws IOException {
-        this.dir = dir;
-        this.updateAction = updateAction;
-        this.watcher = FileSystems.getDefault().newWatchService();
+  //
+  public SecretWatcher(String dir, Runnable updateAction) throws IOException {
+    this.dir = dir;
+    this.updateAction = updateAction;
+    this.watcher = FileSystems.getDefault().newWatchService();
 
-        Path path = Path.of(dir);
-        path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
-    }
+    Path path = Path.of(dir);
+    path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
+  }
 
-    @Override
-    public void run() {
-        try {
-            WatchKey key;
-            while ((key = watcher.take()) != null) {
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    Path changed = (Path) event.context();
-                    if (changed.endsWith(KEY_FILE) || changed.endsWith(CRT_FILE)) {
-                        logger.debug("Detected change to secret {}", changed);
-                        updateAction.run();
-                    }
-                }
-                key.reset();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("Watcher exception", e);
-        } finally {
-            try {
-                watcher.close();
-            } catch (IOException e) {
-                logger.error("Could not close watcher", e);
-            }
+  @Override
+  public void run() {
+    try {
+      WatchKey key;
+      while ((key = watcher.take()) != null) {
+        for (WatchEvent<?> event : key.pollEvents()) {
+          Path changed = (Path) event.context();
+          if (changed.endsWith(KEY_FILE) || changed.endsWith(CRT_FILE)) {
+            logger.debug("Detected change to secret {}", changed);
+            updateAction.run();
+          }
         }
+        key.reset();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.error("Watcher exception", e);
+    } finally {
+      this.stop();
     }
+  }
 
-    // stop the watcher
-    public void stop() {
-        try {
-            watcher.close();
-        } catch (IOException e) {
-            logger.error("Failed to close secret watcher", e);
-        }
+  // stop the watcher
+  public void stop() {
+    try {
+      watcher.close();
+    } catch (IOException e) {
+      logger.error("Failed to close secret watcher", e);
     }
+  }
 }
 
 // Stop the

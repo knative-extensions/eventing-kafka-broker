@@ -36,7 +36,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
 
-    private final String SECRET_VOLUME_PATH = "/etc/receiver-secret-volume";
+    private final String secretVolumePath = "/etc/receiver-secret-volume";
 
     private final IngressRequestHandler ingressRequestHandler;
 
@@ -71,6 +71,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         producerConfigs,
                         properties -> kafkaProducerFactory.create(v, properties)),
                 this.ingressRequestHandler,
-                SECRET_VOLUME_PATH);
+          secretVolumePath);
     }
 }
