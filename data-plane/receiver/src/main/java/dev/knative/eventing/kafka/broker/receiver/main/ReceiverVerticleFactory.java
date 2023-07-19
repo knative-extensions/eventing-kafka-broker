@@ -71,6 +71,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         producerConfigs,
                         properties -> kafkaProducerFactory.create(v, properties)),
                 this.ingressRequestHandler,
-          secretVolumePath);
+                secretVolumePath);
     }
 }
