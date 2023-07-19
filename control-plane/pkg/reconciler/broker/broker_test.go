@@ -390,7 +390,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -453,7 +453,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusUnknown),
+				testProber: probertesting.MockNewProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -2293,7 +2293,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2322,7 +2322,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2348,7 +2348,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2376,7 +2376,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			WantErr: true,
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusReady),
+				testProber: probertesting.MockNewProber(prober.StatusReady),
 			},
 		},
 		{
@@ -2406,7 +2406,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2456,7 +2456,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				SecretFinalizerUpdateRemove("secret-1"),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2505,7 +2505,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2549,7 +2549,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2585,7 +2585,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: deleteTopicError,
-				testProber:             probertesting.MockProber(prober.StatusNotReady),
+				testProber:             probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2605,7 +2605,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2643,7 +2643,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2682,7 +2682,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: sarama.ErrUnknownTopicOrPartition,
-				testProber:             probertesting.MockProber(prober.StatusNotReady),
+				testProber:             probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2704,7 +2704,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 			Key:         testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -2897,9 +2897,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			Partitions: []*sarama.PartitionMetadata{{}},
 		})
 
-		proberMock := probertesting.MockProber(prober.StatusReady)
+		proberMock := probertesting.MockNewProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
-			proberMock = p.(prober.Prober)
+			proberMock = p.(prober.NewProber)
 		}
 
 		reconciler := &Reconciler{

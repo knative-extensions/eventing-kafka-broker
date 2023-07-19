@@ -44,6 +44,8 @@ func (s Status) String() string {
 		return "Ready"
 	case StatusNotReady:
 		return "NotReady"
+	case StatusUnknownErr:
+		return "UnknownError"
 	default:
 		return "Unknown"
 	}

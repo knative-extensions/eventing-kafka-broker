@@ -62,6 +62,8 @@ const (
 
 	// caCertsSecretKey is the name of the CA Cert in the secret
 	caCertsSecretKey = "ca.crt"
+
+	eventingNamespace = "knative-eventing"
 )
 
 type Reconciler struct {
@@ -78,7 +80,7 @@ type Reconciler struct {
 
 	BootstrapServers string
 
-	Prober            prober.Prober
+	Prober            prober.NewProber
 	Counter           *counter.Counter
 	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
 }
@@ -261,9 +263,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
 
-	address := addressableStatus.Address.URL.URL()
-	proberAddressable := prober.Addressable{
-		Address: address,
+	proberAddressable := prober.NewAddressable{
+		AddressStatus: &addressableStatus,
 		ResourceKey: types.NamespacedName{
 			Namespace: broker.GetNamespace(),
 			Name:      broker.GetName(),
@@ -356,9 +357,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.Address(ingressHost, broker)
-	proberAddressable := prober.Addressable{
-		Address: address,
+	address := receiver.HTTPAddress(ingressHost, broker)
+	proberAddressable := prober.NewAddressable{
+		AddressStatus: &duckv1.AddressStatus{
+			Address: &address,
+		},
 		ResourceKey: types.NamespacedName{
 			Namespace: broker.GetNamespace(),
 			Name:      broker.GetName(),
@@ -694,7 +697,7 @@ func finalizerSecret(object metav1.Object) string {
 }
 
 func (r *Reconciler) getCaCerts() (string, error) {
-	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(brokerIngressTLSSecretName)
+	secret, err := r.SecretLister.Secrets(eventingNamespace).Get(brokerIngressTLSSecretName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
 	}

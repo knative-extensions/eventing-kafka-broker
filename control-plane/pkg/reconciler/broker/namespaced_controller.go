@@ -18,7 +18,6 @@ package broker
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
@@ -115,7 +114,11 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	reconciler.IPsLister = prober.NewIPListerWithMapping()
-	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
+
+	reconciler.Prober, err = prober.NewCompositeNoTLS(ctx, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
+	if err != nil {
+		logger.Fatal("Failed to create prober", zap.Error(err))
+	}
 
 	brokerInformer := brokerinformer.Get(ctx)
 

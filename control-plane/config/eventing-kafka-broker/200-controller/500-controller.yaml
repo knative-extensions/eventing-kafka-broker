@@ -115,6 +115,13 @@ spec:
             - name: SINK_INGRESS_POD_PORT
               value: "8080"
 
+            - name: BROKER_INGRESS_POD_TLS_PORT
+              value: "8443"
+            - name: CHANNEL_INGRESS_POD_TLS_PORT
+              value: "8443"
+            - name: SINK_INGRESS_POD_TLS_PORT
+              value: "8443"
+
             - name: BROKER_SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:

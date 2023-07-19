@@ -80,7 +80,7 @@ type NamespacedReconciler struct {
 
 	BootstrapServers string
 
-	Prober  prober.Prober
+	Prober  prober.NewProber
 	Counter *counter.Counter
 
 	IPsLister          prober.IPListerWithMapping

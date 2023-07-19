@@ -421,7 +421,7 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 	}
@@ -470,9 +470,9 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			Partitions: []*sarama.PartitionMetadata{{}},
 		})
 
-		proberMock := probertesting.MockProber(prober.StatusReady)
+		proberMock := probertesting.MockNewProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
-			proberMock = p.(prober.Prober)
+			proberMock = p.(prober.NewProber)
 		}
 
 		mfcMockClient, _ := client.NewUnsafeDynamicClient(dynamicclientfake.Get(ctx))
