@@ -240,7 +240,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 if (ar.succeeded()) {
                     logger.info("Succeeded to updateSSLOptions");
                 } else {
-                    logger.error("Failed to updateSSLOptions", ar.cause());
+                    logger.error("Failed to update TLS key pair", ar.cause());
                 }
             });
         }
