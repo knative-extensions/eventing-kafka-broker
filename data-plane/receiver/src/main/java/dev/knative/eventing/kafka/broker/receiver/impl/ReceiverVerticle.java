@@ -221,12 +221,10 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     public void updateServerConfig() {
         // This function will be called when the secret volume is updated
-
         File tlsKeyFile = new File(tlsKeyFilePath);
         File tlsCrtFile = new File(tlsCrtFilePath);
 
         // Check whether the tls.key and tls.crt files exist
-
         if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
 
             // Update SSL configuration by using updateSSLOptions
