@@ -65,205 +65,183 @@ import org.slf4j.LoggerFactory;
  */
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
-  private final String secretVolumePath;
-  private final String tlsKeyFilePath;
-  private final String tlsCrtFilePath;
+    private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
+    private final String secretVolumePath;
+    private final String tlsKeyFilePath;
+    private final String tlsCrtFilePath;
 
-  private final HttpServerOptions httpServerOptions;
-  private final HttpServerOptions httpsServerOptions;
-  private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
-  private final IngressRequestHandler ingressRequestHandler;
-  private final ReceiverEnv env;
+    private final HttpServerOptions httpServerOptions;
+    private final HttpServerOptions httpsServerOptions;
+    private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
+    private final IngressRequestHandler ingressRequestHandler;
+    private final ReceiverEnv env;
 
-  private HttpServer httpServer;
-  private HttpServer httpsServer;
-  private MessageConsumer<Object> messageConsumer;
-  private IngressProducerReconcilableStore ingressProducerStore;
+    private HttpServer httpServer;
+    private HttpServer httpsServer;
+    private MessageConsumer<Object> messageConsumer;
+    private IngressProducerReconcilableStore ingressProducerStore;
 
-  private SecretWatcher secretWatcher;
+    private SecretWatcher secretWatcher;
 
-  public ReceiverVerticle(
-      final ReceiverEnv env,
-      final HttpServerOptions httpServerOptions,
-      final HttpServerOptions httpsServerOptions,
-      final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
-      final IngressRequestHandler ingressRequestHandler,
-      final String secretVolumePath) {
+    public ReceiverVerticle(
+            final ReceiverEnv env,
+            final HttpServerOptions httpServerOptions,
+            final HttpServerOptions httpsServerOptions,
+            final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
+            final IngressRequestHandler ingressRequestHandler,
+            final String secretVolumePath) {
 
-    Objects.requireNonNull(env);
-    Objects.requireNonNull(httpServerOptions);
-    Objects.requireNonNull(httpsServerOptions);
-    Objects.requireNonNull(ingressProducerStoreFactory);
-    Objects.requireNonNull(ingressRequestHandler);
-    Objects.requireNonNull(secretVolumePath);
+        Objects.requireNonNull(env);
+        Objects.requireNonNull(httpServerOptions);
+        Objects.requireNonNull(httpsServerOptions);
+        Objects.requireNonNull(ingressProducerStoreFactory);
+        Objects.requireNonNull(ingressRequestHandler);
+        Objects.requireNonNull(secretVolumePath);
 
-    this.env = env;
-    this.httpServerOptions =
-        httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
-    this.httpsServerOptions = httpsServerOptions;
-    this.ingressProducerStoreFactory = ingressProducerStoreFactory;
-    this.ingressRequestHandler = ingressRequestHandler;
-    this.secretVolumePath = secretVolumePath;
-    this.tlsKeyFilePath = secretVolumePath + "/tls.key";
-    this.tlsCrtFilePath = secretVolumePath + "/tls.crt";
-  }
-
-  public HttpServerOptions getHttpsServerOptions() {
-    return httpsServerOptions;
-  }
-
-  @Override
-  public void start(final Promise<Void> startPromise) {
-    this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
-    this.messageConsumer =
-        ResourcesReconciler.builder()
-            .watchIngress(
-                IngressReconcilerListener.all(
-                    this.ingressProducerStore, this.ingressRequestHandler))
-            .buildAndListen(vertx);
-
-    this.httpServer = vertx.createHttpServer(this.httpServerOptions);
-
-    // check whether the secret volume is mounted
-    File secretVolume = new File(secretVolumePath);
-    if (secretVolume.exists()) {
-      // The secret volume is mounted, we should start the https server
-      // check whether the tls.key and tls.crt files exist
-      File tlsKeyFile = new File(tlsKeyFilePath);
-      File tlsCrtFile = new File(tlsCrtFilePath);
-
-      if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-        PemKeyCertOptions keyCertOptions =
-            new PemKeyCertOptions()
-                .setKeyPath(tlsKeyFile.getPath())
-                .setCertPath(tlsCrtFile.getPath());
-        this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
-
-        this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
-      }
+        this.env = env;
+        this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
+        this.httpsServerOptions = httpsServerOptions;
+        this.ingressProducerStoreFactory = ingressProducerStoreFactory;
+        this.ingressRequestHandler = ingressRequestHandler;
+        this.secretVolumePath = secretVolumePath;
+        this.tlsKeyFilePath = secretVolumePath + "/tls.key";
+        this.tlsCrtFilePath = secretVolumePath + "/tls.crt";
     }
 
-    final var handler =
-        new ProbeHandler(
-            env.getLivenessProbePath(),
-            env.getReadinessProbePath(),
-            new MethodNotAllowedHandler(this));
-
-    if (this.httpsServer != null) {
-      CompositeFuture.all(
-              this.httpServer
-                  .requestHandler(handler)
-                  .exceptionHandler(startPromise::tryFail)
-                  .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
-              this.httpsServer
-                  .requestHandler(handler)
-                  .exceptionHandler(startPromise::tryFail)
-                  .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
-          .<Void>mapEmpty()
-          .onComplete(startPromise);
-    } else {
-      this.httpServer
-          .requestHandler(handler)
-          .exceptionHandler(startPromise::tryFail)
-          .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
-          .<Void>mapEmpty()
-          .onComplete(startPromise);
+    public HttpServerOptions getHttpsServerOptions() {
+        return httpsServerOptions;
     }
 
-    setupSecretWatcher();
-  }
+    @Override
+    public void start(final Promise<Void> startPromise) {
+        this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
+        this.messageConsumer = ResourcesReconciler.builder()
+                .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
+                .buildAndListen(vertx);
 
-  // Set up the secret watcher
-  private void setupSecretWatcher() {
-    try {
-      this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
-      new Thread(this.secretWatcher).start();
-    } catch (IOException e) {
-      logger.error("Failed to start SecretWatcher", e);
-    }
-  }
+        this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
-  @Override
-  public void stop(Promise<Void> stopPromise) {
-    CompositeFuture.all(
-            (this.httpServer != null
-                ? this.httpServer.close().mapEmpty()
-                : Future.succeededFuture()),
-            (this.httpsServer != null
-                ? this.httpsServer.close().mapEmpty()
-                : Future.succeededFuture()),
-            (this.messageConsumer != null
-                ? this.messageConsumer.unregister()
-                : Future.succeededFuture()))
-        .<Void>mapEmpty()
-        .onComplete(stopPromise);
+        // check whether the secret volume is mounted
+        File secretVolume = new File(secretVolumePath);
+        if (secretVolume.exists()) {
+            // The secret volume is mounted, we should start the https server
+            // check whether the tls.key and tls.crt files exist
+            File tlsKeyFile = new File(tlsKeyFilePath);
+            File tlsCrtFile = new File(tlsCrtFilePath);
 
-    // close the watcher
-    if (this.secretWatcher != null) {
-      this.secretWatcher.stop();
-    }
-  }
+            if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+                PemKeyCertOptions keyCertOptions =
+                        new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+                this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
 
-  @Override
-  public void handle(HttpServerRequest request) {
+                this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
+            }
+        }
 
-    final var requestContext = new RequestContext(request);
+        final var handler = new ProbeHandler(
+                env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
 
-    // Look up for the ingress producer
-    IngressProducer producer = this.ingressProducerStore.resolve(request.host(), request.path());
-    if (producer == null) {
-      request.response().setStatusCode(NOT_FOUND.code()).end();
-      logger.warn(
-          "Resource not found {} {} {}",
-          keyValue("path", request.path()),
-          keyValue("host", request.host()),
-          keyValue("hostHeader", request.getHeader("Host")));
-      return;
-    }
+        if (this.httpsServer != null) {
+            CompositeFuture.all(
+                            this.httpServer
+                                    .requestHandler(handler)
+                                    .exceptionHandler(startPromise::tryFail)
+                                    .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
+                            this.httpsServer
+                                    .requestHandler(handler)
+                                    .exceptionHandler(startPromise::tryFail)
+                                    .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
+                    .<Void>mapEmpty()
+                    .onComplete(startPromise);
+        } else {
+            this.httpServer
+                    .requestHandler(handler)
+                    .exceptionHandler(startPromise::tryFail)
+                    .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
+                    .<Void>mapEmpty()
+                    .onComplete(startPromise);
+        }
 
-    if (isControlPlaneProbeRequest(request)) {
-      request
-          .response()
-          .putHeader(PROBE_HASH_HEADER_NAME, request.getHeader(PROBE_HASH_HEADER_NAME))
-          .setStatusCode(OK.code())
-          .end();
-      return;
+        setupSecretWatcher();
     }
 
-    // Invoke the ingress request handler
-    this.ingressRequestHandler.handle(requestContext, producer);
-  }
-
-  public void updateServerConfig() {
-    // This function will be called when the secret volume is updated
-
-    File tlsKeyFile = new File(tlsKeyFilePath);
-    File tlsCrtFile = new File(tlsCrtFilePath);
-
-    // Check whether the tls.key and tls.crt files exist
-
-    if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-
-      // Update SSL configuration by using updateSSLOptions
-      PemKeyCertOptions keyCertOptions =
-          new PemKeyCertOptions()
-              .setKeyPath(tlsKeyFile.getPath())
-              .setCertPath(tlsCrtFile.getPath());
-
-      // result is a Future object
-      Future<Void> result =
-          httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-
-      result
-          .onSuccess(
-              v -> {
-                logger.info("Succeeded to update TLS key pair");
-              })
-          .onFailure(
-              e -> {
-                logger.error("Failed to update TLS key pair", e);
-              });
+    // Set up the secret watcher
+    private void setupSecretWatcher() {
+        try {
+            this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
+            new Thread(this.secretWatcher).start();
+        } catch (IOException e) {
+            logger.error("Failed to start SecretWatcher", e);
+        }
     }
-  }
+
+    @Override
+    public void stop(Promise<Void> stopPromise) {
+        CompositeFuture.all(
+                        (this.httpServer != null ? this.httpServer.close().mapEmpty() : Future.succeededFuture()),
+                        (this.httpsServer != null ? this.httpsServer.close().mapEmpty() : Future.succeededFuture()),
+                        (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
+                .<Void>mapEmpty()
+                .onComplete(stopPromise);
+
+        // close the watcher
+        if (this.secretWatcher != null) {
+            this.secretWatcher.stop();
+        }
+    }
+
+    @Override
+    public void handle(HttpServerRequest request) {
+
+        final var requestContext = new RequestContext(request);
+
+        // Look up for the ingress producer
+        IngressProducer producer = this.ingressProducerStore.resolve(request.host(), request.path());
+        if (producer == null) {
+            request.response().setStatusCode(NOT_FOUND.code()).end();
+            logger.warn(
+                    "Resource not found {} {} {}",
+                    keyValue("path", request.path()),
+                    keyValue("host", request.host()),
+                    keyValue("hostHeader", request.getHeader("Host")));
+            return;
+        }
+
+        if (isControlPlaneProbeRequest(request)) {
+            request.response()
+                    .putHeader(PROBE_HASH_HEADER_NAME, request.getHeader(PROBE_HASH_HEADER_NAME))
+                    .setStatusCode(OK.code())
+                    .end();
+            return;
+        }
+
+        // Invoke the ingress request handler
+        this.ingressRequestHandler.handle(requestContext, producer);
+    }
+
+    public void updateServerConfig() {
+        // This function will be called when the secret volume is updated
+
+        File tlsKeyFile = new File(tlsKeyFilePath);
+        File tlsCrtFile = new File(tlsCrtFilePath);
+
+        // Check whether the tls.key and tls.crt files exist
+
+        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+
+            // Update SSL configuration by using updateSSLOptions
+            PemKeyCertOptions keyCertOptions =
+                    new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+
+            // result is a Future object
+            Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+
+            result.onSuccess(v -> {
+                        logger.info("Succeeded to update TLS key pair");
+                    })
+                    .onFailure(e -> {
+                        logger.error("Failed to update TLS key pair", e);
+                    });
+        }
+    }
 }
