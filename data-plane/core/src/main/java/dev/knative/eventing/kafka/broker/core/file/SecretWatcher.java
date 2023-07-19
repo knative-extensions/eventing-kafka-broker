@@ -54,7 +54,7 @@ public class SecretWatcher implements Runnable {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     Path changed = (Path) event.context();
                     if (changed.endsWith(KEY_FILE) || changed.endsWith(CRT_FILE)) {
-                        logger.info("Detected change to secret {}", changed);
+                        logger.debug("Detected change to secret {}", changed);
                         updateAction.run();
                     }
                 }
