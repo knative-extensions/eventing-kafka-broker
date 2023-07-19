@@ -30,7 +30,7 @@ public class SecretWatcher implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(SecretWatcher.class);
 
     private final String dir; // directory to watch
-    private WatchService watcher; // watch service
+    private final WatchService watcher; // watch service
     private final Runnable updateAction; // action to run when a change is detected
 
     private static String KEY_FILE = "tls.key";
