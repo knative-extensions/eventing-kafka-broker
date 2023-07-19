@@ -5,9 +5,9 @@
 This repository contains another KafkaChannel implementation, which we believe is more flexible and scalable.
 
 There are already 2 other KafkaChannel implementations:
-the [consolidated KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
+the [consolidated KafkaChannel]
 and
-the [distributed KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
+the [distributed KafkaChannel]
 .
 
 While working on these 2 channel implementations, we realized we could reuse the dataplane for other Knative Kafka
@@ -21,9 +21,9 @@ The dataplane is designed in a way that it only communicates the control plane v
 ## Comparison with other KafkaChannel implementations
 
 You may find a comparison of this new KafkaChannel implementation with
-the [consolidated KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
+the [consolidated KafkaChannel]
 and
-the [distributed KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
+the [distributed KafkaChannel]
 implementations.
 
 |                         | New KafkaChannel                                        | Consolidated KafkaChannel                               | Distributed KafkaChannel                                                             |
@@ -531,5 +531,5 @@ This will save you additional HTTP hops, from channel to broker and broker to ch
 
 ## Discontinued features
 
-- [Namespace dispatchers](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md#namespace-dispatchers)
+- [Namespace dispatchers]
   are not supported at the moment.
