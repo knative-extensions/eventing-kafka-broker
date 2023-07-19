@@ -91,189 +91,171 @@ import org.slf4j.LoggerFactory;
 @ExtendWith(VertxExtension.class)
 public class ReceiverVerticleTest {
 
-  // Set up the logger that is connected to ReceiverVerticle
-  private static final Logger logger = (Logger) LoggerFactory.getLogger(ReceiverVerticle.class);
-  private ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    // Set up the logger that is connected to ReceiverVerticle
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(ReceiverVerticle.class);
+    private ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
-  private static final int TIMEOUT = 10;
-  private static final int PORT = 8082;
-  private static final int TLS_PORT = 8443;
-  private static final String HOST = "localhost";
-  private static final String SECRET_VOLUME_PATH = "src/test/resources";
-  private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
-  private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
+    private static final int TIMEOUT = 10;
+    private static final int PORT = 8082;
+    private static final int TLS_PORT = 8443;
+    private static final String HOST = "localhost";
+    private static final String SECRET_VOLUME_PATH = "src/test/resources";
+    private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+    private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
 
-  private static WebClient webClient;
+    private static WebClient webClient;
 
-  private static MockProducer<String, CloudEvent> mockProducer;
-  private static IngressProducerReconcilableStore store;
+    private static MockProducer<String, CloudEvent> mockProducer;
+    private static IngressProducerReconcilableStore store;
 
-  static {
-    BackendRegistries.setupBackend(
-        new MicrometerMetricsOptions()
-            .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-            .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
-  }
+    static {
+        BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+                .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+                .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    }
 
-  private PrometheusMeterRegistry registry;
+    private PrometheusMeterRegistry registry;
 
-  @BeforeEach
-  public void setUpHTTP(final Vertx vertx, final VertxTestContext testContext) {
-    ContractMessageCodec.register(vertx.eventBus());
+    @BeforeEach
+    public void setUpHTTP(final Vertx vertx, final VertxTestContext testContext) {
+        ContractMessageCodec.register(vertx.eventBus());
 
-    webClient = WebClient.create(vertx);
-    ReceiverVerticleTest.mockProducer =
-        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-    ReactiveKafkaProducer<String, CloudEvent> producer =
-        new MockReactiveKafkaProducer<>(mockProducer);
+        webClient = WebClient.create(vertx);
+        ReceiverVerticleTest.mockProducer =
+                new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+        ReactiveKafkaProducer<String, CloudEvent> producer = new MockReactiveKafkaProducer<>(mockProducer);
 
-    store =
-        new IngressProducerReconcilableStore(
-            AuthProvider.noAuth(), new Properties(), properties -> producer);
+        store = new IngressProducerReconcilableStore(AuthProvider.noAuth(), new Properties(), properties -> producer);
 
-    registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
-    final var httpServerOptions = new HttpServerOptions();
-    httpServerOptions.setPort(PORT);
-    httpServerOptions.setHost(HOST);
+        final var httpServerOptions = new HttpServerOptions();
+        httpServerOptions.setPort(PORT);
+        httpServerOptions.setHost(HOST);
 
-    final var httpsServerOptions = new HttpServerOptions();
-    httpsServerOptions.setPort(TLS_PORT);
-    httpsServerOptions.setHost(HOST);
-    httpsServerOptions.setSsl(true);
-    httpsServerOptions.setPemKeyCertOptions(
-        new PemKeyCertOptions().setCertPath(TLS_KEY_FILE_PATH).setKeyPath(TLS_CRT_FILE_PATH));
+        final var httpsServerOptions = new HttpServerOptions();
+        httpsServerOptions.setPort(TLS_PORT);
+        httpsServerOptions.setHost(HOST);
+        httpsServerOptions.setSsl(true);
+        httpsServerOptions.setPemKeyCertOptions(
+                new PemKeyCertOptions().setCertPath(TLS_KEY_FILE_PATH).setKeyPath(TLS_CRT_FILE_PATH));
 
-    final var env = mock(ReceiverEnv.class);
-    when(env.getLivenessProbePath()).thenReturn("/healthz");
-    when(env.getReadinessProbePath()).thenReturn("/readyz");
-    final var verticle =
-        new ReceiverVerticle(
-            env,
-            httpServerOptions,
-            httpsServerOptions,
-            v -> store,
-            new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), registry),
-            SECRET_VOLUME_PATH);
-    vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
+        final var env = mock(ReceiverEnv.class);
+        when(env.getLivenessProbePath()).thenReturn("/healthz");
+        when(env.getReadinessProbePath()).thenReturn("/readyz");
+        final var verticle = new ReceiverVerticle(
+                env,
+                httpServerOptions,
+                httpsServerOptions,
+                v -> store,
+                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), registry),
+                SECRET_VOLUME_PATH);
+        vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
 
-    // Connect to the logger in ReceiverVerticle
-    listAppender.start();
-    logger.addAppender(listAppender);
-  }
+        // Connect to the logger in ReceiverVerticle
+        listAppender.start();
+        logger.addAppender(listAppender);
+    }
 
-  @BeforeEach
-  public void cleanUp() {
-    mockProducer.clear();
-  }
+    @BeforeEach
+    public void cleanUp() {
+        mockProducer.clear();
+    }
 
-  @AfterEach
-  public void tearDownEach() {
-    registry.close();
-  }
+    @AfterEach
+    public void tearDownEach() {
+        registry.close();
+    }
 
-  @AfterAll
-  public static void tearDown() {
-    webClient.close();
-  }
+    @AfterAll
+    public static void tearDown() {
+        webClient.close();
+    }
 
-  @ParameterizedTest
-  @MethodSource({"getValidNonValidEvents"})
-  public void shouldProduceMessagesReceivedConcurrently(
-      final TestCase tc, final Vertx vertx, final VertxTestContext context)
-      throws InterruptedException {
+    @ParameterizedTest
+    @MethodSource({"getValidNonValidEvents"})
+    public void shouldProduceMessagesReceivedConcurrently(
+            final TestCase tc, final Vertx vertx, final VertxTestContext context) throws InterruptedException {
 
-    final var checkpoints = context.checkpoint(1);
-    final var countDown = new CountDownLatch(1);
+        final var checkpoints = context.checkpoint(1);
+        final var countDown = new CountDownLatch(1);
 
-    new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
-        .accept(tc.getContract());
+        new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS).accept(tc.getContract());
 
-    tc.requestSender
-        .apply(webClient.post(PORT, HOST, tc.path))
-        .onFailure(context::failNow)
-        .onSuccess(
-            response ->
-                vertx.setTimer(
-                    1000,
-                    ignored ->
-                        context.verify(
-                            () -> {
-                              assertThat(response.statusCode())
-                                  .as("verify path: " + tc.path)
-                                  .isEqualTo(tc.responseStatusCode);
+        tc.requestSender
+                .apply(webClient.post(PORT, HOST, tc.path))
+                .onFailure(context::failNow)
+                .onSuccess(response -> vertx.setTimer(
+                        1000,
+                        ignored -> context.verify(() -> {
+                            assertThat(response.statusCode())
+                                    .as("verify path: " + tc.path)
+                                    .isEqualTo(tc.responseStatusCode);
 
-                              final var expectedCount =
-                                  (double) tc.badRequestCount + (double) tc.produceEventCount;
+                            final var expectedCount = (double) tc.badRequestCount + (double) tc.produceEventCount;
 
-                              final var defaultCounter =
-                                  Counter.builder(Metrics.EVENTS_COUNT)
-                                      .register(Metrics.getRegistry());
-                              Counter counter = defaultCounter;
-                              try {
+                            final var defaultCounter =
+                                    Counter.builder(Metrics.EVENTS_COUNT).register(Metrics.getRegistry());
+                            Counter counter = defaultCounter;
+                            try {
                                 if (expectedCount > 0) {
-                                  counter =
-                                      registry.get(Metrics.EVENTS_COUNT).counters().stream()
-                                          .reduce((a, b) -> b) // get last element
-                                          .orElse(defaultCounter);
+                                    counter = registry.get(Metrics.EVENTS_COUNT).counters().stream()
+                                            .reduce((a, b) -> b) // get last element
+                                            .orElse(defaultCounter);
                                 }
-                              } catch (MeterNotFoundException ignored1) {
-                              }
+                            } catch (MeterNotFoundException ignored1) {
+                            }
 
-                              assertThat(counter.count())
-                                  .describedAs(
-                                      "Counter: "
-                                          + StreamSupport.stream(
-                                                  counter.measure().spliterator(), false)
-                                              .map(Measurement::toString)
-                                              .collect(Collectors.joining()))
-                                  .isEqualTo(expectedCount);
+                            assertThat(counter.count())
+                                    .describedAs("Counter: "
+                                            + StreamSupport.stream(
+                                                            counter.measure().spliterator(), false)
+                                                    .map(Measurement::toString)
+                                                    .collect(Collectors.joining()))
+                                    .isEqualTo(expectedCount);
 
-                              if (tc.expectedDispatchLatency) {
+                            if (tc.expectedDispatchLatency) {
                                 final var eventDispatchLatency =
-                                    registry
-                                        .get(Metrics.EVENT_DISPATCH_LATENCY)
-                                        .summaries()
-                                        .stream()
-                                        .reduce((a, b) -> b)
-                                        .get();
+                                        registry.get(Metrics.EVENT_DISPATCH_LATENCY).summaries().stream()
+                                                .reduce((a, b) -> b)
+                                                .get();
 
                                 assertThat(eventDispatchLatency.max()).isGreaterThan(0);
                                 assertThat(eventDispatchLatency.totalAmount()).isGreaterThan(0);
                                 assertThat(eventDispatchLatency.mean()).isGreaterThan(0);
-                              }
+                            }
 
-                              checkpoints.flag();
-                              countDown.countDown();
-                            })));
+                            checkpoints.flag();
+                            countDown.countDown();
+                        })));
 
-    countDown.await(TIMEOUT, TimeUnit.SECONDS);
+        countDown.await(TIMEOUT, TimeUnit.SECONDS);
 
-    if (mockProducer.history().size() > 0) {
-      assertThat(mockProducer.history()).containsExactlyInAnyOrder(tc.record);
-    }
-  }
-
-  // Write the test to verify that when the secret is updated
-  @Test
-  public void secretFileUpdated() throws InterruptedException {
-    // Modified the secret file in the test resources folder
-    File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
-    File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
-
-    // Have a copy of the original TLS cert content by using Files.readString
-    String original_TLS_Cert = "";
-    String original_TLS_Key = "";
-    try {
-      original_TLS_Cert = Files.readString(tlsCrtFile.toPath());
-      original_TLS_Key = Files.readString(tlsKeyFile.toPath());
-    } catch (IOException e) {
-      e.printStackTrace();
+        if (mockProducer.history().size() > 0) {
+            assertThat(mockProducer.history()).containsExactlyInAnyOrder(tc.record);
+        }
     }
 
-    // Write the new CA cert to the file
-    String new_TLS_Cert =
-        """
+    // Write the test to verify that when the secret is updated
+    @Test
+    public void secretFileUpdated() throws InterruptedException {
+        // Modified the secret file in the test resources folder
+        File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
+        File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
+
+        // Have a copy of the original TLS cert content by using Files.readString
+        String original_TLS_Cert = "";
+        String original_TLS_Key = "";
+        try {
+            original_TLS_Cert = Files.readString(tlsCrtFile.toPath());
+            original_TLS_Key = Files.readString(tlsKeyFile.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Write the new CA cert to the file
+        String new_TLS_Cert =
+                """
       -----BEGIN CERTIFICATE-----
       MIIDmDCCAoCgAwIBAgIUZx4ztTK7wyEpRYKkKqM9+oFr+PwwDQYJKoZIhvcNAQEL
       BQAwJzELMAkGA1UEBhMCVVMxGDAWBgNVBAMMD0V4YW1wbGUtUm9vdC1DQTAeFw0y
@@ -297,8 +279,8 @@ public class ReceiverVerticleTest {
       5bOo/SpCokC166Ym
       -----END CERTIFICATE-----""";
 
-    String new_TLS_key =
-        """
+        String new_TLS_key =
+                """
 -----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKrS1taPfNv+WF
 zKQABeVzxFVU+Jnz3w3E1XWh3de8VQVFiRA/0NT/ecT/kPENBtCZ9OWi/nRZuBKB
@@ -328,293 +310,282 @@ TfwO4tuRZ0hSBe+POhImNGNVJ71yylGDFJc/21KMRxXi1IIKVr0qjhv0IQcvDDN2
 QCDcINom+skQGHJlbPdrpwNW
 -----END PRIVATE KEY-----""";
 
-    try {
-      FileWriter tlsCrtWriter = new FileWriter(tlsCrtFile);
-      tlsCrtWriter.write(new_TLS_Cert);
-      tlsCrtWriter.close();
+        try {
+            FileWriter tlsCrtWriter = new FileWriter(tlsCrtFile);
+            tlsCrtWriter.write(new_TLS_Cert);
+            tlsCrtWriter.close();
 
-      FileWriter tlsKeyWriter = new FileWriter(tlsKeyFile);
-      tlsKeyWriter.write(new_TLS_key);
-      tlsKeyWriter.close();
-    } catch (IOException e) {
-      System.out.println("An error occurred.");
-      e.printStackTrace();
+            FileWriter tlsKeyWriter = new FileWriter(tlsKeyFile);
+            tlsKeyWriter.write(new_TLS_key);
+            tlsKeyWriter.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+        // Sleep 1 sec to make sure the file is updated
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Write the old TLS cert and key back
+        try {
+            FileWriter tlsCrtWriter = new FileWriter(tlsCrtFile);
+            tlsCrtWriter.write(original_TLS_Cert);
+            tlsCrtWriter.close();
+
+            FileWriter tlsKeyWriter = new FileWriter(tlsKeyFile);
+            tlsKeyWriter.write(original_TLS_Key);
+            tlsKeyWriter.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+        // Check the logger to see if the message "The secret volume is updated" is printed by using
+        // logger
+        List<ILoggingEvent> logList = listAppender.list;
+        assertEquals("Succeeded to update TLS key pair", logList.get(0).getMessage());
     }
 
-    // Sleep 1 sec to make sure the file is updated
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    private static List<TestCase> getValidNonValidEvents() {
+        return Arrays.asList(
+                new TestCase(
+                        null,
+                        "/broker-ns/broker-name1",
+                        ceRequestSender(new CloudEventBuilder()
+                                .withSubject("subject")
+                                .withSource(URI.create("/hello"))
+                                .withType("type")
+                                .withId("1234")
+                                .build()),
+                        NOT_FOUND.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                                .build()),
+                new TestCase(
+                        null,
+                        "/broker-ns/broker-name/hello",
+                        ceRequestSender(new CloudEventBuilder()
+                                .withSubject("subject")
+                                .withSource(URI.create("/hello"))
+                                .withType("type")
+                                .withId("1234")
+                                .build()),
+                        NOT_FOUND.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-name/hello"))
+                                .build()),
+                new TestCase(
+                        null,
+                        "/broker-ns/h/hello",
+                        ceRequestSender(new CloudEventBuilder()
+                                .withSubject("subject")
+                                .withSource(URI.create("/hello"))
+                                .withType("type")
+                                .withId("1234")
+                                .build()),
+                        NOT_FOUND.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/h/hello"))
+                                .build()),
+                new TestCase(
+                        new ProducerRecord<>(
+                                "topic-name-1",
+                                null,
+                                new io.cloudevents.core.v03.CloudEventBuilder()
+                                        .withSubject("subject")
+                                        .withSource(URI.create("/hello"))
+                                        .withType("type")
+                                        .withId("1234")
+                                        .build()),
+                        "/broker-ns/broker-name1",
+                        ceRequestSender(new io.cloudevents.core.v03.CloudEventBuilder()
+                                .withSubject("subject")
+                                .withSource(URI.create("/hello"))
+                                .withType("type")
+                                .withId("1234")
+                                .build()),
+                        ACCEPTED.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic-name-1")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name1"))
+                                .build()),
+                new TestCase(
+                        null,
+                        "/broker-ns/broker-name",
+                        request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
+                        BAD_REQUEST.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                                .build()),
+                new TestCase(
+                        null,
+                        "/broker-ns/broker-name/hello",
+                        request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
+                        NOT_FOUND.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                                .build()),
+                new TestCase(
+                        null,
+                        "/broker-ns/broker-name3",
+                        request -> {
+                            final var objectMapper = new ObjectMapper();
+                            final var objectNode = objectMapper.createObjectNode();
+                            objectNode.set("hello", new FloatNode(1.24f));
+                            objectNode.set("data", objectMapper.createObjectNode());
+                            request.headers().set("Content-Type", "application/json");
+                            return request.sendBuffer(Buffer.buffer(objectNode.toString()));
+                        },
+                        BAD_REQUEST.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name3"))
+                                .build()),
+                new TestCase(
+                        null,
+                        "/broker-ns/broker-name4",
+                        request -> {
+                            final var objectMapper = new ObjectMapper();
+                            final var objectNode = objectMapper.createObjectNode();
+                            objectNode.set("specversion", new TextNode("1.0"));
+                            objectNode.set("type", new TextNode("my-type"));
+                            objectNode.set("source", new TextNode("my-source"));
+                            objectNode.set("data", objectMapper.createObjectNode());
+                            request.headers().set("Content-Type", "application/json");
+                            return request.sendBuffer(Buffer.buffer(objectNode.toString()));
+                        },
+                        BAD_REQUEST.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name4"))
+                                .build()),
+                new TestCase(
+                        new ProducerRecord<>(
+                                "topic-name-42",
+                                null,
+                                new io.cloudevents.core.v1.CloudEventBuilder()
+                                        .withSubject("subject")
+                                        .withSource(URI.create("/hello"))
+                                        .withType("type")
+                                        .withId("1234")
+                                        .build()),
+                        "/broker-ns/broker-name5",
+                        ceRequestSender(new io.cloudevents.core.v1.CloudEventBuilder()
+                                .withSubject("subject")
+                                .withSource(URI.create("/hello"))
+                                .withType("type")
+                                .withId("1234")
+                                .build()),
+                        ACCEPTED.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic-name-42")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
+                                .build()),
+                new TestCase(
+                        new ProducerRecord<>("topic-name-42", null, null),
+                        "/broker-ns/broker-name5",
+                        probeRequestSender(null),
+                        OK.code(),
+                        DataPlaneContract.Resource.newBuilder()
+                                .setUid("1")
+                                .addTopics("topic-name-42")
+                                .setIngress(
+                                        DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
+                                .build()),
+                new TestCase(
+                        new ProducerRecord<>("topic-name-42", null, null),
+                        "/broker-ns/broker-name5",
+                        probeRequestSender(null),
+                        NOT_FOUND.code(),
+                        DataPlaneContract.Resource.newBuilder().build()));
     }
 
-    // Write the old TLS cert and key back
-    try {
-      FileWriter tlsCrtWriter = new FileWriter(tlsCrtFile);
-      tlsCrtWriter.write(original_TLS_Cert);
-      tlsCrtWriter.close();
-
-      FileWriter tlsKeyWriter = new FileWriter(tlsKeyFile);
-      tlsKeyWriter.write(original_TLS_Key);
-      tlsKeyWriter.close();
-    } catch (IOException e) {
-      System.out.println("An error occurred.");
-      e.printStackTrace();
+    private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> ceRequestSender(final CloudEvent event) {
+        return request -> VertxMessageFactory.createWriter(request).writeBinary(event);
     }
 
-    // Check the logger to see if the message "The secret volume is updated" is printed by using
-    // logger
-    List<ILoggingEvent> logList = listAppender.list;
-    assertEquals("Succeeded to update TLS key pair", logList.get(0).getMessage());
-  }
-
-  private static List<TestCase> getValidNonValidEvents() {
-    return Arrays.asList(
-        new TestCase(
-            null,
-            "/broker-ns/broker-name1",
-            ceRequestSender(
-                new CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            NOT_FOUND.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-                .build()),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name/hello",
-            ceRequestSender(
-                new CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            NOT_FOUND.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-name/hello"))
-                .build()),
-        new TestCase(
-            null,
-            "/broker-ns/h/hello",
-            ceRequestSender(
-                new CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            NOT_FOUND.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/h/hello"))
-                .build()),
-        new TestCase(
-            new ProducerRecord<>(
-                "topic-name-1",
-                null,
-                new io.cloudevents.core.v03.CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            "/broker-ns/broker-name1",
-            ceRequestSender(
-                new io.cloudevents.core.v03.CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            ACCEPTED.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic-name-1")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name1"))
-                .build()),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name",
-            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-            BAD_REQUEST.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-                .build()),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name/hello",
-            request -> request.sendBuffer(Buffer.buffer("this is not a cloud event")),
-            NOT_FOUND.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-                .build()),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name3",
-            request -> {
-              final var objectMapper = new ObjectMapper();
-              final var objectNode = objectMapper.createObjectNode();
-              objectNode.set("hello", new FloatNode(1.24f));
-              objectNode.set("data", objectMapper.createObjectNode());
-              request.headers().set("Content-Type", "application/json");
-              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
-            },
-            BAD_REQUEST.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name3"))
-                .build()),
-        new TestCase(
-            null,
-            "/broker-ns/broker-name4",
-            request -> {
-              final var objectMapper = new ObjectMapper();
-              final var objectNode = objectMapper.createObjectNode();
-              objectNode.set("specversion", new TextNode("1.0"));
-              objectNode.set("type", new TextNode("my-type"));
-              objectNode.set("source", new TextNode("my-source"));
-              objectNode.set("data", objectMapper.createObjectNode());
-              request.headers().set("Content-Type", "application/json");
-              return request.sendBuffer(Buffer.buffer(objectNode.toString()));
-            },
-            BAD_REQUEST.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name4"))
-                .build()),
-        new TestCase(
-            new ProducerRecord<>(
-                "topic-name-42",
-                null,
-                new io.cloudevents.core.v1.CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            "/broker-ns/broker-name5",
-            ceRequestSender(
-                new io.cloudevents.core.v1.CloudEventBuilder()
-                    .withSubject("subject")
-                    .withSource(URI.create("/hello"))
-                    .withType("type")
-                    .withId("1234")
-                    .build()),
-            ACCEPTED.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic-name-42")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
-                .build()),
-        new TestCase(
-            new ProducerRecord<>("topic-name-42", null, null),
-            "/broker-ns/broker-name5",
-            probeRequestSender(null),
-            OK.code(),
-            DataPlaneContract.Resource.newBuilder()
-                .setUid("1")
-                .addTopics("topic-name-42")
-                .setIngress(
-                    DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name5"))
-                .build()),
-        new TestCase(
-            new ProducerRecord<>("topic-name-42", null, null),
-            "/broker-ns/broker-name5",
-            probeRequestSender(null),
-            NOT_FOUND.code(),
-            DataPlaneContract.Resource.newBuilder().build()));
-  }
-
-  private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> ceRequestSender(
-      final CloudEvent event) {
-    return request -> VertxMessageFactory.createWriter(request).writeBinary(event);
-  }
-
-  private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> probeRequestSender(
-      final CloudEvent event) {
-    return request ->
-        request
-            .method(HttpMethod.GET)
-            .putHeader(
-                ControlPlaneProbeRequestUtil.PROBE_HEADER_NAME,
-                ControlPlaneProbeRequestUtil.PROBE_HEADER_VALUE)
-            .send();
-  }
-
-  static final class TestCase {
-
-    final ProducerRecord<String, CloudEvent> record;
-    final String path;
-    final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender;
-    final int responseStatusCode;
-    final DataPlaneContract.Resource resource;
-    final int badRequestCount;
-    final int produceEventCount;
-    final boolean expectedDispatchLatency;
-
-    TestCase(
-        final ProducerRecord<String, CloudEvent> record,
-        final String path,
-        final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
-        final int responseStatusCode,
-        final DataPlaneContract.Resource resource) {
-
-      this.path = path;
-      this.requestSender = requestSender;
-      this.responseStatusCode = responseStatusCode;
-      this.record = record;
-      this.resource = DataPlaneContract.Resource.newBuilder(resource).build();
-
-      int badRequestCount = 0;
-      int produceEventsCount = 0;
-      if (responseStatusCode == BAD_REQUEST.code()) {
-        badRequestCount = 1;
-      } else if (responseStatusCode == ACCEPTED.code()) {
-        produceEventsCount = 1;
-      }
-
-      this.expectedDispatchLatency = responseStatusCode == ACCEPTED.code();
-
-      this.badRequestCount = badRequestCount;
-      this.produceEventCount = produceEventsCount;
+    private static Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> probeRequestSender(
+            final CloudEvent event) {
+        return request -> request.method(HttpMethod.GET)
+                .putHeader(
+                        ControlPlaneProbeRequestUtil.PROBE_HEADER_NAME, ControlPlaneProbeRequestUtil.PROBE_HEADER_VALUE)
+                .send();
     }
 
-    DataPlaneContract.Contract getContract() {
-      return DataPlaneContract.Contract.newBuilder().addResources(this.resource).build();
-    }
+    static final class TestCase {
 
-    @Override
-    public String toString() {
-      return "TestCase{"
-          + "path='"
-          + path
-          + '\''
-          + ", responseStatusCode="
-          + responseStatusCode
-          + '}';
+        final ProducerRecord<String, CloudEvent> record;
+        final String path;
+        final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender;
+        final int responseStatusCode;
+        final DataPlaneContract.Resource resource;
+        final int badRequestCount;
+        final int produceEventCount;
+        final boolean expectedDispatchLatency;
+
+        TestCase(
+                final ProducerRecord<String, CloudEvent> record,
+                final String path,
+                final Function<HttpRequest<Buffer>, Future<HttpResponse<Buffer>>> requestSender,
+                final int responseStatusCode,
+                final DataPlaneContract.Resource resource) {
+
+            this.path = path;
+            this.requestSender = requestSender;
+            this.responseStatusCode = responseStatusCode;
+            this.record = record;
+            this.resource = DataPlaneContract.Resource.newBuilder(resource).build();
+
+            int badRequestCount = 0;
+            int produceEventsCount = 0;
+            if (responseStatusCode == BAD_REQUEST.code()) {
+                badRequestCount = 1;
+            } else if (responseStatusCode == ACCEPTED.code()) {
+                produceEventsCount = 1;
+            }
+
+            this.expectedDispatchLatency = responseStatusCode == ACCEPTED.code();
+
+            this.badRequestCount = badRequestCount;
+            this.produceEventCount = produceEventsCount;
+        }
+
+        DataPlaneContract.Contract getContract() {
+            return DataPlaneContract.Contract.newBuilder()
+                    .addResources(this.resource)
+                    .build();
+        }
+
+        @Override
+        public String toString() {
+            return "TestCase{" + "path='" + path + '\'' + ", responseStatusCode=" + responseStatusCode + '}';
+        }
     }
-  }
 }

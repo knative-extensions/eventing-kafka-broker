@@ -65,147 +65,127 @@ import org.junit.jupiter.api.Test;
 
 public abstract class ReceiverVerticleTracingTest {
 
-  private static final int TIMEOUT = 10;
-  private static final int PORT = 8083;
-  private static final int PORT_TLS = 8443;
-  private static final String HOST = "localhost";
-  private static final String SECRET_VOLUME_PATH = "src/test/resources";
-  private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
-  private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
+    private static final int TIMEOUT = 10;
+    private static final int PORT = 8083;
+    private static final int PORT_TLS = 8443;
+    private static final String HOST = "localhost";
+    private static final String SECRET_VOLUME_PATH = "src/test/resources";
+    private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+    private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
 
-  private Vertx vertx;
-  private InMemorySpanExporter spanExporter;
-  private WebClient webClient;
-  private MockProducer<String, CloudEvent> mockProducer;
-  private IngressProducerReconcilableStore store;
+    private Vertx vertx;
+    private InMemorySpanExporter spanExporter;
+    private WebClient webClient;
+    private MockProducer<String, CloudEvent> mockProducer;
+    private IngressProducerReconcilableStore store;
 
-  static {
-    BackendRegistries.setupBackend(
-        new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
-  }
-
-  public abstract ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
-      Vertx vertx, Producer<String, CloudEvent> producer);
-
-  @BeforeEach
-  public void setup() throws ExecutionException, InterruptedException {
-    this.spanExporter = InMemorySpanExporter.create();
-    SdkTracerProvider tracerProvider =
-        SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
-            .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
-            // Uncomment this line if you want to try locally
-            // .addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
-            .setSampler(Sampler.alwaysOn())
-            .build();
-    OpenTelemetrySdk openTelemetry =
-        OpenTelemetrySdk.builder()
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-            .setTracerProvider(tracerProvider)
-            .build();
-
-    this.vertx =
-        Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
-
-    this.webClient =
-        WebClient.create(
-            vertx,
-            (WebClientOptions) new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
-    this.mockProducer =
-        new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
-
-    this.store =
-        new IngressProducerReconcilableStore(
-            AuthProvider.noAuth(),
-            new Properties(),
-            properties -> createKafkaProducer(vertx, mockProducer));
-
-    final var env = mock(ReceiverEnv.class);
-    when(env.getLivenessProbePath()).thenReturn("/healthz");
-    when(env.getReadinessProbePath()).thenReturn("/readyz");
-
-    final var httpServerOptions = new HttpServerOptions();
-    httpServerOptions.setPort(PORT);
-    httpServerOptions.setHost(HOST);
-    httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
-
-    final var httpsServerOptions = new HttpServerOptions();
-    httpsServerOptions.setPort(PORT_TLS);
-    httpsServerOptions.setHost(HOST);
-    httpsServerOptions.setSsl(true);
-    httpsServerOptions.setPemKeyCertOptions(
-        new PemKeyCertOptions().setCertPath(TLS_KEY_FILE_PATH).setKeyPath(TLS_CRT_FILE_PATH));
-
-    final var verticle =
-        new ReceiverVerticle(
-            env,
-            httpServerOptions,
-            httpsServerOptions,
-            v -> store,
-            new IngressRequestHandlerImpl(
-                StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
-            SECRET_VOLUME_PATH);
-
-    vertx.deployVerticle(verticle).toCompletionStage().toCompletableFuture().get();
-  }
-
-  @AfterEach
-  public void tearDown() throws ExecutionException, InterruptedException {
-    vertx.close().toCompletionStage().toCompletableFuture().get();
-  }
-
-  @Test
-  public void traceIsPropagated()
-      throws ExecutionException, InterruptedException, TimeoutException {
-    CloudEvent inputEvent =
-        new CloudEventBuilder()
-            .withSubject("subject")
-            .withSource(URI.create("/hello"))
-            .withType("type")
-            .withId("1234")
-            .build();
-
-    DataPlaneContract.Resource contract =
-        DataPlaneContract.Resource.newBuilder()
-            .setUid("1")
-            .addTopics("topic-name-42")
-            .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-            .build();
-
-    String path = "/broker-ns/broker-name";
-
-    this.store
-        .onNewIngress(contract, contract.getIngress())
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get();
-
-    HttpResponse<Buffer> response =
-        vertx
-            .<HttpResponse<Buffer>>executeBlocking(
-                promise -> {
-                  VertxMessageFactory.createWriter(webClient.post(PORT, HOST, path))
-                      .writeBinary(inputEvent)
-                      .onComplete(promise);
-                })
-            .toCompletionStage()
-            .toCompletableFuture()
-            .get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(response.statusCode()).isEqualTo(ACCEPTED.code());
-
-    if (mockProducer.history().size() > 0) {
-      assertThat(mockProducer.history())
-          .extracting(ProducerRecord::value)
-          .containsExactlyInAnyOrder(inputEvent);
-
-      assertThat(mockProducer.history())
-          .extracting(ProducerRecord::headers)
-          .extracting(h -> h.lastHeader("traceparent"))
-          .isNotNull()
-          .isNotEmpty();
+    static {
+        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
     }
 
-    assertThat(spanExporter.getFinishedSpanItems()).hasSize(3);
-  }
+    public abstract ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
+            Vertx vertx, Producer<String, CloudEvent> producer);
+
+    @BeforeEach
+    public void setup() throws ExecutionException, InterruptedException {
+        this.spanExporter = InMemorySpanExporter.create();
+        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+                .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
+                .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
+                // Uncomment this line if you want to try locally
+                // .addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
+                .setSampler(Sampler.alwaysOn())
+                .build();
+        OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
+                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+                .setTracerProvider(tracerProvider)
+                .build();
+
+        this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
+
+        this.webClient = WebClient.create(
+                vertx, (WebClientOptions) new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
+        this.mockProducer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+
+        this.store = new IngressProducerReconcilableStore(
+                AuthProvider.noAuth(), new Properties(), properties -> createKafkaProducer(vertx, mockProducer));
+
+        final var env = mock(ReceiverEnv.class);
+        when(env.getLivenessProbePath()).thenReturn("/healthz");
+        when(env.getReadinessProbePath()).thenReturn("/readyz");
+
+        final var httpServerOptions = new HttpServerOptions();
+        httpServerOptions.setPort(PORT);
+        httpServerOptions.setHost(HOST);
+        httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+        final var httpsServerOptions = new HttpServerOptions();
+        httpsServerOptions.setPort(PORT_TLS);
+        httpsServerOptions.setHost(HOST);
+        httpsServerOptions.setSsl(true);
+        httpsServerOptions.setPemKeyCertOptions(
+                new PemKeyCertOptions().setCertPath(TLS_KEY_FILE_PATH).setKeyPath(TLS_CRT_FILE_PATH));
+
+        final var verticle = new ReceiverVerticle(
+                env,
+                httpServerOptions,
+                httpsServerOptions,
+                v -> store,
+                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
+                SECRET_VOLUME_PATH);
+
+        vertx.deployVerticle(verticle).toCompletionStage().toCompletableFuture().get();
+    }
+
+    @AfterEach
+    public void tearDown() throws ExecutionException, InterruptedException {
+        vertx.close().toCompletionStage().toCompletableFuture().get();
+    }
+
+    @Test
+    public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
+        CloudEvent inputEvent = new CloudEventBuilder()
+                .withSubject("subject")
+                .withSource(URI.create("/hello"))
+                .withType("type")
+                .withId("1234")
+                .build();
+
+        DataPlaneContract.Resource contract = DataPlaneContract.Resource.newBuilder()
+                .setUid("1")
+                .addTopics("topic-name-42")
+                .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
+                .build();
+
+        String path = "/broker-ns/broker-name";
+
+        this.store
+                .onNewIngress(contract, contract.getIngress())
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get();
+
+        HttpResponse<Buffer> response = vertx.<HttpResponse<Buffer>>executeBlocking(promise -> {
+                    VertxMessageFactory.createWriter(webClient.post(PORT, HOST, path))
+                            .writeBinary(inputEvent)
+                            .onComplete(promise);
+                })
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get(TIMEOUT, TimeUnit.SECONDS);
+
+        assertThat(response.statusCode()).isEqualTo(ACCEPTED.code());
+
+        if (mockProducer.history().size() > 0) {
+            assertThat(mockProducer.history()).extracting(ProducerRecord::value).containsExactlyInAnyOrder(inputEvent);
+
+            assertThat(mockProducer.history())
+                    .extracting(ProducerRecord::headers)
+                    .extracting(h -> h.lastHeader("traceparent"))
+                    .isNotNull()
+                    .isNotEmpty();
+        }
+
+        assertThat(spanExporter.getFinishedSpanItems()).hasSize(3);
+    }
 }
