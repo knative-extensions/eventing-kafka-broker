@@ -36,6 +36,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
 
+    private final String secretVolumePath = "/etc/receiver-secret-volume";
+
     private final IngressRequestHandler ingressRequestHandler;
 
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
@@ -68,6 +70,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         AuthProvider.kubernetes(),
                         producerConfigs,
                         properties -> kafkaProducerFactory.create(v, properties)),
-                this.ingressRequestHandler);
+                this.ingressRequestHandler,
+                secretVolumePath);
     }
 }

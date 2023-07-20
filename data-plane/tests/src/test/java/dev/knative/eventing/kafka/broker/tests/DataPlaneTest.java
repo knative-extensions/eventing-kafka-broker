@@ -100,6 +100,8 @@ public class DataPlaneTest {
     private static final String PATH_SERVICE_2 = "/service-2";
     private static final String PATH_SERVICE_3 = "/service-3";
 
+    private static final String SECRET_VOLUME_PATH = "src/test/resources";
+
     static {
         assertThat(PATH_SERVICE_1).isNotEqualTo(PATH_SERVICE_2);
         BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
@@ -377,7 +379,8 @@ public class DataPlaneTest {
                         AuthProvider.noAuth(),
                         producerConfigs(),
                         properties -> new VertxKafkaProducer<>(vertx, new KafkaProducer<>(properties))),
-                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()));
+                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
+                SECRET_VOLUME_PATH);
 
         final CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
