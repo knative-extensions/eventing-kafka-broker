@@ -15,15 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -63,6 +54,18 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -76,17 +79,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.slf4j.LoggerFactory;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class ReceiverVerticleTest {
@@ -256,28 +253,28 @@ public class ReceiverVerticleTest {
         // Write the new CA cert to the file
         String new_TLS_Cert =
                 """
------BEGIN CERTIFICATE-----
-MIIDmDCCAoCgAwIBAgIUZx4ztTK7wyEpRYKkKqM9+oFr+PwwDQYJKoZIhvcNAQEL
-BQAwJzELMAkGA1UEBhMCVVMxGDAWBgNVBAMMD0V4YW1wbGUtUm9vdC1DQTAeFw0y
-MzA3MTcxNDI1MzhaFw0yNjA1MDYxNDI1MzhaMG0xCzAJBgNVBAYTAlVTMRIwEAYD
-VQQIDAlZb3VyU3RhdGUxETAPBgNVBAcMCFlvdXJDaXR5MR0wGwYDVQQKDBRFeGFt
-cGxlLUNlcnRpZmljYXRlczEYMBYGA1UEAwwPbG9jYWxob3N0LmxvY2FsMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyq0tbWj3zb/lhcykAAXlc8RVVPiZ
-898NxNV1od3XvFUFRYkQP9DU/3nE/5DxDQbQmfTlov50WbgSgQxt9GR7iC3lheOm
-B3ODaA0p3C7bBg7LeUvtrhvPyHITDI9Aqy8cUO5XHVgbTceW7XOvcmju/DVpm9Id
-iSpEEPMT2GsuLQ2rVvNupIccYRe0NhZly7l27AAkf5y1G2Yd9Oklt+gOPNPB+afH
-/eFlYRrKokp58Kt1eyDNAwaYV8arEKIapU2AQheZTZQSBOi/tFCc7oKFQOmO9sFf
-HEuQfCVd8TZJ2vb7qdiLVlgTDwjVYmUkfkxR7JJ/feDacyfjGkqYd1bngQIDAQAB
-o3YwdDAfBgNVHSMEGDAWgBQGanp895VYiwZNv+X+JJ7GWjQtWTAJBgNVHRMEAjAA
-MAsGA1UdDwQEAwIE8DAaBgNVHREEEzARgglsb2NhbGhvc3SHBH8AAAEwHQYDVR0O
-BBYEFOlfLUC1MJOOjGRWfVzHQYA+Iya4MA0GCSqGSIb3DQEBCwUAA4IBAQACCgdN
-Sj+W39W+8JdHpBU/fw1wwNDB4SyIyxAgPXp8TWiOwoo3ozcALP44ab4jP9b+Etlm
-yNMNdayOf42SCZUhihO4PKiiqDgolDQfYaZbiIEXJ/xaXtao5SxyBPY77eXtXN/+
-E7/TOWQ5U7qJYd7H5vqhlFk6fn7s6WKkue8ELUrWh8r3THASXUsa8xzxHu0nsp2v
-SsbYyR0vyrGE4yvComvl75Igw6jY70cswWdyThGKV6ZLip2BrjLQlFhr3IZN5tbg
-rHxaoqIen8NYjNpBdJDInPMFZshZSx1lAzw6uwP4OuM5WQHgYEk7V+TkOU3osqgD
-5bOo/SpCokC166Ym
------END CERTIFICATE-----""";
+      -----BEGIN CERTIFICATE-----
+      MIIDmDCCAoCgAwIBAgIUZx4ztTK7wyEpRYKkKqM9+oFr+PwwDQYJKoZIhvcNAQEL
+      BQAwJzELMAkGA1UEBhMCVVMxGDAWBgNVBAMMD0V4YW1wbGUtUm9vdC1DQTAeFw0y
+        MzA3MTcxNDI1MzhaFw0yNjA1MDYxNDI1MzhaMG0xCzAJBgNVBAYTAlVTMRIwEAYD
+      VQQIDAlZb3VyU3RhdGUxETAPBgNVBAcMCFlvdXJDaXR5MR0wGwYDVQQKDBRFeGFt
+        cGxlLUNlcnRpZmljYXRlczEYMBYGA1UEAwwPbG9jYWxob3N0LmxvY2FsMIIBIjAN
+      BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyq0tbWj3zb/lhcykAAXlc8RVVPiZ
+      898NxNV1od3XvFUFRYkQP9DU/3nE/5DxDQbQmfTlov50WbgSgQxt9GR7iC3lheOm
+      B3ODaA0p3C7bBg7LeUvtrhvPyHITDI9Aqy8cUO5XHVgbTceW7XOvcmju/DVpm9Id
+      iSpEEPMT2GsuLQ2rVvNupIccYRe0NhZly7l27AAkf5y1G2Yd9Oklt+gOPNPB+afH
+        /eFlYRrKokp58Kt1eyDNAwaYV8arEKIapU2AQheZTZQSBOi/tFCc7oKFQOmO9sFf
+      HEuQfCVd8TZJ2vb7qdiLVlgTDwjVYmUkfkxR7JJ/feDacyfjGkqYd1bngQIDAQAB
+      o3YwdDAfBgNVHSMEGDAWgBQGanp895VYiwZNv+X+JJ7GWjQtWTAJBgNVHRMEAjAA
+      MAsGA1UdDwQEAwIE8DAaBgNVHREEEzARgglsb2NhbGhvc3SHBH8AAAEwHQYDVR0O
+      BBYEFOlfLUC1MJOOjGRWfVzHQYA+Iya4MA0GCSqGSIb3DQEBCwUAA4IBAQACCgdN
+      Sj+W39W+8JdHpBU/fw1wwNDB4SyIyxAgPXp8TWiOwoo3ozcALP44ab4jP9b+Etlm
+      yNMNdayOf42SCZUhihO4PKiiqDgolDQfYaZbiIEXJ/xaXtao5SxyBPY77eXtXN/+
+        E7/TOWQ5U7qJYd7H5vqhlFk6fn7s6WKkue8ELUrWh8r3THASXUsa8xzxHu0nsp2v
+      SsbYyR0vyrGE4yvComvl75Igw6jY70cswWdyThGKV6ZLip2BrjLQlFhr3IZN5tbg
+      rHxaoqIen8NYjNpBdJDInPMFZshZSx1lAzw6uwP4OuM5WQHgYEk7V+TkOU3osqgD
+      5bOo/SpCokC166Ym
+      -----END CERTIFICATE-----""";
 
         String new_TLS_key =
                 """
