@@ -27,8 +27,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
-import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
@@ -38,12 +36,14 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDese
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
+import dev.knative.eventing.kafka.broker.dispatchervertx.VertxConsumerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
-import io.cloudevents.CloudEvent;
+import dev.knative.eventing.kafka.broker.receiververtx.VertxKafkaProducer;
+import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;
@@ -70,6 +70,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.StickyAssignor;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -77,7 +78,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public abstract class DataPlaneTest {
+public class DataPlaneTest {
 
     private static final String BROKER_NAMESPACE = "knative-eventing-42";
     private static final String BROKER_NAME = "kafka-broker-42";
@@ -111,12 +112,9 @@ public abstract class DataPlaneTest {
     private static ConsumerDeployerVerticle consumerDeployerVerticle;
     private static ReceiverVerticle receiverVerticle;
 
-    public abstract ReactiveProducerFactory<String, CloudEvent> getProducerFactory();
-
-    public abstract ReactiveConsumerFactory<String, CloudEvent> getConsumerFactory();
-
     @BeforeAll
-    public void setUp(final Vertx vertx, final VertxTestContext context) throws IOException, InterruptedException {
+    public static void setUp(final Vertx vertx, final VertxTestContext context)
+            throws IOException, InterruptedException {
         setUpKafkaCluster();
         ContractMessageCodec.register(vertx.eventBus());
         consumerDeployerVerticle = setUpDispatcher(vertx, context);
@@ -329,7 +327,7 @@ public abstract class DataPlaneTest {
         kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
     }
 
-    private ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
+    private static ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
             throws InterruptedException {
 
         final var consumerConfigs = new Properties();
@@ -347,8 +345,8 @@ public abstract class DataPlaneTest {
                 producerConfigs,
                 AuthProvider.noAuth(),
                 Metrics.getRegistry(),
-                getConsumerFactory(),
-                getProducerFactory());
+                new VertxConsumerFactory<>(),
+                new VertxProducerFactory<>());
 
         final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 
@@ -359,7 +357,7 @@ public abstract class DataPlaneTest {
         return verticle;
     }
 
-    private ReceiverVerticle setUpReceiver(final Vertx vertx, final VertxTestContext context)
+    private static ReceiverVerticle setUpReceiver(final Vertx vertx, final VertxTestContext context)
             throws InterruptedException {
 
         final var httpServerOptions = new HttpServerOptions();
@@ -378,8 +376,9 @@ public abstract class DataPlaneTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> new IngressProducerReconcilableStore(
-                        AuthProvider.noAuth(), producerConfigs(), properties -> getProducerFactory()
-                                .create(v, properties)),
+                        AuthProvider.noAuth(),
+                        producerConfigs(),
+                        properties -> new VertxKafkaProducer<>(vertx, new KafkaProducer<>(properties))),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()));
 
         final CountDownLatch latch = new CountDownLatch(1);
