@@ -34,6 +34,11 @@
       <artifactId>dispatcher</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>receiver-vertx</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -83,6 +88,12 @@
                 </filter>
                 <filter>
                   <artifact>org.apache.kafka:kafka-clients</artifact>
+                  <includes>
+                    <include>**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>io.fabric8:kubernetes-client</artifact>
                   <includes>
                     <include>**</include>
                   </includes>

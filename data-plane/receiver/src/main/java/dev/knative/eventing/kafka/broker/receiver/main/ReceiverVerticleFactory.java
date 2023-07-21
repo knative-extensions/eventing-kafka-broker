@@ -15,9 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
-import dev.knative.eventing.kafka.broker.receiver.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
@@ -28,7 +28,6 @@ import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
 import java.util.Properties;
 import java.util.function.Supplier;
-import org.apache.kafka.clients.producer.KafkaProducer;
 
 class ReceiverVerticleFactory implements Supplier<Verticle> {
 
@@ -36,6 +35,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final Properties producerConfigs;
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
+
+    private final String secretVolumePath = "/etc/receiver-secret-volume";
 
     private final IngressRequestHandler ingressRequestHandler;
 
@@ -68,7 +69,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                 v -> new IngressProducerReconcilableStore(
                         AuthProvider.kubernetes(),
                         producerConfigs,
-                        properties -> kafkaProducerFactory.create(v, new KafkaProducer<>(properties))),
-                this.ingressRequestHandler);
+                        properties -> kafkaProducerFactory.create(v, properties)),
+                this.ingressRequestHandler,
+                secretVolumePath);
     }
 }

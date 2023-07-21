@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import org.apache.kafka.clients.producer.ProducerRecord;

@@ -28,3 +28,9 @@ func MockProber(status prober.Status) prober.Prober {
 		return status
 	})
 }
+
+func MockNewProber(status prober.Status) prober.NewProber {
+	return prober.NewFunc(func(ctx context.Context, addressable prober.NewAddressable, expected prober.Status) prober.Status {
+		return status
+	})
+}

@@ -88,6 +88,9 @@ function knative_teardown() {
 function knative_eventing() {
   # we need cert-manager installed to be able to create the issuers
   kubectl apply -Rf "${CERTMANAGER_CONFIG}"
+
+  wait_until_pods_running cert-manager || fail_test "Failed to setup cert-manager pods"
+
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"

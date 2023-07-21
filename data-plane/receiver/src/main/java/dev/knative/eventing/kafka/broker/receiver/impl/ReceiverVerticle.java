@@ -21,6 +21,7 @@ import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPla
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
+import dev.knative.eventing.kafka.broker.core.file.SecretWatcher;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -29,18 +30,16 @@ import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.fabric8.kubernetes.client.*;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.SSLOptions;
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -48,28 +47,28 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This verticle is responsible for implementing the logic of the receiver.
- * <p>
- * The receiver is the component responsible for mapping incoming
- * {@link io.cloudevents.CloudEvent} requests to specific Kafka topics.
- * In order to do so, this component:
+ *
+ * <p>The receiver is the component responsible for mapping incoming {@link
+ * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do so, this component:
+ *
  * <ul>
- * <li>Starts two {@link HttpServer}, one with http, and one with https,
- * listening for incoming events</li>
- * <li>Starts a {@link ResourcesReconciler}, listen on the event bus for
- * reconciliation events and keeps track of the
- * {@link dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress}
- * objects and their {@code path => (topic, producer)} mapping</li>
- * <li>Implements a request handler that invokes a series of {@code preHandlers}
- * (which are assumed to complete synchronously) and then a final
- * {@link IngressRequestHandler} to publish the record to Kafka</li>
+ *   <li>Starts two {@link HttpServer}, one with http, and one with https, listening for incoming
+ *       events
+ *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and
+ *       keeps track of the {@link
+ *       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their
+ *       {@code path => (topic, producer)} mapping
+ *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are
+ *       assumed to complete synchronously) and then a final {@link IngressRequestHandler} to
+ *       publish the record to Kafka
  * </ul>
  */
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
-    private static final String SECRET_VOLUME_PATH = "/etc/receiver-secret-volume";
-    private static final String TLS_KEY_FILE_PATH = SECRET_VOLUME_PATH + "/tls.key";
-    private static final String TLS_CRT_FILE_PATH = SECRET_VOLUME_PATH + "/tls.crt";
+    private final String secretVolumePath;
+    private final String tlsKeyFilePath;
+    private final String tlsCrtFilePath;
 
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
@@ -82,23 +81,35 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
 
+    private SecretWatcher secretWatcher;
+
     public ReceiverVerticle(
             final ReceiverEnv env,
             final HttpServerOptions httpServerOptions,
             final HttpServerOptions httpsServerOptions,
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
-            final IngressRequestHandler ingressRequestHandler) {
+            final IngressRequestHandler ingressRequestHandler,
+            final String secretVolumePath) {
+
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
         Objects.requireNonNull(httpsServerOptions);
         Objects.requireNonNull(ingressProducerStoreFactory);
         Objects.requireNonNull(ingressRequestHandler);
+        Objects.requireNonNull(secretVolumePath);
 
         this.env = env;
         this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
         this.httpsServerOptions = httpsServerOptions;
         this.ingressProducerStoreFactory = ingressProducerStoreFactory;
         this.ingressRequestHandler = ingressRequestHandler;
+        this.secretVolumePath = secretVolumePath;
+        this.tlsKeyFilePath = secretVolumePath + "/tls.key";
+        this.tlsCrtFilePath = secretVolumePath + "/tls.crt";
+    }
+
+    public HttpServerOptions getHttpsServerOptions() {
+        return httpsServerOptions;
     }
 
     @Override
@@ -111,16 +122,16 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
         // check whether the secret volume is mounted
-        File secretVolume = new File(SECRET_VOLUME_PATH);
+        File secretVolume = new File(secretVolumePath);
         if (secretVolume.exists()) {
             // The secret volume is mounted, we should start the https server
             // check whether the tls.key and tls.crt files exist
-            File tlsKeyFile = new File(TLS_KEY_FILE_PATH);
-            File tlsCrtFile = new File(TLS_CRT_FILE_PATH);
+            File tlsKeyFile = new File(tlsKeyFilePath);
+            File tlsCrtFile = new File(tlsCrtFilePath);
 
             if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
                 PemKeyCertOptions keyCertOptions =
-                        new PemKeyCertOptions().setKeyPath(TLS_KEY_FILE_PATH).setCertPath(TLS_CRT_FILE_PATH);
+                        new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
 
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
@@ -150,6 +161,18 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                     .<Void>mapEmpty()
                     .onComplete(startPromise);
         }
+
+        setupSecretWatcher();
+    }
+
+    // Set up the secret watcher
+    private void setupSecretWatcher() {
+        try {
+            this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
+            new Thread(this.secretWatcher).start();
+        } catch (IOException e) {
+            logger.error("Failed to start SecretWatcher", e);
+        }
     }
 
     @Override
@@ -160,6 +183,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
+
+        // close the watcher
+        if (this.secretWatcher != null) {
+            this.secretWatcher.stop();
+        }
     }
 
     @Override
@@ -189,5 +217,29 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         // Invoke the ingress request handler
         this.ingressRequestHandler.handle(requestContext, producer);
+    }
+
+    public void updateServerConfig() {
+        // This function will be called when the secret volume is updated
+        File tlsKeyFile = new File(tlsKeyFilePath);
+        File tlsCrtFile = new File(tlsCrtFilePath);
+
+        // Check whether the tls.key and tls.crt files exist
+        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+
+            // Update SSL configuration by using updateSSLOptions
+            PemKeyCertOptions keyCertOptions =
+                    new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+
+            // result is a Future object
+            Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+
+            result.onSuccess(v -> {
+                        logger.info("Succeeded to update TLS key pair");
+                    })
+                    .onFailure(e -> {
+                        logger.error("Failed to update TLS key pair", e);
+                    });
+        }
     }
 }

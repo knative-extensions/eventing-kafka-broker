@@ -32,6 +32,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
@@ -123,7 +125,13 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
                     consumerVerticle.setConsumer(new MockReactiveKafkaConsumer<>(consumer));
                     consumerVerticle.setRecordDispatcher(recordDispatcher);
                     consumerVerticle.setCloser(Future::succeededFuture);
+                    consumerVerticle.setRebalanceListener(new ConsumerRebalanceListener() {
+                        @Override
+                        public void onPartitionsRevoked(final Collection<TopicPartition> partitions) {}
 
+                        @Override
+                        public void onPartitionsAssigned(final Collection<TopicPartition> partitions) {}
+                    });
                     return Future.succeededFuture();
                 });
 

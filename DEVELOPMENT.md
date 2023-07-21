@@ -193,7 +193,7 @@ We are using Spotless to format our Java code. To format your code, run the foll
 directory:
 
 ```shell
-mvn spotless:apply
+./mvnw spotless:apply
 ```
 
 You can also configure it to your IDE. For more information, please refer
