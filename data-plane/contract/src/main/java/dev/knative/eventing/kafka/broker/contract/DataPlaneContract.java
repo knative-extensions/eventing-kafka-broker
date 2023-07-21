@@ -15427,6 +15427,16 @@ public final class DataPlaneContract {
          * @return The bytes for host.
          */
         com.google.protobuf.ByteString getHostBytes();
+
+        /**
+         * <pre>
+         * whether to autocreate event types
+         * </pre>
+         *
+         * <code>bool enableAutoCreateEventTypes = 4;</code>
+         * @return The enableAutoCreateEventTypes.
+         */
+        boolean getEnableAutoCreateEventTypes();
     }
     /**
      * <pre>
@@ -15501,6 +15511,10 @@ public final class DataPlaneContract {
                             java.lang.String s = input.readStringRequireUtf8();
 
                             host_ = s;
+                            break;
+                        }
+                        case 32: {
+                            enableAutoCreateEventTypes_ = input.readBool();
                             break;
                         }
                         default: {
@@ -15650,6 +15664,21 @@ public final class DataPlaneContract {
             }
         }
 
+        public static final int ENABLEAUTOCREATEEVENTTYPES_FIELD_NUMBER = 4;
+        private boolean enableAutoCreateEventTypes_;
+        /**
+         * <pre>
+         * whether to autocreate event types
+         * </pre>
+         *
+         * <code>bool enableAutoCreateEventTypes = 4;</code>
+         * @return The enableAutoCreateEventTypes.
+         */
+        @java.lang.Override
+        public boolean getEnableAutoCreateEventTypes() {
+            return enableAutoCreateEventTypes_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -15674,6 +15703,9 @@ public final class DataPlaneContract {
             if (!getHostBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, host_);
             }
+            if (enableAutoCreateEventTypes_ != false) {
+                output.writeBool(4, enableAutoCreateEventTypes_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -15692,6 +15724,9 @@ public final class DataPlaneContract {
             }
             if (!getHostBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, host_);
+            }
+            if (enableAutoCreateEventTypes_ != false) {
+                size += com.google.protobuf.CodedOutputStream.computeBoolSize(4, enableAutoCreateEventTypes_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -15712,6 +15747,7 @@ public final class DataPlaneContract {
             if (contentMode_ != other.contentMode_) return false;
             if (!getPath().equals(other.getPath())) return false;
             if (!getHost().equals(other.getHost())) return false;
+            if (getEnableAutoCreateEventTypes() != other.getEnableAutoCreateEventTypes()) return false;
             if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
@@ -15729,6 +15765,8 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getPath().hashCode();
             hash = (37 * hash) + HOST_FIELD_NUMBER;
             hash = (53 * hash) + getHost().hashCode();
+            hash = (37 * hash) + ENABLEAUTOCREATEEVENTTYPES_FIELD_NUMBER;
+            hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEnableAutoCreateEventTypes());
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
@@ -15878,6 +15916,8 @@ public final class DataPlaneContract {
 
                 host_ = "";
 
+                enableAutoCreateEventTypes_ = false;
+
                 return this;
             }
 
@@ -15907,6 +15947,7 @@ public final class DataPlaneContract {
                 result.contentMode_ = contentMode_;
                 result.path_ = path_;
                 result.host_ = host_;
+                result.enableAutoCreateEventTypes_ = enableAutoCreateEventTypes_;
                 onBuilt();
                 return result;
             }
@@ -15966,6 +16007,9 @@ public final class DataPlaneContract {
                 if (!other.getHost().isEmpty()) {
                     host_ = other.host_;
                     onChanged();
+                }
+                if (other.getEnableAutoCreateEventTypes() != false) {
+                    setEnableAutoCreateEventTypes(other.getEnableAutoCreateEventTypes());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -16254,6 +16298,49 @@ public final class DataPlaneContract {
                 checkByteStringIsUtf8(value);
 
                 host_ = value;
+                onChanged();
+                return this;
+            }
+
+            private boolean enableAutoCreateEventTypes_;
+            /**
+             * <pre>
+             * whether to autocreate event types
+             * </pre>
+             *
+             * <code>bool enableAutoCreateEventTypes = 4;</code>
+             * @return The enableAutoCreateEventTypes.
+             */
+            @java.lang.Override
+            public boolean getEnableAutoCreateEventTypes() {
+                return enableAutoCreateEventTypes_;
+            }
+            /**
+             * <pre>
+             * whether to autocreate event types
+             * </pre>
+             *
+             * <code>bool enableAutoCreateEventTypes = 4;</code>
+             * @param value The enableAutoCreateEventTypes to set.
+             * @return This builder for chaining.
+             */
+            public Builder setEnableAutoCreateEventTypes(boolean value) {
+
+                enableAutoCreateEventTypes_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * whether to autocreate event types
+             * </pre>
+             *
+             * <code>bool enableAutoCreateEventTypes = 4;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearEnableAutoCreateEventTypes() {
+
+                enableAutoCreateEventTypes_ = false;
                 onChanged();
                 return this;
             }
@@ -26482,43 +26569,44 @@ public final class DataPlaneContract {
                     + "Flags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rrepl"
                     + "yStrategy\"U\n\022EgressFeatureFlags\022\031\n\021enabl"
                     + "eRateLimiter\030\001 \001(\010\022$\n\034enableOrderedExecu"
-                    + "torMetrics\030\002 \001(\010\"H\n\007Ingress\022!\n\013contentMo"
+                    + "torMetrics\030\002 \001(\010\"l\n\007Ingress\022!\n\013contentMo"
                     + "de\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004"
-                    + "host\030\003 \001(\t\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n"
-                    + "\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007versio"
-                    + "n\030\004 \001(\t\"`\n\017SecretReference\022\035\n\treference\030"
-                    + "\001 \001(\0132\n.Reference\022.\n\022keyFieldReferences\030"
-                    + "\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRef"
-                    + "erence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\016"
-                    + "2\014.SecretField\"Y\n\024MultiSecretReference\022\033"
-                    + "\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nreference"
-                    + "s\030\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEvent"
-                    + "Overrides\0228\n\nextensions\030\001 \003(\0132$.CloudEve"
-                    + "ntOverrides.ExtensionsEntry\0321\n\017Extension"
-                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350"
-                    + "\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t"
-                    + "\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 "
-                    + "\001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Eg"
-                    + "ressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n"
-                    + "\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecre"
-                    + "t\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret"
-                    + "\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloud"
-                    + "EventOverrides\030\n \001(\0132\024.CloudEventOverrid"
-                    + "es\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Aut"
-                    + "h\"<\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tres"
-                    + "ources\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy"
-                    + "\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDeliver"
-                    + "yOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007Ke"
-                    + "yType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double"
-                    + "\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINA"
-                    + "RY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016S"
-                    + "ASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020"
-                    + "\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*"
-                    + "D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAIN"
-                    + "TEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.kna"
-                    + "tive.eventing.kafka.broker.contractB\021Dat"
-                    + "aPlaneContractZ\032control-plane/pkg/contra"
-                    + "ctb\006proto3"
+                    + "host\030\003 \001(\t\022\"\n\032enableAutoCreateEventTypes"
+                    + "\030\004 \001(\010\"K\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnam"
+                    + "espace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 "
+                    + "\001(\t\"`\n\017SecretReference\022\035\n\treference\030\001 \001("
+                    + "\0132\n.Reference\022.\n\022keyFieldReferences\030\002 \003("
+                    + "\0132\022.KeyFieldReference\"C\n\021KeyFieldReferen"
+                    + "ce\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.S"
+                    + "ecretField\"Y\n\024MultiSecretReference\022\033\n\010pr"
+                    + "otocol\030\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 "
+                    + "\003(\0132\020.SecretReference\"\202\001\n\023CloudEventOver"
+                    + "rides\0228\n\nextensions\030\001 \003(\0132$.CloudEventOv"
+                    + "errides.ExtensionsEntry\0321\n\017ExtensionsEnt"
+                    + "ry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010R"
+                    + "esource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020"
+                    + "bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132"
+                    + "\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egress"
+                    + "Config\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabs"
+                    + "entAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 "
+                    + "\001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001"
+                    + "(\0132\025.MultiSecretReferenceH\000\0221\n\023cloudEven"
+                    + "tOverrides\030\n \001(\0132\024.CloudEventOverrides\022\035"
+                    + "\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n"
+                    + "\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresourc"
+                    + "es\030\002 \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013"
+                    + "Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrd"
+                    + "er\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyTyp"
+                    + "e\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r"
+                    + "\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000"
+                    + "\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_"
+                    + "MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n"
+                    + "\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010P"
+                    + "rotocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT"
+                    + "\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative"
+                    + ".eventing.kafka.broker.contractB\021DataPla"
+                    + "neContractZ\032control-plane/pkg/contractb\006"
+                    + "proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
@@ -26637,7 +26725,7 @@ public final class DataPlaneContract {
         internal_static_Ingress_descriptor = getDescriptor().getMessageTypes().get(13);
         internal_static_Ingress_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Ingress_descriptor, new java.lang.String[] {
-                    "ContentMode", "Path", "Host",
+                    "ContentMode", "Path", "Host", "EnableAutoCreateEventTypes",
                 });
         internal_static_Reference_descriptor = getDescriptor().getMessageTypes().get(14);
         internal_static_Reference_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
