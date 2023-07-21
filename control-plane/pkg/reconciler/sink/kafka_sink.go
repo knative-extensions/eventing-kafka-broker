@@ -181,8 +181,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Uid:    string(ks.UID),
 		Topics: []string{ks.Spec.Topic},
 		Ingress: &contract.Ingress{
-			Path:        receiver.PathFromObject(ks),
-			ContentMode: coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
+			Path:                       receiver.PathFromObject(ks),
+			ContentMode:                coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
+			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 		Reference: &contract.Reference{
