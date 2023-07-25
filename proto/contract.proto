@@ -196,6 +196,9 @@ message Ingress {
 
   // host header to match
   string host = 3;
+
+  // whether to autocreate event types
+  bool enableAutoCreateEventTypes = 4;
 }
 
 // Kubernetes resource reference.
