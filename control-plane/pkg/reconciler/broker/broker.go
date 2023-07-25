@@ -613,7 +613,8 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Path: receiver.PathFromObject(broker),
+			Path:                       receiver.PathFromObject(broker),
+			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
