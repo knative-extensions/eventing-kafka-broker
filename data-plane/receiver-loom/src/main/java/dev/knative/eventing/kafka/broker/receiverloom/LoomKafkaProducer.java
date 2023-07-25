@@ -28,12 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
-
-    private static final Logger logger = LoggerFactory.getLogger(LoomKafkaProducer.class);
 
     private final Producer<K, V> producer;
 
@@ -56,7 +52,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         } else {
             this.tracer = null;
             this.ctx = null;
-        }
+        }  
     }
 
     @Override
@@ -74,10 +70,8 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             RecordPromise recordPromise = queue.poll();
             ProducerTracer.StartedSpan startedSpan =
                     this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
-            logger.info("Mylog, span created: {}", startedSpan);
             try {
                 var metadata = producer.send(recordPromise.getRecord());
-                logger.info("Mylog, send complete: {}", metadata);
                 recordPromise.getPromise().complete(metadata.get());
                 if (startedSpan != null) {
                     startedSpan.finish(ctx);
