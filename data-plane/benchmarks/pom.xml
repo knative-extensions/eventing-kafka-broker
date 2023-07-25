@@ -39,6 +39,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-core</artifactId>
       <version>${jmh.version}</version>

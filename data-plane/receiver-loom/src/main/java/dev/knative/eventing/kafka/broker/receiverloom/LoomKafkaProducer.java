@@ -52,7 +52,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         } else {
             this.tracer = null;
             this.ctx = null;
-        }  
+        }
     }
 
     @Override
