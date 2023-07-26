@@ -379,7 +379,8 @@ public abstract class AbstractDataPlaneTest {
                 v -> new IngressProducerReconcilableStore(
                         AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveKafkaProducer()
                                 .create(v, properties)),
-                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()));
+                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
+                SECRET_VOLUME_PATH);
 
         final CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));
