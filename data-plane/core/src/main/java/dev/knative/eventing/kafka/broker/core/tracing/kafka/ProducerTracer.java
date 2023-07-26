@@ -35,14 +35,16 @@ public class ProducerTracer<S> {
 
     /**
      * Creates a ProducerTracer, which provides an opinionated facade for using {@link io.vertx.core.spi.tracing.VertxTracer}
-     * with a Kafka Producer use case.
-     * The method will return {@code null} if Tracing is not setup in Vert.x, or if {@code TracingPolicy.IGNORE} is used.
+     * with a Kafka Producer use case. The method will return {@code null} if Tracing is not setup in Vert.x.
+     * {@code TracingPolicy} is always set to {@code TracingPolicy.ALWAYS}.
      * @param tracer the generic tracer object
-     * @param opts Kafka client options
      * @param <S> the type of spans that is going to be generated, depending on the tracing system (zipkin, opentracing ...)
      * @return a new instance of {@code ProducerTracer}, or {@code null}
      */
     public static <S> ProducerTracer create(VertxTracer tracer) {
+        if(tracer == null){
+            return null;
+        }
         TracingPolicy policy = TracingPolicy.ALWAYS;
         return new ProducerTracer<S>(tracer, policy, "");
     }
