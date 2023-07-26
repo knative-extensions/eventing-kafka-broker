@@ -22,8 +22,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -33,16 +33,16 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final Producer<K, V> producer;
 
-    private final Queue<RecordPromise> queue;
-    private final AtomicBoolean isRunning;
+    private final BlockingQueue<RecordPromise> eventQueue;
+    private final AtomicBoolean isClosed;
     private final ProducerTracer tracer;
     private final VertxInternal vertx;
     private final ContextInternal ctx;
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = producer;
-        this.queue = new ConcurrentLinkedQueue<>();
-        this.isRunning = new AtomicBoolean(false);
+        this.eventQueue = new LinkedBlockingQueue<>();
+        this.isClosed = new AtomicBoolean(false);
         this.vertx = (VertxInternal) v;
 
         if (v != null) {
@@ -53,43 +53,50 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             this.tracer = null;
             this.ctx = null;
         }
+        Thread.ofVirtual().start(this::sendFromQueue);
     }
 
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record) {
         Promise<RecordMetadata> promise = Promise.promise();
-        queue.add(new RecordPromise(record, promise));
-        if (isRunning.compareAndSet(false, true)) {
-            Thread.ofVirtual().start(this::sendFromQueue).setPriority(Thread.MAX_PRIORITY);
+        if (isClosed.get()) {
+            promise.fail("Producer is closed");
+        } else {
+            eventQueue.add(new RecordPromise(record, promise));
         }
         return promise.future();
     }
 
     private void sendFromQueue() {
-        while (!queue.isEmpty()) {
-            RecordPromise recordPromise = queue.poll();
-            ProducerTracer.StartedSpan startedSpan =
-                    this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
+        while (true) {
             try {
-                var metadata = producer.send(recordPromise.getRecord());
-                recordPromise.getPromise().complete(metadata.get());
-                if (startedSpan != null) {
-                    startedSpan.finish(ctx);
+                RecordPromise recordPromise = eventQueue.take();
+                ProducerTracer.StartedSpan startedSpan =
+                        this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
+                try {
+                    var metadata = producer.send(recordPromise.getRecord());
+                    recordPromise.getPromise().complete(metadata.get());
+                    if (startedSpan != null) {
+                        startedSpan.finish(ctx);
+                    }
+                } catch (Exception e) {
+                    recordPromise.getPromise().fail(e);
+                    if (startedSpan != null) {
+                        startedSpan.fail(ctx, e);
+                    }
                 }
-            } catch (Exception e) {
-                recordPromise.getPromise().fail(e);
-                if (startedSpan != null) {
-                    startedSpan.fail(ctx, e);
-                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
-        isRunning.set(false);
     }
 
     @Override
     public Future<Void> close() {
         Promise<Void> promise = Promise.promise();
+        this.isClosed.set(true);
         Thread.ofVirtual().start(() -> {
+            while (!eventQueue.isEmpty()) {}
             try {
                 producer.close();
                 promise.complete();
