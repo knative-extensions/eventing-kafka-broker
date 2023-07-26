@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+ /**
+  * This class is inspired from vert-x3/vertx-kafka-client project.
+  * The original source code can be found here: https://github.com/vert-x3/vertx-kafka-client
+  */
 package dev.knative.eventing.kafka.broker.core.tracing.kafka;
 
 /**
