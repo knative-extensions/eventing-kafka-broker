@@ -15,7 +15,7 @@
  */
 
   /**
-  * This class is inspired from vert-x3/vertx-kafka-client project.
+  * This piece of code is inspired from vert-x3/vertx-kafka-client project.
   * The original source code can be found here: https://github.com/vert-x3/vertx-kafka-client
   */
 package dev.knative.eventing.kafka.broker.core.tracing.kafka;
