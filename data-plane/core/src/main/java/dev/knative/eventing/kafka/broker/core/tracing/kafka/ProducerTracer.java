@@ -42,7 +42,7 @@ public class ProducerTracer<S> {
      * @return a new instance of {@code ProducerTracer}, or {@code null}
      */
     public static <S> ProducerTracer create(VertxTracer tracer) {
-        if(tracer == null){
+        if (tracer == null) {
             return null;
         }
         TracingPolicy policy = TracingPolicy.ALWAYS;
