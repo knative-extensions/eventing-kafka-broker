@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-  /**
-  * This piece of code is inspired from vert-x3/vertx-kafka-client project.
-  * The original source code can be found here: https://github.com/vert-x3/vertx-kafka-client
-  */
+/**
+ * This piece of code is inspired from vert-x3/vertx-kafka-client project.
+ * The original source code can be found here: https://github.com/vert-x3/vertx-kafka-client
+ */
 package dev.knative.eventing.kafka.broker.core.tracing.kafka;
 
 import io.vertx.core.spi.tracing.TagExtractor;
