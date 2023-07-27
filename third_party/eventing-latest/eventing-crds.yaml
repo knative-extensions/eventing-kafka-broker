@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas and descriptions
@@ -270,7 +270,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -354,8 +354,24 @@ spec:
                   description: Broker is Addressable. It exposes the endpoint as an URI to get events delivered into the Broker mesh.
                   type: object
                   properties:
+                    name:
+                      type: string
                     url:
                       type: string
+                    CACerts:
+                      type: string
+                addresses:
+                  description: Broker is Addressable. It exposes the endpoints as URIs to get events delivered into the Broker mesh.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
                 annotations:
                   description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
                   type: object
@@ -447,7 +463,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -602,10 +618,27 @@ spec:
               type: object
               properties:
                 address:
+                  description: Channel is Addressable. It exposes the endpoint as an URI to get events delivered into the Channel mesh.
                   type: object
                   properties:
+                    name:
+                      type: string
                     url:
                       type: string
+                    CACerts:
+                      type: string
+                addresses:
+                  description: Channel is Addressable. It exposes the endpoints as URIs to get events delivered into the Channel mesh.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
                 annotations:
                   description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
                   type: object
@@ -733,7 +766,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -890,7 +923,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1051,7 +1084,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1157,10 +1190,27 @@ spec:
               type: object
               properties:
                 address:
+                  description: Parallel is Addressable. It exposes the endpoint as an URI to get events delivered into the Parallel.
                   type: object
                   properties:
+                    name:
+                      type: string
                     url:
                       type: string
+                    CACerts:
+                      type: string
+                addresses:
+                  description: Parallel is Addressable. It exposes the endpoints as URIs to get events delivered into the Parallel.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
                 annotations:
                   description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
                   type: object
@@ -1309,7 +1359,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas and descriptions
@@ -1504,7 +1554,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1634,10 +1684,27 @@ spec:
               type: object
               properties:
                 address:
+                  description: Sequence is Addressable. It exposes the endpoint as an URI to get events delivered into the Sequence.
                   type: object
                   properties:
+                    name:
+                      type: string
                     url:
                       type: string
+                    CACerts:
+                      type: string
+                addresses:
+                  description: Sequence is Addressable. It exposes the endpoints as URIs to get events delivered into the Sequence.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
                 annotations:
                   description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
                   type: object
@@ -1831,7 +1898,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -2025,7 +2092,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2148,6 +2215,9 @@ spec:
                     uri:
                       description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
                       type: string
+                    CACerts:
+                      description: Certification Authority (CA) certificates in PEM format that the subscription trusts when sending events to the sink.
+                      type: string
             status:
               type: object
               properties:
@@ -2251,7 +2321,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20230726-6bfc2d4ae"
+    app.kubernetes.io/version: "20230727-ffa591593"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
