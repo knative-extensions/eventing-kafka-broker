@@ -28,32 +28,30 @@ import org.junit.Test;
 @EnableKubernetesMockClient(crud = true)
 public class EventTypeTest {
 
-  static KubernetesClient client;
-  MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
+    static KubernetesClient client;
+    MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
 
+    @Test
+    public void testCreateEventType() {
+        eventTypeClient
+                .resource(new EventTypeBuilder()
+                        .withReference(new KReference("eventing.knative.dev/v1", "KafkaBroker", "MyBroker", "default"))
+                        .withSchema("sample schema")
+                        .withSchemaDescription("sample schema description")
+                        .withDescription("a sample event type")
+                        .withName("sample.event.type")
+                        .withNamespace("default")
+                        .build())
+                .create();
 
-  @Test
-  public void testCreateEventType() {
-    eventTypeClient
-      .resource(
-        new EventTypeBuilder()
-          .withReference(new KReference("eventing.knative.dev/v1", "KafkaBroker", "MyBroker", "default"))
-          .withSchema("sample schema")
-          .withSchemaDescription("sample schema description")
-          .withDescription("a sample event type")
-          .withName("sample.event.type")
-          .withNamespace("default")
-          .build()
-      ).create();
+        KubernetesResourceList<EventType> eventTypeList =
+                eventTypeClient.inNamespace("default").list();
+        Assert.assertNotNull(eventTypeList);
+        Assert.assertEquals(1, eventTypeList.getItems().size());
+    }
 
-    KubernetesResourceList<EventType> eventTypeList = eventTypeClient.inNamespace("default").list();
-    Assert.assertNotNull(eventTypeList);
-    Assert.assertEquals(1, eventTypeList.getItems().size());
-  }
-
-  @Before
-  public void setupEventTypeClient() {
-    this.eventTypeClient = client.resources(EventType.class);
-  }
-
+    @Before
+    public void setupEventTypeClient() {
+        this.eventTypeClient = client.resources(EventType.class);
+    }
 }
