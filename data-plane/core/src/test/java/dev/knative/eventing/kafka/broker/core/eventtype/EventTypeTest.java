@@ -26,26 +26,26 @@ import org.junit.jupiter.api.Test;
 @EnableKubernetesMockClient(crud = true)
 public class EventTypeTest {
 
-  private KubernetesClient kubernetesClient;
-  private KubernetesMockServer server;
+    private KubernetesClient kubernetesClient;
+    private KubernetesMockServer server;
 
-  @Test
-  public void testCreateEventType() {
-    var eventTypeClient = kubernetesClient.resources(EventType.class);
-    eventTypeClient
-      .resource(new EventTypeBuilder()
-        .withReference(new KReference("eventing.knative.dev/v1", "KafkaBroker", "MyBroker", "default"))
-        .withSchema("sample schema")
-        .withSchemaDescription("sample schema description")
-        .withDescription("a sample event type")
-        .withName("sample.event.type")
-        .withNamespace("default")
-        .build())
-      .create();
+    @Test
+    public void testCreateEventType() {
+        var eventTypeClient = kubernetesClient.resources(EventType.class);
+        eventTypeClient
+                .resource(new EventTypeBuilder()
+                        .withReference(new KReference("eventing.knative.dev/v1", "KafkaBroker", "MyBroker", "default"))
+                        .withSchema("sample schema")
+                        .withSchemaDescription("sample schema description")
+                        .withDescription("a sample event type")
+                        .withName("sample.event.type")
+                        .withNamespace("default")
+                        .build())
+                .create();
 
-    KubernetesResourceList<EventType> eventTypeList =
-      eventTypeClient.inNamespace("default").list();
-    Assertions.assertNotNull(eventTypeList);
-    Assertions.assertEquals(1, eventTypeList.getItems().size());
-  }
+        KubernetesResourceList<EventType> eventTypeList =
+                eventTypeClient.inNamespace("default").list();
+        Assertions.assertNotNull(eventTypeList);
+        Assertions.assertEquals(1, eventTypeList.getItems().size());
+    }
 }
