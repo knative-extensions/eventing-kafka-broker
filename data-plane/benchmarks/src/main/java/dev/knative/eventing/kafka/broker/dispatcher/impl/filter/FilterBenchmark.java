@@ -18,43 +18,35 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
 
 public abstract class FilterBenchmark{
-  @State(Scope.Thread)
-  public static class FilterEvaluationState {
-    Filter filter;
-    CloudEvent event;
+  Filter filter;
+  CloudEvent cloudEvent;
 
-    @Setup
-    public void setupFilter() {
-      this.filter = createFilter();
-    }
-
-    @Setup
-    public void setupEvent() {
-      this.event = createEvent();
-    }
+  @Setup
+  public void setupFilter() {
+    this.filter = createFilter();
   }
 
-  protected static Filter createFilter() {
-    return null;
+  @Setup
+  public void setupCloudEvent() {
+    this.cloudEvent = createEvent();
   }
 
-  protected static CloudEvent createEvent() {
-    return null;
-  }
+  protected abstract Filter createFilter();
+
+  protected abstract CloudEvent createEvent();
 
   @Benchmark
   public void benchmarkFilterCreation(Blackhole bh) {
-    bh.consume(createFilter());
+    bh.consume(this.createFilter());
   }
 
   @Benchmark
-  @Warmup(iterations = 3)
-  @Measurement(iterations = 100)
-  public void benchmarkFilterEvaluation(Blackhole bh, FilterEvaluationState fes) {
-    bh.consume(fes.filter.test(fes.event));
+  public void benchmarkFilterEvaluation(Blackhole bh) {
+    bh.consume(this.filter.test(this.cloudEvent));
   }
 }
