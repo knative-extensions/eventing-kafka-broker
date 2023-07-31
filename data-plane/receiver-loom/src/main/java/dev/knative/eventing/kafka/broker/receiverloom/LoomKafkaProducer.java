@@ -68,7 +68,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     }
 
     private void sendFromQueue() {
-        while (true) {
+        while (!isClosed.get() || !eventQueue.isEmpty()) {
             try {
                 RecordPromise recordPromise = eventQueue.take();
                 ProducerTracer.StartedSpan startedSpan =
