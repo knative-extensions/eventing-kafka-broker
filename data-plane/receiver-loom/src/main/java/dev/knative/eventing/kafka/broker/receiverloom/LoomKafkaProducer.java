@@ -38,6 +38,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     private final ProducerTracer tracer;
     private final VertxInternal vertx;
     private final ContextInternal ctx;
+    private final Thread sendFromQueueThread;
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
         this.producer = producer;
@@ -53,7 +54,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             this.tracer = null;
             this.ctx = null;
         }
-        Thread.ofVirtual().start(this::sendFromQueue);
+        sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     }
 
     private void sendFromQueue() {
-        while (!isClosed.get() || !eventQueue.isEmpty()) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 RecordPromise recordPromise = eventQueue.take();
                 ProducerTracer.StartedSpan startedSpan =
@@ -96,8 +97,9 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         Promise<Void> promise = Promise.promise();
         this.isClosed.set(true);
         Thread.ofVirtual().start(() -> {
-            while (!eventQueue.isEmpty()) {}
             try {
+                Thread.sleep(2000L);
+                sendFromQueueThread.interrupt();
                 producer.close();
                 promise.complete();
             } catch (Exception e) {
