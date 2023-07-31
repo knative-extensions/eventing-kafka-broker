@@ -150,19 +150,13 @@ public class LoomKafkaProducerTest {
 
         // now sendFromQueueThread should be blocked in eventQueue.take()
 
-        // close the producer
-        Future<Void> future = producer.close();
-
-        while (future.isComplete()) {
-            Thread.sleep(100);
-        }
-        // wait for 10 seconds to ensure the sendFromQueueThread is interrupted
-        Thread.sleep(10000L);
-
-        // verify the sendFromQueueThread is interrupted
-        testContext.verify(() -> {
-            assertTrue(!producer.isSendFromQueueThreadAlive());
-            testContext.completeNow();
+        // close the producer and verify the sendFromQueueThread is interrupted
+        producer.close().onComplete(ar -> {
+            testContext.verify(() -> {
+                assertTrue(ar.succeeded());
+                assertTrue(!producer.isSendFromQueueThreadAlive());
+                testContext.completeNow();
+            });
         });
     }
 

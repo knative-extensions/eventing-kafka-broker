@@ -74,18 +74,14 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                 RecordPromise recordPromise = eventQueue.take();
                 ProducerTracer.StartedSpan startedSpan =
                         this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
-                try {
-                    var metadata = producer.send(recordPromise.getRecord());
-                    recordPromise.getPromise().complete(metadata.get());
-                    if (startedSpan != null) {
-                        startedSpan.finish(ctx);
+                producer.send(recordPromise.getRecord(), (metadata, exception) -> {
+                    if (exception != null) {
+                        recordPromise.getPromise().fail(exception);
+                        if (startedSpan != null) {
+                            startedSpan.fail(ctx, exception);
+                        }
                     }
-                } catch (Exception e) {
-                    recordPromise.getPromise().fail(e);
-                    if (startedSpan != null) {
-                        startedSpan.fail(ctx, e);
-                    }
-                }
+                });
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for event queue to be populated.");
             }
