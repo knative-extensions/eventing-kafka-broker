@@ -18,10 +18,15 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import org.openjdk.jmh.annotations.Setup;
-import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
+import java.util.concurrent.TimeUnit;
+
+@BenchmarkMode(Mode.All)
+@Fork(1)
+@State(Scope.Thread)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 public abstract class FilterBenchmark {
   Filter filter;
   CloudEvent cloudEvent;
