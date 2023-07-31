@@ -22,14 +22,18 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.slf4j.Logger;
 
 public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
+
+    Logger logger = org.slf4j.LoggerFactory.getLogger(LoomKafkaProducer.class);
 
     private final Producer<K, V> producer;
 
@@ -41,19 +45,15 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     private final Thread sendFromQueueThread;
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
+        Objects.requireNonNull(v, "Vertx cannot be null");
         this.producer = producer;
         this.eventQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
         this.vertx = (VertxInternal) v;
+        this.ctx = vertx.getOrCreateContext();
+        ContextInternal ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
+        this.tracer = ProducerTracer.create(ctxInt.tracer());
 
-        if (v != null) {
-            ContextInternal ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
-            this.tracer = ProducerTracer.create(ctxInt.tracer());
-            this.ctx = vertx.getOrCreateContext();
-        } else {
-            this.tracer = null;
-            this.ctx = null;
-        }
         sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
     }
 
@@ -87,7 +87,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                     }
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.debug("Interrupted while waiting for event queue to be populated.");
             }
         }
     }
@@ -98,7 +98,9 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         this.isClosed.set(true);
         Thread.ofVirtual().start(() -> {
             try {
-                Thread.sleep(2000L);
+                while (!eventQueue.isEmpty()) {
+                    Thread.sleep(2000L);
+                }
                 sendFromQueueThread.interrupt();
                 producer.close();
                 promise.complete();

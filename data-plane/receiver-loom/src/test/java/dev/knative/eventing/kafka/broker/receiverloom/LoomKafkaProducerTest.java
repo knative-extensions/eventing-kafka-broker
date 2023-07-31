@@ -21,6 +21,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -32,14 +35,19 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(VertxExtension.class)
 public class LoomKafkaProducerTest {
 
-    LoomKafkaProducer<String, Integer> producer;
+    private Vertx vertx;
+    private LoomKafkaProducer<String, Integer> producer;
 
     @BeforeEach
-    public void setUp() {
-        producer = new LoomKafkaProducer<>(null, mockProducer());
+    public void setUp(VertxTestContext testContext) {
+        vertx = Vertx.vertx();
+        producer = new LoomKafkaProducer<>(vertx, mockProducer());
+        testContext.completeNow();
     }
 
     @AfterEach
