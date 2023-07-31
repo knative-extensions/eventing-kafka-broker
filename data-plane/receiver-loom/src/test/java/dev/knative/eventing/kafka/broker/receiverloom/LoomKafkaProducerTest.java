@@ -45,10 +45,9 @@ public class LoomKafkaProducerTest {
     private LoomKafkaProducer<String, Integer> producer;
 
     @BeforeEach
-    public void setUp(VertxTestContext testContext) {
+    public void setUp() {
         vertx = Vertx.vertx();
         producer = new LoomKafkaProducer<>(vertx, mockProducer());
-        testContext.completeNow();
     }
 
     @AfterEach
@@ -103,7 +102,7 @@ public class LoomKafkaProducerTest {
 
     @Test
     public void testCloseIsWaitingForEmptyQueue(VertxTestContext testContext) {
-        // Send a record and wait for it to be processed
+        // Send multiple records
         int numRecords = 100000;
         List<Future<RecordMetadata>> sendFutures = new ArrayList<>();
         for (int i = 0; i < numRecords; i++) {
@@ -169,7 +168,7 @@ public class LoomKafkaProducerTest {
 
     @Test
     public void testFlush(VertxTestContext testContext) {
-        // Send a records
+        // Send a record
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
         Future<RecordMetadata> sendFuture = producer.send(record);
 
@@ -181,8 +180,7 @@ public class LoomKafkaProducerTest {
             });
         });
 
-        // Verify that the sent records is processed before the flush is completed
-
+        // Verify that the sent record is processed before the flush is completed
         sendFuture.onComplete(ar -> {
             testContext.verify(() -> {
                 assertTrue(ar.succeeded());
