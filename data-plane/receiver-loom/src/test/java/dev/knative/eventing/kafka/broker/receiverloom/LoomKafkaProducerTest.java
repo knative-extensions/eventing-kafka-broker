@@ -135,8 +135,9 @@ public class LoomKafkaProducerTest {
         }
     }
 
-    @Test void interruptHappensWhenClose(VertxTestContext testContext) throws InterruptedException{
-        //send a single record
+    @Test
+    void interruptHappensWhenClose(VertxTestContext testContext) throws InterruptedException {
+        // send a single record
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
         Future<RecordMetadata> sendFuture = producer.send(record);
 
@@ -152,18 +153,17 @@ public class LoomKafkaProducerTest {
 
         // close the producer
         Future<Void> future = producer.close();
-        
-        while(future.isComplete()) {
+
+        while (future.isComplete()) {
             Thread.sleep(100);
         }
-        //wait for 5 seconds to ensure the sendFromQueueThread is interrupted
+        // wait for 5 seconds to ensure the sendFromQueueThread is interrupted
         Thread.sleep(5000L);
         // verify the sendFromQueueThread is interrupted
         testContext.verify(() -> {
             assertTrue(!producer.isSendFromQueueThreadAlive());
             testContext.completeNow();
         });
-
     }
 
     @Test
@@ -193,7 +193,7 @@ public class LoomKafkaProducerTest {
                 });
             });
         }
-    }  
+    }
 
     private void sendRecord(AtomicInteger counter, CountDownLatch latch, List<Integer> receivedOrder, int i) {
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);

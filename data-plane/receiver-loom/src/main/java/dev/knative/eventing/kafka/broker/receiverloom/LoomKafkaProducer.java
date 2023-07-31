@@ -156,5 +156,4 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     public int getEventQueueSize() {
         return eventQueue.size();
     }
-    
 }
