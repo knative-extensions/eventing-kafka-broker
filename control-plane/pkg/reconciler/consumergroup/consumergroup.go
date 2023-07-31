@@ -629,6 +629,8 @@ func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler
 		return fmt.Errorf("failed to list statefulset pods with selector %v: %w", selector.String(), err)
 	}
 
+	sort.Slice(pods, func(i, j int) bool { return pods[i].Name < pods[j].Name })
+
 	for _, p := range pods {
 		cmName, err := eventing.ConfigMapNameFromPod(p)
 		if err != nil {
