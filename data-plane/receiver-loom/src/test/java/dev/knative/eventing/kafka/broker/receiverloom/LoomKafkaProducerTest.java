@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiverloom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -59,7 +60,7 @@ public class LoomKafkaProducerTest {
     public void testConcurrentRecordSendCountAndSequence() throws InterruptedException {
 
         // Set up the test parameters
-        int numRecords = 10000;
+        int numRecords = 100000;
         AtomicInteger counter = new AtomicInteger();
         CountDownLatch latch = new CountDownLatch(numRecords);
         List<Integer> receivedOrder = new ArrayList<>();
@@ -80,6 +81,119 @@ public class LoomKafkaProducerTest {
             assertEquals(i, receivedOrder.get(i));
         }
     }
+
+    @Test
+    public void testSendAfterClose(VertxTestContext testContext) {
+        // Close the producer before sending a record
+        producer.close();
+
+        // Attempt to send a record after the producer is closed
+        ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
+        Future<RecordMetadata> sendFuture = producer.send(record);
+
+        // Verify that the sendFuture fails with the expected error message
+        sendFuture.onComplete(ar -> {
+            testContext.verify(() -> {
+                assertTrue(ar.failed());
+                assertEquals("Producer is closed", ar.cause().getMessage());
+                testContext.completeNow();
+            });
+        });
+    }
+
+    @Test
+    public void testCloseIsWaitingForEmptyQueue(VertxTestContext testContext) {
+        // Send a record and wait for it to be processed
+        int numRecords = 100000;
+        List<Future<RecordMetadata>> sendFutures = new ArrayList<>();
+        for (int i = 0; i < numRecords; i++) {
+            ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);
+            sendFutures.add(producer.send(record));
+        }
+
+        // Close the producer and wait for the event queue to be empty
+        producer.close().onComplete(ar -> {
+            testContext.verify(() -> {
+                assertTrue(ar.succeeded());
+
+                // Ensure that the eventQueue is empty after closing
+                assertTrue(producer.getEventQueueSize() == 0);
+                // Ensure that the sendFromQueueThread is not alive after closing
+                assertTrue(!producer.isSendFromQueueThreadAlive());
+                testContext.completeNow();
+            });
+        });
+
+        // Verify that the sent record is processed before the producer is closed
+        for (int i = 0; i < numRecords; i++) {
+            sendFutures.get(i).onComplete(ar -> {
+                testContext.verify(() -> {
+                    assertTrue(ar.succeeded());
+                    testContext.completeNow();
+                });
+            });
+        }
+    }
+
+    @Test void interruptHappensWhenClose(VertxTestContext testContext) throws InterruptedException{
+        //send a single record
+        ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
+        Future<RecordMetadata> sendFuture = producer.send(record);
+
+        // wait sendFuture is completed
+        sendFuture.onComplete(ar -> {
+            testContext.verify(() -> {
+                assertTrue(ar.succeeded());
+                testContext.completeNow();
+            });
+        });
+
+        // now sendFromQueueThread should be blocked in eventQueue.take()
+
+        // close the producer
+        Future<Void> future = producer.close();
+        
+        while(future.isComplete()) {
+            Thread.sleep(100);
+        }
+        //wait for 5 seconds to ensure the sendFromQueueThread is interrupted
+        Thread.sleep(5000L);
+        // verify the sendFromQueueThread is interrupted
+        testContext.verify(() -> {
+            assertTrue(!producer.isSendFromQueueThreadAlive());
+            testContext.completeNow();
+        });
+
+    }
+
+    @Test
+    public void testFlush(VertxTestContext testContext) {
+        // Send a records
+        int numRecords = 100000;
+        List<Future<RecordMetadata>> sendFutures = new ArrayList<>();
+        for (int i = 0; i < numRecords; i++) {
+            ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);
+            sendFutures.add(producer.send(record));
+        }
+
+        // Flush the producer and wait for it to complete
+        producer.flush().onComplete(ar -> {
+            testContext.verify(() -> {
+                assertTrue(ar.succeeded());
+                testContext.completeNow();
+            });
+        });
+
+        // Verify that the sent records is processed before the flush is completed
+        for (int i = 0; i < numRecords; i++) {
+            sendFutures.get(i).onComplete(ar -> {
+                testContext.verify(() -> {
+                    assertTrue(ar.succeeded());
+                    testContext.completeNow();
+                });
+            });
+        }
+    }  
 
     private void sendRecord(AtomicInteger counter, CountDownLatch latch, List<Integer> receivedOrder, int i) {
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);

@@ -147,4 +147,14 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             return promise;
         }
     }
+
+    // Function needed for testing
+    public boolean isSendFromQueueThreadAlive() {
+        return sendFromQueueThread.isAlive();
+    }
+
+    public int getEventQueueSize() {
+        return eventQueue.size();
+    }
+    
 }
