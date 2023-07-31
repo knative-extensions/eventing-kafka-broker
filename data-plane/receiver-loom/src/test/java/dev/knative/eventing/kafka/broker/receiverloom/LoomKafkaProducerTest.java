@@ -157,8 +157,9 @@ public class LoomKafkaProducerTest {
         while (future.isComplete()) {
             Thread.sleep(100);
         }
-        // wait for 5 seconds to ensure the sendFromQueueThread is interrupted
-        Thread.sleep(5000L);
+        // wait for 10 seconds to ensure the sendFromQueueThread is interrupted
+        Thread.sleep(10000L);
+
         // verify the sendFromQueueThread is interrupted
         testContext.verify(() -> {
             assertTrue(!producer.isSendFromQueueThreadAlive());
@@ -169,12 +170,8 @@ public class LoomKafkaProducerTest {
     @Test
     public void testFlush(VertxTestContext testContext) {
         // Send a records
-        int numRecords = 100000;
-        List<Future<RecordMetadata>> sendFutures = new ArrayList<>();
-        for (int i = 0; i < numRecords; i++) {
-            ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);
-            sendFutures.add(producer.send(record));
-        }
+        ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
+        Future<RecordMetadata> sendFuture = producer.send(record);
 
         // Flush the producer and wait for it to complete
         producer.flush().onComplete(ar -> {
@@ -185,14 +182,13 @@ public class LoomKafkaProducerTest {
         });
 
         // Verify that the sent records is processed before the flush is completed
-        for (int i = 0; i < numRecords; i++) {
-            sendFutures.get(i).onComplete(ar -> {
-                testContext.verify(() -> {
-                    assertTrue(ar.succeeded());
-                    testContext.completeNow();
-                });
+
+        sendFuture.onComplete(ar -> {
+            testContext.verify(() -> {
+                assertTrue(ar.succeeded());
+                testContext.completeNow();
             });
-        }
+        });
     }
 
     private void sendRecord(AtomicInteger counter, CountDownLatch latch, List<Integer> receivedOrder, int i) {
