@@ -22,7 +22,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
 
-public abstract class FilterBenchmark{
+public abstract class FilterBenchmark {
   Filter filter;
   CloudEvent cloudEvent;
 
