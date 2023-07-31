@@ -27,9 +27,9 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -199,16 +199,14 @@ public class LoomKafkaProducerTest {
     @SuppressWarnings("unchecked")
     private static KafkaProducer<String, Integer> mockProducer() {
         KafkaProducer<String, Integer> producer = mock(KafkaProducer.class);
-        when(producer.send(any(ProducerRecord.class))).thenReturn((sendDemoRecord()));
+        when(producer.send(any(ProducerRecord.class), any(Callback.class))).thenAnswer(invocation -> {
+            Callback callback = invocation.getArgument(1);
+
+            RecordMetadata metadata = new RecordMetadata(null, 0, 0, 0, -1, -1);
+
+            callback.onCompletion(metadata, null);
+            return null;
+        });
         return producer;
-    }
-
-    private static java.util.concurrent.Future<RecordMetadata> sendDemoRecord() {
-        CompletableFuture<RecordMetadata> future = new CompletableFuture<>();
-        RecordMetadata metadata = new RecordMetadata(null, 0, 0, 0, -1, -1);
-
-        // Complete the future with the demo metadata
-        future.complete(metadata);
-        return future;
     }
 }

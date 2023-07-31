@@ -81,6 +81,9 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                             startedSpan.fail(ctx, exception);
                         }
                     }
+                    if (startedSpan != null) {
+                        startedSpan.finish(ctx);
+                    }
                     recordPromise.getPromise().complete(metadata);
                 });
             } catch (InterruptedException e) {
