@@ -27,6 +27,7 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"broker", "reference", "description", "schema", "schemaData"})
 public class EventTypeSpec implements KubernetesResource {
+
     @JsonProperty("broker")
     private String broker;
 

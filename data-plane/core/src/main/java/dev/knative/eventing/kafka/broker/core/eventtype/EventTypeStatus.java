@@ -27,6 +27,7 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"annotations", "conditions", "observedGeneration"})
 public class EventTypeStatus {
+
     @JsonProperty("annotations")
     private Object annotations;
 
