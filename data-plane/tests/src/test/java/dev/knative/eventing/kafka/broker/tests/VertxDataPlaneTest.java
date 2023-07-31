@@ -23,7 +23,7 @@ import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
 public class VertxDataPlaneTest extends AbstractDataPlaneTest {
 
     @Override
-    protected ReactiveProducerFactory getReactiveKafkaProducer() {
+    protected ReactiveProducerFactory getReactiveProducerFactory() {
         return new VertxProducerFactory<>();
     }
 

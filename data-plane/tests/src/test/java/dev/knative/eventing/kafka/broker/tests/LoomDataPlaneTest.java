@@ -23,7 +23,7 @@ import dev.knative.eventing.kafka.broker.receiverloom.LoomProducerFactory;
 public class LoomDataPlaneTest extends AbstractDataPlaneTest {
 
     @Override
-    protected ReactiveProducerFactory getReactiveKafkaProducer() {
+    protected ReactiveProducerFactory getReactiveProducerFactory() {
         return new LoomProducerFactory<>();
     }
 

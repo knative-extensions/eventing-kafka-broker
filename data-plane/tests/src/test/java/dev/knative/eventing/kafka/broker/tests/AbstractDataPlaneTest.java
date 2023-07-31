@@ -110,7 +110,7 @@ public abstract class AbstractDataPlaneTest {
     private static ConsumerDeployerVerticle consumerDeployerVerticle;
     private static ReceiverVerticle receiverVerticle;
 
-    protected abstract ReactiveProducerFactory getReactiveKafkaProducer();
+    protected abstract ReactiveProducerFactory getReactiveProducerFactory();
 
     protected abstract ReactiveConsumerFactory getReactiveConsumerFactory();
 
@@ -347,7 +347,7 @@ public abstract class AbstractDataPlaneTest {
                 AuthProvider.noAuth(),
                 Metrics.getRegistry(),
                 getReactiveConsumerFactory(),
-                getReactiveKafkaProducer());
+                getReactiveProducerFactory());
 
         final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 
@@ -377,7 +377,7 @@ public abstract class AbstractDataPlaneTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> new IngressProducerReconcilableStore(
-                        AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveKafkaProducer()
+                        AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveProducerFactory()
                                 .create(v, properties)),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
                 SECRET_VOLUME_PATH);
