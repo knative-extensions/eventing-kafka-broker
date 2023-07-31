@@ -81,6 +81,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                             startedSpan.fail(ctx, exception);
                         }
                     }
+                    recordPromise.getPromise().complete(metadata);
                 });
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for event queue to be populated.");
