@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -41,23 +40,23 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     private static final Logger logger = LoggerFactory.getLogger(LoomKafkaConsumer.class);
 
-    private final KafkaConsumer<K, V> consumer;
-    private Handler<Throwable> exceptionHandler;
+    private final Consumer<K, V> consumer;
     private final BlockingQueue<Runnable> taskQueue;
     private final AtomicBoolean isClosed;
     private final Thread taskRunnerThread;
+    private Handler<Throwable> exceptionHandler;
 
-    public LoomKafkaConsumer(Vertx vertx, Map<String, Object> configs) {
-        this.consumer = new KafkaConsumer<>(configs);
+    public LoomKafkaConsumer(Vertx vertx, Consumer<K, V> consumer) {
+        this.consumer = consumer;
         this.taskQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
 
         taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
     }
 
-    private void addTask(Runnable task) {
+    private void addTask(Runnable task, Promise<?> promise) {
         if(isClosed.get()) {
-            throw new IllegalStateException("Consumer is closed");
+            promise.fail("Consumer is closed");
         }
         taskQueue.add(task);
     }
@@ -84,15 +83,21 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                         promise.complete(offsetMap);
                     }
                 });
-        });
+        }, promise);
         return promise.future();
     }
 
     @Override
     public Future<Void> close() {
         Promise<Void> promise = Promise.promise();
-        addTask(() -> {
+        isClosed.set(true);
+        Thread.ofVirtual().start(() -> { // I am not sure we can call close from diffrent thread
             try {
+                while(!taskQueue.isEmpty()) {
+                    Thread.sleep(100);
+                }
+                taskRunnerThread.interrupt();
+                taskRunnerThread.join();
                 consumer.close();
                 promise.complete();
             } catch (Exception e) {
@@ -112,7 +117,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
             } catch (Exception e) {
                 promise.fail(e);
             }
-        });
+        },promise);
         return promise.future();
     }
 
@@ -126,7 +131,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
             } catch (Exception e) {
                 promise.fail(e);
             }
-        });
+        },promise);
         return promise.future();
     }
 
@@ -140,7 +145,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
             } catch (Exception e) {
                 promise.fail(e);
             }
-        });
+        },promise);
         return promise.future();
     }
 
@@ -154,7 +159,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
             } catch (Exception e) {
                 promise.fail(e);
             }
-        });
+        },promise);
         return promise.future();
     }
 
@@ -168,7 +173,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
             } catch (Exception e) {
                 promise.fail(e);
             }
-        });
+        },promise);
         return promise.future();
     }
 

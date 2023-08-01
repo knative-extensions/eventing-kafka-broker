@@ -17,6 +17,8 @@ package dev.knative.eventing.kafka.broker.dispatcherloom;
 
 import java.util.Map;
 
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
 import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import io.vertx.core.Vertx;
@@ -25,7 +27,7 @@ public class LoomConsumerFactory<K, V> implements ReactiveConsumerFactory<K, V> 
 
     @Override
     public ReactiveKafkaConsumer<K, V> create(Vertx vertx, Map<String, Object> configs) {
-        return new LoomKafkaConsumer<>(vertx, configs);
+        return new LoomKafkaConsumer<>(vertx, new KafkaConsumer<>(configs));
     }
     
 }
