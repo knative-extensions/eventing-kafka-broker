@@ -60,7 +60,7 @@ public class LoomKafkaProducerTest {
     public void testConcurrentRecordSendCountAndSequence() throws InterruptedException {
 
         // Set up the test parameters
-        int numRecords = 100000;
+        final int numRecords = 100000;
         AtomicInteger counter = new AtomicInteger();
         CountDownLatch latch = new CountDownLatch(numRecords);
         List<Integer> receivedOrder = new ArrayList<>();
@@ -105,7 +105,7 @@ public class LoomKafkaProducerTest {
     @Test
     public void testCloseIsWaitingForEmptyQueue(VertxTestContext testContext) {
 
-        int numRecords = 100000;
+        final int numRecords = 100000;
         final var checkpoints = testContext.checkpoint(numRecords + 1);
         // Send multiple records
         for (int i = 0; i < numRecords; i++) {
