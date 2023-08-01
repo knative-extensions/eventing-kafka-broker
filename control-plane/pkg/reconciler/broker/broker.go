@@ -453,7 +453,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 func (r *Reconciler) deleteResourceFromContractConfigMap(ctx context.Context, logger *zap.Logger, broker *eventing.Broker) error {
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	// Handles https://github.com/knative-sandbox/eventing-kafka-broker/issues/2893
+	// Handles https://github.com/knative-extensions/eventing-kafka-broker/issues/2893
 	// When the system namespace is deleted while we're running there is no point in
 	// trying to delete the resource from the ConfigMap since the entire ConfigMap
 	// is gone.

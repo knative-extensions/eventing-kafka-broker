@@ -52,7 +52,7 @@ const (
 	SaslScramSha256 = "SCRAM-SHA-256"
 	SaslScramSha512 = "SCRAM-SHA-512"
 
-	// Legacy Channel config to enable TLS, see https://github.com/knative-sandbox/eventing-kafka-broker/issues/2231
+	// Legacy Channel config to enable TLS, see https://github.com/knative-extensions/eventing-kafka-broker/issues/2231
 	SSLLegacyEnabled = "tls.enabled"
 )
 
