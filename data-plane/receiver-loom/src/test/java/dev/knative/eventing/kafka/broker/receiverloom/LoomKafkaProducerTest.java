@@ -86,7 +86,7 @@ public class LoomKafkaProducerTest {
     public void testSendAfterClose(VertxTestContext testContext) {
 
         // Close the producer before sending a record
-        producer.close();
+        producer.close().onFailure(testContext::failNow);
 
         // Attempt to send a record after the producer is closed
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
@@ -105,10 +105,9 @@ public class LoomKafkaProducerTest {
     @Test
     public void testCloseIsWaitingForEmptyQueue(VertxTestContext testContext) {
 
-        // Send multiple records
         int numRecords = 100000;
         final var checkpoints = testContext.checkpoint(numRecords + 1);
-
+        // Send multiple records
         for (int i = 0; i < numRecords; i++) {
             ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);
             producer.send(record)
@@ -118,7 +117,7 @@ public class LoomKafkaProducerTest {
                     .onFailure(testContext::failNow);
         }
 
-        // Close the producer and wait for the event queue to be empty
+        // Close the producer and check that it is waiting for the queue to be empty
         producer.close()
                 .onComplete(ar -> {
                     testContext.verify(() -> {
@@ -134,8 +133,9 @@ public class LoomKafkaProducerTest {
 
     @Test
     void interruptHappensWhenClose(VertxTestContext testContext) throws InterruptedException {
-        // send a single record
+
         final var checkpoints = testContext.checkpoint(2);
+        // send a single record
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
         producer.send(record)
                 .onComplete(ar -> {

@@ -118,8 +118,8 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                     Thread.sleep(2000L);
                 }
                 sendFromQueueThread.interrupt();
-                producer.close();
                 sendFromQueueThread.join();
+                producer.close();
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
