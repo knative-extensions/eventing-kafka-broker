@@ -30,14 +30,15 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
-    Logger logger = org.slf4j.LoggerFactory.getLogger(LoomKafkaProducer.class);
+    private static final Logger logger = LoggerFactory.getLogger(LoomKafkaProducer.class);
 
     private final Producer<K, V> producer;
 
-    private final BlockingQueue<RecordPromise> eventQueue;
+    private final BlockingQueue<RecordPromise<K, V>> eventQueue;
     private final AtomicBoolean isClosed;
     private final ProducerTracer tracer;
     private final VertxInternal vertx;
@@ -63,15 +64,15 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         if (isClosed.get()) {
             promise.fail("Producer is closed");
         } else {
-            eventQueue.add(new RecordPromise(record, promise));
+            eventQueue.add(new RecordPromise<K, V>(record, promise));
         }
         return promise.future();
     }
 
     private void sendFromQueue() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!isClosed.get() || !eventQueue.isEmpty()) {
             try {
-                RecordPromise recordPromise = eventQueue.take();
+                RecordPromise<K, V> recordPromise = eventQueue.take();
                 ProducerTracer.StartedSpan startedSpan =
                         this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
                 producer.send(recordPromise.getRecord(), (metadata, exception) -> {
@@ -88,8 +89,10 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                 });
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for event queue to be populated.");
+                break;
             }
         }
+        logger.debug("Background thread finish.");
     }
 
     @Override
@@ -131,7 +134,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         return producer;
     }
 
-    private class RecordPromise {
+    private static class RecordPromise<K, V> {
         private final ProducerRecord<K, V> record;
         private final Promise<RecordMetadata> promise;
 

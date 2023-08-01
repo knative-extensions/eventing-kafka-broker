@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiverloom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -83,6 +84,7 @@ public class LoomKafkaProducerTest {
 
     @Test
     public void testSendAfterClose(VertxTestContext testContext) {
+
         // Close the producer before sending a record
         producer.close();
 
@@ -102,85 +104,86 @@ public class LoomKafkaProducerTest {
 
     @Test
     public void testCloseIsWaitingForEmptyQueue(VertxTestContext testContext) {
+
         // Send multiple records
         int numRecords = 100000;
-        List<Future<RecordMetadata>> sendFutures = new ArrayList<>();
+        final var checkpoints = testContext.checkpoint(numRecords + 1);
+
         for (int i = 0; i < numRecords; i++) {
             ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", i);
-            sendFutures.add(producer.send(record));
+            producer.send(record)
+                    .onSuccess(ar -> {
+                        checkpoints.flag();
+                    })
+                    .onFailure(testContext::failNow);
         }
 
         // Close the producer and wait for the event queue to be empty
-        producer.close().onComplete(ar -> {
-            testContext.verify(() -> {
-                assertTrue(ar.succeeded());
+        producer.close()
+                .onComplete(ar -> {
+                    testContext.verify(() -> {
+                        assertTrue(ar.succeeded());
+                        assertEquals(0, producer.getEventQueueSize());
+                        assertFalse(producer.isSendFromQueueThreadAlive());
 
-                // Ensure that the eventQueue is empty after closing
-                assertTrue(producer.getEventQueueSize() == 0);
-                // Ensure that the sendFromQueueThread is not alive after closing
-                assertTrue(!producer.isSendFromQueueThreadAlive());
-                testContext.completeNow();
-            });
-        });
-
-        // Verify that the sent record is processed before the producer is closed
-        for (int i = 0; i < numRecords; i++) {
-            sendFutures.get(i).onComplete(ar -> {
-                testContext.verify(() -> {
-                    assertTrue(ar.succeeded());
-                    testContext.completeNow();
-                });
-            });
-        }
+                        checkpoints.flag();
+                    });
+                })
+                .onFailure(testContext::failNow);
     }
 
     @Test
     void interruptHappensWhenClose(VertxTestContext testContext) throws InterruptedException {
         // send a single record
+        final var checkpoints = testContext.checkpoint(2);
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
-        Future<RecordMetadata> sendFuture = producer.send(record);
-
-        // wait sendFuture is completed
-        sendFuture.onComplete(ar -> {
-            testContext.verify(() -> {
-                assertTrue(ar.succeeded());
-                testContext.completeNow();
-            });
-        });
+        producer.send(record)
+                .onComplete(ar -> {
+                    testContext.verify(() -> {
+                        assertTrue(ar.succeeded());
+                        checkpoints.flag();
+                    });
+                })
+                .onFailure(testContext::failNow);
 
         // now sendFromQueueThread should be blocked in eventQueue.take()
 
         // close the producer and verify the sendFromQueueThread is interrupted
-        producer.close().onComplete(ar -> {
-            testContext.verify(() -> {
-                assertTrue(ar.succeeded());
-                assertTrue(!producer.isSendFromQueueThreadAlive());
-                testContext.completeNow();
-            });
-        });
+        producer.close()
+                .onComplete(ar -> {
+                    testContext.verify(() -> {
+                        assertTrue(ar.succeeded());
+                        assertFalse(producer.isSendFromQueueThreadAlive());
+                        checkpoints.flag();
+                    });
+                })
+                .onFailure(testContext::failNow);
     }
 
     @Test
     public void testFlush(VertxTestContext testContext) {
+
+        final var checkpoints = testContext.checkpoint(2);
         // Send a record
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
-        Future<RecordMetadata> sendFuture = producer.send(record);
+        producer.send(record)
+                .onComplete(ar -> {
+                    testContext.verify(() -> {
+                        assertTrue(ar.succeeded());
+                        checkpoints.flag();
+                    });
+                })
+                .onFailure(testContext::failNow);
 
         // Flush the producer and wait for it to complete
-        producer.flush().onComplete(ar -> {
-            testContext.verify(() -> {
-                assertTrue(ar.succeeded());
-                testContext.completeNow();
-            });
-        });
-
-        // Verify that the sent record is processed before the flush is completed
-        sendFuture.onComplete(ar -> {
-            testContext.verify(() -> {
-                assertTrue(ar.succeeded());
-                testContext.completeNow();
-            });
-        });
+        producer.flush()
+                .onComplete(ar -> {
+                    testContext.verify(() -> {
+                        assertTrue(ar.succeeded());
+                        checkpoints.flag();
+                    });
+                })
+                .onFailure(testContext::failNow);
     }
 
     private void sendRecord(AtomicInteger counter, CountDownLatch latch, List<Integer> receivedOrder, int i) {
