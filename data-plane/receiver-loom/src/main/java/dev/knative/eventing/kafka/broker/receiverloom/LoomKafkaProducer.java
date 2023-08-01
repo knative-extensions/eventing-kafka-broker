@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,18 +76,30 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                 RecordPromise<K, V> recordPromise = eventQueue.take();
                 ProducerTracer.StartedSpan startedSpan =
                         this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
-                producer.send(recordPromise.getRecord(), (metadata, exception) -> {
-                    if (exception != null) {
-                        recordPromise.getPromise().fail(exception);
-                        if (startedSpan != null) {
-                            startedSpan.fail(ctx, exception);
+
+                recordPromise
+                        .getPromise()
+                        .future()
+                        .onComplete(v -> {
+                            if (startedSpan != null) {
+                                startedSpan.finish(ctx);
+                            }
+                        })
+                        .onFailure(cause -> {
+                            if (startedSpan != null) {
+                                startedSpan.fail(ctx, cause);
+                            }
+                        });
+                try {
+                    producer.send(recordPromise.getRecord(), (metadata, exception) -> {
+                        if (exception != null) {
+                            recordPromise.getPromise().fail(exception);
                         }
-                    }
-                    if (startedSpan != null) {
-                        startedSpan.finish(ctx);
-                    }
-                    recordPromise.getPromise().complete(metadata);
-                });
+                        recordPromise.getPromise().complete(metadata);
+                    });
+                } catch (final KafkaException exception) {
+                    recordPromise.getPromise().fail(exception);
+                }
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for event queue to be populated.");
                 break;
