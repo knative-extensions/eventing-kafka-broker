@@ -422,7 +422,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	proberAddressable := prober.NewAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
-			Addresses: []duckv1.Addressable(address)
+			Addresses: []duckv1.Addressable{address},
 		},
 		ResourceKey: types.NamespacedName{
 			Namespace: channel.GetNamespace(),
