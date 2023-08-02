@@ -2060,7 +2060,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 		proberMock := probertesting.MockNewProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
-			proberMock = p.(prober.Prober)
+			proberMock = p.(prober.NewProber)
 		}
 
 		var featureFlags *apisconfig.KafkaFeatureFlags
