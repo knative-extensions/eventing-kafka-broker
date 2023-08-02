@@ -112,10 +112,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
 
-	globalResync := func(_ interface{}) {
-		impl.GlobalResync(channelInformer.Informer())
-	}
-
 	rotateCACerts := func(obj interface{}) {
 		newCerts, err := reconciler.getCaCerts()
 		if err != nil && (features.IsPermissiveTransportEncryption() || features.IsStrictTransportEncryption()) {
@@ -123,7 +119,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			logger.Warn("Failed to get new CA certs while rotating CA certs when at least one address uses TLS", zap.Error(err))
 		}
 		reconciler.Prober.RotateRootCaCerts(&newCerts)
-		globalResync(obj)
+		consumergroup.Enqueue("kafkachannel", impl.EnqueueKey)
 	}
 	reconciler.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
