@@ -58,7 +58,7 @@
     </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>receiver-loom</artifactId>
+      <artifactId>dispatcher-loom</artifactId>
       <version>${project.version}</version>
     </dependency>
 
