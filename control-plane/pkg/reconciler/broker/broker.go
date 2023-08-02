@@ -358,7 +358,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	address := receiver.HTTPAddress(ingressHost, broker)
 	proberAddressable := prober.NewAddressable{
 		AddressStatus: &duckv1.AddressStatus{
-			Address: &address,
+			Address:   &address,
+			Addresses: []duckv1.Addressable{address},
 		},
 		ResourceKey: types.NamespacedName{
 			Namespace: broker.GetNamespace(),
