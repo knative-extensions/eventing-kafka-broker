@@ -67,14 +67,13 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                 taskQueue.take().run();
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for task", e);
-                exceptionHandler.handle(e);
             }
         }
     }
 
     @Override
     public Future<Map<TopicPartition, OffsetAndMetadata>> commit(Map<TopicPartition, OffsetAndMetadata> offset) {
-        Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
+        final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
         addTask(() -> {
                 consumer.commitAsync(offset, (offsetMap, exception) -> {
                     if(exception != null) {
@@ -89,19 +88,26 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> close() {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         isClosed.set(true);
-        Thread.ofVirtual().start(() -> { // I am not sure we can call close from diffrent thread
+        taskQueue.add(() -> {
+            try {
+                consumer.close();
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        });
+
+        Thread.ofVirtual().start(() -> {
             try {
                 while(!taskQueue.isEmpty()) {
                     Thread.sleep(100);
                 }
                 taskRunnerThread.interrupt();
                 taskRunnerThread.join();
-                consumer.close();
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
+            } catch (InterruptedException e) {
+                logger.debug("Interrupted while waiting for taskRunnerThread to finish", e);
             }
         });
         return promise.future();
@@ -109,7 +115,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> pause(Collection<TopicPartition> partitions) {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         addTask(() -> {
             try {
                 consumer.pause(partitions);
@@ -123,7 +129,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<ConsumerRecords<K, V>> poll(Duration timeout) {
-        Promise<ConsumerRecords<K, V>> promise = Promise.promise();
+        final Promise<ConsumerRecords<K, V>> promise = Promise.promise();
         addTask(() -> {
             try {
                 ConsumerRecords<K, V> records = consumer.poll(timeout);
@@ -137,7 +143,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> resume(Collection<TopicPartition> partitions) {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         addTask(() -> {
             try {
                 consumer.resume(partitions);
@@ -151,7 +157,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> subscribe(Collection<String> topics) {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         addTask(() -> {
             try {
                 consumer.subscribe(topics);
@@ -165,7 +171,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener) {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         addTask(() -> {
             try {
                 consumer.subscribe(topics, listener);
