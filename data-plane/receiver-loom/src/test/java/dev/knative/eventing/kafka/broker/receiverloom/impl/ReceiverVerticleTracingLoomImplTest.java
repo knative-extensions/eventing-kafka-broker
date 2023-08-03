@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiverloom;
+package dev.knative.eventing.kafka.broker.receiverloom.impl;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticleTracingTest;
+import dev.knative.eventing.kafka.broker.receiverloom.LoomKafkaProducer;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
-import java.util.Properties;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 
-public class LoomProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
+public class ReceiverVerticleTracingLoomImplTest extends ReceiverVerticleTracingTest {
 
     @Override
-    public ReactiveKafkaProducer<K, V> create(Vertx v, Properties config) {
-        return new LoomKafkaProducer<>(v, new KafkaProducer<>(config));
+    public ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
+            Vertx vertx, Producer<String, CloudEvent> producer) {
+        return new LoomKafkaProducer<>(vertx, producer);
     }
 }

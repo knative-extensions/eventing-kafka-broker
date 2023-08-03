@@ -62,8 +62,6 @@ const (
 
 	// caCertsSecretKey is the name of the CA Cert in the secret
 	caCertsSecretKey = "ca.crt"
-
-	eventingNamespace = "knative-eventing"
 )
 
 type Reconciler struct {
@@ -698,7 +696,7 @@ func finalizerSecret(object metav1.Object) string {
 }
 
 func (r *Reconciler) getCaCerts() (string, error) {
-	secret, err := r.SecretLister.Secrets(eventingNamespace).Get(brokerIngressTLSSecretName)
+	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(brokerIngressTLSSecretName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
 	}

@@ -90,7 +90,6 @@ fi
 "${REPO_ROOT_DIR}"/hack/update-deps.sh
 
 cert_manager_installer="${REPO_ROOT_DIR}/vendor/knative.dev/eventing/hack/update-cert-manager.sh"
-
-chmod +x "${cert_manager_installer}"
-
+chmod +x "${cert_manager_installer}" # Allow executing cert-manager script
 "${cert_manager_installer}"
+chmod -x "${cert_manager_installer}" # Revert execute permissions

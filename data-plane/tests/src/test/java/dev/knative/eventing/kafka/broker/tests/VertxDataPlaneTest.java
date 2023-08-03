@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiverloom;
+package dev.knative.eventing.kafka.broker.tests;
 
-import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
-import io.vertx.core.Vertx;
-import java.util.Properties;
-import org.apache.kafka.clients.producer.KafkaProducer;
+import dev.knative.eventing.kafka.broker.dispatchervertx.VertxConsumerFactory;
+import dev.knative.eventing.kafka.broker.receiververtx.VertxProducerFactory;
 
-public class LoomProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
+public class VertxDataPlaneTest extends AbstractDataPlaneTest {
 
     @Override
-    public ReactiveKafkaProducer<K, V> create(Vertx v, Properties config) {
-        return new LoomKafkaProducer<>(v, new KafkaProducer<>(config));
+    protected ReactiveProducerFactory getReactiveProducerFactory() {
+        return new VertxProducerFactory<>();
+    }
+
+    @Override
+    protected ReactiveConsumerFactory getReactiveConsumerFactory() {
+        return new VertxConsumerFactory<>();
     }
 }

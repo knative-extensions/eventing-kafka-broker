@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiverloom;
 
-import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
-import io.vertx.core.Vertx;
-import java.util.Properties;
-import org.apache.kafka.clients.producer.KafkaProducer;
+package dev.knative.eventing.kafka.broker.core.eventtype;
 
-public class LoomProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
+import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Kind;
+import io.fabric8.kubernetes.model.annotation.Version;
 
-    @Override
-    public ReactiveKafkaProducer<K, V> create(Vertx v, Properties config) {
-        return new LoomKafkaProducer<>(v, new KafkaProducer<>(config));
-    }
-}
+@Group("eventing.knative.dev")
+@Version("v1beta2")
+@Kind("EventType")
+public class EventType extends CustomResource<EventTypeSpec, EventTypeStatus> implements Namespaced {}

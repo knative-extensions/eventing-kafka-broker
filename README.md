@@ -18,10 +18,10 @@
   <a href="https://github.com/knative-sanbox/eventing-kafka-broker/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/knative-sandbox/eventing-kafka-broker.svg">
   </a>
-  <a href="https://knative.slack.com">
+  <a href="https://slack.cncf.io/">
       <img src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
   </a>
-  <a href="https://knative.slack.com/archives/C9JP909F0">
+  <a href="https://cloud-native.slack.com/archives/C04LMU33V1S">
       <img src="https://img.shields.io/badge/%23eventing-white.svg?logo=slack&color=522a5e">
   </a>
 </p>
