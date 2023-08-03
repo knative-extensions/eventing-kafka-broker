@@ -15,12 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcherloom;
 
-import java.io.IOException;
-
 import dev.knative.eventing.kafka.broker.receiverloom.LoomProducerFactory;
+import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        dev.knative.eventing.kafka.broker.dispatcher.main.Main.start(args, new LoomConsumerFactory<>(), new LoomProducerFactory<>());
+        dev.knative.eventing.kafka.broker.dispatcher.main.Main.start(
+                args, new LoomConsumerFactory<>(), new LoomProducerFactory<>());
     }
 }

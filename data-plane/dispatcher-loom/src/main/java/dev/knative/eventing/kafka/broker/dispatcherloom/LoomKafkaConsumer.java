@@ -15,13 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcherloom;
 
+import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -29,12 +33,6 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 
 public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
@@ -55,14 +53,14 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     }
 
     private void addTask(Runnable task, Promise<?> promise) {
-        if(isClosed.get()) {
+        if (isClosed.get()) {
             promise.fail("Consumer is closed");
         }
         taskQueue.add(task);
     }
 
     private void processTaskQueue() {
-        while(!isClosed.get() || !taskQueue.isEmpty()){
+        while (!isClosed.get() || !taskQueue.isEmpty()) {
             try {
                 taskQueue.take().run();
             } catch (InterruptedException e) {
@@ -74,15 +72,17 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     @Override
     public Future<Map<TopicPartition, OffsetAndMetadata>> commit(Map<TopicPartition, OffsetAndMetadata> offset) {
         final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
-        addTask(() -> {
-                consumer.commitAsync(offset, (offsetMap, exception) -> {
-                    if(exception != null) {
-                        promise.fail(exception);
-                    } else {
-                        promise.complete(offsetMap);
-                    }
-                });
-        }, promise);
+        addTask(
+                () -> {
+                    consumer.commitAsync(offset, (offsetMap, exception) -> {
+                        if (exception != null) {
+                            promise.fail(exception);
+                        } else {
+                            promise.complete(offsetMap);
+                        }
+                    });
+                },
+                promise);
         return promise.future();
     }
 
@@ -101,7 +101,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
         Thread.ofVirtual().start(() -> {
             try {
-                while(!taskQueue.isEmpty()) {
+                while (!taskQueue.isEmpty()) {
                     Thread.sleep(100);
                 }
                 taskRunnerThread.interrupt();
@@ -116,70 +116,80 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     @Override
     public Future<Void> pause(Collection<TopicPartition> partitions) {
         final Promise<Void> promise = Promise.promise();
-        addTask(() -> {
-            try {
-                consumer.pause(partitions);
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        },promise);
+        addTask(
+                () -> {
+                    try {
+                        consumer.pause(partitions);
+                        promise.complete();
+                    } catch (Exception e) {
+                        promise.fail(e);
+                    }
+                },
+                promise);
         return promise.future();
     }
 
     @Override
     public Future<ConsumerRecords<K, V>> poll(Duration timeout) {
         final Promise<ConsumerRecords<K, V>> promise = Promise.promise();
-        addTask(() -> {
-            try {
-                ConsumerRecords<K, V> records = consumer.poll(timeout);
-                promise.complete(records);
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        },promise);
+        addTask(
+                () -> {
+                    try {
+                        ConsumerRecords<K, V> records = consumer.poll(timeout);
+                        promise.complete(records);
+                    } catch (Exception e) {
+                        promise.fail(e);
+                    }
+                },
+                promise);
         return promise.future();
     }
 
     @Override
     public Future<Void> resume(Collection<TopicPartition> partitions) {
         final Promise<Void> promise = Promise.promise();
-        addTask(() -> {
-            try {
-                consumer.resume(partitions);
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        },promise);
+        addTask(
+                () -> {
+                    try {
+                        consumer.resume(partitions);
+                        promise.complete();
+                    } catch (Exception e) {
+                        promise.fail(e);
+                    }
+                },
+                promise);
         return promise.future();
     }
 
     @Override
     public Future<Void> subscribe(Collection<String> topics) {
         final Promise<Void> promise = Promise.promise();
-        addTask(() -> {
-            try {
-                consumer.subscribe(topics);
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        },promise);
+        addTask(
+                () -> {
+                    try {
+                        consumer.subscribe(topics);
+                        promise.complete();
+                    } catch (Exception e) {
+                        promise.fail(e);
+                    }
+                },
+                promise);
         return promise.future();
     }
 
     @Override
     public Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener) {
         final Promise<Void> promise = Promise.promise();
-        addTask(() -> {
-            try {
-                consumer.subscribe(topics, listener);
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        },promise);
+        addTask(
+                () -> {
+                    try {
+                        consumer.subscribe(topics, listener);
+                        promise.complete();
+                    } catch (Exception e) {
+                        promise.fail(e);
+                    }
+                },
+                promise);
         return promise.future();
     }
 
@@ -193,5 +203,4 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         this.exceptionHandler = handler;
         return this;
     }
-    
 }
