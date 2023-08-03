@@ -72,16 +72,18 @@ public class LoomKafkaConsumerTest {
         assertTrue(consumer.isTaskRunnerThreadAlive());
 
         // Close the consumer
-        consumer.close().onFailure(testContext::failNow);
-
-        // Verify that the task runner thread is stopped after 1 second
-        Thread.sleep(1000L);
-        assertFalse(consumer.isTaskRunnerThreadAlive());
-        checkpoints.flag();
+        consumer.close()
+                .onComplete(ar -> {
+                    ar.succeeded();
+                    // Verify that the task runner thread has stopped
+                    assertFalse(consumer.isTaskRunnerThreadAlive());
+                    checkpoints.flag();
+                })
+                .onFailure(testContext::failNow);
     }
 
     @Test
-    public void checkTaskQueueIsEmptyBeforeClose(VertxTestContext testContext) {
+    public void checkTaskQueueIsEmptyAfterClose(VertxTestContext testContext) {
 
         final var checkpoints = testContext.checkpoint();
 
@@ -102,7 +104,7 @@ public class LoomKafkaConsumerTest {
     }
 
     @Test
-    public void testQueueAfterClose(VertxTestContext testContext) {
+    public void testNoTaskAddingAfterClose(VertxTestContext testContext) {
 
         // close the consumer
         consumer.close().onFailure(testContext::failNow);

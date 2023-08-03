@@ -93,7 +93,6 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         taskQueue.add(() -> {
             try {
                 consumer.close();
-                promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -102,12 +101,14 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         Thread.ofVirtual().start(() -> {
             try {
                 while (!taskQueue.isEmpty()) {
-                    Thread.sleep(100);
+                    Thread.sleep(2000L);
                 }
                 taskRunnerThread.interrupt();
                 taskRunnerThread.join();
+                promise.complete();
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for taskRunnerThread to finish", e);
+                promise.fail(e);
             }
         });
         return promise.future();
