@@ -72,14 +72,12 @@ public class LoomKafkaConsumerTest {
         assertTrue(consumer.isTaskRunnerThreadAlive());
 
         // Close the consumer
-        consumer.close()
-                .onComplete(ar -> {
-                    ar.succeeded();
-                    // Verify that the task runner thread is stopped
-                    assertFalse(consumer.isTaskRunnerThreadAlive());
-                    checkpoints.flag();
-                })
-                .onFailure(testContext::failNow);
+        consumer.close().onFailure(testContext::failNow);
+        
+        // Verify that the task runner thread is stopped after 1 second
+        Thread.sleep(1000L);
+        assertFalse(consumer.isTaskRunnerThreadAlive());
+        checkpoints.flag();
     }
 
     @Test
@@ -183,7 +181,7 @@ public class LoomKafkaConsumerTest {
         HashMap<TopicPartition, Long> beginningOffsets = new HashMap<>();
         beginningOffsets.put(new TopicPartition(topic, 0), 0L);
         beginningOffsets.put(new TopicPartition(topic, 1), 0L);
-        mockConsumer.updateBeginningOffsets(beginningOffsets);
+        mockConsumer.updateEndOffsets(beginningOffsets);
         mockConsumer.seek(new TopicPartition(topic, 0), 0);
         for (ConsumerRecord<String, Integer> record : records) {
             mockConsumer.addRecord(record);
