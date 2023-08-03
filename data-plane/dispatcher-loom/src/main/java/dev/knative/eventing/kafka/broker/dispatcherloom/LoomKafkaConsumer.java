@@ -203,4 +203,13 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         this.exceptionHandler = handler;
         return this;
     }
+
+    // functions needed for test
+    public int getTaskQueueSize() {
+        return taskQueue.size();
+    }
+
+    public boolean isTaskRunnerThreadAlive() {
+        return taskRunnerThread.isAlive();
+    }
 }
