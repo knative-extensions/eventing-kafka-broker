@@ -73,7 +73,7 @@ public class LoomKafkaConsumerTest {
 
         // Close the consumer
         consumer.close().onFailure(testContext::failNow);
-        
+
         // Verify that the task runner thread is stopped after 1 second
         Thread.sleep(1000L);
         assertFalse(consumer.isTaskRunnerThreadAlive());
@@ -178,10 +178,10 @@ public class LoomKafkaConsumerTest {
         // Mock consumers need to seek manually since they cannot automatically reset offsets
         mockConsumer.rebalance(Arrays.asList(new TopicPartition(topic, 0), new TopicPartition(topic, 1)));
 
-        HashMap<TopicPartition, Long> beginningOffsets = new HashMap<>();
-        beginningOffsets.put(new TopicPartition(topic, 0), 0L);
-        beginningOffsets.put(new TopicPartition(topic, 1), 0L);
-        mockConsumer.updateEndOffsets(beginningOffsets);
+        HashMap<TopicPartition, Long> offsets = new HashMap<>();
+        offsets.put(new TopicPartition(topic, 0), 0L);
+        offsets.put(new TopicPartition(topic, 1), 0L);
+        mockConsumer.updateEndOffsets(offsets);
         mockConsumer.seek(new TopicPartition(topic, 0), 0);
         for (ConsumerRecord<String, Integer> record : records) {
             mockConsumer.addRecord(record);
