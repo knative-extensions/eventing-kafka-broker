@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
- /**
-  * This piece of code is inspired from vert-x3/vertx-kafka-client project.
-  * The original source code can be found here: https://github.com/vert-x3/vertx-kafka-client
-  */
+/**
+ * This piece of code is inspired from vert-x3/vertx-kafka-client project.
+ * The original source code can be found here: https://github.com/vert-x3/vertx-kafka-client
+ */
 package dev.knative.eventing.kafka.broker.core.tracing.kafka;
 
 import io.vertx.core.Context;
@@ -54,11 +54,11 @@ public class ConsumerTracer<S> {
      * @param <S> the type of spans that is going to be generated, depending on the tracing system (zipkin, opentracing ...)
      * @return a new instance of {@code ConsumerTracer}, or {@code null}
      */
-    public static <S> ConsumerTracer create(VertxTracer tracer, Map<String, Object> config) {
+    public static <S> ConsumerTracer create(VertxTracer tracer, Map<String, Object> config, TracingPolicy policy) {
         if (tracer == null) {
             return null;
         }
-        TracingPolicy policy = TracingPolicy.ALWAYS;
+        policy = policy == null ? TracingPolicy.ALWAYS : policy;
         String address =
                 config.getOrDefault(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "").toString();
         return new ConsumerTracer<S>(tracer, policy, address);
