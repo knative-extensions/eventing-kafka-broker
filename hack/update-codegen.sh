@@ -72,8 +72,8 @@ group "Knative Codegen"
 group "Update deps post-codegen"
 
 # Our GH Actions env doesn't have protoc, nor Java.
-# For more details: https://github.com/knative-sandbox/eventing-kafka-broker/pull/847#issuecomment-828562570
-# Also: https://github.com/knative-sandbox/knobots/runs/2609020026?check_suite_focus=true#step:6:291
+# For more details: https://github.com/knative-extensions/eventing-kafka-broker/pull/847#issuecomment-828562570
+# Also: https://github.com/knative-extensions/knobots/runs/2609020026?check_suite_focus=true#step:6:291
 if ! ${GITHUB_ACTIONS:-false}; then
   "${REPO_ROOT_DIR}"/hack/generate-proto.sh
 

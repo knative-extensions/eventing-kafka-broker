@@ -37,7 +37,7 @@ fi
 
 # Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
 readonly LATEST_RELEASE_VERSION=$(latest_version)
-readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
+readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-extensions/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 readonly CERTMANAGER_CONFIG=${CERTMANAGER_CONFIG:-"./third_party/cert-manager/"}
