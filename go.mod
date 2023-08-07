@@ -24,8 +24,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.10.0
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.8.0
-	go.uber.org/zap v1.21.0
-	google.golang.org/protobuf v1.30.0
+	go.uber.org/zap v1.24.0
+	google.golang.org/protobuf v1.31.0
 	k8s.io/api v0.26.5
 	k8s.io/apiextensions-apiserver v0.26.5
 	k8s.io/apimachinery v0.26.5
@@ -39,10 +39,10 @@ require (
 	github.com/google/gofuzz v1.2.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/kedacore/keda/v2 v2.8.1
-	knative.dev/eventing v0.38.0
-	knative.dev/hack v0.0.0-20230712131415-ddae80293c43
-	knative.dev/pkg v0.0.0-20230718152110-aef227e72ead
-	knative.dev/reconciler-test v0.0.0-20230731164843-19232908376e
+	knative.dev/eventing v0.38.1-0.20230807013513-ce3b0c8d71d1
+	knative.dev/hack v0.0.0-20230807013713-a75befb4fd4b
+	knative.dev/pkg v0.0.0-20230807013311-7333c861d13b
+	knative.dev/reconciler-test v0.0.0-20230807013513-cd61b6d480f3
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
@@ -78,7 +78,7 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
-	github.com/go-kit/log v0.2.0 // indirect
+	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -110,7 +110,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -118,32 +118,33 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.14.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.37.0 // indirect
-	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/prometheus/client_golang v1.16.0 // indirect
+	github.com/prometheus/client_model v0.4.0 // indirect
+	github.com/prometheus/common v0.44.0 // indirect
+	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/prometheus/statsd_exporter v0.21.0 // indirect
 	github.com/rickb777/plural v1.2.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
+	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/tsenart/vegeta/v12 v12.8.4 // indirect
+	github.com/tsenart/vegeta/v12 v12.11.0 // indirect
 	github.com/wavesoftware/go-ensure v1.0.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/automaxprocs v1.4.0 // indirect
-	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/term v0.10.0 // indirect
+	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.7.0 // indirect
+	golang.org/x/tools v0.11.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gonum.org/v1/gonum v0.0.0-20190331200053-3d26580ed485 // indirect
