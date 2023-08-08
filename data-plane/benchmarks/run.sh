@@ -16,14 +16,16 @@
 
 set -e
 
+TIME=$(date +%s)
+
 run_java_filter_benchmarks_for_class() {
   CLASS=$1
 
   echo "Running benchmarks for ${CLASS}"
 
-  java -jar "${SCRIPT_DIR}/target/benchmarks.jar" $CLASS 2>&1 | tee "${SCRIPT_DIR}/output/${CLASS}.out.txt"
+  java -jar "${SCRIPT_DIR}/target/benchmarks.jar" $CLASS 2>&1 | tee "${SCRIPT_DIR}/output/${CLASS}.${TIME}.out.txt"
 
-  echo "Successfully ran benchmarks for ${CLASS}!\n\nThe results can be found at ${SCRIPT_DIR}/output/${CLASS}.out.txt"
+  echo "Successfully ran benchmarks for ${CLASS}!\n\nThe results can be found at ${SCRIPT_DIR}/output/${CLASS}.${TIME}.out.txt"
 }
 
 SCRIPT_DIR=$(cd -- "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
