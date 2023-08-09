@@ -60,7 +60,7 @@ func (c *compositeProber) Probe(ctx context.Context, addressable NewAddressable,
 		if addr.URL.Scheme == "https" {
 			status = c.httpsProber.Probe(ctx, oldAddressable, expected)
 		} else if addr.URL.Scheme == "http" {
-			c.httpProber.Probe(ctx, oldAddressable, expected)
+			status = c.httpProber.Probe(ctx, oldAddressable, expected)
 		}
 		if status != expected {
 			return status
