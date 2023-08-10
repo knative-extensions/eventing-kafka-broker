@@ -33,6 +33,22 @@ SCRIPT_DIR=$(cd -- "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 DATA_PLANE_DIR="${SCRIPT_DIR}/../"
 
+# check if the benchmark class exists
+
+if [[ ! -z $1 ]]; then
+  FOUND=0
+  while IFS="" read -r p || [[ -n "$p" ]]; do
+    if [[ "$1" == "$p" ]]; then
+      FOUND=1
+      break
+    fi
+  done <"${SCRIPT_DIR}/resources/filter-class-list.txt"
+  if [[ "$FOUND" != 1 ]]; then
+    echo "Please provide a valid class name for a filter benchmark"
+    exit 1
+  fi
+fi
+
 pushd ${DATA_PLANE_DIR} || return $?
 
 # build only benchmarks and it's dependents - skip aggregating licenses as it will be missing licenses due to only
