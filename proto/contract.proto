@@ -199,6 +199,9 @@ message Ingress {
 
   // whether to autocreate event types
   bool enableAutoCreateEventTypes = 4;
+
+  // EventType owner reference
+  Reference eventTypeOwnerReference = 5;
 }
 
 // Kubernetes resource reference.
@@ -215,6 +218,9 @@ message Reference {
 
   // Object version.
   string version = 4;
+
+  // Object kind.
+  string kind = 5;
 }
 
 enum SecretField {
