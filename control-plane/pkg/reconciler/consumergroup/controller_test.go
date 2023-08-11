@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
+	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
