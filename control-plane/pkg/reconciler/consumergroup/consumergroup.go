@@ -326,7 +326,7 @@ func (r Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGro
 
 	// Ensure Contract configmaps are created before scheduling to avoid having pending pods due to missing
 	// volumes.
-	// See https://github.com/knative-sandbox/eventing-kafka-broker/issues/2750#issuecomment-1304244017
+	// See https://github.com/knative-extensions/eventing-kafka-broker/issues/2750#issuecomment-1304244017
 	if err := r.ensureContractConfigmapsExist(ctx, statefulSetScheduler); err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}

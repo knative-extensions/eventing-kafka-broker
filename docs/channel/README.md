@@ -5,9 +5,9 @@
 This repository contains another KafkaChannel implementation, which we believe is more flexible and scalable.
 
 There are already 2 other KafkaChannel implementations:
-the [consolidated KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
+the [consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
 and
-the [distributed KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
+the [distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
 .
 
 While working on these 2 channel implementations, we realized we could reuse the dataplane for other Knative Kafka
@@ -21,9 +21,9 @@ The dataplane is designed in a way that it only communicates the control plane v
 ## Comparison with other KafkaChannel implementations
 
 You may find a comparison of this new KafkaChannel implementation with
-the [consolidated KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
+the [consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
 and
-the [distributed KafkaChannel](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
+the [distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
 implementations.
 
 |                         | New KafkaChannel                                        | Consolidated KafkaChannel                               | Distributed KafkaChannel                                                             |
@@ -52,7 +52,7 @@ implementations.
    > Kubernetes. It is also possible to use an off-cluster Apache Kafka
    > installation.
 
-3. Apply the channel manifests that are listed as assets in [releases](https://github.com/knative-sandbox/eventing-kafka-broker/releases):
+3. Apply the channel manifests that are listed as assets in [releases](https://github.com/knative-extensions/eventing-kafka-broker/releases):
 
     ```sh
     # The whole suite
@@ -342,7 +342,7 @@ a nice and smooth transition to new controllers with a roll-out.
 
 ### Auto migration from consolidated channel
 
-Starting with the [1.4 version](https://github.com/knative-sandbox/eventing-kafka-broker/releases/tag/knative-v1.4.2)
+Starting with the [1.4 version](https://github.com/knative-extensions/eventing-kafka-broker/releases/tag/knative-v1.4.2)
 of the new channel implementation, there is an automated migration post-install job available for
 the migration from the consolidated channel.
 
@@ -483,12 +483,12 @@ Data,
 
 Apply new channel manifest (applying the whole Knative Kafka suite with broker, sink, source and channel):
 ```sh
-❯ kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka.yaml
+❯ kubectl apply -f https://github.com/knative-extensions/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka.yaml
 ```
 
 Apply post-install manifest:
 ```sh
-❯ kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka-post-install.yaml
+❯ kubectl apply -f https://github.com/knative-extensions/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka-post-install.yaml
 ```
 
 Watch the logs of the post-install job:
@@ -520,7 +520,7 @@ Configmap `config-kafka-channel-data-plane` contains 4 different keys to configu
 
 Values of these keys are in [.properties format](https://en.wikipedia.org/wiki/.properties#Format).
 
-You may find the default value of this configmap [in the repository](https://github.com/knative-sandbox/eventing-kafka-broker/blob/main/data-plane/config/channel/100-config-kafka-channel-data-plane.yaml).
+You may find the default value of this configmap [in the repository](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/config/channel/100-config-kafka-channel-data-plane.yaml).
 
 
 ## Best practices
@@ -531,5 +531,5 @@ This will save you additional HTTP hops, from channel to broker and broker to ch
 
 ## Discontinued features
 
-- [Namespace dispatchers](https://github.com/knative-sandbox/eventing-kafka/blob/main/pkg/channel/consolidated/README.md#namespace-dispatchers)
+- [Namespace dispatchers](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/consolidated/README.md#namespace-dispatchers)
   are not supported at the moment.
