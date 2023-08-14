@@ -30,6 +30,7 @@
 
   <properties>
     <java.version>20</java.version>
+    <!-- Used Loom Virtual Threads is still a preview feature in JDK20 -->
     <argLine>--enable-preview</argLine>
   </properties>
 
@@ -58,7 +59,7 @@
     </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>receiver-loom</artifactId>
+      <artifactId>dispatcher-loom</artifactId>
       <version>${project.version}</version>
     </dependency>
 
