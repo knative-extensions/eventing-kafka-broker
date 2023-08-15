@@ -127,7 +127,7 @@ type Auth struct {
 	NetSpec *bindings.KafkaNetSpec
 	// Deprecated, use secret spec
 	AuthSpec   *eventingv1alpha1.Auth `json:"AuthSpec,omitempty"`
-	SecretSpec *SecretSpec
+	SecretSpec *SecretSpec            `json:"SecretSpec,omitempty"`
 }
 
 type SecretSpec struct {
