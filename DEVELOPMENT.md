@@ -172,7 +172,8 @@ If you are building a fitler benchmark or want to benchmark the performance delt
 ./hack/run.sh benchmark-filter <filter_class_name>
 ```
 
-This will run the benchmarks for the class with `<filter_class_name>`. For example, if you want to run all of the Exact Filter Benchmarks, you could run:
+This will run the benchmarks for the class with `<filter_class_name>`. A full list of all available classes can be seen [here](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/benchmarks/resources/filter-class-list.txt).
+For example, if you want to run all of the Exact Filter Benchmarks, you could run:
 
 ```shell
 ./hack/run.sh benchmark-filter ExactFilterBenchmark
