@@ -16,7 +16,7 @@
 
 /**
  * This piece of code is inspired from vert-x3/vertx-kafka-client project.
- * The original source code can be found here: 
+ * The original source code can be found here:
  * https://github.com/vert-x3/vertx-kafka-client/blob/a0e349fca33d3bb4f003ac53e6e0def42a76e8ab/src/main/java/io/vertx/kafka/client/common/tracing/ConsumerTracer.java
  */
 package dev.knative.eventing.kafka.broker.core.tracing.kafka;
