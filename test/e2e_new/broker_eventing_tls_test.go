@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 package e2e_new
 
 import (
@@ -27,9 +26,9 @@ import (
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"knative.dev/reconciler-test/pkg/eventshub"
 )
 
 func TestBrokerTlsCARotation(t *testing.T) {
@@ -47,5 +46,3 @@ func TestBrokerTlsCARotation(t *testing.T) {
 
 	env.Test(ctx, t, features.RotateBrokerTLSCertificates())
 }
-
-

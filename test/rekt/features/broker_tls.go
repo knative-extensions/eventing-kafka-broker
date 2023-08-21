@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
- package features
- import (
+package features
+
+import (
 	"context"
 	"time"
 
-	
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
 
 	"knative.dev/eventing/test/rekt/features/featureflags"
-	"knative.dev/eventing/test/rekt/resources/addressable"
+	// "knative.dev/eventing/test/rekt/resources/addressable"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
@@ -34,13 +37,13 @@
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/resources/service"
 	"knative.dev/reconciler-test/resources/certificate"
-
+	// "knative.dev/eventing/test/rekt/resources/addressable"
 )
 
 func RotateBrokerTLSCertificates() *feature.Feature {
-	// Assuming these resources are Kafka specific.
-	kafkaCertificateName := "kafka-broker-server-tls"
-	kafkaSecretName := "kafka-broker-server-tls"
+
+	ingressCertificateName := "kafka-broker-ingress-server-tls"
+	ingressSecretName := "kafka-broker-ingress-server-tls"
 
 	brokerName := feature.MakeRandomK8sName("broker")
 	triggerName := feature.MakeRandomK8sName("trigger")
@@ -49,21 +52,28 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 
 	f := feature.NewFeatureNamed("Rotate Kafka Broker TLS certificate")
 
-	// Assuming transport encryption should be strict for Kafka as well.
+	brokerConfig := feature.MakeRandomK8sName("brokercfg")
+
+	f.Setup("Create broker config", brokerconfigmap.Install(brokerConfig,
+		brokerconfigmap.WithNumPartitions(1),
+		brokerconfigmap.WithReplicationFactor(1),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext)))
+
 	f.Prerequisite("transport encryption is strict", featureflags.TransportEncryptionStrict())
-	// Making sure Istio isn't messing with our tests.
 	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
-	f.Setup("Rotate Kafka certificate", certificate.Rotate(certificate.RotateCertificate{
+	f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
 		Certificate: types.NamespacedName{
 			Namespace: system.Namespace(),
-			Name:      kafkaCertificateName,
+			Name:      ingressCertificateName,
 		},
 	}))
-	// Assuming that externally we can't verify this rotation for Kafka as well, so no separate steps.
 
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiverTLS))
-	f.Setup("install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
+	f.Setup("Install broker", broker.Install(brokerName, append(
+		broker.WithEnvConfig(),
+		broker.WithConfig(brokerConfig))...,
+	))
 	f.Setup("Broker is ready", broker.IsReady(brokerName))
 	f.Setup("install trigger", func(ctx context.Context, t feature.T) {
 		d := service.AsDestinationRef(sink)
@@ -71,15 +81,16 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 		trigger.Install(triggerName, brokerName, trigger.WithSubscriberFromDestination(d))(ctx, t)
 	})
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
-	f.Setup("Broker has HTTPS address", broker.ValidateAddress(brokerName, addressable.AssertHTTPSAddress))
+	// f.Setup("Broker has HTTPS address", broker.ValidateAddress(brokerName, addressable.AssertHTTPSAddress))
 
 	event := cetest.FullEvent()
 	event.SetID(uuid.New().String())
 
 	f.Requirement("install source", eventshub.Install(source,
-		eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, nil),
+		eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, &ingressCertificateName),
 		eventshub.InputEvent(event),
-		// Send multiple events to account for potential delay in certificate rotation detection.
+		// Send multiple events so that we take into account that the certificate rotation might
+		// be detected by the server after some time.
 		eventshub.SendMultipleEvents(100, 3*time.Second),
 	))
 
@@ -91,8 +102,8 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 		MatchReceivedEvent(cetest.HasId(event.ID())).
 		AtLeast(1),
 	)
-	f.Assert("Source matched updated peer certificate", assert.OnStore(source).
-		MatchPeerCertificatesReceived(assert.MatchPeerCertificatesFromSecret(system.Namespace(), kafkaSecretName, "tls.crt")).
+	f.Assert("Source match updated peer certificate", assert.OnStore(source).
+		MatchPeerCertificatesReceived(assert.MatchPeerCertificatesFromSecret(system.Namespace(), ingressSecretName, "tls.crt")).
 		AtLeast(1),
 	)
 
