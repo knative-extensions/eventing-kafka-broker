@@ -61,7 +61,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record) {
-        Promise<RecordMetadata> promise = Promise.promise();
+        final Promise<RecordMetadata> promise = Promise.promise();
         if (isClosed.get()) {
             promise.fail("Producer is closed");
         } else {
@@ -110,7 +110,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     @Override
     public Future<Void> close() {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         this.isClosed.set(true);
         Thread.ofVirtual().start(() -> {
             try {
@@ -130,7 +130,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     @Override
     public Future<Void> flush() {
-        Promise<Void> promise = Promise.promise();
+        final Promise<Void> promise = Promise.promise();
         Thread.ofVirtual().start(() -> {
             try {
                 producer.flush();
