@@ -18,6 +18,7 @@ function usage() {
   echo "   teardown-infra                                          Remove eventing, Kafka (Strimzi)"
   echo "   deploy-kafka                                            Deploy Kafka (Strimzi)"
   echo "   deploy                                                  Deploy eventing-kafka-broker"
+  echo "   deploy-loom                                             Deploy eventing-kafka-broker with loom modules"
   echo "   deploy-source                                           Deploy eventing-kafka-broker source bundle"
   echo "   teardown                                                Remove eventing-kafka-broker"
   echo "   teardown-source                                         Remove eventing-kafka-broker source bundle"
@@ -47,6 +48,8 @@ elif [[ "${action}" == "deploy-kafka" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && kafka_setup
 elif [[ "${action}" == "deploy" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
+elif [[ "${action}" == "deploy-loom" ]]; then
+  USE_LOOM="true" && source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
 elif [[ "${action}" == "deploy-source" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_source_setup
 elif [[ "${action}" == "build-from-source" ]]; then
