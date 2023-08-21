@@ -61,7 +61,10 @@ func (cg *ConsumerGroup) MarkReconcileConsumersFailedCondition(condition *apis.C
 		condition.GetMessage(),
 	)
 
-	return fmt.Errorf("consumers aren't ready, %v: %v", condition.GetReason(), condition.GetMessage())
+	// It is "normal" to have non-ready consumers, and we will get notified when their status change,
+	// so we don't need to return an error here which causes the object to be queued with an
+	// exponentially increasing delay.
+	return nil
 }
 
 func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
