@@ -28,6 +28,7 @@ import (
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
+	"knative.dev/reconciler-test/pkg/eventshub"
 )
 
 func TestBrokerTlsCARotation(t *testing.T) {
@@ -39,6 +40,7 @@ func TestBrokerTlsCARotation(t *testing.T) {
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
+		eventshub.WithTLS(t),
 	)
 
 	env.Test(ctx, t, features.RotateBrokerTLSCertificates())

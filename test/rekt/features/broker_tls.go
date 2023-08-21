@@ -38,34 +38,29 @@
 )
 
 func RotateBrokerTLSCertificates() *feature.Feature {
-	ingressCertificateName := "mt-broker-ingress-server-tls"
-	ingressSecretName := "mt-broker-ingress-server-tls"
-
-	filterCertificateName := "mt-broker-filter-server-tls"
+	// Assuming these resources are Kafka specific.
+	kafkaCertificateName := "kafka-broker-server-tls"
+	kafkaSecretName := "kafka-broker-server-tls"
 
 	brokerName := feature.MakeRandomK8sName("broker")
 	triggerName := feature.MakeRandomK8sName("trigger")
 	sink := feature.MakeRandomK8sName("sink")
 	source := feature.MakeRandomK8sName("source")
 
-	f := feature.NewFeatureNamed("Rotate Broker TLS certificate")
+	f := feature.NewFeatureNamed("Rotate Kafka Broker TLS certificate")
 
+	// Assuming transport encryption should be strict for Kafka as well.
 	f.Prerequisite("transport encryption is strict", featureflags.TransportEncryptionStrict())
+	// Making sure Istio isn't messing with our tests.
 	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
-	f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
+	f.Setup("Rotate Kafka certificate", certificate.Rotate(certificate.RotateCertificate{
 		Certificate: types.NamespacedName{
 			Namespace: system.Namespace(),
-			Name:      ingressCertificateName,
+			Name:      kafkaCertificateName,
 		},
 	}))
-	// We cannot externally verify this certificate rotation
-	f.Setup("Rotate filter certificate", certificate.Rotate(certificate.RotateCertificate{
-		Certificate: types.NamespacedName{
-			Namespace: system.Namespace(),
-			Name:      filterCertificateName,
-		},
-	}))
+	// Assuming that externally we can't verify this rotation for Kafka as well, so no separate steps.
 
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiverTLS))
 	f.Setup("install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
@@ -84,8 +79,7 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 	f.Requirement("install source", eventshub.Install(source,
 		eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, nil),
 		eventshub.InputEvent(event),
-		// Send multiple events so that we take into account that the certificate rotation might
-		// be detected by the server after some time.
+		// Send multiple events to account for potential delay in certificate rotation detection.
 		eventshub.SendMultipleEvents(100, 3*time.Second),
 	))
 
@@ -97,8 +91,8 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 		MatchReceivedEvent(cetest.HasId(event.ID())).
 		AtLeast(1),
 	)
-	f.Assert("Source match updated peer certificate", assert.OnStore(source).
-		MatchPeerCertificatesReceived(assert.MatchPeerCertificatesFromSecret(system.Namespace(), ingressSecretName, "tls.crt")).
+	f.Assert("Source matched updated peer certificate", assert.OnStore(source).
+		MatchPeerCertificatesReceived(assert.MatchPeerCertificatesFromSecret(system.Namespace(), kafkaSecretName, "tls.crt")).
 		AtLeast(1),
 	)
 
