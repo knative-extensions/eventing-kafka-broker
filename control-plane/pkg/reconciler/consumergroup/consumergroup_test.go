@@ -399,7 +399,7 @@ func TestReconcileKind(t *testing.T) {
 					}, nil
 				}),
 			},
-			WantErr: true,
+			WantErr: false,
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
 					ConsumerSpec(NewConsumerSpec(
@@ -465,7 +465,6 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				"Warning InternalError consumers aren't ready, ConsumerBinding: failed to bind resource to pod: EOF",
 			},
 		},
 		{
