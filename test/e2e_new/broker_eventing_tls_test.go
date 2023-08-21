@@ -22,6 +22,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/pkg/system"
@@ -41,6 +42,7 @@ func TestBrokerTlsCARotation(t *testing.T) {
 		k8s.WithEventListener,
 		environment.Managed(t),
 		eventshub.WithTLS(t),
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 	)
 
 	env.Test(ctx, t, features.RotateBrokerTLSCertificates())
