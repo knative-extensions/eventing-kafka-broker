@@ -97,15 +97,18 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
             return;
         }
         if (this.isPollInFlight.compareAndSet(false, true)) {
-            this.consumer.poll(POLL_TIMEOUT).onSuccess(records -> vertx.runOnContext(v -> this.handleRecords(records))).onFailure(cause -> {
-                isPollInFlight.set(false);
-                logger.error(
-                        "Failed to poll messages {}",
-                        getConsumerVerticleContext().getLoggingKeyValue(),
-                        cause);
-                // Wait before retrying.
-                vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
-            });
+            this.consumer
+                    .poll(POLL_TIMEOUT)
+                    .onSuccess(records -> vertx.runOnContext(v -> this.handleRecords(records)))
+                    .onFailure(cause -> {
+                        isPollInFlight.set(false);
+                        logger.error(
+                                "Failed to poll messages {}",
+                                getConsumerVerticleContext().getLoggingKeyValue(),
+                                cause);
+                        // Wait before retrying.
+                        vertx.setTimer(BACKOFF_DELAY_MS, t -> poll());
+                    });
         }
     }
 
