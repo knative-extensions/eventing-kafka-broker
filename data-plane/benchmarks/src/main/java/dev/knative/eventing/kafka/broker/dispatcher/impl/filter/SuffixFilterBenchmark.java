@@ -1,0 +1,124 @@
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+
+import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
+import io.cloudevents.core.v1.CloudEventV1;
+
+import java.net.URI;
+import java.util.Map;
+
+public class SuffixFilterBenchmark {
+  public static CloudEvent event() {
+    return CloudEventBuilder.v1()
+      .withId("abcdefghijklmnop")
+      .withSource(URI.create("http://localhost"))
+      .withType("com.github.pull.create")
+      .withDataSchema(URI.create("/api/schema"))
+      .withDataContentType("testContentType")
+      .withSubject("testSubject")
+      .build();
+  }
+
+  public class SuffixFilterIDBenchmark extends FilterBenchmark {
+
+    @Override
+    protected Filter createFilter() {
+      return new PrefixFilter(Map.of(CloudEventV1.ID, "lmnop"));
+    }
+
+    @Override
+    protected CloudEvent createEvent() {
+      return event();
+    }
+  }
+
+  public class SuffixFilterAllContextAttributes5CharsBenchmark extends FilterBenchmark {
+
+    @Override
+    protected Filter createFilter() {
+      return new PrefixFilter(Map.of(
+        CloudEventV1.ID, "lmnop",
+        CloudEventV1.SOURCE, "lhost",
+        CloudEventV1.TYPE, "reate",
+        CloudEventV1.DATASCHEMA, "chema",
+        CloudEventV1.DATACONTENTTYPE, "tType",
+        CloudEventV1.SUBJECT, "bject"
+      ));
+    }
+
+    @Override
+    protected CloudEvent createEvent() {
+      return event();
+    }
+  }
+
+  public class SuffixFilterAllContextAttributes3CharsBenchmark extends FilterBenchmark {
+
+    @Override
+    protected Filter createFilter() {
+      return new PrefixFilter(Map.of(
+        CloudEventV1.ID, "nop",
+        CloudEventV1.SOURCE, "ost",
+        CloudEventV1.TYPE, "ate",
+        CloudEventV1.DATASCHEMA, "ema",
+        CloudEventV1.DATACONTENTTYPE, "ype",
+        CloudEventV1.SUBJECT, "ect"
+      ));
+    }
+
+    @Override
+    protected CloudEvent createEvent() {
+      return event();
+    }
+  }
+
+  public class SuffixFilterLongNoBenchmark extends FilterBenchmark {
+
+    @Override
+    protected Filter createFilter() {
+      return new PrefixFilter(Map.of(
+        CloudEventV1.ID, "qwertyuiopasdfghjklzxcvbnm",
+        CloudEventV1.SOURCE, "qwertyuiopasdfghjklzxcvbnm"
+      ));
+    }
+
+    @Override
+    protected CloudEvent createEvent() {
+      return event();
+    }
+  }
+
+  public class SuffixFilterMediumNoBenchmark extends FilterBenchmark {
+
+    @Override
+    protected Filter createFilter() {
+      return new PrefixFilter(Map.of(
+        CloudEventV1.ID, "hjklzxcvbnm",
+        CloudEventV1.SOURCE, "hjklzxcvbnm"
+      ));
+    }
+
+    @Override
+    protected CloudEvent createEvent() {
+      return event();
+    }
+  }
+
+  public class SuffixFilterShortNoBenchmark extends FilterBenchmark {
+
+    @Override
+    protected Filter createFilter() {
+      return new PrefixFilter(Map.of(
+        CloudEventV1.ID, "bnm",
+        CloudEventV1.SOURCE, "bnm"
+      ));
+    }
+
+    @Override
+    protected CloudEvent createEvent() {
+      return event();
+    }
+  }
+}
