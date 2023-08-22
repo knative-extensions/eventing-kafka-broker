@@ -676,6 +676,8 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 			Uuid:      string(channel.GetUID()),
 			Namespace: channel.GetNamespace(),
 			Name:      channel.GetName(),
+			Kind:      "KafkaChannel",
+			Version:   messagingv1beta1.SchemeGroupVersion.String(),
 		},
 	}
 
