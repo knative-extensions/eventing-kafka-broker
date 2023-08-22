@@ -1643,7 +1643,7 @@ func TestReconcileKind(t *testing.T) {
 		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
 		store.OnConfigChanged(exampleConfig)
 
-		r := Reconciler{
+		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
@@ -1786,7 +1786,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 
 		ctx, _ = kedaclient.With(ctx)
 
-		r := Reconciler{
+		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{

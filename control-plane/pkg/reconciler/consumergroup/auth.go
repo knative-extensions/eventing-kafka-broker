@@ -27,7 +27,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
-func (r Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals.ConsumerGroup) (kafka.ConfigOption, error) {
+func (r *Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals.ConsumerGroup) (kafka.ConfigOption, error) {
 	var secret *corev1.Secret
 
 	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) {
