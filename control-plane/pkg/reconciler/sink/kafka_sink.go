@@ -19,8 +19,9 @@ package sink
 import (
 	"context"
 	"fmt"
-	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"time"
+
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
