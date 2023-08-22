@@ -36,7 +36,7 @@ public class SuffixFilterBenchmark {
                 .build();
     }
 
-    public class SuffixFilterIDBenchmark extends FilterBenchmark {
+    public static class SuffixFilterIDBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -49,7 +49,7 @@ public class SuffixFilterBenchmark {
         }
     }
 
-    public class SuffixFilterAllContextAttributes5CharsBenchmark extends FilterBenchmark {
+    public static class SuffixFilterAllContextAttributes5CharsBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -68,7 +68,7 @@ public class SuffixFilterBenchmark {
         }
     }
 
-    public class SuffixFilterAllContextAttributes3CharsBenchmark extends FilterBenchmark {
+    public static class SuffixFilterAllContextAttributes3CharsBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -87,7 +87,7 @@ public class SuffixFilterBenchmark {
         }
     }
 
-    public class SuffixFilterLongNoBenchmark extends FilterBenchmark {
+    public static class SuffixFilterLongNoBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -102,7 +102,7 @@ public class SuffixFilterBenchmark {
         }
     }
 
-    public class SuffixFilterMediumNoBenchmark extends FilterBenchmark {
+    public static class SuffixFilterMediumNoBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -117,7 +117,7 @@ public class SuffixFilterBenchmark {
         }
     }
 
-    public class SuffixFilterShortNoBenchmark extends FilterBenchmark {
+    public static class SuffixFilterShortNoBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {

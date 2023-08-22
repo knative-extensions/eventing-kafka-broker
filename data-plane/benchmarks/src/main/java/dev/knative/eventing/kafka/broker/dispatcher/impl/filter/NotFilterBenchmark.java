@@ -39,7 +39,7 @@ public class NotFilterBenchmark {
                 .build();
     }
 
-    public class NotFilterWithExactFilterBenchmark extends FilterBenchmark {
+    public static class NotFilterWithExactFilterBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -52,7 +52,7 @@ public class NotFilterBenchmark {
         }
     }
 
-    public class NotFilterWithPrefixFilterBenchmark extends FilterBenchmark {
+    public static class NotFilterWithPrefixFilterBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -65,7 +65,7 @@ public class NotFilterBenchmark {
         }
     }
 
-    public class NotFilterWithSuffixFilterBenchmark extends FilterBenchmark {
+    public static class NotFilterWithSuffixFilterBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {

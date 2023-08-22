@@ -36,7 +36,7 @@ public class PrefixFilterBenchmark {
                 .build();
     }
 
-    public class PrefixFilterIDBenchmark extends FilterBenchmark {
+    public static class PrefixFilterIDBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -49,7 +49,7 @@ public class PrefixFilterBenchmark {
         }
     }
 
-    public class PrefixFilterAllContextAttributes5CharsBenchmark extends FilterBenchmark {
+    public static class PrefixFilterAllContextAttributes5CharsBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -68,7 +68,7 @@ public class PrefixFilterBenchmark {
         }
     }
 
-    public class PrefixFilterAllContextAttributes3CharsBenchmark extends FilterBenchmark {
+    public static class PrefixFilterAllContextAttributes3CharsBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -87,7 +87,7 @@ public class PrefixFilterBenchmark {
         }
     }
 
-    public class PrefixFilterLongNoBenchmark extends FilterBenchmark {
+    public static class PrefixFilterLongNoBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -102,7 +102,7 @@ public class PrefixFilterBenchmark {
         }
     }
 
-    public class PrefixFilterMediumNoBenchmark extends FilterBenchmark {
+    public static class PrefixFilterMediumNoBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -117,7 +117,7 @@ public class PrefixFilterBenchmark {
         }
     }
 
-    public class PrefixFilterShortNoBenchmark extends FilterBenchmark {
+    public static class PrefixFilterShortNoBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
