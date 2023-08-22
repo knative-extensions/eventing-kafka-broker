@@ -19,6 +19,7 @@ package testing
 import (
 	"context"
 	"fmt"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -134,6 +135,8 @@ func SinkReference() *contract.Reference {
 		Uuid:      SinkUUID,
 		Namespace: SinkNamespace,
 		Name:      SinkName,
+		Kind:      "KafkaSink",
+		Version:   eventingv1alpha1.SchemeGroupVersion.String(),
 	}
 }
 

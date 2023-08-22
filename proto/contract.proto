@@ -200,8 +200,6 @@ message Ingress {
   // whether to autocreate event types
   bool enableAutoCreateEventTypes = 4;
 
-  // EventType owner reference
-  Reference eventTypeOwnerReference = 5;
 }
 
 // Kubernetes resource reference.

@@ -620,6 +620,8 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 			Uuid:      string(broker.GetUID()),
 			Namespace: broker.GetNamespace(),
 			Name:      broker.GetName(),
+			Kind:      "Broker",
+			Version:   eventing.SchemeGroupVersion.String(),
 		},
 	}
 

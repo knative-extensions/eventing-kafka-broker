@@ -384,6 +384,8 @@ func BrokerReference() *contract.Reference {
 		Uuid:      BrokerUUID,
 		Namespace: BrokerNamespace,
 		Name:      BrokerName,
+		Kind:      "Broker",
+		Version:   eventing.SchemeGroupVersion.String(),
 	}
 }
 

@@ -19,6 +19,7 @@ package sink
 import (
 	"context"
 	"fmt"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -190,6 +191,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			Uuid:      string(ks.GetUID()),
 			Namespace: ks.GetNamespace(),
 			Name:      ks.GetName(),
+			Kind:      "KafkaSink",
+			Version:   eventingv1alpha1.SchemeGroupVersion.String(),
 		},
 	}
 	if ks.Spec.HasAuthConfig() {
