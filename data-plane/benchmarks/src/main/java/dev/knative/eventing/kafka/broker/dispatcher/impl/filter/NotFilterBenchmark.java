@@ -24,58 +24,57 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.v1.CloudEventV1;
-
 import java.net.URI;
 import java.util.Map;
 
 public class NotFilterBenchmark {
-  public static CloudEvent event() {
-    return CloudEventBuilder.v1()
-      .withId("abcdefghijklmnop")
-      .withSource(URI.create("http://localhost"))
-      .withType("com.github.pull.create")
-      .withDataSchema(URI.create("/api/schema"))
-      .withDataContentType("testContentType")
-      .withSubject("testSubject")
-      .build();
-  }
-
-  public class NotFilterWithExactFilterBenchmark extends FilterBenchmark {
-
-    @Override
-    protected Filter createFilter() {
-      return new NotFilter(new ExactFilter(Map.of(CloudEventV1.ID, "abcdefghijklmnop")));
+    public static CloudEvent event() {
+        return CloudEventBuilder.v1()
+                .withId("abcdefghijklmnop")
+                .withSource(URI.create("http://localhost"))
+                .withType("com.github.pull.create")
+                .withDataSchema(URI.create("/api/schema"))
+                .withDataContentType("testContentType")
+                .withSubject("testSubject")
+                .build();
     }
 
-    @Override
-    protected CloudEvent createEvent() {
-      return event();
-    }
-  }
+    public class NotFilterWithExactFilterBenchmark extends FilterBenchmark {
 
-  public class NotFilterWithPrefixFilterBenchmark extends FilterBenchmark {
+        @Override
+        protected Filter createFilter() {
+            return new NotFilter(new ExactFilter(Map.of(CloudEventV1.ID, "abcdefghijklmnop")));
+        }
 
-    @Override
-    protected Filter createFilter() {
-      return new NotFilter(new PrefixFilter(Map.of(CloudEventV1.TYPE, "com.github")));
-    }
-
-    @Override
-    protected CloudEvent createEvent() {
-      return event();
-    }
-  }
-
-  public class NotFilterWithSuffixFilterBenchmark extends FilterBenchmark {
-
-    @Override
-    protected Filter createFilter() {
-      return new NotFilter(new SuffixFilter(Map.of(CloudEventV1.SOURCE, "/localhost")));
+        @Override
+        protected CloudEvent createEvent() {
+            return event();
+        }
     }
 
-    @Override
-    protected CloudEvent createEvent() {
-      return event();
+    public class NotFilterWithPrefixFilterBenchmark extends FilterBenchmark {
+
+        @Override
+        protected Filter createFilter() {
+            return new NotFilter(new PrefixFilter(Map.of(CloudEventV1.TYPE, "com.github")));
+        }
+
+        @Override
+        protected CloudEvent createEvent() {
+            return event();
+        }
     }
-  }
+
+    public class NotFilterWithSuffixFilterBenchmark extends FilterBenchmark {
+
+        @Override
+        protected Filter createFilter() {
+            return new NotFilter(new SuffixFilter(Map.of(CloudEventV1.SOURCE, "/localhost")));
+        }
+
+        @Override
+        protected CloudEvent createEvent() {
+            return event();
+        }
+    }
 }
