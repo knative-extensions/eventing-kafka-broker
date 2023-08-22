@@ -139,7 +139,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
         if (this.isPollInFlight.compareAndSet(false, true)) {
             logger.debug("Polling for records {}", getConsumerVerticleContext().getLoggingKeyValue());
 
-            this.consumer.poll(POLLING_TIMEOUT).onSuccess(this::recordsHandler).onFailure(t -> {
+            this.consumer.poll(POLLING_TIMEOUT).onSuccess(records -> vertx.runOnContext(v -> this.recordsHandler(records))).onFailure(t -> {
                 if (this.closed.get()) {
                     // The failure might have been caused by stopping the consumer, so we just ignore it
                     return;
