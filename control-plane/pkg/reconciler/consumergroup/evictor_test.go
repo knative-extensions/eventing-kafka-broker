@@ -201,7 +201,7 @@ func TestEvictorEvictPodNotFound(t *testing.T) {
 	e := newEvictor(ctx)
 	err := e.evict(pod, cg, placement)
 
-	require.NotNil(t, err)
+	require.Nil(t, err)
 }
 func TestEvictorEvictConsumerGroupNotFound(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)

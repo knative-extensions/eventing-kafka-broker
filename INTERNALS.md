@@ -9,7 +9,7 @@ group to view it).
 The **data-plane** is implemented in Java for leveraging the always up-to-date,
 feature rich and tuned Kafka client. The **control-plane** is implemented in Go
 following the
-[Knative Kubernetes controllers](https://github.com/knative-sandbox/sample-controller).
+[Knative Kubernetes controllers](https://github.com/knative-extensions/sample-controller).
 
 - data-plane internals: [data-plane/README.md](data-plane/README.md).
 <!--- TODO add control-plane internals --->

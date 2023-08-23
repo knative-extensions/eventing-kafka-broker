@@ -22,8 +22,12 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"time"
 
 	"github.com/Shopify/sarama"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -36,7 +40,9 @@ import (
 	"k8s.io/utils/pointer"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/metrics"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -61,7 +67,37 @@ import (
 var (
 	ErrNoSubscriberURI     = errors.New("no subscriber URI resolved")
 	ErrNoDeadLetterSinkURI = errors.New("no dead letter sink URI resolved")
+
+	scheduleLatencyStat = stats.Int64("schedule_latency", "Latency of consumer group schedule operations", stats.UnitMilliseconds)
+	// scheduleDistribution defines the bucket boundaries for the histogram of schedule latency metric.
+	// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
+	scheduleDistribution = view.Distribution(10, 100, 1000, 10000, 30000, 60000)
+
+	initializeOffsetsLatencyStat = stats.Int64("initialize_offsets_latency", "Latency of consumer group offsets initialization operations", stats.UnitMilliseconds)
+	// initializeOffsetsDistribution defines the bucket boundaries for the histogram of initialize offsets latency metric.
+	// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
+	initializeOffsetsDistribution = view.Distribution(10, 100, 1000, 10000, 30000, 60000)
 )
+
+func init() {
+	views := []*view.View{
+		{
+			Description: "Latency of consumer group schedule operations",
+			TagKeys:     []tag.Key{controller.NamespaceTagKey},
+			Measure:     scheduleLatencyStat,
+			Aggregation: scheduleDistribution,
+		},
+		{
+			Description: "Latency of consumer group offsets initialization operations",
+			TagKeys:     []tag.Key{controller.NamespaceTagKey},
+			Measure:     initializeOffsetsLatencyStat,
+			Aggregation: initializeOffsetsDistribution,
+		},
+	}
+	if err := view.Register(views...); err != nil {
+		panic(err)
+	}
+}
 
 type Scheduler struct {
 	scheduler.Scheduler
@@ -105,7 +141,7 @@ type Reconciler struct {
 	DeleteConsumerGroupMetadataCounter *counter.Counter
 }
 
-func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
@@ -152,7 +188,7 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 	return nil
 }
 
-func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 
 	cg.Spec.Replicas = pointer.Int32(0)
 	err := r.schedule(ctx, cg) //de-schedule placements
@@ -161,7 +197,7 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 		cg.Status.Placements = nil
 
 		// return an error to 1. update the status. 2. not clear the finalizer
-		return errors.New("placement list was not empty")
+		return fmt.Errorf("failed to unschedule consumer group: %w", err)
 	}
 
 	// Get consumers associated with the ConsumerGroup.
@@ -187,7 +223,7 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 	return nil
 }
 
-func (r Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
@@ -215,7 +251,7 @@ func (r Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkain
 	return nil
 }
 
-func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 
 	// Get consumers associated with the ConsumerGroup.
 	existingConsumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
@@ -244,7 +280,7 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 	return nil
 }
 
-func (r Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafkainternals.ConsumerGroup, pc ConsumersPerPlacement) error {
+func (r *Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafkainternals.ConsumerGroup, pc ConsumersPerPlacement) error {
 
 	placement := *pc.Placement
 	consumers := pc.Consumers
@@ -299,7 +335,7 @@ func (r Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafka
 	return nil
 }
 
-func (r Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.ConsumerGroup, placement eventingduckv1alpha1.Placement) error {
+func (r *Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.ConsumerGroup, placement eventingduckv1alpha1.Placement) error {
 	c := cg.ConsumerFromTemplate()
 
 	c.Name = r.NameGenerator.GenerateName(cg.GetName() + "-")
@@ -312,7 +348,7 @@ func (r Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.Consu
 	return nil
 }
 
-func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainternals.Consumer) error {
+func (r *Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainternals.Consumer) error {
 	dOpts := metav1.DeleteOptions{
 		Preconditions: &metav1.Preconditions{UID: &consumer.UID},
 	}
@@ -323,12 +359,15 @@ func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainterna
 	return nil
 }
 
-func (r Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+	startTime := time.Now()
+	defer recordScheduleLatency(ctx, cg, startTime)
+
 	statefulSetScheduler := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind)
 
 	// Ensure Contract configmaps are created before scheduling to avoid having pending pods due to missing
 	// volumes.
-	// See https://github.com/knative-sandbox/eventing-kafka-broker/issues/2750#issuecomment-1304244017
+	// See https://github.com/knative-extensions/eventing-kafka-broker/issues/2750#issuecomment-1304244017
 	if err := r.ensureContractConfigmapsExist(ctx, statefulSetScheduler); err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
@@ -350,7 +389,7 @@ type ConsumersPerPlacement struct {
 	Consumers []*kafkainternals.Consumer
 }
 
-func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.Placement, consumers []*kafkainternals.Consumer) []ConsumersPerPlacement {
+func (r *Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.Placement, consumers []*kafkainternals.Consumer) []ConsumersPerPlacement {
 	placementConsumers := make([]ConsumersPerPlacement, 0, int(math.Max(float64(len(placements)), float64(len(consumers)))))
 
 	// Group consumers by Pod bind.
@@ -405,7 +444,7 @@ func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.P
 	return placementConsumers
 }
 
-func (r Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
+func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
 	consumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list consumers for selector %+v: %w", cg.Spec.Selector, err)
@@ -445,7 +484,10 @@ func (r Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Cons
 	return condition, nil
 }
 
-func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+	startTime := time.Now()
+	defer recordInitializeOffsetsLatency(ctx, cg, startTime)
+
 	if cg.Spec.Template.Spec.Delivery == nil || cg.Spec.Template.Spec.Delivery.InitialOffset == sources.OffsetEarliest {
 		return nil
 	}
@@ -489,7 +531,7 @@ func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainterna
 	return nil
 }
 
-func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	var triggerAuthentication *kedav1alpha1.TriggerAuthentication
 	var secret *corev1.Secret
 
@@ -630,7 +672,7 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 	return nil
 }
 
-func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
+func (r *Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
 	selector := labels.SelectorFromSet(map[string]string{"app": scheduler.StatefulSetName})
 	pods, err := r.PodLister.
 		Pods(r.SystemNamespace).
@@ -654,7 +696,7 @@ func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler
 	return nil
 }
 
-func (r Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1.Pod, name string) error {
+func (r *Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1.Pod, name string) error {
 	// Check if ConfigMap exists in lister cache
 	_, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
 	// ConfigMap already exists, return
@@ -694,3 +736,31 @@ var (
 	_ consumergroup.Interface = &Reconciler{}
 	_ consumergroup.Finalizer = &Reconciler{}
 )
+
+func recordScheduleLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
+	func() {
+		ctx, err := tag.New(
+			ctx,
+			tag.Insert(controller.NamespaceTagKey, cg.Namespace),
+		)
+		if err != nil {
+			return
+		}
+
+		metrics.Record(ctx, scheduleLatencyStat.M(time.Since(startTime).Milliseconds()))
+	}()
+}
+
+func recordInitializeOffsetsLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
+	func() {
+		ctx, err := tag.New(
+			ctx,
+			tag.Insert(controller.NamespaceTagKey, cg.Namespace),
+		)
+		if err != nil {
+			return
+		}
+
+		metrics.Record(ctx, initializeOffsetsLatencyStat.M(time.Since(startTime).Milliseconds()))
+	}()
+}

@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
+import dev.knative.eventing.kafka.broker.core.tracing.kafka.ConsumerTracer;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
@@ -55,8 +56,6 @@ import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.kafka.client.common.KafkaClientOptions;
-import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -117,11 +116,8 @@ public class ConsumerVerticleBuilder {
                         offsetManager,
                         ConsumerTracer.create(
                                 ((VertxInternal) vertx).tracer(),
-                                new KafkaClientOptions()
-                                        .setConfig(consumerVerticleContext.getConsumerConfigs())
-                                        // Make sure the policy is propagate for the manually instantiated consumer
-                                        // tracer
-                                        .setTracingPolicy(TracingPolicy.PROPAGATE)),
+                                consumerVerticleContext.getConsumerConfigs(),
+                                TracingPolicy.PROPAGATE),
                         Metrics.getRegistry()),
                 new CloudEventOverridesMutator(
                         consumerVerticleContext.getResource().getCloudEventOverrides()));

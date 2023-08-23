@@ -164,6 +164,27 @@ export EVENT=alloc
 
 For more information on the profiler test, see [the profiler test doc](./data-plane/profiler/README.md).
 
+### Run Filter Benchmarks
+
+If you are building a fitler benchmark or want to benchmark the performance delta caused when changing the filters, you can run:
+
+```shell
+./hack/run.sh benchmark-filter <filter_class_name>
+```
+
+This will run the benchmarks for the class with `<filter_class_name>`. A full list of all available classes can be seen [here](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/benchmarks/resources/filter-class-list.txt).
+For example, if you want to run all of the Exact Filter Benchmarks, you could run:
+
+```shell
+./hack/run.sh benchmark-filter ExactFilterBenchmark
+```
+
+Alternatively, if you want to run all of the benchmarks you can run:
+
+```shell
+./hack/run.sh benchmark-filters
+```
+
 ## Code generation
 
 Sometimes, before deploying the services it's required to run our code generators, by running the following command:
