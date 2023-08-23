@@ -24,7 +24,7 @@ import (
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
-	"k8s.io/apimachinery/pkg/types"
+	// "k8s.io/apimachinery/pkg/types"
 
 	"knative.dev/eventing/test/rekt/features/featureflags"
 	// "knative.dev/eventing/test/rekt/resources/addressable"
@@ -36,7 +36,7 @@ import (
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/resources/service"
-	"knative.dev/reconciler-test/resources/certificate"
+	// "knative.dev/reconciler-test/resources/certificate"
 	// "knative.dev/eventing/test/rekt/resources/addressable"
 )
 
@@ -62,12 +62,12 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 	f.Prerequisite("transport encryption is strict", featureflags.TransportEncryptionStrict())
 	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
-	f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
-		Certificate: types.NamespacedName{
-			Namespace: system.Namespace(),
-			Name:      ingressCertificateName,
-		},
-	}))
+	// f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
+	// 	Certificate: types.NamespacedName{
+	// 		Namespace: system.Namespace(),
+	// 		Name:      ingressCertificateName,
+	// 	},
+	// }))
 
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiverTLS))
 	f.Setup("Install broker", broker.Install(brokerName, append(

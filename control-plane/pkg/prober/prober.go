@@ -115,6 +115,10 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 	response, err := client.Do(r)
 	if err != nil {
 		logger.Error("Failed probe", zap.Error(err))
+		logger.Debug("the request", zap.Any("request", r))
+		logger.Debug("[haha] Failed probe", zap.Error(err), zap.String("address", address))
+		logger.Debug("response", zap.Any("response", response))
+		logger.Debug("prober headers", zap.Any("prober headers", network.ProbeHeaderName))
 		return StatusUnknownErr
 	}
 

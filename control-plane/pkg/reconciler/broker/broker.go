@@ -234,32 +234,32 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
 
-	transportEncryptionFlags := feature.FromContext(ctx)
+	//transportEncryptionFlags := feature.FromContext(ctx)
 	var addressableStatus duckv1.AddressStatus
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
-		addressableStatus.Address = &httpsAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
-	} else {
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
+	//if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	//	caCerts, err := r.getCaCerts()
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	httpAddress := receiver.HTTPAddress(ingressHost, broker)
+	//	httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+	//	addressableStatus.Address = &httpAddress
+	//	addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
+	//} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	caCerts, err := r.getCaCerts()
+	if err != nil {
+		return err
 	}
+
+	httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+	addressableStatus.Address = &httpsAddress
+	addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
+	//} else {
+	//	httpAddress := receiver.HTTPAddress(ingressHost, broker)
+	//	addressableStatus.Address = &httpAddress
+	//	addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
+	//}
 
 	proberAddressable := prober.NewAddressable{
 		AddressStatus: &addressableStatus,
