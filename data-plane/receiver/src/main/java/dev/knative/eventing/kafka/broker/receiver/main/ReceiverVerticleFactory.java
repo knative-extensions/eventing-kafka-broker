@@ -26,53 +26,51 @@ import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
 import io.vertx.core.http.HttpServerOptions;
-
 import java.util.Properties;
 import java.util.function.Supplier;
 
 class ReceiverVerticleFactory implements Supplier<Verticle> {
 
-  private final ReceiverEnv env;
-  private final Properties producerConfigs;
-  private final HttpServerOptions httpServerOptions;
-  private final HttpServerOptions httpsServerOptions;
+    private final ReceiverEnv env;
+    private final Properties producerConfigs;
+    private final HttpServerOptions httpServerOptions;
+    private final HttpServerOptions httpsServerOptions;
 
+    private final String secretVolumePath = "/etc/receiver-tls-secret";
 
-  private final String secretVolumePath = "/etc/receiver-tls-secret";
+    private final IngressRequestHandler ingressRequestHandler;
 
-  private final IngressRequestHandler ingressRequestHandler;
+    private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
-  private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
-
-  ReceiverVerticleFactory(
-    final ReceiverEnv env,
-    final Properties producerConfigs,
-    final MeterRegistry metricsRegistry,
-    final HttpServerOptions httpServerOptions,
-    final HttpServerOptions httpsServerOptions,
-    final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
-    {
-      this.env = env;
-      this.producerConfigs = producerConfigs;
-      this.httpServerOptions = httpServerOptions;
-      this.httpsServerOptions = httpsServerOptions;
-      this.ingressRequestHandler =
-        new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
-      this.kafkaProducerFactory = kafkaProducerFactory;
+    ReceiverVerticleFactory(
+            final ReceiverEnv env,
+            final Properties producerConfigs,
+            final MeterRegistry metricsRegistry,
+            final HttpServerOptions httpServerOptions,
+            final HttpServerOptions httpsServerOptions,
+            final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
+        {
+            this.env = env;
+            this.producerConfigs = producerConfigs;
+            this.httpServerOptions = httpServerOptions;
+            this.httpsServerOptions = httpsServerOptions;
+            this.ingressRequestHandler =
+                    new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
+            this.kafkaProducerFactory = kafkaProducerFactory;
+        }
     }
-  }
 
-  @Override
-  public Verticle get() {
-    return new ReceiverVerticle(
-      env,
-      httpServerOptions,
-      httpsServerOptions,
-      v -> new IngressProducerReconcilableStore(
-        AuthProvider.kubernetes(),
-        producerConfigs,
-        properties -> kafkaProducerFactory.create(v, properties)),
-      this.ingressRequestHandler,
-      secretVolumePath);
-  }
+    @Override
+    public Verticle get() {
+        return new ReceiverVerticle(
+                env,
+                httpServerOptions,
+                httpsServerOptions,
+                v -> new IngressProducerReconcilableStore(
+                        AuthProvider.kubernetes(),
+                        producerConfigs,
+                        properties -> kafkaProducerFactory.create(v, properties)),
+                this.ingressRequestHandler,
+                secretVolumePath);
+    }
 }
