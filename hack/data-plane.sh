@@ -31,8 +31,17 @@ readonly SINK_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink-tls
 readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
 readonly CHANNEL_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel-tls
 
-readonly RECEIVER_DIRECTORY=receiver-vertx
-readonly DISPATCHER_DIRECTORY=dispatcher-vertx
+readonly RECEIVER_VERTX_DIRECTORY=receiver-vertx
+readonly DISPATCHER_VERTX_DIRECTORY=dispatcher-vertx
+
+readonly RECEIVER_LOOM_DIRECTORY=receiver-loom
+readonly DISPATCHER_LOOM_DIRECTORY=dispatcher-loom
+
+USE_LOOM=${USE_LOOM:-"false"}
+
+if [ $USE_LOOM == "true" ]; then
+  echo "Using loom modules ${USE_LOOM}"
+fi
 
 # Checks whether the given function exists.
 function function_exists() {
@@ -54,19 +63,29 @@ fi
 function receiver_build_push() {
   header "Building receiver ..."
 
-  local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
-  export KNATIVE_KAFKA_RECEIVER_IMAGE="${receiver}:${TAG}"
+  if [ $USE_LOOM == "true" ]; then
+    local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver-loom}"
+    ./mvnw clean package jib:build -pl "${RECEIVER_LOOM_DIRECTORY}" -DskipTests || return $?
+  else
+    local receiver="${KNATIVE_KAFKA_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
+    ./mvnw clean package jib:build -pl "${RECEIVER_VERTX_DIRECTORY}" -DskipTests || return $?
+  fi
 
-  ./mvnw clean package jib:build -pl ${RECEIVER_DIRECTORY} -DskipTests || return $?
+  export KNATIVE_KAFKA_RECEIVER_IMAGE="${receiver}:${TAG}"
 }
 
 function dispatcher_build_push() {
   header "Building dispatcher ..."
 
-  local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
+  if [ "${USE_LOOM}" == "true" ]; then
+    local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher-loom}"
+    ./mvnw clean package jib:build -pl "${DISPATCHER_LOOM_DIRECTORY}" -DskipTests || return $?
+  else
+    local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
+    ./mvnw clean package jib:build -pl "${DISPATCHER_VERTX_DIRECTORY}" -DskipTests || return $?
+  fi
+  
   export KNATIVE_KAFKA_DISPATCHER_IMAGE="${dispatcher}:${TAG}"
-
-  ./mvnw clean package jib:build -pl "${DISPATCHER_DIRECTORY}" -DskipTests || return $?
 }
 
 function data_plane_build_push() {
@@ -87,6 +106,11 @@ function replace_images() {
 
   sed -i "s|\${KNATIVE_KAFKA_DISPATCHER_IMAGE}|${KNATIVE_KAFKA_DISPATCHER_IMAGE}|g" "${file}" &&
     sed -i "s|\${KNATIVE_KAFKA_RECEIVER_IMAGE}|${KNATIVE_KAFKA_RECEIVER_IMAGE}|g" "${file}"
+
+  # spefying 'runAsUser: 1001' in the source config for loom images
+  if [ "$USE_LOOM" == "true" ]; then
+    sed -i "s|runAsNonRoot: true|runAsUser: 1001|g" "${file}"
+  fi
 
   return $?
 }

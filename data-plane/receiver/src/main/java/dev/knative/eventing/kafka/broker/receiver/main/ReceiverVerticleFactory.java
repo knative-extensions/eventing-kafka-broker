@@ -37,6 +37,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
   private final HttpServerOptions httpServerOptions;
   private final HttpServerOptions httpsServerOptions;
 
+
   private final String secretVolumePath = "/etc/receiver-tls-secret";
 
   private final IngressRequestHandler ingressRequestHandler;
