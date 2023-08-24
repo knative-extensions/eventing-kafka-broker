@@ -182,7 +182,6 @@ spec:
             secretName: kafka-broker-ingress-server-tls
             optional: true
 
-
       restartPolicy: Always
 ---
 
