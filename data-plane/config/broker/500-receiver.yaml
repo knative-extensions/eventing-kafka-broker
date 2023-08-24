@@ -182,7 +182,7 @@ spec:
             secretName: kafka-broker-ingress-server-tls
             optional: true
 
-            
+
       restartPolicy: Always
 ---
 
@@ -212,6 +212,10 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
     - name: http-metrics
       port: 9090
       protocol: TCP
