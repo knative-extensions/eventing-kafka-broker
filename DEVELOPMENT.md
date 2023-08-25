@@ -64,7 +64,7 @@ export KO_DOCKER_REPO=localhost:5001
 ./hack/run.sh deploy
 ```
 
-> **Note:** If you want to deploy the broker with Loom Virtual Thread implementation, use`./hack/run.sh deploy-loom` [For more details](./docs/broker/Loom-Modules.md)
+> **Note:** If you want to deploy the broker with Loom Virtual Thread implementation, use`./hack/run.sh deploy-loom` [For more details](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/docs/broker/Loom-Modules.md)
 
 ### Run build tests
 

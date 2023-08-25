@@ -22,4 +22,4 @@ Export the environment variable `USE_LOOM=true`
 ```shell
 export USE_LOOM=true
 ```
-And run any command that is available in the [run.sh](../../hack/run.sh) script or any other command that you want to run.
+And run any command that is available in the [run.sh](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/hack/run.sh) script or any other command that you want to run.
