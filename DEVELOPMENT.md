@@ -64,7 +64,7 @@ export KO_DOCKER_REPO=localhost:5001
 ./hack/run.sh deploy
 ```
 
-> **Note:** If you want to deploy the broker with Loom Virtual Threads implementation. Just set the environment variable `USE_LOOM=true` before running the `./hack/run.sh deploy` or any other command. [Refere foror more details](./docs/broker/Loom-Modules.md)
+> **Note:** If you want to deploy the broker with Loom Virtual Thread implementation, use`./hack/run.sh deploy-loom` [For more details](./docs/broker/Loom-Modules.md)
 
 ### Run build tests
 

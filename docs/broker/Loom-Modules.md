@@ -1,9 +1,9 @@
 # Dispatcher & Receiver Loom Implementations
 
 Loom implemantation of Dispatcher and Receiver are located in [`dispatcher-loom`](../../data-plane/dispatcher-loom/) and [`receiver-loom`](../../data-plane/receiver-loom/) directories respectively.  
-In these implementations we use [Project Loom](https://openjdk.org/projects/loom/)'s virtual threads for the underlyig Kafka communication.
+In these implementations we use [Project Loom](https://openjdk.org/projects/loom/)'s virtual threads for the underlyig Kafka communication asynchronously.
 
-> **Note:** Loom is still in early access and is not yet production ready. It might replace the current implementation in the future. but that will not effect the API or the functionality of the broker.
+> **Note:** This is still in early access and is not yet production ready. It might replace the current implementation in the future. but that will not effect the API or the functionality of the broker.
 
 ## Installation
 
