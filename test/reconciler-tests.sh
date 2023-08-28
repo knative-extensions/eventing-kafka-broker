@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-source $(dirname $0)/e2e-common.sh
+source $(dirname "$0")/e2e-common.sh
 export BROKER_TEMPLATES=./templates/kafka-broker
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize $@ --skip-istio-addon --min-nodes=4 --max-nodes=4
+  initialize "$@" --num-nodes=4
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
@@ -25,7 +25,7 @@ header "Running tests"
 
 if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   # if this flag exists, only test Kafka channel scenarios with auth
-  $(dirname $0)/channel-reconciler-tests.sh || fail_test "Failed to execute KafkaChannel tests"
+  $(dirname "$0")/channel-reconciler-tests.sh || fail_test "Failed to execute KafkaChannel tests"
   success
 fi
 
