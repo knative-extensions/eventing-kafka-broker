@@ -41,7 +41,7 @@ require (
 	github.com/kedacore/keda/v2 v2.8.1
 	go.opencensus.io v0.24.0
 	knative.dev/eventing v0.38.1-0.20230815095940-29ac3eee64a4
-	knative.dev/hack v0.0.0-20230815012940-044c02b7a447
+	knative.dev/hack v0.0.0-20230818155117-9cc05a31e8c0
 	knative.dev/pkg v0.0.0-20230815132840-4f651e092853
 	knative.dev/reconciler-test v0.0.0-20230810072538-a7237b013cbb
 	sigs.k8s.io/controller-runtime v0.12.3

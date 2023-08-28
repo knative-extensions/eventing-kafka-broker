@@ -1277,8 +1277,8 @@ k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 h1:GfD9OzL11kvZN5iArC6oTS7RTj7oJ
 k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/eventing v0.38.1-0.20230815095940-29ac3eee64a4 h1:619xUZrwrv3xuterMgF8qKXLTJm1MosKwuTLcG5HTOk=
 knative.dev/eventing v0.38.1-0.20230815095940-29ac3eee64a4/go.mod h1:InEIckt+XICxXXYy2P4kqEJ4nMDXqI1iCUZ84vGDRbM=
-knative.dev/hack v0.0.0-20230815012940-044c02b7a447 h1:Lr4O/WEyZHuUBFbqATYdQlfLXvhPUCluF4zlgRi59T4=
-knative.dev/hack v0.0.0-20230815012940-044c02b7a447/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
+knative.dev/hack v0.0.0-20230818155117-9cc05a31e8c0 h1:n9YEGYuoj31pAkhGlNL+xTQAeXKYTLeMmIZLWA9fAeo=
+knative.dev/hack v0.0.0-20230818155117-9cc05a31e8c0/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
 knative.dev/pkg v0.0.0-20230815132840-4f651e092853 h1:OyAYpXLa/jQWClFxRegCccGySyX2/1BVRtKaAWRE/xM=
 knative.dev/pkg v0.0.0-20230815132840-4f651e092853/go.mod h1:Y5Tis5nMoapB9iTZywW20Qnv/7LBahrtHz9Sm6+l3LE=
 knative.dev/reconciler-test v0.0.0-20230810072538-a7237b013cbb h1:XKIYY3OOzlzuN1hX3jc3UoJyIXe33bghVHyyhIpkr2A=
