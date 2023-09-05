@@ -17,7 +17,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.v1.CloudEventV1;
@@ -40,7 +40,7 @@ public class SuffixFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new PrefixFilter(Map.of(CloudEventV1.ID, "lmnop"));
+            return new SuffixFilter(Map.of(CloudEventV1.ID, "lmnop"));
         }
 
         @Override
@@ -53,7 +53,7 @@ public class SuffixFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new PrefixFilter(Map.of(
+            return new SuffixFilter(Map.of(
                     CloudEventV1.ID, "lmnop",
                     CloudEventV1.SOURCE, "lhost",
                     CloudEventV1.TYPE, "reate",
@@ -72,7 +72,7 @@ public class SuffixFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new PrefixFilter(Map.of(
+            return new SuffixFilter(Map.of(
                     CloudEventV1.ID, "nop",
                     CloudEventV1.SOURCE, "ost",
                     CloudEventV1.TYPE, "ate",
@@ -91,7 +91,7 @@ public class SuffixFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new PrefixFilter(Map.of(
+            return new SuffixFilter(Map.of(
                     CloudEventV1.ID, "qwertyuiopasdfghjklzxcvbnm",
                     CloudEventV1.SOURCE, "qwertyuiopasdfghjklzxcvbnm"));
         }
@@ -106,7 +106,7 @@ public class SuffixFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new PrefixFilter(Map.of(
+            return new SuffixFilter(Map.of(
                     CloudEventV1.ID, "hjklzxcvbnm",
                     CloudEventV1.SOURCE, "hjklzxcvbnm"));
         }
@@ -121,7 +121,7 @@ public class SuffixFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new PrefixFilter(Map.of(
+            return new SuffixFilter(Map.of(
                     CloudEventV1.ID, "bnm",
                     CloudEventV1.SOURCE, "bnm"));
         }
