@@ -10,3 +10,4 @@ approvers:
 reviewers:
 - eventing-writers
 - eventing-kafka-broker-approvers
+- eventing-kafka-broker-reviewers
