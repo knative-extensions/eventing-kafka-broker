@@ -256,11 +256,11 @@ func WithChannelTopicStatusAnnotation(topicName string) func(obj duckv1.KRShaped
 
 func ChannelReference() *contract.Reference {
 	return &contract.Reference{
-		Uuid:      ChannelUUID,
-		Namespace: ChannelNamespace,
-		Name:      ChannelName,
-		Kind:      "KafkaChannel",
-		Version:   messagingv1beta1.SchemeGroupVersion.String(),
+		Uuid:         ChannelUUID,
+		Namespace:    ChannelNamespace,
+		Name:         ChannelName,
+		Kind:         "KafkaChannel",
+		GroupVersion: messagingv1beta1.SchemeGroupVersion.String(),
 	}
 }
 

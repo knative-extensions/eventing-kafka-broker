@@ -381,11 +381,11 @@ func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace st
 
 func BrokerReference() *contract.Reference {
 	return &contract.Reference{
-		Uuid:      BrokerUUID,
-		Namespace: BrokerNamespace,
-		Name:      BrokerName,
-		Kind:      "Broker",
-		Version:   eventing.SchemeGroupVersion.String(),
+		Uuid:         BrokerUUID,
+		Namespace:    BrokerNamespace,
+		Name:         BrokerName,
+		Kind:         "Broker",
+		GroupVersion: eventing.SchemeGroupVersion.String(),
 	}
 }
 

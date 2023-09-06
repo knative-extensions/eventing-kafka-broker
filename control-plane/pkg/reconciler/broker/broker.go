@@ -617,11 +617,11 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
-			Uuid:      string(broker.GetUID()),
-			Namespace: broker.GetNamespace(),
-			Name:      broker.GetName(),
-			Kind:      "Broker",
-			Version:   eventing.SchemeGroupVersion.String(),
+			Uuid:         string(broker.GetUID()),
+			Namespace:    broker.GetNamespace(),
+			Name:         broker.GetName(),
+			Kind:         "Broker",
+			GroupVersion: eventing.SchemeGroupVersion.String(),
 		},
 	}
 
