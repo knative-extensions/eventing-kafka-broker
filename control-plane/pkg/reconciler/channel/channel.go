@@ -68,6 +68,9 @@ const (
 	NewChannelIngressServiceName = "kafka-channel-ingress"
 	kafkaChannelTLSSecretName    = "kafka-channel-ingress-server-tls" //nolint:gosec // This is not a hardcoded credential
 	caCertsSecretKey             = "ca.crt"
+	// TopicPrefix is the old Kafka Channel topic prefix - we keep this constant so that deleting channels shortly after upgrading
+	// does not have issues. See https://github.com/knative-extensions/eventing-kafka-broker/issues/3289 for more info
+	TopicPrefix = "knative-messaging-kafka"
 )
 
 type Reconciler struct {
@@ -494,7 +497,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 
 	topicName, ok := channel.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {
-		return fmt.Errorf("no topic annotated on channel")
+		topicName = kafka.ChannelTopic(TopicPrefix, channel)
 	}
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
