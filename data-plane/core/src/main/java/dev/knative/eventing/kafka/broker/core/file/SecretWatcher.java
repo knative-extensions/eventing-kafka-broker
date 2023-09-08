@@ -39,6 +39,9 @@ public class SecretWatcher implements Runnable {
     this.updateAction = updateAction;
     this.watcher = FileSystems.getDefault().newWatchService();
 
+    private static String KEY_FILE = "tls.key";
+    private static String CRT_FILE = "tls.crt";
+
     Path path = Path.of(dir);
     path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
   }
@@ -51,7 +54,7 @@ public class SecretWatcher implements Runnable {
         for (WatchEvent<?> event : key.pollEvents()) {
           Path changed = (Path) event.context();
           Path fullChangedPath = Path.of(dir, changed.toString());
-          if (Files.isSymbolicLink(fullChangedPath)) {
+          if (Files.isSymbolicLink(fullChangedPath) || changed.endsWith(KEY_FILE) || changed.endsWith(CRT_FILE)) {
             logger.info("Detected change to secret {}", changed);
             updateAction.run();
           }
