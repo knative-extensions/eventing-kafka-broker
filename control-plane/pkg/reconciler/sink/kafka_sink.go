@@ -65,7 +65,7 @@ type Reconciler struct {
 	// mock the function used during the reconciliation loop.
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
-	Prober prober.Prober
+	Prober prober.NewProber
 
 	IngressHost string
 }
@@ -277,9 +277,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
 
-	address := addressableStatus.Address.URL.URL()
-	proberAddressable := prober.Addressable{
-		Address: address,
+	proberAddressable := prober.NewAddressable{
+		AddressStatus: &addressableStatus,
 		ResourceKey: types.NamespacedName{
 			Namespace: ks.GetNamespace(),
 			Name:      ks.GetName(),
@@ -349,9 +348,12 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.Address(r.IngressHost, ks)
-	proberAddressable := prober.Addressable{
-		Address: address,
+	address := receiver.HTTPAddress(r.IngressHost, ks)
+	proberAddressable := prober.NewAddressable{
+		AddressStatus: &duckv1.AddressStatus{
+			Address:   &address,
+			Addresses: []duckv1.Addressable{address},
+		},
 		ResourceKey: types.NamespacedName{
 			Namespace: ks.GetNamespace(),
 			Name:      ks.GetName(),
