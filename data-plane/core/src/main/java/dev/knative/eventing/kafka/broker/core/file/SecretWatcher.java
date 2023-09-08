@@ -34,13 +34,12 @@ public class SecretWatcher implements Runnable {
   private final WatchService watcher; // watch service
   private final Runnable updateAction; // action to run when a change is detected
 
+  private static String KEY_FILE = "tls.key";
+  private static String CRT_FILE = "tls.crt";
   public SecretWatcher(String dir, Runnable updateAction) throws IOException {
     this.dir = dir;
     this.updateAction = updateAction;
     this.watcher = FileSystems.getDefault().newWatchService();
-
-    private static String KEY_FILE = "tls.key";
-    private static String CRT_FILE = "tls.crt";
 
     Path path = Path.of(dir);
     path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
