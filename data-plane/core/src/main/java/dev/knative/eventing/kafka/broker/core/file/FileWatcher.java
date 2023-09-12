@@ -64,7 +64,7 @@ public class FileWatcher implements AutoCloseable {
      */
     public FileWatcher(File file, Consumer<DataPlaneContract.Contract> contractConsumer) {
         Objects.requireNonNull(file, "provide file");
-        Objects.requireNonNull(contractConsumer, "provide consumer");
+        // Objects.requireNonNull(contractConsumer, "provide consumer");
 
         this.contractConsumer = contractConsumer;
         this.toWatch = file.getAbsoluteFile();
@@ -175,7 +175,11 @@ public class FileWatcher implements AutoCloseable {
                 final var bufferedReader = new BufferedReader(fileReader)) {
             final var contract = parseFromJson(bufferedReader);
             if (contract == null) {
-                return;
+//                return;
+
+              // change detected, and print log
+              logger.info("[haha] filewatcher detected the change");
+              return;
             }
             // The check, which is based only on the generation number, works because the control plane doesn't update
             // the
@@ -189,7 +193,10 @@ public class FileWatcher implements AutoCloseable {
                         keyValue("lastGeneration", previousLastContract));
                 return;
             }
-            contractConsumer.accept(contract);
+            if(contractConsumer != null)
+            {
+              contractConsumer.accept(contract);
+            }
         } catch (IOException e) {
             logger.warn("Error reading the contract file, retrying...", e);
         }

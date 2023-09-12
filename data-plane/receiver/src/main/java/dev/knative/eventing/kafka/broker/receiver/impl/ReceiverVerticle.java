@@ -30,6 +30,7 @@ import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.fabric8.kubernetes.client.*;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -167,12 +168,26 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     // Set up the secret watcher
     private void setupSecretWatcher() {
-        try {
-            this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
-            new Thread(this.secretWatcher).start();
-        } catch (IOException e) {
-            logger.error("Failed to start SecretWatcher", e);
-        }
+        // try {
+        //     this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
+        //     new Thread(this.secretWatcher).start();
+        // } catch (IOException e) {
+        //     logger.error("Failed to start SecretWatcher", e);
+        // }
+
+     try {
+       File certFile = new File(secretVolumePath + "/tls.crt");
+       FileWatcher fw = new FileWatcher(certFile, null);
+       // Started once
+       fw.start();
+       logger.info("[haha] Started FileWatcher");
+     }
+     catch (Exception e) {
+       logger.error("Failed to start FileWatcher", e);
+     }
+
+
+
     }
 
     @Override
@@ -219,27 +234,54 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.ingressRequestHandler.handle(requestContext, producer);
     }
 
-    public void updateServerConfig() {
-        // This function will be called when the secret volume is updated
-        File tlsKeyFile = new File(tlsKeyFilePath);
-        File tlsCrtFile = new File(tlsCrtFilePath);
+  public void updateServerConfig() {
 
-        // Check whether the tls.key and tls.crt files exist
-        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+    logger.info("[haha] updateServerConfig is called");
+    // This function will be called when the secret volume is updated
+    File tlsKeyFile = new File(tlsKeyFilePath);
+    File tlsCrtFile = new File(tlsCrtFilePath);
 
-            // Update SSL configuration by using updateSSLOptions
-            PemKeyCertOptions keyCertOptions =
-                    new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+    // Check whether the tls.key and tls.crt files exist
+    if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+      logger.info("[haha] tlsKeyFile exists, get the new key pair");
 
-            // result is a Future object
-            Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+      //log the content of the tls.crt
+//            printFileContent("/etc/receiver-tls-secret/tls.crt");
 
-            result.onSuccess(v -> {
-                        logger.info("Succeeded to update TLS key pair");
-                    })
-                    .onFailure(e -> {
-                        logger.error("Failed to update TLS key pair", e);
-                    });
-        }
+      // Update SSL configuration by using updateSSLOptions
+      PemKeyCertOptions keyCertOptions =
+        new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+
+      // result is a Future object
+      Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+
+      result.onSuccess(v -> {
+          logger.info("Succeeded to update TLS key pair");
+          // restart the server
+          this.httpsServer.close()
+            .onSuccess(v1 -> {
+              logger.info("[haha] httpsServer is closed");
+              this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
+              this.httpsServer
+                .requestHandler(new ProbeHandler(
+                  env.getLivenessProbePath(),
+                  env.getReadinessProbePath(),
+                  new MethodNotAllowedHandler(this)))
+                .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
+                .onSuccess(server -> {
+                  logger.info("[haha] HTTPS server is up and running!");
+                })
+                .onFailure(err -> {
+                  logger.error("[haha] Failed to start HTTPS server!", err);
+                });
+            })
+            .onFailure(e -> {
+              logger.error("[haha] Failed to close httpsServer", e);
+            });
+        })
+        .onFailure(e -> {
+          logger.error("[haha] Failed to update TLS key pair", e);
+        });
     }
+  }
 }
