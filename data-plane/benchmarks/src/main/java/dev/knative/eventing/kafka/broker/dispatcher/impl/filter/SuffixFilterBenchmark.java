@@ -26,14 +26,7 @@ import java.util.Map;
 
 public class SuffixFilterBenchmark {
     public static CloudEvent event() {
-        return CloudEventBuilder.v1()
-                .withId("abcdefghijklmnop")
-                .withSource(URI.create("http://localhost"))
-                .withType("com.github.pull.create")
-                .withDataSchema(URI.create("/api/schema"))
-                .withDataContentType("testContentType")
-                .withSubject("testSubject")
-                .build();
+        return SampleEvent.event();
     }
 
     public static class SuffixFilterIDBenchmark extends FilterBenchmark {
