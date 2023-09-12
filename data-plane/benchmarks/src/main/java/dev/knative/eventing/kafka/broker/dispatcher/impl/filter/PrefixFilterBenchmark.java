@@ -19,9 +19,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.v1.CloudEventV1;
-import java.net.URI;
 import java.util.Map;
 
 public class PrefixFilterBenchmark {
