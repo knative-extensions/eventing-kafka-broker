@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.core.file;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -36,13 +35,14 @@ public class SecretWatcher implements Runnable {
 
   private static String KEY_FILE = "tls.key";
   private static String CRT_FILE = "tls.crt";
+
   public SecretWatcher(String dir, Runnable updateAction) throws IOException {
     this.dir = dir;
     this.updateAction = updateAction;
     this.watcher = FileSystems.getDefault().newWatchService();
 
     Path path = Path.of(dir);
-    path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE);
+    path.register(watcher, StandardWatchEventKinds.ENTRY_MODIFY);
   }
 
   @Override
@@ -52,9 +52,8 @@ public class SecretWatcher implements Runnable {
       while ((key = watcher.take()) != null) {
         for (WatchEvent<?> event : key.pollEvents()) {
           Path changed = (Path) event.context();
-          Path fullChangedPath = Path.of(dir, changed.toString());
-          if (Files.isSymbolicLink(fullChangedPath) || changed.endsWith(KEY_FILE) || changed.endsWith(CRT_FILE)) {
-            logger.info("Detected change to secret {}", changed);
+          if (changed.endsWith(KEY_FILE) || changed.endsWith(CRT_FILE)) {
+            logger.debug("Detected change to secret {}", changed);
             updateAction.run();
           }
         }
@@ -62,7 +61,7 @@ public class SecretWatcher implements Runnable {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.info("Watcher exception", e);
+      logger.error("Watcher exception", e);
     } finally {
       this.stop();
     }
