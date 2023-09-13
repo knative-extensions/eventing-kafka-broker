@@ -95,8 +95,9 @@ elif [[ "${action}" == "benchmark-filter" ]]; then
   "${ROOT_DIR}/data-plane/benchmarks/run.sh" "$2"
 elif [[ "${action}" == "benchmark-filters" ]]; then
   "${ROOT_DIR}/data-plane/benchmarks/run.sh"
-elif [[ "${action}" == "./hack/update-codegen.sh" || "${action}" == "./hack/run.sh format-java" ]]; then
-    "${ROOT_DIR}"/mvnw spotless:apply
+elif [[ "${action}" == "format-java" ]]; then
+  cd "${ROOT_DIR}/data-plane"
+  ./mvnw spotless:apply
 else
   echo "Unrecognized action ${action}"
   usage "$0"
