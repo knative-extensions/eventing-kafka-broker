@@ -49,19 +49,26 @@ import org.slf4j.LoggerFactory;
 /**
  * This verticle is responsible for implementing the logic of the receiver.
  *
- * <p>The receiver is the component responsible for mapping incoming {@link
- * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do so, this component:
+ * <p>
+ * The receiver is the component responsible for mapping incoming {@link
+ * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do
+ * so, this component:
  *
  * <ul>
- *   <li>Starts two {@link HttpServer}, one with http, and one with https, listening for incoming
- *       events
- *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and
- *       keeps track of the {@link
- *       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their
- *       {@code path => (topic, producer)} mapping
- *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are
- *       assumed to complete synchronously) and then a final {@link IngressRequestHandler} to
- *       publish the record to Kafka
+ * <li>Starts two {@link HttpServer}, one with http, and one with https,
+ * listening for incoming
+ * events
+ * <li>Starts a {@link ResourcesReconciler}, listen on the event bus for
+ * reconciliation events and
+ * keeps track of the {@link
+ * dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects
+ * and their
+ * {@code path => (topic, producer)} mapping
+ * <li>Implements a request handler that invokes a series of {@code preHandlers}
+ * (which are
+ * assumed to complete synchronously) and then a final
+ * {@link IngressRequestHandler} to
+ * publish the record to Kafka
  * </ul>
  */
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
@@ -220,7 +227,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.ingressRequestHandler.handle(requestContext, producer);
     }
 
-       public void updateServerConfig() {
+    public void updateServerConfig() {
 
         // This function will be called when the secret volume is updated
         File tlsKeyFile = new File(tlsKeyFilePath);
@@ -234,12 +241,19 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
                         .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
 
-                httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-                logger.info("Updated SSL configuration");
+                // result is a Future object
+                Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+
+                result.onSuccess(v -> {
+                            logger.info("Succeeded to update TLS key pair");
+                        })
+                        .onFailure(e -> {
+                            logger.error("Failed to update TLS key pair while executing updateSSLOptions", e);
+                        });
+
             } catch (IOException e) {
                 logger.error("Failed to read file {}", tlsCrtFilePath, e);
             }
         }
     }
 }
-
