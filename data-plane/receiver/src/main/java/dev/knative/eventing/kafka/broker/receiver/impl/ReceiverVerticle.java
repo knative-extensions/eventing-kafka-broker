@@ -32,6 +32,7 @@ import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.fabric8.kubernetes.client.*;
 import io.vertx.core.*;
+import io.vertx.core.buffer.*;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -219,27 +220,26 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.ingressRequestHandler.handle(requestContext, producer);
     }
 
-    public void updateServerConfig() {
+       public void updateServerConfig() {
+
         // This function will be called when the secret volume is updated
         File tlsKeyFile = new File(tlsKeyFilePath);
         File tlsCrtFile = new File(tlsCrtFilePath);
 
         // Check whether the tls.key and tls.crt files exist
         if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+            try {
+                // Update SSL configuration by using updateSSLOptions
+                PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
+                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
+                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
 
-            // Update SSL configuration by using updateSSLOptions
-            PemKeyCertOptions keyCertOptions =
-                    new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
-
-            // result is a Future object
-            Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-
-            result.onSuccess(v -> {
-                        logger.info("Succeeded to update TLS key pair");
-                    })
-                    .onFailure(e -> {
-                        logger.error("Failed to update TLS key pair", e);
-                    });
+                httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+                logger.info("Updated SSL configuration");
+            } catch (IOException e) {
+                logger.error("Failed to read file {}", tlsCrtFilePath, e);
+            }
         }
     }
 }
+
