@@ -114,8 +114,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     @Override
     public void start(final Promise<Void> startPromise) {
-        logger.info("[haha] Starting receiver verticle, and value of secretVolumePath is {}", secretVolumePath);
-
         this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
@@ -131,21 +129,10 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             File tlsKeyFile = new File(tlsKeyFilePath);
             File tlsCrtFile = new File(tlsCrtFilePath);
 
-            logger.info("[haha] tlsKeyFile exists? {}", tlsKeyFile.exists());
-            logger.info("[haha] tlsCrtFile exists? {}", tlsCrtFile.exists());
-            logger.info("[haha] httpsServerOptions is null? {}", httpsServerOptions == null);
-
             if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-                logger.info("[haha] secretVolume exists");
                 PemKeyCertOptions keyCertOptions =
                         new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
-
-                logger.info("[haha] Starting https server");
-                logger.info("[haha] httpsServerOptions is {}", httpsServerOptions.toJson());
-
-                logger.info("key path is {}", tlsKeyFile.getPath());
-                logger.info("cert path is {}", tlsCrtFile.getPath());
 
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
             }
@@ -155,40 +142,32 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
 
         if (this.httpsServer != null) {
-            logger.info("[haha] Starting both http and https server");
             CompositeFuture.all(
                             this.httpServer
                                     .requestHandler(handler)
                                     .exceptionHandler(startPromise::tryFail)
                                     .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
                                     .onSuccess(server -> {
-                                        logger.info("[haha] HTTP server is up and running!");
+                                        logger.info("HTTP server is up and running!");
                                     })
                                     .onFailure(err -> {
-                                        logger.error("[haha] Failed to start HTTP server!", err);
+                                        logger.error("Failed to start HTTP server!", err);
                                     }),
                             this.httpsServer
                                     .requestHandler(handler)
                                     .exceptionHandler(startPromise::tryFail)
                                     .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
                                     .onSuccess(server -> {
-                                        logger.info("[haha] HTTPS server is up and running!");
+                                        logger.info("HTTPS server is up and running!");
                                     })
                                     .onFailure(err -> {
-                                        logger.error("[haha] Failed to start HTTPS server!", err);
+                                        logger.error("Failed to start HTTPS server!", err);
                                     }))
                     .<Void>mapEmpty()
                     .onComplete(startPromise);
 
-            logger.info("[haha] httpsServer is {}", httpsServer);
-            // print the content of the httpsServerOptions
-            logger.info("[haha] httpsServerOptions is {}", httpsServerOptions.toJson());
-
-            // printFileContent("/etc/receiver-tls-secret/tls.crt");
-            // printFileContent("/etc/receiver-tls-secret/tls.key");
-
         } else {
-            logger.info("[haha] Starting only http server");
+            logger.info("Starting only http server");
             this.httpServer
                     .requestHandler(handler)
                     .exceptionHandler(startPromise::tryFail)
@@ -209,15 +188,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             logger.error("Failed to start SecretWatcher", e);
         }
     }
-
-    // public void printFileContent(String filePath) {
-    //   try {
-    //     String content = new String(Files.readAllBytes(Paths.get(filePath)));
-    //     logger.info("[haha] content of {} is {}", filePath, content);
-    //   } catch (Exception e) {
-    //     e.printStackTrace();
-    //   }
-    // }
 
     @Override
     public void stop(Promise<Void> stopPromise) {
