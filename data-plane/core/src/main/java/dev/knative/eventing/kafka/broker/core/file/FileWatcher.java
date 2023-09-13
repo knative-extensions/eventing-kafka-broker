@@ -135,51 +135,49 @@ public class FileWatcher implements AutoCloseable {
 
         // If we're using the trigger function, we don't need to update the contract
         if (triggerFunction != null) {
-          update();
+            update();
         }
 
-
         while (!Thread.interrupted()) {
-          if (triggerFunction == null) {
-            var shouldUpdate = false;
+            if (triggerFunction == null) {
+                var shouldUpdate = false;
 
-            // Note: take() blocks
-            WatchKey key;
-            try {
-              key = watcher.take();
-              logger.debug("Contract updates");
-              logger.info("[haha] contract updates");
-            } catch (InterruptedException e) {
-              break; // Looks good, this means Thread.interrupt was invoked
+                // Note: take() blocks
+                WatchKey key;
+                try {
+                    key = watcher.take();
+                    logger.debug("Contract updates");
+                } catch (InterruptedException e) {
+                    break; // Looks good, this means Thread.interrupt was invoked
+                }
+
+                // this should be rare but it can actually happen so check watch key validity
+                if (!key.isValid()) {
+                    logger.warn("Invalid key");
+                    continue;
+                }
+
+                // loop through all watch service events and determine if an update we're
+                // interested in
+                // has occurred.
+                for (final var event : key.pollEvents()) {
+
+                    final var kind = event.kind();
+
+                    // check if we're interested in the updated file
+                    if (kind != OVERFLOW) {
+                        shouldUpdate = true;
+                        break;
+                    }
+                }
+
+                if (shouldUpdate) {
+                    update();
+                }
+
+                // reset the watch key, so that we receives new events
+                key.reset();
             }
-
-            // this should be rare but it can actually happen so check watch key validity
-            if (!key.isValid()) {
-              logger.warn("Invalid key");
-              continue;
-            }
-
-            // loop through all watch service events and determine if an update we're
-            // interested in
-            // has occurred.
-            for (final var event : key.pollEvents()) {
-
-              final var kind = event.kind();
-
-              // check if we're interested in the updated file
-              if (kind != OVERFLOW) {
-                shouldUpdate = true;
-                break;
-              }
-            }
-
-            if (shouldUpdate) {
-              update();
-            }
-
-            // reset the watch key, so that we receives new events
-            key.reset();
-          }
         }
 
         // Close the watcher
