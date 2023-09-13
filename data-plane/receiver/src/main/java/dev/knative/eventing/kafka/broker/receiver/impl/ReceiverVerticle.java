@@ -21,7 +21,7 @@ import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPla
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
-import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.file.SecretWatcher;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -30,9 +30,9 @@ import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import io.fabric8.kubernetes.client.*;
 import io.vertx.core.*;
-import io.vertx.core.buffer.*;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -49,26 +49,19 @@ import org.slf4j.LoggerFactory;
 /**
  * This verticle is responsible for implementing the logic of the receiver.
  *
- * <p>
- * The receiver is the component responsible for mapping incoming {@link
- * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do
- * so, this component:
+ * <p>The receiver is the component responsible for mapping incoming {@link
+ * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do so, this component:
  *
  * <ul>
- * <li>Starts two {@link HttpServer}, one with http, and one with https,
- * listening for incoming
- * events
- * <li>Starts a {@link ResourcesReconciler}, listen on the event bus for
- * reconciliation events and
- * keeps track of the {@link
- * dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects
- * and their
- * {@code path => (topic, producer)} mapping
- * <li>Implements a request handler that invokes a series of {@code preHandlers}
- * (which are
- * assumed to complete synchronously) and then a final
- * {@link IngressRequestHandler} to
- * publish the record to Kafka
+ *   <li>Starts two {@link HttpServer}, one with http, and one with https, listening for incoming
+ *       events
+ *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and
+ *       keeps track of the {@link
+ *       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their
+ *       {@code path => (topic, producer)} mapping
+ *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are
+ *       assumed to complete synchronously) and then a final {@link IngressRequestHandler} to
+ *       publish the record to Kafka
  * </ul>
  */
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
@@ -175,16 +168,26 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     // Set up the secret watcher
     private void setupSecretWatcher() {
-        try {
-            File certFile = new File(secretVolumePath + "/tls.crt");
-            FileWatcher fw = new FileWatcher(certFile);
-            fw.setTriggerFunction(this::updateServerConfig);
-            // Started once
-            fw.start();
-            logger.info("[haha] Started FileWatcher");
-        } catch (Exception e) {
-            logger.error("Failed to start FileWatcher", e);
-        }
+        // try {
+        //     this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
+        //     new Thread(this.secretWatcher).start();
+        // } catch (IOException e) {
+        //     logger.error("Failed to start SecretWatcher", e);
+        // }
+
+     try {
+       File certFile = new File(secretVolumePath + "/tls.crt");
+       FileWatcher fw = new FileWatcher(certFile, null);
+       // Started once
+       fw.start();
+       logger.info("[haha] Started FileWatcher");
+     }
+     catch (Exception e) {
+       logger.error("Failed to start FileWatcher", e);
+     }
+
+
+
     }
 
     @Override
@@ -195,6 +198,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
+
+        // close the watcher
+        if (this.secretWatcher != null) {
+            this.secretWatcher.stop();
+        }
     }
 
     @Override
@@ -226,31 +234,54 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.ingressRequestHandler.handle(requestContext, producer);
     }
 
-    public void updateServerConfig() {
+  public void updateServerConfig() {
 
-        logger.info("[haha] updateServerConfig is called");
-        // This function will be called when the secret volume is updated
-        File tlsKeyFile = new File(tlsKeyFilePath);
-        File tlsCrtFile = new File(tlsCrtFilePath);
+    logger.info("[haha] updateServerConfig is called");
+    // This function will be called when the secret volume is updated
+    File tlsKeyFile = new File(tlsKeyFilePath);
+    File tlsCrtFile = new File(tlsCrtFilePath);
 
-        // Check whether the tls.key and tls.crt files exist
-        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-            logger.info("[haha] tlsKeyFile exists, get the new key pair");
+    // Check whether the tls.key and tls.crt files exist
+    if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+      logger.info("[haha] tlsKeyFile exists, get the new key pair");
 
-            // log the content of the tls.crt
-            // printFileContent(tlsCrtFilePath);
-            logger.info("[haha] tlsCrtFile exists, and the path is {}", tlsCrtFilePath);
+      //log the content of the tls.crt
+//            printFileContent("/etc/receiver-tls-secret/tls.crt");
 
-            try {
-                // Update SSL configuration by using updateSSLOptions
-                PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
-                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
-                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
+      // Update SSL configuration by using updateSSLOptions
+      PemKeyCertOptions keyCertOptions =
+        new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
 
-                httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-            } catch (IOException e) {
-                logger.error("[haha] Failed to read file {}", tlsCrtFilePath, e);
-            }
-        }
+      // result is a Future object
+      Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
+
+      result.onSuccess(v -> {
+          logger.info("Succeeded to update TLS key pair");
+          // restart the server
+          this.httpsServer.close()
+            .onSuccess(v1 -> {
+              logger.info("[haha] httpsServer is closed");
+              this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
+              this.httpsServer
+                .requestHandler(new ProbeHandler(
+                  env.getLivenessProbePath(),
+                  env.getReadinessProbePath(),
+                  new MethodNotAllowedHandler(this)))
+                .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
+                .onSuccess(server -> {
+                  logger.info("[haha] HTTPS server is up and running!");
+                })
+                .onFailure(err -> {
+                  logger.error("[haha] Failed to start HTTPS server!", err);
+                });
+            })
+            .onFailure(e -> {
+              logger.error("[haha] Failed to close httpsServer", e);
+            });
+        })
+        .onFailure(e -> {
+          logger.error("[haha] Failed to update TLS key pair", e);
+        });
     }
+  }
 }
