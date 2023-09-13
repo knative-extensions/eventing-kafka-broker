@@ -63,7 +63,8 @@ public class FileWatcherTest {
             }
         };
 
-        try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
+        try (FileWatcher fw = new FileWatcher(file)) {
+            fw.setContractConsumer(brokersConsumer);
             fw.start();
 
             write(file, broker1);
@@ -91,7 +92,8 @@ public class FileWatcherTest {
             waitBroker.countDown();
         };
 
-        try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
+        try (FileWatcher fw = new FileWatcher(file)) {
+            fw.setContractConsumer(brokersConsumer);
             fw.start();
 
             waitBroker.await();
@@ -106,7 +108,8 @@ public class FileWatcherTest {
 
         final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {};
 
-        try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
+        try (FileWatcher fw = new FileWatcher(file)) {
+            fw.setContractConsumer(brokersConsumer);
             // Started once
             fw.start();
 

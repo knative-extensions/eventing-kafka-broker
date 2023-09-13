@@ -100,8 +100,9 @@ public class UnorderedConsumerTest {
         startServer(vertx, new VertxTestContext(), event, waitEvents);
 
         final var file = Files.createTempFile("fw-", "-fw").toFile();
-        final var fileWatcher = new FileWatcher(
-                file, new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS));
+        final var fileWatcher = new FileWatcher(file);
+        fileWatcher.setContractConsumer(
+                new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS));
 
         fileWatcher.start();
 

@@ -195,25 +195,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
-
-        // close the watcher
-        if (this.secretWatcher != null) {
-            this.secretWatcher.stop();
-        }
-    }
-
-    public void printFileContent(String filePath) {
-        try {
-            File file = new File(filePath);
-            if (file.exists()) {
-                logger.info("[haha] File {} exists", filePath);
-                logger.info("[haha] File content is {}", java.nio.file.Files.readString(file.toPath()));
-            } else {
-                logger.info("[haha] File {} does not exist", filePath);
-            }
-        } catch (IOException e) {
-            logger.error("[haha] Failed to read file {}", filePath, e);
-        }
     }
 
     @Override
@@ -270,36 +251,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             } catch (IOException e) {
                 logger.error("[haha] Failed to read file {}", tlsCrtFilePath, e);
             }
-
-            // result is a Future object
-
-            // result.onSuccess(v -> {
-            // logger.info("Succeeded to update TLS key pair");
-            // // restart the server
-            // this.httpsServer.close()
-            // .onSuccess(v1 -> {
-            // logger.info("[haha] httpsServer is closed");
-            // this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
-            // this.httpsServer
-            // .requestHandler(new ProbeHandler(
-            // env.getLivenessProbePath(),
-            // env.getReadinessProbePath(),
-            // new MethodNotAllowedHandler(this)))
-            // .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
-            // .onSuccess(server -> {
-            // logger.info("[haha] HTTPS server is up and running!");
-            // })
-            // .onFailure(err -> {
-            // logger.error("[haha] Failed to start HTTPS server!", err);
-            // });
-            // })
-            // .onFailure(e -> {
-            // logger.error("[haha] Failed to close httpsServer", e);
-            // });
-            // })
-            // .onFailure(e -> {
-            // logger.error("[haha] Failed to update TLS key pair", e);
-            // });
         }
     }
 }
