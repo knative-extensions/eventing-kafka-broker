@@ -38,19 +38,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is responsible for watching a given file and reports update.
+ * This class is responsible for watching a given file and reports update or execu
  * <p>
- * Using {@link #start()}, this class will create a background thread running the file watcher.
+ * Using {@link #start()}, this class will create a background thread running
+ * the file watcher.
  * You can interrupt such thread with {@link #close()}
  * <p>
- * This class is thread safe, and it cannot start more than one watch at the time.
+ * This class is thread safe, and it cannot start more than one watch at the
+ * time.
  */
 public class FileWatcher implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
     private final File toWatch;
-    private final Consumer<DataPlaneContract.Contract> contractConsumer;
+    private Consumer<DataPlaneContract.Contract> contractConsumer;
+    private Runnable triggerFunction;
 
     private Thread watcherThread;
     private WatchService watcher;
@@ -62,18 +65,27 @@ public class FileWatcher implements AutoCloseable {
      * @param contractConsumer updates receiver.
      * @param file             file to watch
      */
-    public FileWatcher(File file, Consumer<DataPlaneContract.Contract> contractConsumer) {
+    public FileWatcher(File file) {
         Objects.requireNonNull(file, "provide file");
-        // Objects.requireNonNull(contractConsumer, "provide consumer");
 
-        this.contractConsumer = contractConsumer;
+        this.contractConsumer = null;
         this.toWatch = file.getAbsoluteFile();
         this.lastContract = -1;
     }
 
+    public void setContractConsumer(Consumer<DataPlaneContract.Contract> contractConsumer) {
+        this.contractConsumer = contractConsumer;
+    }
+
+    // setTriggerFunction will accept a function, and set it to triggerFunction
+    public void setTriggerFunction(Runnable triggerFunction) {
+        this.triggerFunction = triggerFunction;
+    }
+
     /**
      * Start the watcher thread.
-     * This is going to create a new deamon thread, which can be stopped using {@link #close()}.
+     * This is going to create a new deamon thread, which can be stopped using
+     * {@link #close()}.
      *
      * @throws IOException           if an error happened while starting to watch
      * @throws IllegalStateException if the watcher is already running
@@ -107,7 +119,8 @@ public class FileWatcher implements AutoCloseable {
     private void run() {
         try {
             // register the given watch service.
-            // Note: this watch a directory and not the single file we're interested in, so that's the
+            // Note: this watch a directory and not the single file we're interested in, so
+            // that's the
             // reason in #watch() we filter watch service events based on the updated file.
             this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         } catch (IOException e) {
@@ -116,47 +129,57 @@ public class FileWatcher implements AutoCloseable {
         }
         logger.info("Started watching {}", toWatch);
 
-        // If the container restarts, the mounted file never gets reconciled, so update as soon as we
-        // start watching
-        update();
+        // If the container restarts, the mounted file never gets reconciled, so update
+        // as soon as we
+        // start watching. This doesn't apply to the trigger function usage
+
+        // If we're using the trigger function, we don't need to update the contract
+        if (triggerFunction != null) {
+          update();
+        }
+
 
         while (!Thread.interrupted()) {
+          if (triggerFunction == null) {
             var shouldUpdate = false;
 
             // Note: take() blocks
             WatchKey key;
             try {
-                key = watcher.take();
-                logger.debug("Contract updates");
+              key = watcher.take();
+              logger.debug("Contract updates");
+              logger.info("[haha] contract updates");
             } catch (InterruptedException e) {
-                break; // Looks good, this means Thread.interrupt was invoked
+              break; // Looks good, this means Thread.interrupt was invoked
             }
 
             // this should be rare but it can actually happen so check watch key validity
             if (!key.isValid()) {
-                logger.warn("Invalid key");
-                continue;
+              logger.warn("Invalid key");
+              continue;
             }
 
-            // loop through all watch service events and determine if an update we're interested in
+            // loop through all watch service events and determine if an update we're
+            // interested in
             // has occurred.
             for (final var event : key.pollEvents()) {
 
-                final var kind = event.kind();
+              final var kind = event.kind();
 
-                // check if we're interested in the updated file
-                if (kind != OVERFLOW) {
-                    shouldUpdate = true;
-                    break;
-                }
+              // check if we're interested in the updated file
+              if (kind != OVERFLOW) {
+                shouldUpdate = true;
+                break;
+              }
             }
 
             if (shouldUpdate) {
-                update();
+              update();
             }
 
             // reset the watch key, so that we receives new events
             key.reset();
+          }
         }
 
         // Close the watcher
@@ -171,17 +194,22 @@ public class FileWatcher implements AutoCloseable {
         if (Thread.interrupted()) {
             return;
         }
+
+        if (triggerFunction != null) {
+            // change detected, and print log
+            // which means it is secretWatcher, we need to update the server config
+            triggerFunction.run();
+            return;
+        }
+
         try (final var fileReader = new FileReader(toWatch);
                 final var bufferedReader = new BufferedReader(fileReader)) {
             final var contract = parseFromJson(bufferedReader);
             if (contract == null) {
-//                return;
-
-              // change detected, and print log
-              logger.info("[haha] filewatcher detected the change");
-              return;
+                return;
             }
-            // The check, which is based only on the generation number, works because the control plane doesn't update
+            // The check, which is based only on the generation number, works because the
+            // control plane doesn't update
             // the
             // file if nothing changes.
             final var previousLastContract = this.lastContract;
@@ -193,9 +221,8 @@ public class FileWatcher implements AutoCloseable {
                         keyValue("lastGeneration", previousLastContract));
                 return;
             }
-            if(contractConsumer != null)
-            {
-              contractConsumer.accept(contract);
+            if (contractConsumer != null) {
+                contractConsumer.accept(contract);
             }
         } catch (IOException e) {
             logger.warn("Error reading the contract file, retrying...", e);
