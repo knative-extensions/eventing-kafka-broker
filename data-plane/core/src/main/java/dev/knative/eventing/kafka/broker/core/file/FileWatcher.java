@@ -69,6 +69,7 @@ public class FileWatcher implements AutoCloseable {
         Objects.requireNonNull(file, "provide file");
 
         this.contractConsumer = null;
+        this.triggerFunction = null;
         this.toWatch = file.getAbsoluteFile();
         this.lastContract = -1;
     }
@@ -134,7 +135,7 @@ public class FileWatcher implements AutoCloseable {
         // start watching. This doesn't apply to the trigger function usage
 
         // If we're using the trigger function, we don't need to update the contract
-        if (triggerFunction != null) {
+        if (triggerFunction == null) {
             update();
         }
 
