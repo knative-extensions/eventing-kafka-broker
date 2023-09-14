@@ -146,28 +146,14 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                             this.httpServer
                                     .requestHandler(handler)
                                     .exceptionHandler(startPromise::tryFail)
-                                    .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
-                                    .onSuccess(server -> {
-                                        logger.info("HTTP server is up and running!");
-                                    })
-                                    .onFailure(err -> {
-                                        logger.error("Failed to start HTTP server!", err);
-                                    }),
+                                    .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
                             this.httpsServer
                                     .requestHandler(handler)
                                     .exceptionHandler(startPromise::tryFail)
-                                    .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost())
-                                    .onSuccess(server -> {
-                                        logger.info("HTTPS server is up and running!");
-                                    })
-                                    .onFailure(err -> {
-                                        logger.error("Failed to start HTTPS server!", err);
-                                    }))
+                                    .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
                     .<Void>mapEmpty()
                     .onComplete(startPromise);
-
         } else {
-            logger.info("Starting only http server");
             this.httpServer
                     .requestHandler(handler)
                     .exceptionHandler(startPromise::tryFail)
