@@ -236,20 +236,17 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         // Check whether the tls.key and tls.crt files exist
         if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
             try {
-                // Update SSL configuration by using updateSSLOptions
+                // Update SSL configuration by passing the new value of the certificate and key
+                // Have to use value instead of path here otherwise the changes won't be applied
                 PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
                         .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
                         .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
 
-                // result is a Future object
-                Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-
-                result.onSuccess(v -> {
-                            logger.info("Succeeded to update TLS key pair");
-                        })
-                        .onFailure(e -> {
-                            logger.error("Failed to update TLS key pair while executing updateSSLOptions", e);
-                        });
+                httpsServer
+                        .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
+                        .onSuccess(v -> logger.info("Succeeded to update TLS key pair"))
+                        .onFailure(
+                                e -> logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
 
             } catch (IOException e) {
                 logger.error("Failed to read file {}", tlsCrtFilePath, e);
