@@ -20,10 +20,15 @@ import (
 	"context"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
+	"knative.dev/eventing/test/rekt/resources/addressable"
+	"knative.dev/reconciler-test/resources/certificate"
+
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+
 	// "k8s.io/apimachinery/pkg/types"
 
 	"knative.dev/eventing/test/rekt/features/featureflags"
@@ -62,12 +67,12 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 	f.Prerequisite("transport encryption is strict", featureflags.TransportEncryptionStrict())
 	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
-	// f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
-	// 	Certificate: types.NamespacedName{
-	// 		Namespace: system.Namespace(),
-	// 		Name:      ingressCertificateName,
-	// 	},
-	// }))
+	f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
+		Certificate: types.NamespacedName{
+			Namespace: system.Namespace(),
+			Name:      ingressCertificateName,
+		},
+	}))
 
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiverTLS))
 	f.Setup("Install broker", broker.Install(brokerName, append(
@@ -81,7 +86,7 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 		trigger.Install(triggerName, brokerName, trigger.WithSubscriberFromDestination(d))(ctx, t)
 	})
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
-	// f.Setup("Broker has HTTPS address", broker.ValidateAddress(brokerName, addressable.AssertHTTPSAddress))
+	f.Setup("Broker has HTTPS address", broker.ValidateAddress(brokerName, addressable.AssertHTTPSAddress))
 
 	event := cetest.FullEvent()
 	event.SetID(uuid.New().String())
