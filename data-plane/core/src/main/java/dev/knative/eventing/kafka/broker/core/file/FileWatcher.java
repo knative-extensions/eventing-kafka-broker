@@ -78,7 +78,6 @@ public class FileWatcher implements AutoCloseable {
         this.contractConsumer = contractConsumer;
     }
 
-    // setTriggerFunction will accept a function, and set it to triggerFunction
     public void setTriggerFunction(Runnable triggerFunction) {
         this.triggerFunction = triggerFunction;
     }
@@ -195,8 +194,6 @@ public class FileWatcher implements AutoCloseable {
         }
 
         if (triggerFunction != null) {
-            // change detected, and print log
-            // which means it is secretWatcher, we need to update the server config
             triggerFunction.run();
             return;
         }
