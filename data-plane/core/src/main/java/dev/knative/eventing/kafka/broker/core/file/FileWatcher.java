@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is responsible for watching a given file and reports update or execu
+ * This class is responsible for watching a given file and reports update or execute a trigger function.
  * <p>
  * Using {@link #start()}, this class will create a background thread running
  * the file watcher.
@@ -120,8 +120,7 @@ public class FileWatcher implements AutoCloseable {
         try {
             // register the given watch service.
             // Note: this watch a directory and not the single file we're interested in, so
-            // that's the
-            // reason in #watch() we filter watch service events based on the updated file.
+            // that's the reason in #watch() we filter watch service events based on the updated file.
             this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         } catch (IOException e) {
             logger.error("Error while starting watching the file", e);
