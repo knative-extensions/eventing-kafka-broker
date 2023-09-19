@@ -37,7 +37,7 @@ function usage() {
   echo "   build-for-source-from-source                            Build artifacts from source for source bundle only"
   echo "   benchmark-filter <bencmark_class_name>                  Run the filter benchmarks for <benchmark_class_name>"
   echo "   benchmark-filters                                       Run all the filter benchmarks"
-  echo "   run-matched-test <testname> <testdir>                   Run all e2e tests matching testname in testdir"
+  echo "   integration-test <testname> <testdir>                   Run all e2e tests matching testname in testdir"
   echo ""
 }
 
@@ -97,7 +97,7 @@ elif [[ "${action}" == "benchmark-filter" ]]; then
   "${ROOT_DIR}/data-plane/benchmarks/run.sh" "$2"
 elif [[ "${action}" == "benchmark-filters" ]]; then
   "${ROOT_DIR}/data-plane/benchmarks/run.sh"
-elif [[ "${action}" == "run-matched-test" ]]; then
+elif [[ "${action}" == "integration-test" ]]; then
   "${ROOT_DIR}"/test/e2e-matched-test.sh "$2" "$3"
 else
   echo "Unrecognized action ${action}"

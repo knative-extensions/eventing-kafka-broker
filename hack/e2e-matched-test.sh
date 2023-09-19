@@ -14,18 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(dirname "$0")/e2e-common.sh
-export BROKER_TEMPLATES="${BROKER_TEMPLATES:-./templates/kafka-broker}"
+source $(dirname "$0")/../test/e2e-common.sh
+export BROKER_TEMPLATES="${BROKER_TEMPLATES:-$(dirname "$0")../test/e2e_new/templates/kafka-broker}"
+export BROKER_CLASS="${BROKER_CLASS:-Kafka}"
 
-TESTNAME="$1"
-TESTDIR="$2"
+test_name="$1"
+test_dir="$2"
 
-if [[ -z "${TESTNAME}" ]]; then
-  fail_test "No testname provided"
+if [[ -z "${test_name}" ]]; then
+	fail_test "No testname provided"
 fi
 
-if [[ -z "${TESTDIR}" ]]; then
-  fail_test "No testdir provided"
+if [[ -z "${test_dir}" ]]; then
+	fail_test "No testdir provided"
 fi
 
 header "Waiting Knative eventing to come up"
@@ -36,13 +37,6 @@ export_logs_continuously
 
 header "Running tests"
 
-if [[ -z "${BROKER_CLASS}" ]]; then
-  echo "BROKER_CLASS is not set, setting it to Kafka as a default"
-  BROKER_CLASS="Kafka"
-else
-  echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
-fi
-
-go_test_e2e -timeout=30m -run="${TESTNAME}" "${TESTDIR}/..." || fail_test "Test(s) failed"
+go_test_e2e -timeout=30m -run="${test_name}" "${test_dir}/..." || fail_test "Test(s) failed"
 
 success
