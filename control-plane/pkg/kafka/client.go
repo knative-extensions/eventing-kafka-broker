@@ -17,7 +17,7 @@
 package kafka
 
 import (
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/rcrowley/go-metrics"
 )
 
