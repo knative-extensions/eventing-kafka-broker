@@ -163,6 +163,7 @@ aliases:
   - Vishal-Chdhry
   - creydr
   - csantanapr
+  - davidhadas
   - dprotaso
   - dsimansk
   - itsmurugappan
@@ -191,10 +192,6 @@ aliases:
   - knative-prow-robot
   - knative-prow-updater-robot
   - knative-test-reporter-robot
-  kperf-approvers:
-  - chzhyang
-  - maximilien
-  - psschwei
   net-certmanager-approvers: []
   net-contour-approvers:
   - KauzClay
@@ -270,6 +267,7 @@ aliases:
   - nainaz
   - salaboy
   technical-oversight-committee:
+  - davidhadas
   - dprotaso
   - dsimansk
   - kvmware
