@@ -15,7 +15,7 @@
 # limitations under the License.
 
 source $(dirname "$0")/e2e-common.sh
-export BROKER_TEMPLATES=./templates/kafka-broker
+export BROKER_TEMPLATES="${BROKER_TEMPLATES:-./templates/kafka-broker}"
 
 TESTNAME="$1"
 TESTDIR="$2"
