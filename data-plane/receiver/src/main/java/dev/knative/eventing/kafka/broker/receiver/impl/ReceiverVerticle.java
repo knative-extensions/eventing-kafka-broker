@@ -238,7 +238,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             try {
                 // Update SSL configuration by passing the new value of the certificate and key
                 // Have to use value instead of path here otherwise the changes won't be applied
-                PemKeyCertOptions keyCertOptions = new PemKeyCertOptions()
+                final var keyCertOptions = new PemKeyCertOptions()
                         .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
                         .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
 
