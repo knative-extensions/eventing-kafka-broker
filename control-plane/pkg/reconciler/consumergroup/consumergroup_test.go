@@ -108,6 +108,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -119,6 +120,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 				),
 				NewConsumer(2,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -194,6 +196,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(systemNamespace, "p1", nil, DispatcherPodAsOwnerReference("p1")),
 				NewConfigMapWithBinaryData(systemNamespace, "p2", nil, DispatcherPodAsOwnerReference("p2")),
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -205,6 +208,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 				),
 				NewConsumer(2,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -402,6 +406,7 @@ func TestReconcileKind(t *testing.T) {
 			WantErr: false,
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -525,6 +530,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -871,6 +877,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1112,6 +1119,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1197,6 +1205,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1290,6 +1299,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1411,6 +1421,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1529,6 +1540,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1540,6 +1552,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 				),
 				NewConsumer(2,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
@@ -1735,6 +1748,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			},
 			WantCreates: []runtime.Object{
 				NewConsumer(1,
+					ConsumerFinalizer(),
 					ConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
