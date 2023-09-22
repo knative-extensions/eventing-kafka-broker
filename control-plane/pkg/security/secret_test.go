@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
