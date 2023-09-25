@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 package dev.knative.eventing.kafka.broker.core.eventbus;
+
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.function.Consumer;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +72,8 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
             if (contract == null) {
                 return;
             }
-            // The check, which is based only on the generation number, works because the control plane doesn't update the
+            // The check, which is based only on the generation number, works because the control plane doesn't update
+            // the
             // file if nothing changes.
             final var previousLastContract = this.lastContract;
             this.lastContract = contract.getGeneration();

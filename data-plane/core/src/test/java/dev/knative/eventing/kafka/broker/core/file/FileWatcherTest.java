@@ -16,24 +16,23 @@
 
 package dev.knative.eventing.kafka.broker.core.file;
 
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
 
 public class FileWatcherTest {
 
     private File tempFile;
     private FileWatcher fileWatcher;
-    private volatile boolean wasTriggered = false; 
+    private volatile boolean wasTriggered = false;
 
     @BeforeEach
     public void setUp() throws Exception {
         // Create a temporary file for testing purposes
         tempFile = Files.createTempFile("test", ".txt").toFile();
-        
     }
 
     @AfterEach
@@ -43,7 +42,6 @@ public class FileWatcherTest {
         }
         Files.deleteIfExists(tempFile.toPath());
     }
-
 
     @Test
     public void testStart() throws Exception {
@@ -56,7 +54,6 @@ public class FileWatcherTest {
         fileWatcher = new FileWatcher(tempFile, () -> {});
         fileWatcher.start();
         assertDoesNotThrow(fileWatcher::close);
-        
     }
 
     @Test
