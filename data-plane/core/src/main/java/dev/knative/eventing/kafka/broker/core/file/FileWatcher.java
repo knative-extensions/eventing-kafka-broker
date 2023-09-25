@@ -45,6 +45,7 @@ public class FileWatcher implements AutoCloseable {
 
     private final File toWatch;
     private Runnable triggerFunction;
+    private boolean runAtBeginning = false;
 
     private Thread watcherThread;
     private WatchService watcher;
@@ -59,13 +60,16 @@ public class FileWatcher implements AutoCloseable {
         Objects.requireNonNull(file, "provide file");
         Objects.requireNonNull(triggerFunction, "provide triggerFunction");
 
-
         this.triggerFunction = triggerFunction;
         this.toWatch = file.getAbsoluteFile();
     }
 
     public Thread getWatcherThread() {
         return this.watcherThread;
+    }
+
+    public void setRunAtBeginning(boolean runAtBeginning) {
+        this.runAtBeginning = runAtBeginning;
     }
 
     /**
@@ -113,9 +117,13 @@ public class FileWatcher implements AutoCloseable {
             return;
         }
         logger.info("Started watching {}", toWatch);
-        
+
+        if (runAtBeginning) {
+            triggerFunction.run();
+        }
+
         while (!Thread.interrupted()) {
-            
+
             WatchKey key;
             try {
                 key = watcher.take();
@@ -123,17 +131,17 @@ public class FileWatcher implements AutoCloseable {
             } catch (InterruptedException e) {
                 break; // Thread.interrupt was invoked
             }
-    
+
             // Check the watch key's validity
             if (!key.isValid()) {
                 logger.warn("Invalid key");
                 continue;
             }
-    
+
             // Loop through all watch service events
             for (final var event : key.pollEvents()) {
                 final var kind = event.kind();
-    
+
                 // We check if the event's context (the file) matches our target file
                 final var filename = event.context();
                 if (kind != OVERFLOW && filename.toString().equals(toWatch.getName())) {
@@ -142,11 +150,11 @@ public class FileWatcher implements AutoCloseable {
                     }
                 }
             }
-    
+
             // Reset the watch key to receive new events
             key.reset();
         }
-    
+
         // Close the watcher
         try {
             this.watcher.close();
@@ -154,6 +162,4 @@ public class FileWatcher implements AutoCloseable {
             logger.warn("Error while closing the file watcher", e);
         }
     }
-    
 }
-
