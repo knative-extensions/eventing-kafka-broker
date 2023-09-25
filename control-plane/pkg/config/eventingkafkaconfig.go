@@ -17,7 +17,7 @@ limitations under the License.
 package config
 
 import (
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 

@@ -45,3 +45,6 @@ data-plane/**/build/
 /eventing-kafka-source-bundle.yaml
 
 /eventing-kafka-tls-networking.yaml
+
+## Ignore benchmark outputs
+data-plane/**/*.out.txt

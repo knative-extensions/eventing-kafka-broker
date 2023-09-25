@@ -48,8 +48,8 @@ type evictor struct {
 // newEvictor creates a new evictor.
 //
 // fields are additional logger fields to be attached to the evictor logger.
-func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
-	return evictor{
+func newEvictor(ctx context.Context, fields ...zap.Field) *evictor {
+	return &evictor{
 		ctx:             ctx,
 		kubeClient:      kubeclient.Get(ctx),
 		InternalsClient: kafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -60,7 +60,7 @@ func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
 	}
 }
 
-func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
+func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
 	key := vpod.GetKey()
 
 	logger := e.logger.
@@ -124,6 +124,9 @@ func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) erro
 	_, err := e.kubeClient.CoreV1().
 		Pods(pod.GetNamespace()).
 		Update(e.ctx, pod, metav1.UpdateOptions{})
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("failed to update pod %s/%s: %w", pod.GetNamespace(), pod.GetName(), err)
 	}

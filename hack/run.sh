@@ -18,6 +18,7 @@ function usage() {
   echo "   teardown-infra                                          Remove eventing, Kafka (Strimzi)"
   echo "   deploy-kafka                                            Deploy Kafka (Strimzi)"
   echo "   deploy                                                  Deploy eventing-kafka-broker"
+  echo "   deploy-loom                                             Deploy eventing-kafka-broker with loom modules"
   echo "   deploy-source                                           Deploy eventing-kafka-broker source bundle"
   echo "   teardown                                                Remove eventing-kafka-broker"
   echo "   teardown-source                                         Remove eventing-kafka-broker source bundle"
@@ -34,6 +35,8 @@ function usage() {
   echo "   generate                                                Run code generators"
   echo "   build-from-source                                       Build artifacts from source"
   echo "   build-for-source-from-source                            Build artifacts from source for source bundle only"
+  echo "   benchmark-filter <bencmark_class_name>                  Run the filter benchmarks for <benchmark_class_name>"
+  echo "   benchmark-filters                                       Run all the filter benchmarks"
   echo ""
 }
 
@@ -45,6 +48,8 @@ elif [[ "${action}" == "deploy-kafka" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && kafka_setup
 elif [[ "${action}" == "deploy" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
+elif [[ "${action}" == "deploy-loom" ]]; then
+  USE_LOOM="true" && source "${ROOT_DIR}"/test/e2e-common.sh && test_setup
 elif [[ "${action}" == "deploy-source" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && test_source_setup
 elif [[ "${action}" == "build-from-source" ]]; then
@@ -87,6 +92,10 @@ elif [[ "${action}" == "profiler" ]]; then
 elif [[ "${action}" == "generate" ]]; then
   "${ROOT_DIR}"/hack/generate-proto.sh
   "${ROOT_DIR}"/hack/update-codegen.sh
+elif [[ "${action}" == "benchmark-filter" ]]; then
+  "${ROOT_DIR}/data-plane/benchmarks/run.sh" "$2"
+elif [[ "${action}" == "benchmark-filters" ]]; then
+  "${ROOT_DIR}/data-plane/benchmarks/run.sh"
 else
   echo "Unrecognized action ${action}"
   usage "$0"

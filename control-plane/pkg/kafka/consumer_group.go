@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 )

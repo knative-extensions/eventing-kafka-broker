@@ -21,7 +21,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"

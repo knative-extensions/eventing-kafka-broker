@@ -14,19 +14,19 @@ You need to install:
 - [`ko`](https://github.com/google/ko) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
     - check
-      [go \<version\>](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/go.mod)
+      [go \<version\>](https://github.com/knative-extensions/eventing-kafka-broker/blob/master/go.mod)
       for the required Go version used in this project
 - [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) -
   (_required_)
     - check
-      [java.version](https://github.com/knative-sandbox/eventing-kafka-broker/blob/master/data-plane/pom.xml)
+      [java.version](https://github.com/knative-extensions/eventing-kafka-broker/blob/master/data-plane/pom.xml)
       maven property for the required Java version used in this project
 - [`protoc`](https://github.com/protocolbuffers/protobuf)
      - To install protoc, you can follow https://grpc.io/docs/protoc-installation/
 - `protoc-gen-go`
      - To install `protoc-gen-go` run `go install google.golang.org/protobuf/cmd/protoc-gen-go@[version]`
 
-_Note: See [`protoc` and `protoc-gen-go` current used versions](https://github.com/knative-sandbox/eventing-kafka-broker/blob/main/control-plane/pkg/contract/contract.pb.go#L3)_
+_Note: See [`protoc` and `protoc-gen-go` current used versions](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/control-plane/pkg/contract/contract.pb.go#L3)_
 
 Requirements signaled as "optional" are not required, but it's highly recommended having them installed. If a specific
 version of a requirement is not explicitly defined above, any version will work during development.
@@ -44,7 +44,7 @@ cd ${GOPATH}/src/knative.dev
 git clone git@github.com:knative/eventing.git # clone eventing repo
 git clone git@github.com:${YOUR_GITHUB_USERNAME}/eventing-kafka-broker.git
 cd eventing-kafka-broker
-git remote add upstream https://github.com/knative-sandbox/eventing-kafka-broker.git
+git remote add upstream https://github.com/knative-extensions/eventing-kafka-broker.git
 git remote set-url --push upstream no_push
 ```
 
