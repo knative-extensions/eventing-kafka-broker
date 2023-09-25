@@ -62,7 +62,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
         this.accept(DataPlaneContract.Contract.newBuilder().build());
     }
 
-    public void updateContact(File toWatch) {
+    public void updateContract(File toWatch) {
         if (Thread.interrupted()) {
             return;
         }
