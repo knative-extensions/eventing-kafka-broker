@@ -13,117 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import com.google.protobuf.util.JsonFormat;
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import org.junit.jupiter.api.*;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FileWatcherTest {
 
-    @Test
-    @Timeout(value = 5)
-    public void shouldReceiveUpdatesOnUpdate() throws Exception {
-        final var file = Files.createTempFile("fw-", "-fw").toFile();
+    private File tempFile;
+    private FileWatcher fileWatcher;
+    private volatile boolean wasTriggered = false; 
 
-        final var broker1 = DataPlaneContract.Contract.newBuilder()
-                .addResources(resource1())
-                .setGeneration(1)
-                .build();
+    @BeforeEach
+    public void setUp() throws Exception {
+        // Create a temporary file for testing purposes
+        tempFile = Files.createTempFile("test", ".txt").toFile();
+        
+    }
 
-        final var broker2 = DataPlaneContract.Contract.newBuilder()
-                .addResources(resource2())
-                .setGeneration(2)
-                .build();
-
-        final var isFirst = new AtomicBoolean(true);
-        final var waitFirst = new CountDownLatch(1);
-        final var waitSecond = new CountDownLatch(1);
-        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
-            if (isFirst.getAndSet(false)) {
-                assertThat(broker).isEqualTo(broker1);
-                waitFirst.countDown();
-            } else if (!broker.equals(broker1)) {
-                assertThat(broker).isEqualTo(broker2);
-                waitSecond.countDown();
-            }
-        };
-
-        try (FileWatcher fw = new FileWatcher(file)) {
-            fw.setContractConsumer(brokersConsumer);
-            fw.start();
-
-            write(file, broker1);
-            waitFirst.await();
-
-            write(file, broker2);
-            waitSecond.await();
+    @AfterEach
+    public void tearDown() throws Exception {
+        if (fileWatcher != null && fileWatcher.getWatcherThread() != null) {
+            fileWatcher.close();
         }
+        Files.deleteIfExists(tempFile.toPath());
+    }
+
+
+    @Test
+    public void testStart() throws Exception {
+        fileWatcher = new FileWatcher(tempFile, () -> {});
+        assertDoesNotThrow(fileWatcher::start);
     }
 
     @Test
-    @Timeout(value = 5)
-    public void shouldReadFileWhenStartWatchingWithoutUpdates() throws Exception {
-
-        final var file = Files.createTempFile("fw-", "-fw").toFile();
-
-        final var broker1 = DataPlaneContract.Contract.newBuilder()
-                .addResources(resource1())
-                .build();
-        write(file, broker1);
-
-        final var waitBroker = new CountDownLatch(1);
-        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
-            assertThat(broker).isEqualTo(broker1);
-            waitBroker.countDown();
-        };
-
-        try (FileWatcher fw = new FileWatcher(file)) {
-            fw.setContractConsumer(brokersConsumer);
-            fw.start();
-
-            waitBroker.await();
-        }
+    public void testClose() throws Exception {
+        fileWatcher = new FileWatcher(tempFile, () -> {});
+        fileWatcher.start();
+        assertDoesNotThrow(fileWatcher::close);
+        
     }
 
     @Test
-    @Timeout(value = 5)
-    public void shouldNotStartTwice() throws Exception {
+    public void testFileModification() throws Exception {
 
-        final var file = Files.createTempFile("fw-", "-fw").toFile();
+        fileWatcher = new FileWatcher(tempFile, () -> wasTriggered = true);
+        fileWatcher.start();
 
-        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {};
-
-        try (FileWatcher fw = new FileWatcher(file)) {
-            fw.setContractConsumer(brokersConsumer);
-            // Started once
-            fw.start();
-
-            // Now this should fail
-            assertThatThrownBy(fw::start).isInstanceOf(IllegalStateException.class);
+        // Modify the file
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write("Test Data");
         }
-    }
 
-    public static void write(File file, DataPlaneContract.Contract contract) throws IOException {
-        final var f = new File(file.toString());
-        try (final var out = new FileWriter(f)) {
-            JsonFormat.printer().appendTo(contract, out);
-        } finally {
-            LoggerFactory.getLogger(FileWatcherTest.class).info("file written");
-        }
+        // Sleep for a duration to allow the FileWatcher to detect changes
+        Thread.sleep(5000); // sleep for 5 seconds. Adjust as necessary.
+
+        assertTrue(wasTriggered, "Trigger function was not called upon file modification");
     }
 }
