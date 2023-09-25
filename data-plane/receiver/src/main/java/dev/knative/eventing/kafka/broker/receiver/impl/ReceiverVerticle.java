@@ -32,6 +32,7 @@ import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.fabric8.kubernetes.client.*;
 import io.vertx.core.*;
+import io.vertx.core.buffer.*;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -48,19 +49,26 @@ import org.slf4j.LoggerFactory;
 /**
  * This verticle is responsible for implementing the logic of the receiver.
  *
- * <p>The receiver is the component responsible for mapping incoming {@link
- * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do so, this component:
+ * <p>
+ * The receiver is the component responsible for mapping incoming {@link
+ * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do
+ * so, this component:
  *
  * <ul>
- *   <li>Starts two {@link HttpServer}, one with http, and one with https, listening for incoming
- *       events
- *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and
- *       keeps track of the {@link
- *       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their
- *       {@code path => (topic, producer)} mapping
- *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are
- *       assumed to complete synchronously) and then a final {@link IngressRequestHandler} to
- *       publish the record to Kafka
+ * <li>Starts two {@link HttpServer}, one with http, and one with https,
+ * listening for incoming
+ * events
+ * <li>Starts a {@link ResourcesReconciler}, listen on the event bus for
+ * reconciliation events and
+ * keeps track of the {@link
+ * dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects
+ * and their
+ * {@code path => (topic, producer)} mapping
+ * <li>Implements a request handler that invokes a series of {@code preHandlers}
+ * (which are
+ * assumed to complete synchronously) and then a final
+ * {@link IngressRequestHandler} to
+ * publish the record to Kafka
  * </ul>
  */
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
@@ -220,26 +228,29 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     }
 
     public void updateServerConfig() {
+
         // This function will be called when the secret volume is updated
         File tlsKeyFile = new File(tlsKeyFilePath);
         File tlsCrtFile = new File(tlsCrtFilePath);
 
         // Check whether the tls.key and tls.crt files exist
         if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+            try {
+                // Update SSL configuration by passing the new value of the certificate and key
+                // Have to use value instead of path here otherwise the changes won't be applied
+                final var keyCertOptions = new PemKeyCertOptions()
+                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
+                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
 
-            // Update SSL configuration by using updateSSLOptions
-            PemKeyCertOptions keyCertOptions =
-                    new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
+                httpsServer
+                        .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
+                        .onSuccess(v -> logger.info("Succeeded to update TLS key pair"))
+                        .onFailure(
+                                e -> logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
 
-            // result is a Future object
-            Future<Void> result = httpsServer.updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions));
-
-            result.onSuccess(v -> {
-                        logger.info("Succeeded to update TLS key pair");
-                    })
-                    .onFailure(e -> {
-                        logger.error("Failed to update TLS key pair", e);
-                    });
+            } catch (IOException e) {
+                logger.error("Failed to read file {}", tlsCrtFilePath, e);
+            }
         }
     }
 }
