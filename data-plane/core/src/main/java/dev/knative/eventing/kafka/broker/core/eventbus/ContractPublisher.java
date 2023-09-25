@@ -68,7 +68,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
                         keyValue("lastGeneration", previousLastContract));
                 return;
             }
-            contractConsumer.accept(contract);
+            this.accept(contract);
         } catch (IOException e) {
             logger.warn("Error reading the contract file, retrying...", e);
         }
