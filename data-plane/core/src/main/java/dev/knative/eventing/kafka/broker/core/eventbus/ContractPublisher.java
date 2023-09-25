@@ -45,4 +45,32 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
     public void close() throws Exception {
         this.accept(DataPlaneContract.Contract.newBuilder().build());
     }
+
+    public updateContact(File toWatch) {
+        if (Thread.interrupted()) {
+            return;
+        }
+        try (final var fileReader = new FileReader(toWatch);
+                final var bufferedReader = new BufferedReader(fileReader)) {
+            final var contract = parseFromJson(bufferedReader);
+            if (contract == null) {
+                return;
+            }
+            // The check, which is based only on the generation number, works because the control plane doesn't update
+            // the
+            // file if nothing changes.
+            final var previousLastContract = this.lastContract;
+            this.lastContract = contract.getGeneration();
+            if (contract.getGeneration() == previousLastContract) {
+                logger.debug(
+                        "Contract unchanged {} {}",
+                        keyValue("generation", contract.getGeneration()),
+                        keyValue("lastGeneration", previousLastContract));
+                return;
+            }
+            this.accept(contract);
+        } catch (IOException e) {
+            logger.warn("Error reading the contract file, retrying...", e);
+        }
+    }
 }
