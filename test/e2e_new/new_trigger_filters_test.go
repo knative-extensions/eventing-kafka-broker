@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package experimental
+package e2e_new
 
 import (
 	"testing"
@@ -30,7 +30,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
-	"knative.dev/eventing-kafka-broker/test/experimental/features_config"
 
 	newfilters "knative.dev/eventing/test/experimental/features/new_trigger_filters"
 	"knative.dev/eventing/test/rekt/resources/broker"
@@ -54,7 +53,6 @@ func TestNewTriggerFilters(t *testing.T) {
 
 func InstallKafkaBrokerWithExperimentalFeatures(name string) *feature.Feature {
 	f := feature.NewFeatureNamed("Kafka broker")
-	f.Setup("enable new trigger filters experimental feature", features_config.Install)
 	f.Setup("install one partition configuration", single_partition_config.Install)
 	f.Setup("install broker", broker.Install(
 		name,
