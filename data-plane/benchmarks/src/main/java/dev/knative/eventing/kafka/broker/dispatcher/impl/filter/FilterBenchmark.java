@@ -18,39 +18,40 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+
+import java.util.concurrent.TimeUnit;
 
 @BenchmarkMode(Mode.All)
 @Fork(1)
 @State(Scope.Thread)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public abstract class FilterBenchmark {
-    Filter filter;
-    CloudEvent cloudEvent;
+  Filter filter;
+  CloudEvent cloudEvent;
 
-    @Setup
-    public void setupFilter() {
-        this.filter = createFilter();
-    }
+  @Setup
+  public void setupFilter() {
+    this.filter = createFilter();
+  }
 
-    @Setup
-    public void setupCloudEvent() {
-        this.cloudEvent = createEvent();
-    }
+  @Setup
+  public void setupCloudEvent() {
+    this.cloudEvent = createEvent();
+  }
 
-    protected abstract Filter createFilter();
+  protected abstract Filter createFilter();
 
-    protected abstract CloudEvent createEvent();
+  protected abstract CloudEvent createEvent();
 
-    @Benchmark
-    public void benchmarkFilterCreation(Blackhole bh) {
-        bh.consume(this.createFilter());
-    }
+  @Benchmark
+  public void benchmarkFilterCreation(Blackhole bh) {
+    bh.consume(this.createFilter());
+  }
 
-    @Benchmark
-    public void benchmarkFilterEvaluation(Blackhole bh) {
-        bh.consume(this.filter.test(this.cloudEvent));
-    }
+  @Benchmark
+  public void benchmarkFilterEvaluation(Blackhole bh) {
+    bh.consume(this.filter.test(this.cloudEvent));
+  }
 }
