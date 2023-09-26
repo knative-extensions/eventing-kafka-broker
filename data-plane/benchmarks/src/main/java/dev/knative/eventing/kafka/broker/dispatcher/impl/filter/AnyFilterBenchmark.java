@@ -23,38 +23,36 @@ import java.util.Map;
 import java.util.Set;
 
 public class AnyFilterBenchmark {
-    private boolean returnFirst = false;
-
-    public CloudEvent event() {
-        this.returnFirst = !this.returnFirst;
-        if (this.returnFirst) {
+    public static CloudEvent event() {
+        final var returnFirst = Math.random() > 0.5;
+        if (returnFirst) {
             return SampleEvent.event();
         } else {
             return SampleEvent.otherEvent();
         }
     }
 
-    public ExactFilter makeExactFilter() {
+    public static ExactFilter makeExactFilter() {
         return new ExactFilter(Map.of("id", "com.github.pull.create"));
     }
 
-    public PrefixFilter makePrefixFilter() {
+    public static PrefixFilter makePrefixFilter() {
         return new PrefixFilter(Map.of("type", "com.g"));
     }
 
-    public SuffixFilter makeSuffixFilter() {
+    public static SuffixFilter makeSuffixFilter() {
         return new SuffixFilter(Map.of("source", "lhost"));
     }
 
-    public PrefixFilter makePrefixFilterNoMatch() {
+    public static PrefixFilter makePrefixFilterNoMatch() {
         return new PrefixFilter(Map.of("type", "other.event"));
     }
 
-    public SuffixFilter makeSufficFilterNoMatch() {
+    public static SuffixFilter makeSufficFilterNoMatch() {
         return new SuffixFilter(Map.of("source", "qwertyuiop"));
     }
 
-    public class AnyFilterWithExactFilterBenchmark extends FilterBenchmark {
+    public static class AnyFilterWithExactFilterBenchmark extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -67,7 +65,7 @@ public class AnyFilterBenchmark {
         }
     }
 
-    public class AnyFilterMatchAllSubfilters extends FilterBenchmark {
+    public static class AnyFilterMatchAllSubfilters extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -80,7 +78,7 @@ public class AnyFilterBenchmark {
         }
     }
 
-    public class AnyFilterFirstMatchAtEnd extends FilterBenchmark {
+    public static class AnyFilterFirstMatchAtEnd extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -93,7 +91,7 @@ public class AnyFilterBenchmark {
         }
     }
 
-    public class AnyFilterFirstMatchAtStart extends FilterBenchmark {
+    public static class AnyFilterFirstMatchAtStart extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -106,7 +104,7 @@ public class AnyFilterBenchmark {
         }
     }
 
-    public class AnyFilter2EventsMatch2DifferentFilters extends FilterBenchmark {
+    public static class AnyFilter2EventsMatch2DifferentFilters extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
@@ -119,7 +117,7 @@ public class AnyFilterBenchmark {
         }
     }
 
-    public class AnyFilter2EventsMatch2DifferentFiltersOneFilterMatchesNeither extends FilterBenchmark {
+    public static class AnyFilter2EventsMatch2DifferentFiltersOneFilterMatchesNeither extends FilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AnyFilter(Set.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()));
