@@ -1,15 +1,21 @@
+/*
+ Copyright 2021 The CloudEvents Authors
+ SPDX-License-Identifier: Apache-2.0
+*/
+
 package kafka_sarama
 
 import (
 	"bytes"
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 const (
@@ -30,15 +36,17 @@ type Message struct {
 }
 
 // Check if http.Message implements binding.Message
-var _ binding.Message = (*Message)(nil)
-var _ binding.MessageMetadataReader = (*Message)(nil)
+var (
+	_ binding.Message               = (*Message)(nil)
+	_ binding.MessageMetadataReader = (*Message)(nil)
+)
 
 // NewMessageFromConsumerMessage returns a binding.Message that holds the provided ConsumerMessage.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
 func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 	var contentType string
-	headers := make(map[string][]byte, len(cm.Headers))
+	headers := make(map[string][]byte, len(cm.Headers)+3)
 	for _, r := range cm.Headers {
 		k := strings.ToLower(string(r.Key))
 		if k == contentTypeHeader {
@@ -46,6 +54,9 @@ func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 		}
 		headers[k] = r.Value
 	}
+	headers[prefix+"kafkaoffset"] = []byte(strconv.FormatInt(cm.Offset, 10))
+	headers[prefix+"kafkapartition"] = []byte(strconv.FormatInt(int64(cm.Partition), 10))
+	headers[prefix+"kafkatopic"] = []byte(cm.Topic)
 	return NewMessage(cm.Value, contentType, headers)
 }
 

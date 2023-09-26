@@ -39,7 +39,6 @@ function usage() {
   echo "   benchmark-filters                                       Run all the filter benchmarks"
   echo ""
 }
-
 if [[ "$action" == "deploy-infra" ]]; then
   source "${ROOT_DIR}"/test/e2e-common.sh && knative_setup
 elif [[ "${action}" == "teardown-infra" ]]; then
@@ -96,6 +95,9 @@ elif [[ "${action}" == "benchmark-filter" ]]; then
   "${ROOT_DIR}/data-plane/benchmarks/run.sh" "$2"
 elif [[ "${action}" == "benchmark-filters" ]]; then
   "${ROOT_DIR}/data-plane/benchmarks/run.sh"
+elif [[ "${action}" == "format-java" ]]; then
+  cd "${ROOT_DIR}/data-plane"
+  ./mvnw spotless:apply
 else
   echo "Unrecognized action ${action}"
   usage "$0"
