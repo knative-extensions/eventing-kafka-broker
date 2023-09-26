@@ -58,7 +58,6 @@ public class FileWatcher implements AutoCloseable {
      */
     public FileWatcher(File file, Runnable triggerFunction) {
         Objects.requireNonNull(file, "provide file");
-        Objects.requireNonNull(triggerFunction, "provide triggerFunction");
 
         this.triggerFunction = triggerFunction;
         this.toWatch = file.getAbsoluteFile();
