@@ -45,7 +45,6 @@ public class FileWatcher implements AutoCloseable {
 
     private final File toWatch;
     private Runnable triggerFunction;
-    private boolean runAtBeginning = false;
 
     private Thread watcherThread;
     private WatchService watcher;
@@ -65,10 +64,6 @@ public class FileWatcher implements AutoCloseable {
 
     public Thread getWatcherThread() {
         return this.watcherThread;
-    }
-
-    public void setRunAtBeginning(boolean runAtBeginning) {
-        this.runAtBeginning = runAtBeginning;
     }
 
     /**
@@ -117,9 +112,7 @@ public class FileWatcher implements AutoCloseable {
         }
         logger.info("Started watching {}", toWatch);
 
-        if (runAtBeginning) {
-            triggerFunction.run();
-        }
+        triggerFunction.run();
 
         while (!Thread.interrupted()) {
 

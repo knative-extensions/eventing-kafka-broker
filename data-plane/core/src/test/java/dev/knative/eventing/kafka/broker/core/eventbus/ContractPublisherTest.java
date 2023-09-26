@@ -124,7 +124,6 @@ public class ContractPublisherTest {
         };
 
         try (FileWatcher fw = new FileWatcher(file, () -> brokersConsumer.accept(broker1)); ) {
-            fw.setRunAtBeginning(true);
             fw.start();
             waitBroker.await();
         }
