@@ -21,13 +21,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.*;
 
 public class FileWatcherTest {
 
     private File tempFile;
     private FileWatcher fileWatcher;
-    private volatile boolean wasTriggered = false;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -44,22 +45,13 @@ public class FileWatcherTest {
     }
 
     @Test
-    public void testStart() throws Exception {
-        fileWatcher = new FileWatcher(tempFile, () -> {});
-        assertDoesNotThrow(fileWatcher::start);
-    }
-
-    @Test
-    public void testClose() throws Exception {
-        fileWatcher = new FileWatcher(tempFile, () -> {});
-        fileWatcher.start();
-        assertDoesNotThrow(fileWatcher::close);
-    }
-
-    @Test
     public void testFileModification() throws Exception {
+        // Set up a counter to track how many times the trigger function is called
+        AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> wasTriggered = true);
+        fileWatcher = new FileWatcher(tempFile, () -> {
+            counter.incrementAndGet();
+        });
         fileWatcher.start();
 
         // Modify the file
@@ -70,6 +62,24 @@ public class FileWatcherTest {
         // Sleep for a duration to allow the FileWatcher to detect changes
         Thread.sleep(5000); // sleep for 5 seconds. Adjust as necessary.
 
-        assertTrue(wasTriggered, "Trigger function was not called upon file modification");
+        // The trigger function should have been called 2 times
+        assertEquals(2, counter.get());
+    }
+
+    @Test
+    public void testFileNoUpdate() throws Exception {
+        // Set up a counter to track how many times the trigger function is called
+        AtomicInteger counter = new AtomicInteger(0);
+
+        fileWatcher = new FileWatcher(tempFile, () -> {
+            counter.incrementAndGet();
+        });
+        fileWatcher.start();
+
+        // Sleep for a duration to allow the FileWatcher to detect changes
+        Thread.sleep(5000); // sleep for 5 seconds. Adjust as necessary.
+
+        // The trigger function should have been called 1 time
+        assertEquals(1, counter.get());
     }
 }
