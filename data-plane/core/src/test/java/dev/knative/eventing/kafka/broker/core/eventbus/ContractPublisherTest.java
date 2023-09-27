@@ -77,7 +77,7 @@ public class ContractPublisherTest {
             assertThat(broker).isEqualTo(broker1);
         };
 
-        brokersConsumer.accept(null);
+        brokersConsumer.accept(broker1);
 
     }
 
