@@ -73,11 +73,19 @@ public class ContractPublisherTest {
                 .build();
         write(file, broker1);
 
-        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
-            assertThat(broker).isEqualTo(broker1);
-        };
-
-        brokersConsumer.accept(broker1);
+         ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), address);
+         publisher.updateContract(file);
+         publisher.updateContract(file);
+         final var counter = new AtomicInterger();
+         
+         vertx.eventBus().localConsumer(address).handler(message -> {
+              // count the times the handler is called 
+              counter.incrementAntGet();
+          });
+          
+          Thread.sleep(2000L);
+         
+          await().until( () -> counter.get() == 1)
 
     }
 
