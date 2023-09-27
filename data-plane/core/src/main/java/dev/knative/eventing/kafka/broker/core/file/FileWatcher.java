@@ -136,8 +136,7 @@ public class FileWatcher implements AutoCloseable {
                 final var kind = event.kind();
 
                 // We check if the event's context (the file) matches our target file
-                final var filename = event.context();
-                if (kind != OVERFLOW && filename.toString().equals(toWatch.getName())) {
+                if (kind != OVERFLOW) {
                         triggerFunction.run();
                 }
             }
