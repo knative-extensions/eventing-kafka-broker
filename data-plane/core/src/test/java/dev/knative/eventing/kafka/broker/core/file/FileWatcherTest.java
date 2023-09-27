@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.awaitility.Awaitility.await;
 
 import org.junit.jupiter.api.*;
 
@@ -59,11 +60,9 @@ public class FileWatcherTest {
             writer.write("Test Data");
         }
 
-        // Sleep for a duration to allow the FileWatcher to detect changes
-        Thread.sleep(5000); // sleep for 5 seconds. Adjust as necessary.
-
-        // The trigger function should have been called 2 times
-        assertEquals(2, counter.get());
+        // Await until the trigger function is called twice: 1 is for the initial file
+        // read, and 1 is for the file modification
+        await().until(() -> counter.get() == 2);
     }
 
     @Test
@@ -76,10 +75,8 @@ public class FileWatcherTest {
         });
         fileWatcher.start();
 
-        // Sleep for a duration to allow the FileWatcher to detect changes
-        Thread.sleep(5000); // sleep for 5 seconds. Adjust as necessary.
-
-        // The trigger function should have been called 1 time
-        assertEquals(1, counter.get());
+        // Await until the trigger function is called once: 1 is for the initial file
+        // read
+        await().until(() -> counter.get() == 1);
     }
 }
