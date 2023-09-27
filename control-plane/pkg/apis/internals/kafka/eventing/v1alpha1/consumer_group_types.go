@@ -156,12 +156,13 @@ func (c *ConsumerGroup) GetStatus() *duckv1.Status {
 func (cg *ConsumerGroup) ConsumerFromTemplate(options ...ConsumerOption) *Consumer {
 	// TODO figure out naming strategy, is generateName enough?
 	c := &Consumer{
-		ObjectMeta: cg.Spec.Template.ObjectMeta,
-		Spec:       cg.Spec.Template.Spec,
+		ObjectMeta: *cg.Spec.Template.ObjectMeta.DeepCopy(),
+		Spec:       *cg.Spec.Template.Spec.DeepCopy(),
 	}
 
 	ownerRef := metav1.NewControllerRef(cg, ConsumerGroupGroupVersionKind)
 	c.OwnerReferences = append(c.OwnerReferences, *ownerRef)
+	c.Finalizers = []string{"consumers.internal.kafka.eventing.knative.dev"}
 
 	for _, opt := range options {
 		opt(c)
