@@ -123,7 +123,7 @@ public class ContractPublisherTest {
             waitBroker.countDown();
         };
 
-        try (FileWatcher fw = new FileWatcher(file, () -> brokersConsumer.accept(broker1)); ) {
+        try (FileWatcher fw = new FileWatcher(file, () -> brokersConsumer.accept(broker1));) {
             fw.start();
             waitBroker.await();
         }
@@ -139,12 +139,38 @@ public class ContractPublisherTest {
                 .addResources(resource1())
                 .build();
 
-        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {};
+        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
+        };
 
         try (FileWatcher fw = new FileWatcher(file, () -> brokersConsumer.accept(broker1))) {
 
             // Started once
             fw.start();
+
+            // Now this should fail
+            assertThatThrownBy(fw::start).isInstanceOf(IllegalStateException.class);
+        }
+    }
+
+    @Test
+    @Timeout(value = 5)
+    public void updateWithSameContractFileShouldNotTriggerUpdate() throws Exception {
+
+        final var file = Files.createTempFile("fw-", "-fw").toFile();
+
+        final var broker1 = DataPlaneContract.Contract.newBuilder()
+                .addResources(resource1())
+                .build();
+
+        final var waitBroker = new CountDownLatch(1);
+        final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
+            assertThat(broker).isEqualTo(broker1);
+            waitBroker.countDown();
+        };
+
+        try (FileWatcher fw = new FileWatcher(file, () -> brokersConsumer.accept(broker1))) {
+            fw.start();
+            waitBroker.await();
 
             // Now this should fail
             assertThatThrownBy(fw::start).isInstanceOf(IllegalStateException.class);

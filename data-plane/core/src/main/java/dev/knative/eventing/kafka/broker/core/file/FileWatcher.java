@@ -57,6 +57,7 @@ public class FileWatcher implements AutoCloseable {
      */
     public FileWatcher(File file, Runnable triggerFunction) {
         Objects.requireNonNull(file, "provide file");
+        Objects.requireNonNull(triggerFunction, "provide trigger function");
 
         this.triggerFunction = triggerFunction;
         this.toWatch = file.getAbsoluteFile();
@@ -137,9 +138,7 @@ public class FileWatcher implements AutoCloseable {
                 // We check if the event's context (the file) matches our target file
                 final var filename = event.context();
                 if (kind != OVERFLOW && filename.toString().equals(toWatch.getName())) {
-                    if (triggerFunction != null) {
                         triggerFunction.run();
-                    }
                 }
             }
 
