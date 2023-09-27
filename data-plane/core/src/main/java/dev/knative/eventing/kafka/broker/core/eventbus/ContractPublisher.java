@@ -62,11 +62,11 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
         this.accept(DataPlaneContract.Contract.newBuilder().build());
     }
 
-    public void updateContract(File toWatch) {
+    public void updateContract(File newContract) {
         if (Thread.interrupted()) {
             return;
         }
-        try (final var fileReader = new FileReader(toWatch);
+        try (final var fileReader = new FileReader(newContract);
                 final var bufferedReader = new BufferedReader(fileReader)) {
             final var contract = parseFromJson(bufferedReader);
             if (contract == null) {
@@ -90,7 +90,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
         }
     }
 
-    private DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
+    public static DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
         try {
             final var contract = DataPlaneContract.Contract.newBuilder();
             JsonFormat.parser().merge(content, contract);
