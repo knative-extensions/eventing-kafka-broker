@@ -138,6 +138,9 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 			Labels: map[string]string{
 				internalscg.UserFacingResourceLabelSelector: strings.ToLower(ks.GetGroupVersionKind().Kind),
 			},
+			Finalizers: []string{
+				"consumergroups.internal.kafka.eventing.knative.dev",
+			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
 			Replicas: ks.Spec.Consumers,

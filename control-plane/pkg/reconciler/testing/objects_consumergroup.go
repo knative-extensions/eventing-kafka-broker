@@ -173,6 +173,12 @@ func WithConsumerGroupLabels(labels map[string]string) ConsumerGroupOption {
 	}
 }
 
+func WithConsumerGroupFinalizer() ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Finalizers = []string{"consumergroups.internal.kafka.eventing.knative.dev"}
+	}
+}
+
 func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.Spec.Replicas = pointer.Int32(replicas)
