@@ -269,7 +269,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		StatefulSetName:      c.StatefulSetName,
 		PodCapacity:          c.Capacity,
 		RefreshPeriod:        c.RefreshPeriod,
-		SchedulerPolicy:      "", //  scheduler.SchedulerPolicyType field only applicable for old scheduler policy
+		SchedulerPolicy:      scheduler.MAXFILLUP,
 		SchedPolicy:          c.SchedulerPolicy,
 		DeschedPolicy:        c.DeSchedulerPolicy,
 		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
