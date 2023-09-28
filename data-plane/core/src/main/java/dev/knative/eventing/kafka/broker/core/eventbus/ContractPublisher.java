@@ -73,8 +73,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
                 return;
             }
             // The check, which is based only on the generation number, works because the control plane doesn't update
-            // the
-            // file if nothing changes.
+            // the file if nothing changes.
             final var previousLastContract = this.lastContract;
             this.lastContract = contract.getGeneration();
             if (contract.getGeneration() == previousLastContract) {
