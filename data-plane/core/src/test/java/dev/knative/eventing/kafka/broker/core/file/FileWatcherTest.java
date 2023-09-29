@@ -16,14 +16,13 @@
 
 package dev.knative.eventing.kafka.broker.core.file;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
-import static org.awaitility.Awaitility.await;
-
 import org.junit.jupiter.api.*;
 
 public class FileWatcherTest {

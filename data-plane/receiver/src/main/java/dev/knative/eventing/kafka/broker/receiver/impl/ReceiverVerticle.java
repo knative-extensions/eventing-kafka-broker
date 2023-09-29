@@ -138,8 +138,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             File tlsCrtFile = new File(tlsCrtFilePath);
 
             if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
-                PemKeyCertOptions keyCertOptions = new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath())
-                        .setCertPath(tlsCrtFile.getPath());
+                PemKeyCertOptions keyCertOptions =
+                        new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
 
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
@@ -151,14 +151,14 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         if (this.httpsServer != null) {
             CompositeFuture.all(
-                    this.httpServer
-                            .requestHandler(handler)
-                            .exceptionHandler(startPromise::tryFail)
-                            .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
-                    this.httpsServer
-                            .requestHandler(handler)
-                            .exceptionHandler(startPromise::tryFail)
-                            .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
+                            this.httpServer
+                                    .requestHandler(handler)
+                                    .exceptionHandler(startPromise::tryFail)
+                                    .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost()),
+                            this.httpsServer
+                                    .requestHandler(handler)
+                                    .exceptionHandler(startPromise::tryFail)
+                                    .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
                     .<Void>mapEmpty()
                     .onComplete(startPromise);
         } else {
@@ -187,9 +187,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     @Override
     public void stop(Promise<Void> stopPromise) throws Exception {
         CompositeFuture.all(
-                (this.httpServer != null ? this.httpServer.close().mapEmpty() : Future.succeededFuture()),
-                (this.httpsServer != null ? this.httpsServer.close().mapEmpty() : Future.succeededFuture()),
-                (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
+                        (this.httpServer != null ? this.httpServer.close().mapEmpty() : Future.succeededFuture()),
+                        (this.httpsServer != null ? this.httpsServer.close().mapEmpty() : Future.succeededFuture()),
+                        (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
 

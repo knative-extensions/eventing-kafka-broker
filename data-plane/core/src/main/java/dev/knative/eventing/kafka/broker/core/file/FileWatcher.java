@@ -137,8 +137,8 @@ public class FileWatcher implements AutoCloseable {
 
                 // We check if the event's context (the file) matches our target file
                 if (kind != OVERFLOW) {
-                        triggerFunction.run();
-                        break;
+                    triggerFunction.run();
+                    break;
                 }
             }
 

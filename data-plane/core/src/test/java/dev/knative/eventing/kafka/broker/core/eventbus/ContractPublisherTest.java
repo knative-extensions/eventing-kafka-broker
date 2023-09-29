@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.eventbus;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.google.protobuf.util.JsonFormat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
@@ -30,12 +31,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.LoggerFactory;
-import static org.awaitility.Awaitility.await;
 
 @ExtendWith(VertxExtension.class)
 public class ContractPublisherTest {
@@ -90,7 +89,6 @@ public class ContractPublisherTest {
         Thread.sleep(2000L);
 
         await().until(() -> counter.get() == 1);
-
     }
 
     @Test
@@ -139,7 +137,6 @@ public class ContractPublisherTest {
         Thread.sleep(2000L);
 
         await().until(() -> counter.get() == 2);
-
     }
 
     public static void write(File file, DataPlaneContract.Contract contract) throws IOException {
