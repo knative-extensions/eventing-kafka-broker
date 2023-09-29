@@ -74,14 +74,16 @@ func (bs *BrokerStatus) GetTopLevelCondition() *apis.Condition {
 
 // SetAddress makes this Broker addressable by setting the URI. It also
 // sets the BrokerConditionAddressable to true.
-func (bs *BrokerStatus) SetAddress(address *v1.Addressable) {
+func (bs *BrokerStatus) SetAddress(url *apis.URL) {
 	bs.AddressStatus = v1.AddressStatus{
-		Address: address,
+		Address: &v1.Addressable{
+			URL: url,
+		},
 	}
 
-	if address != nil && address.URL != nil {
+	if url != nil {
 		bs.GetConditionSet().Manage(bs).MarkTrue(BrokerConditionAddressable)
-		bs.AddressStatus.Address.Name = &address.URL.Scheme
+		bs.AddressStatus.Address.Name = &url.Scheme
 	} else {
 		bs.GetConditionSet().Manage(bs).MarkFalse(BrokerConditionAddressable, "nil URL", "URL is nil")
 	}

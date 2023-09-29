@@ -33,7 +33,7 @@ const (
 	DefaultShutdownTimeout = time.Minute * 1
 )
 
-type HTTPEventReceiver struct {
+type HTTPMessageReceiver struct {
 	port int
 
 	server   *http.Server
@@ -46,11 +46,11 @@ type HTTPEventReceiver struct {
 	Ready chan interface{}
 }
 
-// HTTPEventReceiverOption enables further configuration of a HTTPEventReceiver.
-type HTTPEventReceiverOption func(*HTTPEventReceiver)
+// HTTPMessageReceiverOption enables further configuration of a HTTPMessageReceiver.
+type HTTPMessageReceiverOption func(*HTTPMessageReceiver)
 
-func NewHTTPEventReceiver(port int, o ...HTTPEventReceiverOption) *HTTPEventReceiver {
-	h := &HTTPEventReceiver{
+func NewHTTPMessageReceiver(port int, o ...HTTPMessageReceiverOption) *HTTPMessageReceiver {
+	h := &HTTPMessageReceiver{
 		port: port,
 	}
 
@@ -63,25 +63,25 @@ func NewHTTPEventReceiver(port int, o ...HTTPEventReceiverOption) *HTTPEventRece
 }
 
 // WithChecker takes a handler func which will run as an additional health check in Drainer.
-// kncloudevents HTTPEventReceiver uses Drainer to perform health check.
+// kncloudevents HTTPMessageReceiver uses Drainer to perform health check.
 // By default, Drainer directly writes StatusOK to kubelet probe if the Pod is not draining.
 // Users can configure customized liveness and readiness check logic by defining checker here.
-func WithChecker(checker http.HandlerFunc) HTTPEventReceiverOption {
-	return func(h *HTTPEventReceiver) {
+func WithChecker(checker http.HandlerFunc) HTTPMessageReceiverOption {
+	return func(h *HTTPMessageReceiver) {
 		h.checker = checker
 	}
 }
 
 // WithDrainQuietPeriod configures the QuietPeriod for the Drainer.
-func WithDrainQuietPeriod(duration time.Duration) HTTPEventReceiverOption {
-	return func(h *HTTPEventReceiver) {
+func WithDrainQuietPeriod(duration time.Duration) HTTPMessageReceiverOption {
+	return func(h *HTTPMessageReceiver) {
 		h.drainQuietPeriod = duration
 	}
 }
 
 // WithTLSConfig configures the TLS config for the receiver.
-func WithTLSConfig(cfg *tls.Config) HTTPEventReceiverOption {
-	return func(h *HTTPEventReceiver) {
+func WithTLSConfig(cfg *tls.Config) HTTPMessageReceiverOption {
+	return func(h *HTTPMessageReceiver) {
 		if h.server == nil {
 			h.server = newServer()
 		}
@@ -92,8 +92,8 @@ func WithTLSConfig(cfg *tls.Config) HTTPEventReceiverOption {
 
 // WithWriteTimeout sets the HTTP server's WriteTimeout. It covers the time between end of reading
 // Request Header to end of writing response.
-func WithWriteTimeout(duration time.Duration) HTTPEventReceiverOption {
-	return func(h *HTTPEventReceiver) {
+func WithWriteTimeout(duration time.Duration) HTTPMessageReceiverOption {
+	return func(h *HTTPMessageReceiver) {
 		if h.server == nil {
 			h.server = newServer()
 		}
@@ -104,8 +104,8 @@ func WithWriteTimeout(duration time.Duration) HTTPEventReceiverOption {
 
 // WithReadTimeout sets the HTTP server's ReadTimeout. It covers the duration from reading the entire request
 // (Headers + Body)
-func WithReadTimeout(duration time.Duration) HTTPEventReceiverOption {
-	return func(h *HTTPEventReceiver) {
+func WithReadTimeout(duration time.Duration) HTTPMessageReceiverOption {
+	return func(h *HTTPMessageReceiver) {
 		if h.server == nil {
 			h.server = newServer()
 		}
@@ -114,7 +114,7 @@ func WithReadTimeout(duration time.Duration) HTTPEventReceiverOption {
 	}
 }
 
-func (recv *HTTPEventReceiver) GetAddr() string {
+func (recv *HTTPMessageReceiver) GetAddr() string {
 	if recv.server != nil {
 		return recv.server.Addr
 	}
@@ -123,7 +123,7 @@ func (recv *HTTPEventReceiver) GetAddr() string {
 }
 
 // Blocking
-func (recv *HTTPEventReceiver) StartListen(ctx context.Context, handler http.Handler) error {
+func (recv *HTTPMessageReceiver) StartListen(ctx context.Context, handler http.Handler) error {
 	var err error
 	if recv.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", recv.port)); err != nil {
 		return err

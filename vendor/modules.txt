@@ -85,7 +85,6 @@ github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
 github.com/cloudevents/sdk-go/v2/binding/format
 github.com/cloudevents/sdk-go/v2/binding/spec
-github.com/cloudevents/sdk-go/v2/binding/transformer
 github.com/cloudevents/sdk-go/v2/client
 github.com/cloudevents/sdk-go/v2/context
 github.com/cloudevents/sdk-go/v2/event
@@ -1280,7 +1279,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.38.1-0.20230922120019-37a0e3ceac14
+# knative.dev/eventing v0.38.4
 ## explicit; go 1.19
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1305,7 +1304,6 @@ knative.dev/eventing/pkg/apis/sources
 knative.dev/eventing/pkg/apis/sources/config
 knative.dev/eventing/pkg/apis/sources/v1
 knative.dev/eventing/pkg/apis/sources/v1beta2
-knative.dev/eventing/pkg/broker
 knative.dev/eventing/pkg/client/clientset/versioned
 knative.dev/eventing/pkg/client/clientset/versioned/fake
 knative.dev/eventing/pkg/client/clientset/versioned/scheme
@@ -1359,8 +1357,6 @@ knative.dev/eventing/pkg/duck
 knative.dev/eventing/pkg/eventingtls
 knative.dev/eventing/pkg/eventingtls/eventingtlstesting
 knative.dev/eventing/pkg/kncloudevents
-knative.dev/eventing/pkg/kncloudevents/attributes
-knative.dev/eventing/pkg/metrics
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
 knative.dev/eventing/pkg/reconciler/testing/v1
@@ -1378,7 +1374,6 @@ knative.dev/eventing/pkg/scheduler/plugins/core/removewithhighestordinalpriority
 knative.dev/eventing/pkg/scheduler/plugins/kafka/nomaxresourcecount
 knative.dev/eventing/pkg/scheduler/state
 knative.dev/eventing/pkg/scheduler/statefulset
-knative.dev/eventing/pkg/tracing
 knative.dev/eventing/pkg/utils
 knative.dev/eventing/test
 knative.dev/eventing/test/conformance/helpers
@@ -1586,7 +1581,6 @@ knative.dev/reconciler-test/pkg/resources/knativeservice
 knative.dev/reconciler-test/pkg/resources/secret
 knative.dev/reconciler-test/pkg/resources/service
 knative.dev/reconciler-test/pkg/state
-knative.dev/reconciler-test/resources/certificate
 knative.dev/reconciler-test/resources/svc
 # sigs.k8s.io/controller-runtime v0.12.3
 ## explicit; go 1.17

@@ -24,5 +24,4 @@ const (
 	NewTriggerFilters   = "new-trigger-filters"
 	TransportEncryption = "transport-encryption"
 	EvenTypeAutoCreate  = "eventtype-auto-create"
-	OIDCAuthentication  = "authentication.oidc"
 )
