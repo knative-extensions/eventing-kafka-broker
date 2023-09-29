@@ -78,7 +78,7 @@ type Object interface {
 type StatusConditionManager struct {
 	Object Object
 
-	SetAddress func(u *apis.URL)
+	SetAddress func(addr *duckv1.Addressable)
 
 	Env              *config.Env
 	BootstrapServers string
@@ -196,18 +196,20 @@ func (manager *StatusConditionManager) FailedToGetBrokerAuthSecret(err error) re
 }
 
 func (manager *StatusConditionManager) Addressable(address *url.URL) {
-	manager.SetAddress(&apis.URL{
-		Scheme:      address.Scheme,
-		Opaque:      address.Opaque,
-		User:        address.User,
-		Host:        address.Host,
-		Path:        address.Path,
-		RawPath:     address.RawPath,
-		ForceQuery:  address.ForceQuery,
-		RawQuery:    address.RawQuery,
-		Fragment:    address.Fragment,
-		RawFragment: address.RawFragment,
-	})
+	manager.SetAddress(&duckv1.Addressable{
+		Name: &address.Scheme,
+		URL: &apis.URL{
+			Scheme:      address.Scheme,
+			Opaque:      address.Opaque,
+			User:        address.User,
+			Host:        address.Host,
+			Path:        address.Path,
+			RawPath:     address.RawPath,
+			ForceQuery:  address.ForceQuery,
+			RawQuery:    address.RawQuery,
+			Fragment:    address.Fragment,
+			RawFragment: address.RawFragment,
+		}})
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionAddressable)
 	manager.ProbesStatusReady()
 }

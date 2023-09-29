@@ -264,19 +264,18 @@ func getSelectorLabel(ssName string) map[string]string {
 }
 
 func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) Scheduler {
-	ss := statefulsetscheduler.NewScheduler(
-		ctx,
-		system.Namespace(),
-		c.StatefulSetName,
-		lister,
-		c.RefreshPeriod,
-		c.Capacity,
-		"", //  scheduler.SchedulerPolicyType field only applicable for old scheduler policy
-		nodeinformer.Get(ctx).Lister(),
-		newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
-		c.SchedulerPolicy,
-		c.DeSchedulerPolicy,
-	)
+	ss, _ := statefulsetscheduler.New(ctx, &statefulsetscheduler.Config{
+		StatefulSetNamespace: system.Namespace(),
+		StatefulSetName:      c.StatefulSetName,
+		PodCapacity:          c.Capacity,
+		RefreshPeriod:        c.RefreshPeriod,
+		SchedulerPolicy:      scheduler.MAXFILLUP,
+		SchedPolicy:          c.SchedulerPolicy,
+		DeschedPolicy:        c.DeSchedulerPolicy,
+		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
+		VPodLister:           lister,
+		NodeLister:           nodeinformer.Get(ctx).Lister(),
+	})
 
 	return Scheduler{
 		Scheduler:       ss,

@@ -20,12 +20,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 func TestKafkaSinkStatusSetAddress(t *testing.T) {
 	status := KafkaSinkStatus{}
-	status.SetAddress(apis.HTTP("localhost"))
+	status.SetAddress(&duckv1.Addressable{
+		Name: pointer.String("http"),
+		URL:  apis.HTTP("localhost"),
+	})
 
 	addressable := status.GetCondition(ConditionAddressable).IsTrue()
 
