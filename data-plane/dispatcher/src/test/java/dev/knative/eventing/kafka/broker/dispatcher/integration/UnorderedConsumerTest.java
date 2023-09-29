@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
-import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -23,6 +22,7 @@ import static org.awaitility.Awaitility.await;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisherTest;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
@@ -100,12 +100,13 @@ public class UnorderedConsumerTest {
         startServer(vertx, new VertxTestContext(), event, waitEvents);
 
         final var file = Files.createTempFile("fw-", "-fw").toFile();
-        final var fileWatcher = new FileWatcher(
-                file, new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS));
+        final var contractPublisher =
+                new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+        final var fileWatcher = new FileWatcher(file, () -> contractPublisher.updateContract(file));
 
         fileWatcher.start();
 
-        write(file, contract);
+        ContractPublisherTest.write(file, contract);
 
         await().atMost(6, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
