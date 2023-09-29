@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 )

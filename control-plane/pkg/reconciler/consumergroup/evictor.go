@@ -48,8 +48,8 @@ type evictor struct {
 // newEvictor creates a new evictor.
 //
 // fields are additional logger fields to be attached to the evictor logger.
-func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
-	return evictor{
+func newEvictor(ctx context.Context, fields ...zap.Field) *evictor {
+	return &evictor{
 		ctx:             ctx,
 		kubeClient:      kubeclient.Get(ctx),
 		InternalsClient: kafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -60,16 +60,12 @@ func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
 	}
 }
 
-func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
+func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
 	key := vpod.GetKey()
 
 	logger := e.logger.
 		With(zap.String("consumergroup", key.String())).
 		With(zap.String("pod", fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())))
-
-	if err := e.disablePodScheduling(logger, pod.DeepCopy() /* Do not modify informer copy. */); err != nil {
-		return fmt.Errorf("failed to mark pod unschedulable: %w", err)
-	}
 
 	cgBefore, err := e.InternalsClient.
 		ConsumerGroups(key.Namespace).
@@ -110,25 +106,6 @@ func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv
 		return fmt.Errorf("failed patching: %w", err)
 	}
 	logger.Debug("Patched consumer group with placement changes", zap.Any("patch", patch))
-
-	return nil
-}
-
-func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) error {
-	if pod.Annotations == nil {
-		pod.Annotations = make(map[string]string, 1)
-	}
-	// scheduling disabled.
-	pod.Annotations[scheduler.PodAnnotationKey] = "true"
-
-	_, err := e.kubeClient.CoreV1().
-		Pods(pod.GetNamespace()).
-		Update(e.ctx, pod, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to update pod %s/%s: %w", pod.GetNamespace(), pod.GetName(), err)
-	}
-
-	logger.Info("Marked pod as unschedulable")
 
 	return nil
 }

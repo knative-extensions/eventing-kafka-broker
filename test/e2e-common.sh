@@ -112,11 +112,17 @@ function knative_eventing() {
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   kafka_setup
+  keda_setup
 }
 
 function kafka_setup() {
   echo ">> Prepare to deploy Strimzi"
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
+}
+
+function keda_setup() {
+  echo ">> Prepare to deploy KEDA"
+  ./test/keda/keda_setup.sh || fail_test "Failed to set up KEDA"
 }
 
 function build_components_from_source() {

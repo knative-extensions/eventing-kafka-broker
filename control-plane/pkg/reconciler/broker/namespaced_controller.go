@@ -22,7 +22,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	mfclient "github.com/manifestival/client-go-client"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
