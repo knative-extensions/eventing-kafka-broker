@@ -353,3 +353,9 @@ func ConsumerDeletedTimeStamp() ConsumerOption {
 		WithDeletedTimeStamp(c)
 	}
 }
+
+func ConsumerFinalizer() ConsumerOption {
+	return func(c *kafkainternals.Consumer) {
+		c.Finalizers = []string{"consumers.internal.kafka.eventing.knative.dev"}
+	}
+}

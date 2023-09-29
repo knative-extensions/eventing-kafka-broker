@@ -93,12 +93,12 @@ func (kcs *KafkaChannelStatus) InitializeConditions() {
 }
 
 // SetAddress sets the address (as part of Addressable contract) and marks the correct condition.
-func (kcs *KafkaChannelStatus) SetAddress(url *apis.URL) {
+func (kcs *KafkaChannelStatus) SetAddress(addr *duckv1.Addressable) {
 	if kcs.Address == nil {
 		kcs.Address = &duckv1.Addressable{}
 	}
-	if url != nil {
-		kcs.Address.URL = url
+	if addr != nil {
+		kcs.Address = addr
 		kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionAddressable)
 	} else {
 		kcs.Address.URL = nil

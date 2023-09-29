@@ -32,7 +32,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 	pkgTest "knative.dev/pkg/test"
 	"knative.dev/pkg/test/helpers"
@@ -142,7 +141,7 @@ func (p *prober) getStepNoFromMsg(message string) (string, error) {
 func (p *prober) getTraceForStepEvent(eventNo string) []byte {
 	p.log.Debugf("Fetching trace for Step event #%s", eventNo)
 	query := fmt.Sprintf("step=%s and cloudevents.type=%s and target=%s",
-		eventNo, event.StepType, fmt.Sprintf(forwarderTargetFmt, p.client.Namespace, network.GetClusterDomainName()))
+		eventNo, event.StepType, fmt.Sprintf(forwarderTargetFmt, p.client.Namespace))
 	trace, err := event.FindTrace(query)
 	if err != nil {
 		p.log.Warn(err)
@@ -159,7 +158,7 @@ func (p *prober) exportFinishedEventTrace() {
 func (p *prober) getTraceForFinishedEvent() []byte {
 	p.log.Info("Fetching trace for Finished event")
 	query := fmt.Sprintf("cloudevents.type=%s and target=%s",
-		event.FinishedType, fmt.Sprintf(forwarderTargetFmt, p.client.Namespace, network.GetClusterDomainName()))
+		event.FinishedType, fmt.Sprintf(forwarderTargetFmt, p.client.Namespace))
 	trace, err := event.FindTrace(query)
 	if err != nil {
 		p.log.Warn(err)

@@ -21,7 +21,7 @@ import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPla
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
-import dev.knative.eventing.kafka.broker.core.file.SecretWatcher;
+import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -89,7 +89,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
 
-    private SecretWatcher secretWatcher;
+    private FileWatcher secretWatcher;
 
     public ReceiverVerticle(
             final ReceiverEnv env,
@@ -176,15 +176,16 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     // Set up the secret watcher
     private void setupSecretWatcher() {
         try {
-            this.secretWatcher = new SecretWatcher(secretVolumePath, this::updateServerConfig);
-            new Thread(this.secretWatcher).start();
+            File file = new File(secretVolumePath + "/tls.crt");
+            this.secretWatcher = new FileWatcher(file, this::updateServerConfig);
+            this.secretWatcher.start();
         } catch (IOException e) {
             logger.error("Failed to start SecretWatcher", e);
         }
     }
 
     @Override
-    public void stop(Promise<Void> stopPromise) {
+    public void stop(Promise<Void> stopPromise) throws Exception {
         CompositeFuture.all(
                         (this.httpServer != null ? this.httpServer.close().mapEmpty() : Future.succeededFuture()),
                         (this.httpsServer != null ? this.httpsServer.close().mapEmpty() : Future.succeededFuture()),
@@ -194,7 +195,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         // close the watcher
         if (this.secretWatcher != null) {
-            this.secretWatcher.stop();
+            try {
+                this.secretWatcher.close();
+            } catch (IOException e) {
+                logger.error("Failed to close SecretWatcher", e);
+            }
         }
     }
 

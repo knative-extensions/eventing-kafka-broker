@@ -18,7 +18,6 @@ package addressable
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,8 +26,6 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/k8s"
 )
-
-type ValidateAddress func(addressable *duckv1.Addressable) error
 
 // Address returns a broker's address.
 func Address(ctx context.Context, gvr schema.GroupVersionResource, name string, timings ...time.Duration) (*duckv1.Addressable, error) {
@@ -53,11 +50,4 @@ func Address(ctx context.Context, gvr schema.GroupVersionResource, name string, 
 		return true, nil
 	})
 	return addr, err
-}
-
-func AssertHTTPSAddress(addr *duckv1.Addressable) error {
-	if addr.URL.Scheme != "https" {
-		return fmt.Errorf("address is not HTTPS: %#v", addr)
-	}
-	return nil
 }

@@ -126,10 +126,12 @@ public class Main {
 
             ContractPublisher publisher =
                     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-            FileWatcher fileWatcher = new FileWatcher(new File(env.getDataPlaneConfigFilePath()), publisher);
+
+            File file = new File(env.getDataPlaneConfigFilePath());
+            FileWatcher fileWatcher = new FileWatcher(file, () -> publisher.updateContract(file));
             fileWatcher.start();
 
-            // Register shutdown hook for graceful shutdown.
+            //     Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
 
         } catch (final Exception ex) {
