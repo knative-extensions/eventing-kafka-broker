@@ -17,7 +17,7 @@
 package testing
 
 import (
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 type MockKafkaClient struct {
@@ -25,9 +25,7 @@ type MockKafkaClient struct {
 	IsClosed   bool
 }
 
-var (
-	_ sarama.Client = &MockKafkaClient{}
-)
+var _ sarama.Client = &MockKafkaClient{}
 
 func (m MockKafkaClient) Config() *sarama.Config {
 	return sarama.NewConfig()
@@ -62,6 +60,10 @@ func (m MockKafkaClient) WritablePartitions(topic string) ([]int32, error) {
 }
 
 func (m MockKafkaClient) Leader(topic string, partitionID int32) (*sarama.Broker, error) {
+	panic("implement me")
+}
+
+func (m MockKafkaClient) LeaderAndEpoch(topic string, partitionID int32) (*sarama.Broker, int32, error) {
 	panic("implement me")
 }
 

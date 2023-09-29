@@ -19,7 +19,7 @@ package trigger
 import (
 	"context"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	"k8s.io/client-go/tools/cache"

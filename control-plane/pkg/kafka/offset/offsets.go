@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 
