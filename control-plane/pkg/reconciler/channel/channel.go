@@ -30,7 +30,7 @@ import (
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"

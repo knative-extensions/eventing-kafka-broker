@@ -55,6 +55,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     private void addTask(Runnable task, Promise<?> promise) {
         if (isClosed.get()) {
             promise.fail("Consumer is closed");
+            return;
         }
         taskQueue.add(task);
     }
@@ -65,6 +66,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                 taskQueue.take().run();
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for task", e);
+                break;
             }
         }
     }
@@ -105,10 +107,10 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                 }
                 taskRunnerThread.interrupt();
                 taskRunnerThread.join();
-                promise.complete();
+                promise.tryComplete();
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for taskRunnerThread to finish", e);
-                promise.fail(e);
+                promise.tryFail(e);
             }
         });
         return promise.future();

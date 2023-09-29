@@ -70,6 +70,10 @@ const (
 	Json     = "json"
 )
 
+var (
+	jsonUnmarshalOptions = protojson.UnmarshalOptions{DiscardUnknown: true}
+)
+
 // Base reconciler for broker and trigger reconciler.
 // It contains common logic for both trigger and broker reconciler.
 type Reconciler struct {
@@ -213,7 +217,7 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	case Protobuf:
 		err = proto.Unmarshal(dataPlaneDataRaw, ct)
 	case Json:
-		err = protojson.Unmarshal(dataPlaneDataRaw, ct)
+		err = jsonUnmarshalOptions.Unmarshal(dataPlaneDataRaw, ct)
 	}
 	if err != nil {
 
