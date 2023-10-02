@@ -32,7 +32,7 @@ import (
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/experimental/features_config"
 
-	newfilters "knative.dev/eventing/test/experimental/features/new_trigger_filters"
+	newfilters "knative.dev/eventing/test/rekt/features/new_trigger_filters"
 	"knative.dev/eventing/test/rekt/resources/broker"
 )
 
