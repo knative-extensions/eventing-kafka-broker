@@ -92,7 +92,7 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 	event.SetID(uuid.New().String())
 
 	f.Requirement("install source", eventshub.Install(source,
-		eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, &ingressCertificateName),
+		eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, nil),
 		eventshub.InputEvent(event),
 		// Send multiple events so that we take into account that the certificate rotation might
 		// be detected by the server after some time.
