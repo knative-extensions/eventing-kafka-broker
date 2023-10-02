@@ -29,11 +29,8 @@ import (
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 
-	// "k8s.io/apimachinery/pkg/types"
-
-	"knative.dev/eventing/test/rekt/features/featureflags"
-	// "knative.dev/eventing/test/rekt/resources/addressable"
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
+	"knative.dev/eventing/test/rekt/features/featureflags"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
@@ -41,8 +38,6 @@ import (
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/resources/service"
-	// "knative.dev/reconciler-test/resources/certificate"
-	// "knative.dev/eventing/test/rekt/resources/addressable"
 )
 
 func RotateBrokerTLSCertificates() *feature.Feature {

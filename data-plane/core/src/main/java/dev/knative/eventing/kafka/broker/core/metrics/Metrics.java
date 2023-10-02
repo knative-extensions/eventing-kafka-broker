@@ -288,7 +288,6 @@ public class Metrics {
     public static PemKeyCertOptions permKeyCertOptions() {
         final var certPath = System.getenv().get("METRICS_PEM_CERT_PATH");
         final var keyPath = System.getenv().get("METRICS_PEM_KEY_PATH");
-        logger.info("[hahap] certPath: " + certPath + ", keyPath: " + keyPath);
         if (certPath == null || keyPath == null) {
             logger.info("Metrics cert paths weren't provided, server will start without TLS");
             return null;
