@@ -28,7 +28,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/network"
 	pkgTest "knative.dev/pkg/test"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
@@ -54,7 +53,7 @@ const (
 
 	prefix = "eventing_upgrade_tests"
 
-	forwarderTargetFmt = "http://" + receiver.Name + ".%s.svc.%s"
+	forwarderTargetFmt = "http://" + receiver.Name + ".%s.svc.cluster.local"
 
 	defaultTraceExportLimit = 100
 )
@@ -193,7 +192,7 @@ func (p *prober) compileTemplate(templateName string, endpoint interface{}, trac
 		p.config,
 		endpoint,
 		tracingConfig,
-		fmt.Sprintf(forwarderTargetFmt, p.client.Namespace, network.GetClusterDomainName()),
+		fmt.Sprintf(forwarderTargetFmt, p.client.Namespace),
 	}
 	p.ensureNoError(tmpl.Execute(&buff, data))
 	return buff.String()

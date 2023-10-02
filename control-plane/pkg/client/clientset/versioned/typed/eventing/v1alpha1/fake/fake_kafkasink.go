@@ -23,7 +23,6 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -36,9 +35,9 @@ type FakeKafkaSinks struct {
 	ns   string
 }
 
-var kafkasinksResource = schema.GroupVersionResource{Group: "eventing.knative.dev", Version: "v1alpha1", Resource: "kafkasinks"}
+var kafkasinksResource = v1alpha1.SchemeGroupVersion.WithResource("kafkasinks")
 
-var kafkasinksKind = schema.GroupVersionKind{Group: "eventing.knative.dev", Version: "v1alpha1", Kind: "KafkaSink"}
+var kafkasinksKind = v1alpha1.SchemeGroupVersion.WithKind("KafkaSink")
 
 // Get takes name of the kafkaSink, and returns the corresponding kafkaSink object, and an error if there is any.
 func (c *FakeKafkaSinks) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.KafkaSink, err error) {

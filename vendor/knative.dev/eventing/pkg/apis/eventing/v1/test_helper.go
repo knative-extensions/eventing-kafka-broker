@@ -61,9 +61,7 @@ func (t testHelper) ReadyBrokerStatus() *BrokerStatus {
 	bs.PropagateIngressAvailability(t.AvailableEndpoints())
 	bs.PropagateTriggerChannelReadiness(t.ReadyChannelStatus())
 	bs.PropagateFilterAvailability(t.AvailableEndpoints())
-	bs.SetAddress(&duckv1.Addressable{
-		URL: apis.HTTP("example.com"),
-	})
+	bs.SetAddress(apis.HTTP("example.com"))
 	bs.MarkDeadLetterSinkResolvedSucceeded(eventingduckv1.DeliveryStatus{})
 	return bs
 }
@@ -73,9 +71,7 @@ func (t testHelper) ReadyBrokerStatusWithoutDLS() *BrokerStatus {
 	bs.PropagateIngressAvailability(t.AvailableEndpoints())
 	bs.PropagateTriggerChannelReadiness(t.ReadyChannelStatus())
 	bs.PropagateFilterAvailability(t.AvailableEndpoints())
-	bs.SetAddress(&duckv1.Addressable{
-		URL: apis.HTTP("example.com"),
-	})
+	bs.SetAddress(apis.HTTP("example.com"))
 	bs.MarkDeadLetterSinkNotConfigured()
 	return bs
 }
