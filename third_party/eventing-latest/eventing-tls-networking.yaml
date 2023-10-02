@@ -104,6 +104,7 @@ spec:
     rotationPolicy: Always
   dnsNames:
     - imc-dispatcher.knative-eventing.svc.cluster.local
+    - imc-dispatcher.knative-eventing.svc
   issuerRef:
     name: selfsigned-ca-issuer
     kind: Issuer
@@ -149,6 +150,7 @@ spec:
     rotationPolicy: Always
   dnsNames:
     - broker-filter.knative-eventing.svc.cluster.local
+    - broker-filter.knative-eventing.svc
   issuerRef:
     name: selfsigned-ca-issuer
     kind: Issuer
@@ -194,6 +196,7 @@ spec:
     rotationPolicy: Always
   dnsNames:
     - broker-ingress.knative-eventing.svc.cluster.local
+    - broker-ingress.knative-eventing.svc
   issuerRef:
     name: selfsigned-ca-issuer
     kind: Issuer
