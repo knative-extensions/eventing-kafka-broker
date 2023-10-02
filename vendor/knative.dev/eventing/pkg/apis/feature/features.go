@@ -76,10 +76,6 @@ func (e Flags) IsDisabledTransportEncryption() bool {
 	return e != nil && e[TransportEncryption] == Disabled
 }
 
-func (e Flags) IsOIDCAuthentication() bool {
-	return e != nil && e[OIDCAuthentication] == Enabled
-}
-
 func (e Flags) String() string {
 	return fmt.Sprintf("%+v", map[string]Flag(e))
 }

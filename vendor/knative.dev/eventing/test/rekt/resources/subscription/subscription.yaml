@@ -29,20 +29,12 @@ spec:
     {{ if .subscriber.ref }}
     ref:
       kind: {{ .subscriber.ref.kind }}
-      {{ if .subscriber.ref.namespace }}
-      namespace: {{ .subscriber.ref.namespace }}
-      {{ else }}
       namespace: {{ .namespace }}
-      {{ end }}
       name: {{ .subscriber.ref.name }}
       apiVersion: {{ .subscriber.ref.apiVersion }}
     {{ end }}
     {{ if .subscriber.uri }}
     uri: {{ .subscriber.uri }}
-    {{ end }}
-    {{ if .subscriber.CACerts }}
-    CACerts: |-
-      {{ .subscriber.CACerts }}
     {{ end }}
   {{ end }}
   {{if .reply }}
@@ -60,10 +52,6 @@ spec:
     {{ end }}
     {{ if .reply.uri }}
     uri: {{ .reply.uri }}
-    {{ end }}
-    {{ if .reply.CACerts }}
-    CACerts: |-
-      {{ .reply.CACerts }}
     {{ end }}
   {{ end }}
   {{ if .delivery }}
@@ -83,10 +71,6 @@ spec:
       {{ end }}
       {{ if .delivery.deadLetterSink.uri }}
       uri: {{ .delivery.deadLetterSink.uri }}
-      {{ end }}
-      {{ if .delivery.deadLetterSink.CACerts }}
-      CACerts: |-
-        {{ .delivery.deadLetterSink.CACerts }}
       {{ end }}
     {{ end }}
     {{ if .delivery.retry }}
