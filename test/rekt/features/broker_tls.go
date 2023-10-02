@@ -54,13 +54,13 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 
 	brokerConfig := feature.MakeRandomK8sName("brokercfg")
 
+	f.Prerequisite("transport encryption is strict", featureflags.TransportEncryptionStrict())
+	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
+
 	f.Setup("Create broker config", brokerconfigmap.Install(brokerConfig,
 		brokerconfigmap.WithNumPartitions(1),
 		brokerconfigmap.WithReplicationFactor(1),
 		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersPlaintext)))
-
-	f.Prerequisite("transport encryption is strict", featureflags.TransportEncryptionStrict())
-	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
 	f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
 		Certificate: types.NamespacedName{
