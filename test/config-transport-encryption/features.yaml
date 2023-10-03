@@ -21,4 +21,4 @@ metadata:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
 data:
-  transport-encryption: "strict"
+  transport-encryption: "Strict"
