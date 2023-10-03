@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/kelseyhightower/envconfig"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"

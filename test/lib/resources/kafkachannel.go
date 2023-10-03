@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 
@@ -34,6 +35,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/apis/messaging"
 
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 // KafkaChannelOption enables further configuration of a KafkaChannel.
@@ -127,9 +129,9 @@ func WithKafkaChannelEndpointsReady() KafkaChannelOption {
 
 func WithKafkaChannelAddress(a string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.SetAddress(&apis.URL{
-			Scheme: "http",
-			Host:   a,
+		nc.Status.SetAddress(&duckv1.Addressable{
+			Name: pointer.String("http"),
+			URL:  apis.HTTP(a),
 		})
 	}
 }

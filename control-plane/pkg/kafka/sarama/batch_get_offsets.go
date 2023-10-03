@@ -17,7 +17,7 @@ limitations under the License.
 package sarama
 
 import (
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 // GetOffsets queries the cluster to get the most recent available offset at the

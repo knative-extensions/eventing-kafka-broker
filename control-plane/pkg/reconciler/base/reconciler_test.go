@@ -200,6 +200,25 @@ func TestGetDataPlaneConfigMapDataCorrupted(t *testing.T) {
 	require.Equal(t, uint64(0), got.Generation)
 }
 
+func TestGetDataPlaneConfigMapDataUnknownField(t *testing.T) {
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	r := &base.Reconciler{
+		KubeClient:              kubeclient.Get(ctx),
+		ContractConfigMapFormat: base.Json,
+	}
+
+	cm := &corev1.ConfigMap{
+		BinaryData: map[string][]byte{
+			base.ConfigMapDataKey: []byte(dataPlaneContractExtraData),
+		},
+	}
+
+	got, err := r.GetDataPlaneConfigMapData(logging.FromContext(ctx).Desugar(), cm)
+	require.Nil(t, err)
+	require.Equal(t, uint64(11), got.Generation)
+}
+
 func TestUpdateReceiverPodAnnotation(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
@@ -297,3 +316,50 @@ func addRunningPod(store cache.Store, kc kubernetes.Interface, label string) {
 		panic(err)
 	}
 }
+
+const dataPlaneContractExtraData = `{
+  "generation": "11",
+  "resources": [
+    {
+      "uid": "50a30fb7-9710-45f5-9724-9a7ebb677a29",
+      "topics": [
+        "knative-messaging-kafka.eventing-e2e17.sut"
+      ],
+      "bootstrapServers": "my-cluster-kafka-bootstrap.kafka:9092",
+      "ingress": {
+        "host": "sut-kn-channel.eventing-e2e17.svc.cluster.local"
+      },
+      "egressConfig": {
+        "retry": 12,
+        "backoffDelay": "1000"
+      },
+      "egresses": [
+        {
+          "consumerGroup": "kafka.eventing-e2e17.sut.e21ad4f4-bf2d-4fe2-879a-728bb9d5626d",
+          "destination": "http://wathola-receiver.eventing-e2e17.svc.cluster.local",
+          "discardReply": {},
+          "uid": "e21ad4f4-bf2d-4fe2-879a-728bb9d5626d",
+          "egressConfig": {
+            "retry": 12,
+            "backoffDelay": "1000"
+          },
+          "deliveryOrder": "ORDERED",
+          "reference": {
+            "uuid": "e21ad4f4-bf2d-4fe2-879a-728bb9d5626d",
+            "namespace": "eventing-e2e17",
+            "name": "sut"
+          }
+        }
+      ],
+      "reference": {
+        "uuid": "50a30fb7-9710-45f5-9724-9a7ebb677a29",
+        "namespace": "eventing-e2e17",
+        "name": "sut",
+        "kind": "KafkaChannel",
+        "groupVersion": "messaging.knative.dev/v1beta1"
+      },
+	  "extraKey": "extraValue"
+    }
+  ]
+}
+`

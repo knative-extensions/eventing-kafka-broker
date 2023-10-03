@@ -163,6 +163,7 @@ aliases:
   - Vishal-Chdhry
   - creydr
   - csantanapr
+  - davidhadas
   - dprotaso
   - dsimansk
   - itsmurugappan
@@ -191,10 +192,6 @@ aliases:
   - knative-prow-robot
   - knative-prow-updater-robot
   - knative-test-reporter-robot
-  kperf-approvers:
-  - chzhyang
-  - maximilien
-  - psschwei
   net-certmanager-approvers: []
   net-contour-approvers:
   - KauzClay
@@ -244,6 +241,10 @@ aliases:
   - nak3
   - psschwei
   - skonto
+  serving-progressive-rollout-approvers:
+  - houshengbo
+  - sukumargaonkar
+  - yuzisun
   serving-reviewers:
   - KauzClay
   - jsanin-vmw
@@ -270,11 +271,18 @@ aliases:
   - nainaz
   - salaboy
   technical-oversight-committee:
+  - davidhadas
   - dprotaso
   - dsimansk
   - kvmware
   - psschwei
   ux-wg-leads:
-  - snneji
+  - cali0707
+  - leo6leo
+  - mmejia02
+  - zainabhusain227
   ux-writers:
-  - snneji
+  - cali0707
+  - leo6leo
+  - mmejia02
+  - zainabhusain227

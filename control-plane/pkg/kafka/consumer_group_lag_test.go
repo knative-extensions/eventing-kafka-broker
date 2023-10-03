@@ -22,13 +22,12 @@ import (
 	"net"
 	"testing"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 func TestConsumerGroupLagProvider(t *testing.T) {
-
 	const group = "group-1"
 
 	brokerAddr := "localhost:43245"
@@ -151,7 +150,6 @@ func TestConsumerGroupLagProvider(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestConsumerGroupLagTotal(t *testing.T) {
@@ -203,6 +201,8 @@ type Partition struct {
 	ID             int32
 }
 
+var _ sarama.Client = &saramaClientMock{}
+
 type saramaClientMock struct {
 	t                 *testing.T
 	topics            []string
@@ -212,56 +212,56 @@ type saramaClientMock struct {
 	closed            bool
 }
 
-func (s saramaClientMock) CreateACLs(acls []*sarama.ResourceAcls) error {
+func (s *saramaClientMock) CreateACLs(acls []*sarama.ResourceAcls) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
+func (s *saramaClientMock) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) DescribeClientQuotas(components []sarama.QuotaFilterComponent, strict bool) ([]sarama.DescribeClientQuotasEntry, error) {
+func (s *saramaClientMock) DescribeClientQuotas(components []sarama.QuotaFilterComponent, strict bool) ([]sarama.DescribeClientQuotasEntry, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) AlterClientQuotas(entity []sarama.QuotaEntityComponent, op sarama.ClientQuotasOp, validateOnly bool) error {
+func (s *saramaClientMock) AlterClientQuotas(entity []sarama.QuotaEntityComponent, op sarama.ClientQuotasOp, validateOnly bool) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
+func (s *saramaClientMock) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
 	return nil, nil
 }
 
-func (s saramaClientMock) DeleteUserScramCredentials(delete []sarama.AlterUserScramCredentialsDelete) ([]*sarama.AlterUserScramCredentialsResult, error) {
+func (s *saramaClientMock) DeleteUserScramCredentials(delete []sarama.AlterUserScramCredentialsDelete) ([]*sarama.AlterUserScramCredentialsResult, error) {
 	return nil, nil
 }
 
-func (s saramaClientMock) UpsertUserScramCredentials(upsert []sarama.AlterUserScramCredentialsUpsert) ([]*sarama.AlterUserScramCredentialsResult, error) {
+func (s *saramaClientMock) UpsertUserScramCredentials(upsert []sarama.AlterUserScramCredentialsUpsert) ([]*sarama.AlterUserScramCredentialsResult, error) {
 	return nil, nil
 }
 
-func (s saramaClientMock) LeastLoadedBroker() *sarama.Broker {
+func (s *saramaClientMock) LeastLoadedBroker() *sarama.Broker {
 	panic("implement me")
 }
 
-func (s saramaClientMock) TransactionCoordinator(transactionID string) (*sarama.Broker, error) {
+func (s *saramaClientMock) TransactionCoordinator(transactionID string) (*sarama.Broker, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) RefreshTransactionCoordinator(transactionID string) error {
+func (s *saramaClientMock) RefreshTransactionCoordinator(transactionID string) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
+func (s *saramaClientMock) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) CreateTopic(topic string, _ *sarama.TopicDetail, _ bool) error {
+func (s *saramaClientMock) CreateTopic(topic string, _ *sarama.TopicDetail, _ bool) error {
 	s.hasTopic(topic)
 	return nil
 }
 
-func (s saramaClientMock) ListTopics() (map[string]sarama.TopicDetail, error) {
+func (s *saramaClientMock) ListTopics() (map[string]sarama.TopicDetail, error) {
 	m := make(map[string]sarama.TopicDetail, len(s.topics))
 	for _, t := range s.topics {
 		m[t] = sarama.TopicDetail{
@@ -274,7 +274,7 @@ func (s saramaClientMock) ListTopics() (map[string]sarama.TopicDetail, error) {
 	return m, nil
 }
 
-func (s saramaClientMock) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
+func (s *saramaClientMock) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {
 	for _, t := range topics {
 		s.hasTopic(t)
 		partitions := make([]*sarama.PartitionMetadata, 0, len(s.partitionsByTopic[t]))
@@ -291,64 +291,64 @@ func (s saramaClientMock) DescribeTopics(topics []string) (metadata []*sarama.To
 	return
 }
 
-func (s saramaClientMock) DeleteTopic(topic string) error {
+func (s *saramaClientMock) DeleteTopic(topic string) error {
 	s.hasTopic(topic)
 	return nil
 }
 
-func (s saramaClientMock) CreatePartitions(topic string, _ int32, _ [][]int32, _ bool) error {
+func (s *saramaClientMock) CreatePartitions(topic string, _ int32, _ [][]int32, _ bool) error {
 	s.hasTopic(topic)
 	return nil
 }
 
-func (s saramaClientMock) AlterPartitionReassignments(topic string, _ [][]int32) error {
+func (s *saramaClientMock) AlterPartitionReassignments(topic string, _ [][]int32) error {
 	s.hasTopic(topic)
 	return nil
 }
 
-func (s saramaClientMock) ListPartitionReassignments(topic string, _ []int32) (topicStatus map[string]map[int32]*sarama.PartitionReplicaReassignmentsStatus, err error) {
+func (s *saramaClientMock) ListPartitionReassignments(topic string, _ []int32) (topicStatus map[string]map[int32]*sarama.PartitionReplicaReassignmentsStatus, err error) {
 	s.hasTopic(topic)
 	return
 }
 
-func (s saramaClientMock) DeleteRecords(topic string, _ map[int32]int64) error {
+func (s *saramaClientMock) DeleteRecords(topic string, _ map[int32]int64) error {
 	s.hasTopic(topic)
 	return nil
 }
 
-func (s saramaClientMock) DescribeConfig(sarama.ConfigResource) ([]sarama.ConfigEntry, error) {
+func (s *saramaClientMock) DescribeConfig(sarama.ConfigResource) ([]sarama.ConfigEntry, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) AlterConfig(sarama.ConfigResourceType, string, map[string]*string, bool) error {
+func (s *saramaClientMock) AlterConfig(sarama.ConfigResourceType, string, map[string]*string, bool) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) IncrementalAlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]sarama.IncrementalAlterConfigsEntry, validateOnly bool) error {
+func (s *saramaClientMock) IncrementalAlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]sarama.IncrementalAlterConfigsEntry, validateOnly bool) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) CreateACL(sarama.Resource, sarama.Acl) error {
+func (s *saramaClientMock) CreateACL(sarama.Resource, sarama.Acl) error {
 	panic("implement me")
 }
 
-func (s saramaClientMock) ListAcls(sarama.AclFilter) ([]sarama.ResourceAcls, error) {
+func (s *saramaClientMock) ListAcls(sarama.AclFilter) ([]sarama.ResourceAcls, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) DeleteACL(sarama.AclFilter, bool) ([]sarama.MatchingAcl, error) {
+func (s *saramaClientMock) DeleteACL(sarama.AclFilter, bool) ([]sarama.MatchingAcl, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) ListConsumerGroups() (map[string]string, error) {
+func (s *saramaClientMock) ListConsumerGroups() (map[string]string, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) DescribeConsumerGroups([]string) ([]*sarama.GroupDescription, error) {
+func (s *saramaClientMock) DescribeConsumerGroups([]string) ([]*sarama.GroupDescription, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) ListConsumerGroupOffsets(group string, topicPartitions map[string][]int32) (*sarama.OffsetFetchResponse, error) {
+func (s *saramaClientMock) ListConsumerGroupOffsets(group string, topicPartitions map[string][]int32) (*sarama.OffsetFetchResponse, error) {
 	s.hasGroup(group)
 
 	s.hasTopicPartitions(topicPartitions)
@@ -366,7 +366,7 @@ func (s saramaClientMock) ListConsumerGroupOffsets(group string, topicPartitions
 	return response, nil
 }
 
-func (s saramaClientMock) hasTopicPartitions(topicPartitions map[string][]int32) {
+func (s *saramaClientMock) hasTopicPartitions(topicPartitions map[string][]int32) {
 	for topic, partitions := range topicPartitions {
 		s.hasTopic(topic)
 		for _, p := range partitions {
@@ -375,101 +375,107 @@ func (s saramaClientMock) hasTopicPartitions(topicPartitions map[string][]int32)
 	}
 }
 
-func (s saramaClientMock) DeleteConsumerGroup(group string) error {
+func (s *saramaClientMock) DeleteConsumerGroup(group string) error {
 	s.hasGroup(group)
 	return nil
 }
 
-func (s saramaClientMock) DescribeCluster() (brokers []*sarama.Broker, controllerID int32, err error) {
+func (s *saramaClientMock) DescribeCluster() (brokers []*sarama.Broker, controllerID int32, err error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) DescribeLogDirs([]int32) (map[int32][]sarama.DescribeLogDirsResponseDirMetadata, error) {
+func (s *saramaClientMock) DescribeLogDirs([]int32) (map[int32][]sarama.DescribeLogDirsResponseDirMetadata, error) {
 	panic("implement me")
 }
 
-func (s saramaClientMock) Config() *sarama.Config {
+func (s *saramaClientMock) Config() *sarama.Config {
 	return sarama.NewConfig()
 }
 
-func (s saramaClientMock) Controller() (*sarama.Broker, error) {
+func (s *saramaClientMock) Controller() (*sarama.Broker, error) {
 	return s.broker, nil
 }
 
-func (s saramaClientMock) RefreshController() (*sarama.Broker, error) {
+func (s *saramaClientMock) RefreshController() (*sarama.Broker, error) {
 	return s.broker, nil
 }
 
-func (s saramaClientMock) Brokers() []*sarama.Broker {
+func (s *saramaClientMock) Brokers() []*sarama.Broker {
 	return []*sarama.Broker{s.broker}
 }
 
-func (s saramaClientMock) Broker(int32) (*sarama.Broker, error) {
+func (s *saramaClientMock) Broker(int32) (*sarama.Broker, error) {
 	return s.broker, nil
 }
 
-func (s saramaClientMock) Topics() ([]string, error) {
+func (s *saramaClientMock) Topics() ([]string, error) {
 	return s.topics, nil
 }
 
-func (s saramaClientMock) Partitions(topic string) ([]int32, error) {
+func (s *saramaClientMock) Partitions(topic string) ([]int32, error) {
 	s.hasTopic(topic)
 	return s.getPartitions(topic), nil
 }
 
-func (s saramaClientMock) WritablePartitions(topic string) ([]int32, error) {
+func (s *saramaClientMock) WritablePartitions(topic string) ([]int32, error) {
 	s.hasTopic(topic)
 	return s.getPartitions(topic), nil
 }
 
-func (s saramaClientMock) Leader(topic string, partitionID int32) (*sarama.Broker, error) {
+func (s *saramaClientMock) Leader(topic string, partitionID int32) (*sarama.Broker, error) {
 	s.hasTopic(topic)
 	s.hasPartition(topic, partitionID)
 	return s.broker, nil
 }
 
-func (s saramaClientMock) Replicas(topic string, partitionID int32) ([]int32, error) {
+func (s *saramaClientMock) LeaderAndEpoch(topic string, partitionID int32) (*sarama.Broker, int32, error) {
+	s.hasTopic(topic)
+	s.hasPartition(topic, partitionID)
+	return s.broker, -1, nil
+}
+
+func (s *saramaClientMock) Replicas(topic string, partitionID int32) ([]int32, error) {
 	s.hasTopic(topic)
 	s.hasPartition(topic, partitionID)
 	panic("implement me")
 }
 
-func (s saramaClientMock) hasPartition(topic string, partitionID int32) {
+func (s *saramaClientMock) hasPartition(topic string, partitionID int32) {
 	require.True(s.t, sets.NewInt32(s.getPartitions(topic)...).Has(partitionID))
 }
 
-func (s saramaClientMock) hasTopic(topic string) {
+func (s *saramaClientMock) hasTopic(topic string) {
 	require.True(s.t, sets.NewString(s.topics...).Has(topic))
 }
 
-func (s saramaClientMock) hasGroup(group string) {
+func (s *saramaClientMock) hasGroup(group string) {
 	require.True(s.t, sets.NewString(s.groups...).Has(group))
 }
 
-func (s saramaClientMock) InSyncReplicas(topic string, partitionID int32) ([]int32, error) {
+func (s *saramaClientMock) InSyncReplicas(topic string, partitionID int32) ([]int32, error) {
 	s.hasTopic(topic)
 	s.hasPartition(topic, partitionID)
 	panic("implement me")
 }
 
-func (s saramaClientMock) OfflineReplicas(topic string, partitionID int32) ([]int32, error) {
+func (s *saramaClientMock) OfflineReplicas(topic string, partitionID int32) ([]int32, error) {
 	s.hasTopic(topic)
 	s.hasPartition(topic, partitionID)
 	panic("implement me")
 }
 
-func (s saramaClientMock) RefreshBrokers([]string) error {
+func (s *saramaClientMock) RefreshBrokers([]string) error {
 	return nil
 }
 
-func (s saramaClientMock) RefreshMetadata(topics ...string) error {
+func (s *saramaClientMock) RefreshMetadata(topics ...string) error {
 	for _, t := range topics {
 		s.hasTopic(t)
 	}
 	return nil
 }
 
-func (s saramaClientMock) GetOffset(topic string, partitionID int32, time int64) (int64, error) {
+func (s *saramaClientMock) GetOffset(topic string, partitionID int32, time int64) (int64, error) {
 	require.Equal(s.t, sarama.OffsetNewest, time)
 	s.hasTopic(topic)
 	s.hasPartition(topic, partitionID)
@@ -482,15 +488,15 @@ func (s saramaClientMock) GetOffset(topic string, partitionID int32, time int64)
 	return -1, nil
 }
 
-func (s saramaClientMock) Coordinator(string) (*sarama.Broker, error) {
+func (s *saramaClientMock) Coordinator(string) (*sarama.Broker, error) {
 	return s.broker, nil
 }
 
-func (s saramaClientMock) RefreshCoordinator(string) error {
+func (s *saramaClientMock) RefreshCoordinator(string) error {
 	return nil
 }
 
-func (s saramaClientMock) InitProducerID() (*sarama.InitProducerIDResponse, error) {
+func (s *saramaClientMock) InitProducerID() (*sarama.InitProducerIDResponse, error) {
 	panic("implement me")
 }
 
@@ -501,11 +507,11 @@ func (s *saramaClientMock) Close() error {
 	return nil
 }
 
-func (s saramaClientMock) Closed() bool {
+func (s *saramaClientMock) Closed() bool {
 	return s.closed
 }
 
-func (s saramaClientMock) getPartitions(topic string) []int32 {
+func (s *saramaClientMock) getPartitions(topic string) []int32 {
 	partitions := make([]int32, 0, len(s.partitionsByTopic[topic]))
 	for _, p := range s.partitionsByTopic[topic] {
 		partitions = append(partitions, p.ID)

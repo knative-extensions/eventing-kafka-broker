@@ -17,7 +17,7 @@
 package kafka
 
 import (
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/rcrowley/go-metrics"
 )
 
@@ -56,7 +56,7 @@ type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, e
 // GetSaramaConfig returns Kafka Client configuration with the given options applied.
 func GetSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
-	config.Version = sarama.MaxVersion
+	config.Version = sarama.DefaultVersion
 
 	err := Options(config, configOptions...)
 	if err != nil {

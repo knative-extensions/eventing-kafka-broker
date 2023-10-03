@@ -67,10 +67,6 @@ func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduck
 		With(zap.String("consumergroup", key.String())).
 		With(zap.String("pod", fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())))
 
-	if err := e.disablePodScheduling(logger, pod.DeepCopy() /* Do not modify informer copy. */); err != nil {
-		return fmt.Errorf("failed to mark pod unschedulable: %w", err)
-	}
-
 	cgBefore, err := e.InternalsClient.
 		ConsumerGroups(key.Namespace).
 		Get(e.ctx, key.Name, metav1.GetOptions{})
@@ -110,28 +106,6 @@ func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduck
 		return fmt.Errorf("failed patching: %w", err)
 	}
 	logger.Debug("Patched consumer group with placement changes", zap.Any("patch", patch))
-
-	return nil
-}
-
-func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) error {
-	if pod.Annotations == nil {
-		pod.Annotations = make(map[string]string, 1)
-	}
-	// scheduling disabled.
-	pod.Annotations[scheduler.PodAnnotationKey] = "true"
-
-	_, err := e.kubeClient.CoreV1().
-		Pods(pod.GetNamespace()).
-		Update(e.ctx, pod, metav1.UpdateOptions{})
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("failed to update pod %s/%s: %w", pod.GetNamespace(), pod.GetName(), err)
-	}
-
-	logger.Info("Marked pod as unschedulable")
 
 	return nil
 }

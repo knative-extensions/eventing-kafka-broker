@@ -111,6 +111,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -163,6 +164,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -216,6 +218,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -272,6 +275,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -327,6 +331,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -430,6 +435,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -557,6 +563,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -638,6 +645,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -696,6 +704,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -1389,6 +1398,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -1442,6 +1452,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
