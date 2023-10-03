@@ -58,6 +58,4 @@ if ! ${LOCAL_DEVELOPMENT}; then
   go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
 fi
 
-
-
 success
