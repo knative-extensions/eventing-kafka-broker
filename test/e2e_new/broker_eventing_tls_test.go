@@ -31,7 +31,7 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 )
 
-func TestBrokerTlsCARotation(t *testing.T) {
+func TestBrokerTLSCARotation(t *testing.T) {
 	t.Parallel()
 
 	ctx, env := global.Environment(
