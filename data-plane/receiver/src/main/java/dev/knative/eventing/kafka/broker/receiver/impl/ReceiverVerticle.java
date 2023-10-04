@@ -176,7 +176,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private void setupSecretWatcher() {
         try {
             ReciverVertical
-            this.secretWatcher = new SecretWatcher(secretVolume, this::updateServerConfig);
+            
             new Thread(this.secretWatcher).start();
             File file = new File(secretVolumePath + "/tls.crt");
             this.secretWatcher = new FileWatcher(file, this::updateServerConfig);
