@@ -87,6 +87,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+	trigger.Status.MarkOIDCIdentityCreatedNotSupported()
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.reconcileKind(ctx, trigger)
 	})
@@ -142,13 +143,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	if !broker.IsReady() {
 		// Trigger will get re-queued once this broker is ready.
 		return nil
-	}
-
-	if feature.FromContext(ctx).IsOIDCAuthentication() {
-		return fmt.Errorf("OIDC is not implemented in the eventing kafka broker yet")
-	} else {
-		trigger.Status.Auth = nil
-		trigger.Status.MarkOIDCIdentityCreatedNotSupported()
 	}
 
 	if ok, err := r.reconcileConsumerGroup(ctx, broker, trigger); err != nil {

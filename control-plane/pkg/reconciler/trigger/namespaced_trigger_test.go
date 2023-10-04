@@ -129,7 +129,6 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						withTriggerStatusGroupIdAnnotation(TriggerUUID),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
-						reconcilertesting.WithTriggerOIDCIdentityCreatedNotSupported(),
 					),
 				},
 			},
