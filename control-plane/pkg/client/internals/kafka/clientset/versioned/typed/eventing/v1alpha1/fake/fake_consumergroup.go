@@ -24,7 +24,6 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -37,9 +36,9 @@ type FakeConsumerGroups struct {
 	ns   string
 }
 
-var consumergroupsResource = schema.GroupVersionResource{Group: "internal.kafka.eventing.knative.dev", Version: "v1alpha1", Resource: "consumergroups"}
+var consumergroupsResource = v1alpha1.SchemeGroupVersion.WithResource("consumergroups")
 
-var consumergroupsKind = schema.GroupVersionKind{Group: "internal.kafka.eventing.knative.dev", Version: "v1alpha1", Kind: "ConsumerGroup"}
+var consumergroupsKind = v1alpha1.SchemeGroupVersion.WithKind("ConsumerGroup")
 
 // Get takes name of the consumerGroup, and returns the corresponding consumerGroup object, and an error if there is any.
 func (c *FakeConsumerGroups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ConsumerGroup, err error) {
