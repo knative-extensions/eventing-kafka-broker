@@ -148,7 +148,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return fmt.Errorf("OIDC is not implemented in the eventing kafka broker yet")
 	} else {
 		trigger.Status.Auth = nil
-		trigger.Status.MarkOIDCIdentityCreatedSucceededWithReason(fmt.Sprintf("%s feature disabled", feature.OIDCAuthentication), "")
+		trigger.Status.MarkOIDCIdentityCreatedNotSupported()
 	}
 
 	if ok, err := r.reconcileConsumerGroup(ctx, broker, trigger); err != nil {
