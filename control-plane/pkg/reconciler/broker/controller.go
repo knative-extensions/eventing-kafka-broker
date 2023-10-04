@@ -102,8 +102,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	features := feature.FromContext(ctx)
 	caCerts, err := reconciler.getCaCerts()
-	
-	
 
 	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
 		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
@@ -122,7 +120,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		impl.GlobalResync(brokerInformer.Informer())
 	})
 	kafkaConfigStore.WatchConfigs(watcher)
-
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
