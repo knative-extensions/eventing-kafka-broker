@@ -250,7 +250,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                                 e -> logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
 
             } catch (IOException e) {
-                logger.error("Failed to read file {}", tlsCrtFilePath, e);
+                logger.error("Failed to read file {}", tlsCrtFile.toPath(), e);
             }
         }
     }
