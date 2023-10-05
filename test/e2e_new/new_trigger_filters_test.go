@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package experimental
+package e2e_new
 
 import (
 	"testing"
@@ -30,8 +30,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
-	"knative.dev/eventing-kafka-broker/test/experimental/features_config"
-
 	newfilters "knative.dev/eventing/test/rekt/features/new_trigger_filters"
 	"knative.dev/eventing/test/rekt/resources/broker"
 )
@@ -48,13 +46,44 @@ func TestNewTriggerFilters(t *testing.T) {
 	)
 	brokerName := feature.MakeRandomK8sName("broker")
 
-	env.Prerequisite(ctx, t, InstallKafkaBrokerWithExperimentalFeatures(brokerName))
+	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
 	env.TestSet(ctx, t, newfilters.FiltersFeatureSet(brokerName))
 }
 
-func InstallKafkaBrokerWithExperimentalFeatures(name string) *feature.Feature {
+func TestKafkaBrokerAnyFiltersTrigger(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
+	env.Test(ctx, t, newfilters.AnyFilterFeature(brokerName))
+}
+
+func TestKafkaBrokerAllFiltersTrigger(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
+	env.Test(ctx, t, newfilters.AllFilterFeature(brokerName))
+}
+
+func InstallKafkaBroker(name string) *feature.Feature {
 	f := feature.NewFeatureNamed("Kafka broker")
-	f.Setup("enable new trigger filters experimental feature", features_config.Install)
 	f.Setup("install one partition configuration", single_partition_config.Install)
 	f.Setup("install broker", broker.Install(
 		name,
