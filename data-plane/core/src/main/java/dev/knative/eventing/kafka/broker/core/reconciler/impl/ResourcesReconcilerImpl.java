@@ -226,6 +226,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                 && Objects.equals(r1.hasMultiAuthSecret(), r2.hasMultiAuthSecret())
                 && Objects.equals(r1.getMultiAuthSecret(), r2.getMultiAuthSecret())
                 && Objects.equals(r1.getCloudEventOverrides(), r2.getCloudEventOverrides())
+                && Objects.equals(r1.getReference(), r2.getReference())
                 // In the case of ingress reconcile, do we really care about this one?
                 && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
     }
@@ -252,6 +253,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                 && Objects.equals(e1.getDialectedFilterList(), e2.getDialectedFilterList())
                 && Objects.equals(e1.getDestinationCACerts(), e2.getDestinationCACerts())
                 && Objects.equals(e1.getReplyUrlCACerts(), e2.getReplyUrlCACerts())
+                && Objects.equals(e1.getReference(), e2.getReference())
                 && Objects.equals(
                         e1.getEgressConfig().getDeadLetterCACerts(),
                         e2.getEgressConfig().getDeadLetterCACerts());
