@@ -5,4 +5,4 @@ metadata:
   namespace: knative-eventing
 data:
   _example: |
-    controller.autoscaler: "enabled"
+    controller.autoscaler: "disabled"

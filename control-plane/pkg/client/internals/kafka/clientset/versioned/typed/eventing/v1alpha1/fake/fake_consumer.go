@@ -23,7 +23,6 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -36,9 +35,9 @@ type FakeConsumers struct {
 	ns   string
 }
 
-var consumersResource = schema.GroupVersionResource{Group: "internal.kafka.eventing.knative.dev", Version: "v1alpha1", Resource: "consumers"}
+var consumersResource = v1alpha1.SchemeGroupVersion.WithResource("consumers")
 
-var consumersKind = schema.GroupVersionKind{Group: "internal.kafka.eventing.knative.dev", Version: "v1alpha1", Kind: "Consumer"}
+var consumersKind = v1alpha1.SchemeGroupVersion.WithKind("Consumer")
 
 // Get takes name of the consumer, and returns the corresponding consumer object, and an error if there is any.
 func (c *FakeConsumers) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Consumer, err error) {
