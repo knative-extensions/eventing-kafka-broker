@@ -17,7 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import java.util.Set;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +25,9 @@ public class AnyFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(AnyFilter.class);
 
-    private final Set<Filter> filters;
+    private final List<Filter> filters;
 
-    public AnyFilter(Set<Filter> filters) {
+    public AnyFilter(List<Filter> filters) {
         this.filters = filters;
     }
 

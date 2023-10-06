@@ -24,8 +24,8 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -51,31 +51,31 @@ public class AnyFilterTest {
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AnyFilter(Set.of(new ExactFilter(Map.of("id", "123-42")))), true),
+                Arguments.of(event, new AnyFilter(List.of(new ExactFilter(Map.of("id", "123-42")))), true),
                 Arguments.of(
                         event,
-                        new AnyFilter(Set.of(
+                        new AnyFilter(List.of(
                                 new ExactFilter(Map.of("id", "123-42")),
                                 new ExactFilter(Map.of("source", "/api/some-source")))),
                         true),
                 Arguments.of(
                         event,
-                        new AnyFilter(Set.of(
+                        new AnyFilter(List.of(
                                 new ExactFilter(Map.of("id", "123")),
                                 new ExactFilter(Map.of("source", "/api/some-source")))),
                         true),
                 Arguments.of(
                         event,
-                        new AnyFilter(Set.of(
+                        new AnyFilter(List.of(
                                 new ExactFilter(Map.of("id", "123-42")),
                                 new ExactFilter(Map.of("source", "/api/something-else")))),
                         true),
                 Arguments.of(
                         event,
-                        new AnyFilter(Set.of(
+                        new AnyFilter(List.of(
                                 new ExactFilter(Map.of("id", "123")),
                                 new ExactFilter(Map.of("source", "/api/something-else")))),
                         false),
-                Arguments.of(event, new AnyFilter(Collections.emptySet()), false));
+                Arguments.of(event, new AnyFilter(Collections.emptyList()), false));
     }
 }

@@ -192,7 +192,7 @@ public class ConsumerVerticleBuilder {
 
     private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
         return new AllFilter(
-                filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toSet()));
+                filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toList()));
     }
 
     private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
@@ -203,10 +203,10 @@ public class ConsumerVerticleBuilder {
             case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
             case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
                     .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
             case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
                     .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
             case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
             default -> Filter.noop();
         };
