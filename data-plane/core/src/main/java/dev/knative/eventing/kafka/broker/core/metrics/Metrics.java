@@ -62,17 +62,22 @@ public class Metrics {
     public static final boolean DISABLE_KAFKA_CLIENTS_METRICS =
             Boolean.parseBoolean(System.getenv("DISABLE_KAFKA_CLIENTS_METRICS"));
 
-    // There are different thread polls usable, mainly, each with its own drawbacks for our use case:
-    //   - cached thread pools
-    //   - fixed thread pools
+    // There are different thread polls usable, mainly, each with its own drawbacks
+    // for our use case:
+    // - cached thread pools
+    // - fixed thread pools
     //
-    // A cached thread might grow unbounded and since creating, updating and deleting resources
-    // trigger the usage of this executor, a bad actor might start continuously creating, updating
+    // A cached thread might grow unbounded and since creating, updating and
+    // deleting resources
+    // trigger the usage of this executor, a bad actor might start continuously
+    // creating, updating
     // and deleting resources which will cause resource exhaustion.
     //
-    // A fixed thread poll doesn't give the best possible latency for every resource, but it's
+    // A fixed thread poll doesn't give the best possible latency for every
+    // resource, but it's
     // bounded, so we keep the resource usage under control.
-    // We might want to provide configs to make it bigger than a single thread but a single thread
+    // We might want to provide configs to make it bigger than a single thread but a
+    // single thread
     // to start with is good enough for now.
     public static final ExecutorService meterBinderExecutor = Executors.newSingleThreadExecutor();
 
@@ -80,17 +85,19 @@ public class Metrics {
         Runtime.getRuntime().addShutdownHook(new Thread(meterBinderExecutor::shutdown));
     }
 
-    // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
-    // Different monitoring systems have different recommendations regarding naming convention, and some naming
+    // Micrometer employs a naming convention that separates lowercase words with a
+    // '.' (dot) character.
+    // Different monitoring systems have different recommendations regarding naming
+    // convention, and some naming
     // conventions may be incompatible for one system and not another.
-    // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
+    // Each Micrometer implementation for a monitoring system comes with a naming
+    // convention that transforms lowercase
     // dot notation names to the monitoring system’s recommended naming convention.
-    // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
+    // Additionally, this naming convention implementation sanitizes metric names
+    // and tags of special characters that
     // are disallowed by the monitoring system.
 
-    /**
-     * In prometheus format --> http_events_sent_total
-     */
+    /** In prometheus format --> http_events_sent_total */
     public static final String HTTP_EVENTS_SENT_COUNT = "http.events.sent";
 
     /**
@@ -221,8 +228,8 @@ public class Metrics {
      * Register the given consumer to the global meter registry.
      *
      * @param consumer consumer to bind to the global registry.
-     * @param <K>      Record key type.
-     * @param <V>      Record value type.
+     * @param <K> Record key type.
+     * @param <V> Record value type.
      * @return A meter binder to close once the consumer is closed.
      */
     public static <K, V> AsyncCloseable register(final Consumer<K, V> consumer) {
@@ -233,8 +240,8 @@ public class Metrics {
      * Register the given producer to the global meter registry.
      *
      * @param producer Consumer to bind to the global registry.
-     * @param <K>      Record key type.
-     * @param <V>      Record value type.
+     * @param <K> Record key type.
+     * @param <V> Record value type.
      * @return A meter binder to close once the producer is closed.
      */
     public static <K, V> AsyncCloseable register(final Producer<K, V> producer) {
@@ -270,7 +277,8 @@ public class Metrics {
                 };
 
             } catch (final RejectedExecutionException ex) {
-                // if this task cannot be accepted for execution when the executor has been shutdown.
+                // if this task cannot be accepted for execution when the executor has been
+                // shutdown.
                 logger.warn("Failed to bind metrics for Kafka client", ex);
             }
         }

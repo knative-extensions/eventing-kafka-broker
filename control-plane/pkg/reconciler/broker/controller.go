@@ -88,8 +88,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		)
 	}
 
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	featureStore.WatchConfigs(watcher)
+
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
-		return controller.Options{PromoteFilterFunc: kafka.BrokerClassFilter()}
+		return controller.Options{
+			ConfigStore:       featureStore,
+			PromoteFilterFunc: kafka.BrokerClassFilter()}
 	})
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
@@ -97,6 +102,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	features := feature.FromContext(ctx)
 	caCerts, err := reconciler.getCaCerts()
+
 	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
 		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
 		logger.Warn("Failed to get CA certs when at least one address uses TLS", zap.Error(err))

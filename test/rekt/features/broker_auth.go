@@ -21,15 +21,19 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/v2/test"
+
 	"github.com/google/uuid"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkaauthsecret"
+
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
+
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
+
 	"knative.dev/reconciler-test/resources/svc"
 
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
