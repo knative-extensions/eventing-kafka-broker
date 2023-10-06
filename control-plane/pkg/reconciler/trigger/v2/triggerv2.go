@@ -72,6 +72,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+	trigger.Status.MarkOIDCIdentityCreatedNotSupported()
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	if trigger.Status.Annotations == nil {

@@ -87,6 +87,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+	trigger.Status.MarkOIDCIdentityCreatedNotSupported()
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.reconcileKind(ctx, trigger)
 	})

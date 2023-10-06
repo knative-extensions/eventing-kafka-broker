@@ -33,7 +33,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
@@ -127,6 +130,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, 20*time.Minute),
 	}
 
 	consumerInformer := consumer.Get(ctx)
@@ -153,6 +157,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 
 	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+	r.EnqueueKey = func(key string) {
+		parts := strings.SplitN(key, string(types.Separator), 3)
+		if len(parts) != 2 {
+			panic(fmt.Sprintf("Expected <namespace>/<name> format, got %s", key))
+		}
+		impl.EnqueueKey(types.NamespacedName{Namespace: parts[0], Name: parts[1]})
+	}
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
@@ -160,7 +171,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	configStore.WatchConfigs(watcher)
 
-	consumerGroupInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	consumerGroupInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    impl.Enqueue,
+		UpdateFunc: controller.PassNew(impl.Enqueue),
+		DeleteFunc: func(obj interface{}) {
+			impl.Enqueue(obj)
+			if cg, ok := obj.(metav1.Object); ok && cg != nil {
+				r.InitOffsetLatestInitialOffsetCache.Expire(keyOf(cg))
+			}
+		},
+	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
 	globalResync := func(interface{}) {
@@ -244,19 +264,18 @@ func getSelectorLabel(ssName string) map[string]string {
 }
 
 func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) Scheduler {
-	ss := statefulsetscheduler.NewScheduler(
-		ctx,
-		system.Namespace(),
-		c.StatefulSetName,
-		lister,
-		c.RefreshPeriod,
-		c.Capacity,
-		"", //  scheduler.SchedulerPolicyType field only applicable for old scheduler policy
-		nodeinformer.Get(ctx).Lister(),
-		newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
-		c.SchedulerPolicy,
-		c.DeSchedulerPolicy,
-	)
+	ss, _ := statefulsetscheduler.New(ctx, &statefulsetscheduler.Config{
+		StatefulSetNamespace: system.Namespace(),
+		StatefulSetName:      c.StatefulSetName,
+		PodCapacity:          c.Capacity,
+		RefreshPeriod:        c.RefreshPeriod,
+		SchedulerPolicy:      scheduler.MAXFILLUP,
+		SchedPolicy:          c.SchedulerPolicy,
+		DeschedPolicy:        c.DeSchedulerPolicy,
+		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
+		VPodLister:           lister,
+		NodeLister:           nodeinformer.Get(ctx).Lister(),
+	})
 
 	return Scheduler{
 		Scheduler:       ss,
