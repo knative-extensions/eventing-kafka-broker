@@ -20,8 +20,8 @@ set -o nounset
 set -o pipefail
 
 CLUSTER_SUFFIX=${CLUSTER_SUFFIX:-"cluster.local"}
-NODE_VERSION=${NODE_VERSION:-"v1.20.0"}
-NODE_SHA=${NODE_SHA:-"sha256:b40ecf8bcb188f6a0d0f5d406089c48588b75edc112c6f635d26be5de1c89040"}
+NODE_VERSION=${NODE_VERSION:-"v1.27.3"}
+NODE_SHA=${NODE_SHA:-"sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72"}
 
 cat <<EOF | kind create cluster --config=-
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -31,10 +31,7 @@ kind: Cluster
 # See: https://kubernetes.slack.com/archives/CEKK1KTN2/p1600268272383600
 kubeadmConfigPatches:
   - |
-    apiVersion: kubeadm.k8s.io/v1beta2
     kind: ClusterConfiguration
-    metadata:
-      name: config
     apiServer:
       extraArgs:
         "service-account-issuer": "kubernetes.default.svc"

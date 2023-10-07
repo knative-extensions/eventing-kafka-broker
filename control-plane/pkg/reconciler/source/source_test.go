@@ -56,6 +56,8 @@ import (
 
 const (
 	finalizerName = "kafkasources.sources.knative.dev"
+
+	enableKEDA = "enable-keda"
 )
 
 var (
@@ -111,6 +113,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -163,6 +166,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -216,6 +220,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -272,6 +277,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -327,6 +333,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -430,6 +437,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -557,6 +565,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -638,6 +647,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -696,6 +706,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -1363,6 +1374,9 @@ func TestReconcileKind(t *testing.T) {
 				ReactorKEDAEnabled(),
 			},
 			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				enableKEDA: true,
+			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
@@ -1389,6 +1403,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -1442,6 +1457,7 @@ func TestReconcileKind(t *testing.T) {
 			Key: testKey,
 			WantCreates: []runtime.Object{
 				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
 					WithConsumerGroupName(SourceUUID),
 					WithConsumerGroupNamespace(SourceNamespace),
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
@@ -1493,6 +1509,18 @@ func TestReconcileKind(t *testing.T) {
 		store := configapis.NewStore(ctx)
 		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
 		store.OnConfigChanged(exampleConfig)
+
+		if shouldEnableKeda, ok := row.OtherTestData[enableKEDA]; ok && shouldEnableKeda.(bool) == true {
+			store.OnConfigChanged(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      configapis.FlagsConfigName,
+					Namespace: SystemNamespace,
+				},
+				Data: map[string]string{
+					"controller.autoscaler": "Enabled",
+				},
+			})
+		}
 
 		reconciler := &Reconciler{
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),

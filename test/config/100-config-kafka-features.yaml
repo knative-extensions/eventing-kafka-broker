@@ -6,7 +6,7 @@ metadata:
 data:
   dispatcher.rate-limiter: "enabled"
   dispatcher.ordered-executor-metrics: "enabled"
-  controller.autoscaler: "enabled"
+  controller.autoscaler: "disabled"
   triggers.consumergroup.template: "knative-trigger-{{ .Namespace }}-{{ .Name }}"
   brokers.topic.template: "knative-broker-{{ .Namespace }}-{{ .Name }}"
   channels.topic.template: "knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}"

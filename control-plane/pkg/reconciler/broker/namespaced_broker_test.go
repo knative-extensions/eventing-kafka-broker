@@ -38,7 +38,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/manifestival/client-go-client"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"

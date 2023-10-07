@@ -37,7 +37,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

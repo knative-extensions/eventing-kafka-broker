@@ -37,7 +37,7 @@ fi
 
 # Latest release. If user does not supply this as a flag, the latest tagged release on the current branch will be used.
 readonly LATEST_RELEASE_VERSION=$(latest_version)
-readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
+readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-extensions/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
 readonly CERTMANAGER_CONFIG=${CERTMANAGER_CONFIG:-"./third_party/cert-manager/"}
@@ -112,11 +112,17 @@ function knative_eventing() {
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   kafka_setup
+  keda_setup
 }
 
 function kafka_setup() {
   echo ">> Prepare to deploy Strimzi"
   ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
+}
+
+function keda_setup() {
+  echo ">> Prepare to deploy KEDA"
+  ./test/keda/keda_setup.sh || fail_test "Failed to set up KEDA"
 }
 
 function build_components_from_source() {

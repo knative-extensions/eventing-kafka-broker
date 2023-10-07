@@ -283,7 +283,7 @@ func IsEnabled(ctx context.Context, features *config.KafkaFeatureFlags, client v
 		 return true
 	 }*/
 
-	if _, err := client.KedaV1alpha1().ScaledObjects(object.GetNamespace()).List(ctx, metav1.ListOptions{}); err != nil {
+	if _, err := client.KedaV1alpha1().ScaledObjects(object.GetNamespace()).List(ctx, metav1.ListOptions{Limit: 1}); err != nil {
 		logging.FromContext(ctx).Debug("KEDA not installed, failed to list ScaledObjects")
 		return false
 	}

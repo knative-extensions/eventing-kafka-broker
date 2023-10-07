@@ -16,10 +16,11 @@ aliases:
   - snneji
   docs-writers:
   - csantanapr
-  - psschwei
+  - nak3
+  - retocode
+  - skonto
   - snneji
-  eventing-autoscaler-keda-approvers:
-  - zroubalik
+  eventing-autoscaler-keda-approvers: []
   eventing-awssqs-approvers:
   - lberk
   - matzew
@@ -50,6 +51,8 @@ aliases:
   - aliok
   - matzew
   - pierDipi
+  eventing-kafka-broker-reviewers:
+  - cali0707
   eventing-kafka-mtsource-approvers:
   - steven0711dong
   eventing-kafka-wg-leads:
@@ -73,7 +76,6 @@ aliases:
   - gabo1208
   - ikvmw
   - joeeltgroth
-  - menehune23
   - salaboy
   - xtreme-sameer-vohra
   eventing-redis-approvers:
@@ -81,11 +83,13 @@ aliases:
   - lionelvillard
   - matzew
   eventing-reviewers:
+  - cali0707
   - creydr
   eventing-wg-leads:
   - pierDipi
   eventing-writers:
   - aliok
+  - creydr
   - lionelvillard
   - matzew
   - odacremolbap
@@ -96,28 +100,24 @@ aliases:
   - matejvasek
   - nainaz
   - salaboy
-  - zroubalik
   functastic-writers:
   - lance
   - lkingland
   - matejvasek
   - nainaz
   - salaboy
-  - zroubalik
   function-runtime-approvers:
   - lance
   - lkingland
   - matejvasek
   - nainaz
   - salaboy
-  - zroubalik
   function-runtime-writers:
   - lance
   - lkingland
   - matejvasek
   - nainaz
   - salaboy
-  - zroubalik
   homebrew-kn-plugins-approvers:
   - dsimansk
   - maximilien
@@ -165,6 +165,7 @@ aliases:
   - Vishal-Chdhry
   - creydr
   - csantanapr
+  - davidhadas
   - dprotaso
   - dsimansk
   - itsmurugappan
@@ -181,7 +182,6 @@ aliases:
   - salaboy
   - skonto
   - upodroid
-  - zroubalik
   knative-release-leads:
   - Vishal-Chdhry
   - creydr
@@ -194,10 +194,6 @@ aliases:
   - knative-prow-robot
   - knative-prow-updater-robot
   - knative-test-reporter-robot
-  kperf-approvers:
-  - chzhyang
-  - maximilien
-  - psschwei
   net-certmanager-approvers: []
   net-contour-approvers:
   - KauzClay
@@ -230,7 +226,6 @@ aliases:
   productivity-writers:
   - cardil
   - kvmware
-  - psschwei
   - upodroid
   security-guard-approvers:
   - davidhadas
@@ -247,6 +242,10 @@ aliases:
   - nak3
   - psschwei
   - skonto
+  serving-progressive-rollout-approvers:
+  - houshengbo
+  - sukumargaonkar
+  - yuzisun
   serving-reviewers:
   - KauzClay
   - jsanin-vmw
@@ -273,12 +272,18 @@ aliases:
   - nainaz
   - salaboy
   technical-oversight-committee:
+  - davidhadas
   - dprotaso
   - dsimansk
   - kvmware
   - psschwei
-  - zroubalik
   ux-wg-leads:
-  - snneji
+  - cali0707
+  - leo6leo
+  - mmejia02
+  - zainabhusain227
   ux-writers:
-  - snneji
+  - cali0707
+  - leo6leo
+  - mmejia02
+  - zainabhusain227

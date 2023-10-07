@@ -40,6 +40,7 @@ spec:
 
   dnsNames:
     - kafka-sink-ingress.knative-eventing.svc.cluster.local
+    - kafka-sink-ingress.knative-eventing.svc
 
   issuerRef:
     name: selfsigned-ca-issuer

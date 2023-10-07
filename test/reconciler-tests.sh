@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-source $(dirname $0)/e2e-common.sh
+source $(dirname "$0")/e2e-common.sh
 export BROKER_TEMPLATES=./templates/kafka-broker
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize $@ --skip-istio-addon --min-nodes=4 --max-nodes=4
+  initialize "$@" --num-nodes=4
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
@@ -25,7 +25,7 @@ header "Running tests"
 
 if [ "${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO:-""}" != "" ]; then
   # if this flag exists, only test Kafka channel scenarios with auth
-  $(dirname $0)/channel-reconciler-tests.sh || fail_test "Failed to execute KafkaChannel tests"
+  $(dirname "$0")/channel-reconciler-tests.sh || fail_test "Failed to execute KafkaChannel tests"
   success
 fi
 
@@ -47,6 +47,12 @@ go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new_channel/... || fail_test "E2E (new - KafkaChannel) suite failed"
 
 go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
+
+echo "Running E2E Reconciler Tests with strict transport encryption"
+
+kubectl apply -Rf "$(dirname "$0")/config-transport-encryption"
+
+go_test_e2e -timeout=1h ./test/e2e_new -run TLS || fail_test
 
 if ! ${LOCAL_DEVELOPMENT}; then
   go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
