@@ -18,6 +18,10 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,23 +29,43 @@ public class AnyFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(AnyFilter.class);
 
-    private final List<Filter> filters;
+    private final List<FilterCounter> filters;
+
+    private final ArrayBlockingQueue<Integer> indexSwapQueue;
+
+    private final FilterListOptimizer filterListOptimizer;
+
+    private final ReadWriteLock readWriteLock;
 
     public AnyFilter(List<Filter> filters) {
-        this.filters = filters;
+        this.filters = filters.stream().map(FilterCounter::new).collect(Collectors.toList());
+        this.indexSwapQueue = new ArrayBlockingQueue<>(1);
+        this.readWriteLock = new ReentrantReadWriteLock();
+        this.filterListOptimizer =
+                new FilterListOptimizer(this.readWriteLock, this.indexSwapQueue, this.filters, logger);
+        this.filterListOptimizer.start();
     }
 
     @Override
     public boolean test(CloudEvent cloudEvent) {
         logger.debug("Testing event against ANY filter. Event {}", cloudEvent);
-
-        for (Filter filter : filters) {
+        this.readWriteLock.readLock().lock();
+        for (int i = 0; i < this.filters.size(); i++) {
+            Filter filter = this.filters.get(i).getFilter();
             if (filter.test(cloudEvent)) {
+                this.indexSwapQueue.offer(i);
                 logger.debug("Test succeeded. Filter {} Event {}", filter, cloudEvent);
+                this.readWriteLock.readLock().unlock();
                 return true;
             }
         }
         logger.debug("Test failed. All filters failed. Event {}", cloudEvent);
+        this.readWriteLock.readLock().unlock();
         return false;
+    }
+
+    @Override
+    public void close() {
+        this.filterListOptimizer.interrupt();
     }
 }

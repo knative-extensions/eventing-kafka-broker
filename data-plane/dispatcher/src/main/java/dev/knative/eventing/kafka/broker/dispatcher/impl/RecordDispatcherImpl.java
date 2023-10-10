@@ -503,6 +503,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     public Future<Void> close() {
         this.closed.set(true);
 
+        this.filter.close();
+
         Metrics.searchEgressMeters(
                         meterRegistry, consumerVerticleContext.getEgress().getReference())
                 .forEach(meterRegistry::remove);

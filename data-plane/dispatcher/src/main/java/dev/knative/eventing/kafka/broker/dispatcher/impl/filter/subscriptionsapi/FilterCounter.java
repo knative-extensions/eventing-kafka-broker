@@ -13,25 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
-import io.cloudevents.CloudEvent;
-import java.util.function.Predicate;
+import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 
-/**
- * This interface provides an abstraction for filtering {@link CloudEvent} instances.
- */
-@FunctionalInterface
-public interface Filter extends Predicate<CloudEvent> {
+public class FilterCounter {
+    private final Filter filter;
+    private int count;
 
-    /**
-     * @return noop implementation that always returns true
-     */
-    static Filter noop() {
-        return ce -> true;
+    public FilterCounter(Filter filter) {
+        this.filter = filter;
+        this.count = 0;
     }
 
-    default void close() {
-        return;
+    public Filter getFilter() {
+        return filter;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public int incrementCount() {
+        return this.count++;
     }
 }
