@@ -19,8 +19,8 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.*;
 import io.cloudevents.CloudEvent;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class AnyFilterBenchmark {
     public static CloudEvent event() {
@@ -56,7 +56,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(Set.of(makeExactFilter()));
+            return new AnyFilter(List.of(makeExactFilter()));
         }
 
         @Override
@@ -69,7 +69,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(Set.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
+            return new AnyFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
         }
 
         @Override
@@ -82,7 +82,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(Set.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()));
+            return new AnyFilter(List.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()));
         }
 
         @Override
@@ -95,7 +95,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(Set.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()));
+            return new AnyFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()));
         }
 
         @Override
@@ -108,7 +108,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(Set.of(makePrefixFilter(), makePrefixFilterNoMatch()));
+            return new AnyFilter(List.of(makePrefixFilter(), makePrefixFilterNoMatch()));
         }
 
         @Override
@@ -120,7 +120,7 @@ public class AnyFilterBenchmark {
     public static class AnyFilter2EventsMatch2DifferentFiltersOneFilterMatchesNeither extends FilterBenchmark {
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(Set.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()));
+            return new AnyFilter(List.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()));
         }
 
         @Override

@@ -22,8 +22,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import io.cloudevents.CloudEvent;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class AllFilterBenchmark {
     public static ExactFilter makeExactFilter() {
@@ -50,7 +50,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(Set.of(makeExactFilter()));
+            return new AllFilter(List.of(makeExactFilter()));
         }
 
         @Override
@@ -59,11 +59,11 @@ public class AllFilterBenchmark {
         }
     }
 
-    public static class AllFilterMatchAllSubfilters extends FilterBenchmark {
+    public static class AllFilterMatchAllSubFilters extends FilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(Set.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
+            return new AllFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
         }
 
         @Override
@@ -76,7 +76,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(Set.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()));
+            return new AllFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()));
         }
 
         @Override
@@ -89,7 +89,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(Set.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
+            return new AllFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
         }
 
         @Override
@@ -102,7 +102,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(Set.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()));
+            return new AllFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()));
         }
 
         @Override
@@ -115,7 +115,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(Set.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
+            return new AllFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
         }
 
         @Override
