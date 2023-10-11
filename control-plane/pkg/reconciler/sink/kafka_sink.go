@@ -188,11 +188,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 		Reference: &contract.Reference{
-			Uuid:         string(ks.GetUID()),
-			Namespace:    ks.GetNamespace(),
-			Name:         ks.GetName(),
-			Kind:         "KafkaSink",
-			GroupVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+			Uuid:      string(ks.GetUID()),
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
 		},
 	}
 	if ks.Spec.HasAuthConfig() {
