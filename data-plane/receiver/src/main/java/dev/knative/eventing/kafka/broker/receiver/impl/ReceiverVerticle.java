@@ -74,9 +74,9 @@ import org.slf4j.LoggerFactory;
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
-    private final File tlsKeyFile;
-    private final File tlsCrtFile;
-    private final File secretVolume;
+    private final String tlsKeyFile;
+    private final String tlsCrtFile;
+    private final String secretVolume;
 
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
@@ -98,8 +98,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
             final String secretVolumePath,
-            final String tlsKeyFilePath, 
-            final String tlsCrtFilePath) {
+            ) {
 
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
@@ -113,9 +112,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.httpsServerOptions = httpsServerOptions;
         this.ingressProducerStoreFactory = ingressProducerStoreFactory;
         this.ingressRequestHandler = ingressRequestHandler;
-        this.tlsKeyFile = new File(tlsKeyFilePath);
-        this.tlsCrtFile = new File(tlsCrtFilePath);
         this.secretVolume = new File(secretVolumePath);
+      this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
+      this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -136,7 +135,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             // The secret volume is mounted, we should start the https server
             // check whether the tls.key and tls.crt files exist
 
-            if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+            if (this.tlsKeyFile.exists() && this.tlsCrtFile.exists() && httpsServerOptions != null) {
                 PemKeyCertOptions keyCertOptions =
                         new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
@@ -175,7 +174,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     // Set up the secret watcher
     private void setupSecretWatcher() {
         try {
-            this.secretWatcher = new FileWatcher(tlsCrtFile, this::updateServerConfig);
+            this.secretWatcher = new FileWatcher(this.tlsCrtFile, this::updateServerConfig);
             this.secretWatcher.start();
         } catch (IOException e) {
             logger.error("Failed to start SecretWatcher", e);
@@ -235,13 +234,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         // This function will be called when the secret volume is updated
 
         // Check whether the tls.key and tls.crt files exist
-        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+        if (this.tlsKeyFile.exists() && this.tlsCrtFile.exists() && httpsServerOptions != null) {
             try {
                 // Update SSL configuration by passing the new value of the certificate and key
                 // Have to use value instead of path here otherwise the changes won't be applied
                 final var keyCertOptions = new PemKeyCertOptions()
-                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
-                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
+                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(this.tlsCrtFile.toPath())))
+                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(this.tlsKeyFile.toPath())));
 
                 httpsServer
                         .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
