@@ -99,7 +99,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
 	IPsLister := prober.IdentityIPsLister()
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
-	reconciler.Prober, err = prober.NewComposite(ctx, configs.IngressPodPort, configs.IngressPodTlsPort, IPsLister, impl.EnqueueKey, &caCerts)
+	reconciler.Prober, err = prober.NewComposite(ctx, "", configs.IngressPodTlsPort, IPsLister, impl.EnqueueKey, &caCerts)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
