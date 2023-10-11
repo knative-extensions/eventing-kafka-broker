@@ -97,7 +97,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final HttpServerOptions httpsServerOptions,
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
-            final String secretVolumePath,
+            final String secretVolumePath
             ) {
 
         Objects.requireNonNull(env);
