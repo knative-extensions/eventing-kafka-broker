@@ -26,6 +26,8 @@ import org.openjdk.jmh.infra.Blackhole;
 @BenchmarkMode(Mode.Throughput)
 @Fork(1)
 @State(Scope.Thread)
+@Measurement(iterations = 3, time = 10)
+@Warmup(iterations = 3, time = 5)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public abstract class FilterBenchmark {
     Filter filter;
@@ -57,7 +59,7 @@ public abstract class FilterBenchmark {
     @Benchmark
     public void benchmarkFilterCreation(Blackhole bh) {
         final var filter = this.createFilter();
-        filter.close();
+        filter.close(vertx);
         bh.consume(filter);
     }
 
