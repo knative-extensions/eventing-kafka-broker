@@ -20,8 +20,9 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"knative.dev/eventing/test/rekt/resources/addressable"
 	"time"
+
+	"knative.dev/eventing/test/rekt/resources/addressable"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
