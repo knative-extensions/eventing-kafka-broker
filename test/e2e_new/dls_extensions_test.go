@@ -436,6 +436,7 @@ func assertEnhancedWithKnativeErrorExtensions(sinkName string, matcherfns ...fun
 			matchers[i] = fn(ctx)
 		}
 		_ = eventshub.StoreFromContext(ctx, sinkName).AssertExact(
+			ctx,
 			t,
 			1,
 			MatchKind(EventReceived),

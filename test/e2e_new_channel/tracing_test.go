@@ -162,7 +162,7 @@ func channelHasMatchingTraceTree(sourceName, sinkName, channelName, eventID stri
 				},
 			},
 		}
-		eventshub.StoreFromContext(ctx, sinkName).AssertExact(t, 1,
+		eventshub.StoreFromContext(ctx, sinkName).AssertExact(ctx, t, 1,
 			MatchKind(EventReceived),
 			tracing.TraceTreeMatches(sourceName, eventID, expectedTree),
 		)

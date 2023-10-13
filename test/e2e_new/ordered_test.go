@@ -205,6 +205,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 func assertDeliveryOrderAndTiming(sinkName string, expectedNumber int, responseWaitTime time.Duration, matchers ...cetest.EventMatcher) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		events := eventshub.StoreFromContext(ctx, sinkName).AssertExact(
+			ctx,
 			t,
 			expectedNumber,
 			MatchKind(EventReceived),
