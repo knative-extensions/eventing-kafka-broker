@@ -33,7 +33,6 @@ import (
 
 func TestSinkTLSCARotation(t *testing.T) {
 	t.Parallel()
-	t.Skip()
 
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
