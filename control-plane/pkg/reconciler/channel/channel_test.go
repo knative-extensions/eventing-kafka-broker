@@ -140,7 +140,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -157,7 +157,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantErr: true,
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusReady),
+				testProber: probertesting.MockNewProber(prober.StatusReady),
 			},
 		},
 		{
@@ -377,7 +377,7 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -447,7 +447,7 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusUnknown),
+				testProber: probertesting.MockNewProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -2048,7 +2048,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 	}
@@ -2058,9 +2058,9 @@ func TestFinalizeKind(t *testing.T) {
 
 func useTable(t *testing.T, table TableTest, env config.Env) {
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-		proberMock := probertesting.MockProber(prober.StatusReady)
+		proberMock := probertesting.MockNewProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
-			proberMock = p.(prober.Prober)
+			proberMock = p.(prober.NewProber)
 		}
 
 		var featureFlags *apisconfig.KafkaFeatureFlags
