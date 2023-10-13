@@ -74,9 +74,9 @@ import org.slf4j.LoggerFactory;
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
-    private final String tlsKeyFile;
-    private final String tlsCrtFile;
-    private final String secretVolume;
+    private final File tlsKeyFile;
+    private final File tlsCrtFile;
+    private final File secretVolume;
 
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
