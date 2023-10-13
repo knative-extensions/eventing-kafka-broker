@@ -77,6 +77,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private static final String EKB_ERROR_PREFIX = "kne-";
     private static final int KN_ERROR_DATA_MAX_BYTES = 1024;
 
+    private final Vertx vertx;
+
     private final Filter filter;
     private final Function<ConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> subscriberSender;
     private final Function<ConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> dlsSender;
@@ -103,6 +105,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
      * @param consumerTracer           consumer tracer
      */
     public RecordDispatcherImpl(
+            final Vertx vertx,
             final ConsumerVerticleContext consumerVerticleContext,
             final Filter filter,
             final CloudEventSender subscriberSender,
@@ -111,6 +114,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             final RecordDispatcherListener recordDispatcherListener,
             final ConsumerTracer consumerTracer,
             final MeterRegistry meterRegistry) {
+        Objects.requireNonNull(vertx, "provide vertx");
         Objects.requireNonNull(consumerVerticleContext, "provide consumerVerticleContext");
         Objects.requireNonNull(filter, "provide filter");
         Objects.requireNonNull(subscriberSender, "provide subscriberSender");
@@ -118,6 +122,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         Objects.requireNonNull(recordDispatcherListener, "provide offsetStrategy");
         Objects.requireNonNull(responseHandler, "provide sinkResponseHandler");
 
+        this.vertx = vertx;
         this.consumerVerticleContext = consumerVerticleContext;
         this.filter = filter;
         this.subscriberSender = composeSenderAndSinkHandler(subscriberSender, responseHandler, "subscriber");
@@ -503,7 +508,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     public Future<Void> close() {
         this.closed.set(true);
 
-        this.filter.close();
+        this.filter.close(vertx);
 
         Metrics.searchEgressMeters(
                         meterRegistry, consumerVerticleContext.getEgress().getReference())

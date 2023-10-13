@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
+import io.vertx.core.Vertx;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -32,6 +33,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class AnyFilterTest {
+
+    static final Vertx vertx = Vertx.vertx();
 
     static final CloudEvent event = CloudEventBuilder.v1()
             .withId("123-42")
@@ -47,35 +50,48 @@ public class AnyFilterTest {
     @MethodSource(value = {"testCases"})
     public void match(CloudEvent event, Filter filter, boolean shouldMatch) {
         assertThat(filter.test(event)).isEqualTo(shouldMatch);
+        filter.close(vertx);
     }
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AnyFilter(List.of(new ExactFilter(Map.of("id", "123-42")))), true),
+                Arguments.of(event, new AnyFilter(List.of(new ExactFilter(Map.of("id", "123-42"))), vertx, 500), true),
                 Arguments.of(
                         event,
-                        new AnyFilter(List.of(
-                                new ExactFilter(Map.of("id", "123-42")),
-                                new ExactFilter(Map.of("source", "/api/some-source")))),
+                        new AnyFilter(
+                                List.of(
+                                        new ExactFilter(Map.of("id", "123-42")),
+                                        new ExactFilter(Map.of("source", "/api/some-source"))),
+                                vertx,
+                                500),
                         true),
                 Arguments.of(
                         event,
-                        new AnyFilter(List.of(
-                                new ExactFilter(Map.of("id", "123")),
-                                new ExactFilter(Map.of("source", "/api/some-source")))),
+                        new AnyFilter(
+                                List.of(
+                                        new ExactFilter(Map.of("id", "123")),
+                                        new ExactFilter(Map.of("source", "/api/some-source"))),
+                                vertx,
+                                500),
                         true),
                 Arguments.of(
                         event,
-                        new AnyFilter(List.of(
-                                new ExactFilter(Map.of("id", "123-42")),
-                                new ExactFilter(Map.of("source", "/api/something-else")))),
+                        new AnyFilter(
+                                List.of(
+                                        new ExactFilter(Map.of("id", "123-42")),
+                                        new ExactFilter(Map.of("source", "/api/something-else"))),
+                                vertx,
+                                500),
                         true),
                 Arguments.of(
                         event,
-                        new AnyFilter(List.of(
-                                new ExactFilter(Map.of("id", "123")),
-                                new ExactFilter(Map.of("source", "/api/something-else")))),
+                        new AnyFilter(
+                                List.of(
+                                        new ExactFilter(Map.of("id", "123")),
+                                        new ExactFilter(Map.of("source", "/api/something-else"))),
+                                vertx,
+                                500),
                         false),
-                Arguments.of(event, new AnyFilter(Collections.emptyList()), false));
+                Arguments.of(event, new AnyFilter(Collections.emptyList(), vertx, 500), false));
     }
 }

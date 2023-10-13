@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 public class AllFilterBenchmark {
+
     public static ExactFilter makeExactFilter() {
         return new ExactFilter(Map.of("id", "com.github.pull.create"));
     }
@@ -50,7 +51,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter()));
+            return new AllFilter(List.of(makeExactFilter()), vertx, FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -63,7 +64,10 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
+            return new AllFilter(
+                    List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -76,7 +80,10 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()));
+            return new AllFilter(
+                    List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -89,7 +96,10 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
+            return new AllFilter(
+                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -102,7 +112,10 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()));
+            return new AllFilter(
+                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -115,7 +128,10 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
+            return new AllFilter(
+                    List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override

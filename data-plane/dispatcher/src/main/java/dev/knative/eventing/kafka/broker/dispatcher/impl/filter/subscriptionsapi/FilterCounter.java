@@ -16,14 +16,15 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FilterCounter {
     private final Filter filter;
-    private int count;
+    private final AtomicInteger count;
 
     public FilterCounter(Filter filter) {
         this.filter = filter;
-        this.count = 0;
+        this.count = new AtomicInteger(0);
     }
 
     public Filter getFilter() {
@@ -31,10 +32,10 @@ public class FilterCounter {
     }
 
     public int getCount() {
-        return count;
+        return count.get();
     }
 
     public int incrementCount() {
-        return this.count++;
+        return this.count.incrementAndGet();
     }
 }

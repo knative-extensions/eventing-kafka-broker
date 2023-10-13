@@ -70,6 +70,8 @@ public class ConsumerVerticleBuilder {
 
     private static final CloudEventSender NO_DEAD_LETTER_SINK_SENDER = CloudEventSender.noop("No dead letter sink set");
 
+    private static final long FILTER_REORDER_TIME_MILLISECONDS = 1000 * 60 * 5; // 5 minutes
+
     private final ConsumerVerticleContext consumerVerticleContext;
 
     public ConsumerVerticleBuilder(final ConsumerVerticleContext consumerVerticleContext) {
@@ -108,8 +110,9 @@ public class ConsumerVerticleBuilder {
 
         final var recordDispatcher = new RecordDispatcherMutatorChain(
                 new RecordDispatcherImpl(
+                        vertx,
                         consumerVerticleContext,
-                        getFilter(),
+                        getFilter(vertx),
                         egressSubscriberSender,
                         egressDeadLetterSender,
                         responseHandler,
@@ -179,10 +182,10 @@ public class ConsumerVerticleBuilder {
         };
     }
 
-    private Filter getFilter() {
+    private Filter getFilter(Vertx vertx) {
         // Dialected filters should override the attributes filter
         if (consumerVerticleContext.getEgress().getDialectedFilterCount() > 0) {
-            return getFilter(consumerVerticleContext.getEgress().getDialectedFilterList());
+            return getFilter(consumerVerticleContext.getEgress().getDialectedFilterList(), vertx);
         } else if (consumerVerticleContext.getEgress().hasFilter()) {
             return new ExactFilter(
                     consumerVerticleContext.getEgress().getFilter().getAttributesMap());
@@ -190,23 +193,34 @@ public class ConsumerVerticleBuilder {
         return Filter.noop();
     }
 
-    private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
+    private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters, Vertx vertx) {
         return new AllFilter(
-                filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toList()));
+                filters.stream()
+                        .map((DataPlaneContract.DialectedFilter filter) ->
+                                ConsumerVerticleBuilder.getFilter(filter, vertx))
+                        .collect(Collectors.toList()),
+                vertx,
+                FILTER_REORDER_TIME_MILLISECONDS);
     }
 
-    private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
+    private static Filter getFilter(DataPlaneContract.DialectedFilter filter, Vertx vertx) {
         return switch (filter.getFilterCase()) {
             case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
             case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
             case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
-            case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
-            case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
-                    .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toList()));
-            case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
-                    .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toList()));
+            case NOT -> new NotFilter(getFilter(filter.getNot().getFilter(), vertx));
+            case ANY -> new AnyFilter(
+                    filter.getAny().getFiltersList().stream()
+                            .map((DataPlaneContract.DialectedFilter f) -> ConsumerVerticleBuilder.getFilter(f, vertx))
+                            .collect(Collectors.toList()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
+            case ALL -> new AllFilter(
+                    filter.getAll().getFiltersList().stream()
+                            .map((DataPlaneContract.DialectedFilter f) -> ConsumerVerticleBuilder.getFilter(f, vertx))
+                            .collect(Collectors.toList()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
             case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
             default -> Filter.noop();
         };

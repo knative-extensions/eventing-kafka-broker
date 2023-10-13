@@ -56,7 +56,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeExactFilter()));
+            return new AnyFilter(List.of(makeExactFilter()), vertx, FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -69,7 +69,10 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
+            return new AnyFilter(
+                    List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -82,7 +85,10 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()));
+            return new AnyFilter(
+                    List.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -95,7 +101,10 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()));
+            return new AnyFilter(
+                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -108,7 +117,8 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makePrefixFilter(), makePrefixFilterNoMatch()));
+            return new AnyFilter(
+                    List.of(makePrefixFilter(), makePrefixFilterNoMatch()), vertx, FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -120,7 +130,10 @@ public class AnyFilterBenchmark {
     public static class AnyFilter2EventsMatch2DifferentFiltersOneFilterMatchesNeither extends FilterBenchmark {
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()));
+            return new AnyFilter(
+                    List.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
