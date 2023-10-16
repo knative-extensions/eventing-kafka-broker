@@ -33,7 +33,7 @@ public class AnyFilterBenchmark {
     }
 
     public static ExactFilter makeExactFilter() {
-        return new ExactFilter(Map.of("id", "com.github.pull.create"));
+        return new ExactFilter(Map.of("type", "com.github.pull.create"));
     }
 
     public static PrefixFilter makePrefixFilter() {
