@@ -17,27 +17,27 @@
 package installation
 
 import (
-	"knative.dev/hack/shell"
+	"testing"
+
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+	"knative.dev/pkg/test/upgrade/shell"
 )
 
 func runShellFunc(funcName string, c pkgupgrade.Context) {
 	c.Log.Info("Running shell function: ", funcName)
-	err := shellout(funcName)
+	err := shellout(funcName, c.T)
 	if err != nil {
 		c.T.Error(err)
 		return
 	}
 }
 
-func shellout(funcName string) error {
+func shellout(funcName string, t *testing.T) error {
 	loc, err := shell.NewProjectLocation("../../..")
 	if err != nil {
 		return err
 	}
-	exec := shell.NewExecutor(shell.ExecutorConfig{
-		ProjectLocation: loc,
-	})
+	exec := shell.NewExecutor(t, loc)
 	fn := shell.Function{
 		Script: shell.Script{
 			Label:      funcName,
