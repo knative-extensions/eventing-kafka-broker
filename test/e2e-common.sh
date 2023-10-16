@@ -166,7 +166,7 @@ function build_source_components_from_source() {
 function install_latest_release() {
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
-  ko-nonexistent apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
+  ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
