@@ -33,7 +33,7 @@ public class AnyFilterBenchmark {
     }
 
     public static ExactFilter makeExactFilter() {
-        return new ExactFilter(Map.of("id", "com.github.pull.create"));
+        return new ExactFilter(Map.of("type", "com.github.pull.create"));
     }
 
     public static PrefixFilter makePrefixFilter() {
@@ -48,7 +48,7 @@ public class AnyFilterBenchmark {
         return new PrefixFilter(Map.of("type", "other.event"));
     }
 
-    public static SuffixFilter makeSufficFilterNoMatch() {
+    public static SuffixFilter makeSuffixFilterNoMatch() {
         return new SuffixFilter(Map.of("source", "qwertyuiop"));
     }
 
@@ -86,7 +86,7 @@ public class AnyFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AnyFilter(
-                    List.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()),
+                    List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }
@@ -102,7 +102,7 @@ public class AnyFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AnyFilter(
-                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()),
+                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }
@@ -131,7 +131,7 @@ public class AnyFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AnyFilter(
-                    List.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()),
+                    List.of(makeSuffixFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }

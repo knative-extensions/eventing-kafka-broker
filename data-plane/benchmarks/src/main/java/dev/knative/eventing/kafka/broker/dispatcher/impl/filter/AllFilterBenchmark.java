@@ -28,7 +28,7 @@ import java.util.Map;
 public class AllFilterBenchmark {
 
     public static ExactFilter makeExactFilter() {
-        return new ExactFilter(Map.of("id", "com.github.pull.create"));
+        return new ExactFilter(Map.of("type", "com.github.pull.create"));
     }
 
     public static PrefixFilter makePrefixFilter() {

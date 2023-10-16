@@ -43,6 +43,9 @@ public class AnyFilter implements Filter {
     }
 
     private void reorder(Long id) {
+        if (!this.shouldReorder) {
+            return;
+        }
         logger.debug("Reordering ANY filter!");
         this.filters.updateAndGet((filterCounters -> filterCounters.stream()
                 .sorted(Comparator.comparingInt(FilterCounter::getCount).reversed())

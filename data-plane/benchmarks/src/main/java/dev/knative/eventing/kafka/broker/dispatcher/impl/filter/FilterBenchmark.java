@@ -33,21 +33,27 @@ public abstract class FilterBenchmark {
     Filter filter;
     CloudEvent cloudEvent;
 
-    public static final Vertx vertx = Vertx.vertx();
+    Vertx vertx;
 
-    public static final long FILTER_REORDER_TIME_MILLISECONDS = 500; // 0.5 seconds
+    public static final long FILTER_REORDER_TIME_MILLISECONDS = 1000; // 1 seconds
 
-    @Setup
+    @TearDown
+    public void closeVertx() {
+        this.vertx.close();
+    }
+
+    @Setup(Level.Trial)
     public void setupFilter() {
+        this.vertx = Vertx.vertx();
         this.filter = createFilter();
     }
 
-    @Setup
+    @Setup(Level.Trial)
     public void setupCloudEvent() {
         this.cloudEvent = createEvent();
     }
 
-    @TearDown
+    @TearDown(Level.Trial)
     public void teardown() {
         this.filter.close(vertx);
     }
