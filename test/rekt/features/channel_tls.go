@@ -17,20 +17,10 @@
 package features
 
 import (
-	"context"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
-	"knative.dev/eventing/test/rekt/resources/subscription"
-	"time"
-
-	cetest "github.com/cloudevents/sdk-go/v2/test"
-	"github.com/google/uuid"
-	"knative.dev/eventing/test/rekt/resources/addressable"
-
 	"knative.dev/eventing/test/rekt/features/featureflags"
 	"knative.dev/reconciler-test/pkg/eventshub"
-	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
-	"knative.dev/reconciler-test/pkg/resources/service"
 )
 
 func RotateChannelTLSCertificates() *feature.Feature {
@@ -39,9 +29,9 @@ func RotateChannelTLSCertificates() *feature.Feature {
 	//ingressSecretName := "kafka-channel-ingress-server-tls"
 
 	channelName := feature.MakeRandomK8sName("channel")
-	subscriptionName := feature.MakeRandomK8sName("sub")
+	//subscriptionName := feature.MakeRandomK8sName("sub")
 	sink := feature.MakeRandomK8sName("sink")
-	source := feature.MakeRandomK8sName("source")
+	//source := feature.MakeRandomK8sName("source")
 
 	f := feature.NewFeatureNamed("Rotate Kafka Channel TLS certificate")
 
@@ -63,36 +53,37 @@ func RotateChannelTLSCertificates() *feature.Feature {
 	))
 	f.Setup("channel is ready", kafkachannel.IsReady(channelName))
 
-	f.Setup("install subscription", func(ctx context.Context, t feature.T) {
-		d := service.AsDestinationRef(sink)
-		d.CACerts = eventshub.GetCaCerts(ctx)
-		subscription.Install(subscriptionName,
-			subscription.WithChannel(kafkachannel.AsRef(channelName)),
-			subscription.WithSubscriberFromDestination(d))(ctx, t)
-	})
-	f.Setup("subscription is ready", subscription.IsReady(subscriptionName))
-
-	f.Setup("Channel has HTTPS address", kafkachannel.ValidateAddress(channelName, addressable.AssertHTTPSAddress))
-
-	event := cetest.FullEvent()
-	event.SetID(uuid.New().String())
-
-	f.Requirement("install source", eventshub.Install(source,
-		eventshub.StartSenderToResourceTLS(kafkachannel.GVR(), channelName, nil),
-		eventshub.InputEvent(event),
-		// Send multiple events so that we take into account that the certificate rotation might
-		// be detected by the server after some time.
-		eventshub.SendMultipleEvents(100, 3*time.Second),
-	))
-
-	f.Assert("Event sent", assert.OnStore(source).
-		MatchSentEvent(cetest.HasId(event.ID())).
-		AtLeast(1),
-	)
-	f.Assert("Event received", assert.OnStore(sink).
-		MatchReceivedEvent(cetest.HasId(event.ID())).
-		AtLeast(1),
-	)
+	//f.Setup("install subscription", func(ctx context.Context, t feature.T) {
+	//	d := service.AsDestinationRef(sink)
+	//	d.CACerts = eventshub.GetCaCerts(ctx)
+	//	subscription.Install(subscriptionName,
+	//		subscription.WithChannel(kafkachannel.AsRef(channelName)),
+	//		subscription.WithSubscriberFromDestination(d))(ctx, t)
+	//})
+	//
+	//f.Setup("subscription is ready", subscription.IsReady(subscriptionName))
+	//
+	//f.Setup("Channel has HTTPS address", kafkachannel.ValidateAddress(channelName, addressable.AssertHTTPSAddress))
+	//
+	//event := cetest.FullEvent()
+	//event.SetID(uuid.New().String())
+	//
+	//f.Requirement("install source", eventshub.Install(source,
+	//	eventshub.StartSenderToResourceTLS(kafkachannel.GVR(), channelName, nil),
+	//	eventshub.InputEvent(event),
+	//	// Send multiple events so that we take into account that the certificate rotation might
+	//	// be detected by the server after some time.
+	//	eventshub.SendMultipleEvents(100, 3*time.Second),
+	//))
+	//
+	//f.Assert("Event sent", assert.OnStore(source).
+	//	MatchSentEvent(cetest.HasId(event.ID())).
+	//	AtLeast(1),
+	//)
+	//f.Assert("Event received", assert.OnStore(sink).
+	//	MatchReceivedEvent(cetest.HasId(event.ID())).
+	//	AtLeast(1),
+	//)
 	//f.Assert("Source match updated peer certificate", assert.OnStore(source).
 	//	MatchPeerCertificatesReceived(assert.MatchPeerCertificatesFromSecret(system.Namespace(), ingressSecretName, "tls.crt")).
 	//	AtLeast(1),

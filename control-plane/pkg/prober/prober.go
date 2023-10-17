@@ -120,6 +120,15 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 
 	if response.StatusCode != http.StatusOK {
 		logger.Info("Resource not ready", zap.Int("statusCode", response.StatusCode))
+		logger.Info("[haha] Response body", zap.Any("response", response.Body))
+		logger.Info("[haha] Response header", zap.Any("response", response.Header))
+		logger.Info("[haha] Response status", zap.Any("response", response.Status))
+		logger.Info("[haha] Response proto", zap.Any("response", response.Proto))
+		logger.Info("[haha] Response proto major", zap.Any("response", response.ProtoMajor))
+		logger.Info("[haha] Response proto minor", zap.Any("response", response.ProtoMinor))
+		logger.Info("[haha] Response transfer encoding", zap.Any("response", response.Request))
+		logger.Info("[haha] Response transfer encoding", zap.Any("response", response.ContentLength))
+
 		return StatusNotReady
 	}
 

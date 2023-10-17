@@ -697,12 +697,17 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 }
 
 func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) (*corev1.Service, error) {
-	expected, err := resources.MakeK8sService(channel, resources.ExternalService(r.DataPlaneNamespace, NewChannelIngressServiceName))
+	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
+	expected, err := resources.MakeK8sService(channel, logger, resources.ExternalService(r.DataPlaneNamespace, NewChannelIngressServiceName))
 	if err != nil {
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}
 
+	logger.Debug("[hahap] Channel service created", zap.Any("service", expected))
+
 	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
+
+	logger.Debug("[hahap] Channel service got", zap.Any("service", svc))
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
