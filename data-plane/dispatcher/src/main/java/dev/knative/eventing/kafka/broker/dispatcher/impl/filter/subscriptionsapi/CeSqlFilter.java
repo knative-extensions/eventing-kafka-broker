@@ -22,6 +22,7 @@ import io.cloudevents.sql.EvaluationRuntime;
 import io.cloudevents.sql.Expression;
 import io.cloudevents.sql.Parser;
 import io.cloudevents.sql.Type;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +30,15 @@ public class CeSqlFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
 
+    private final AtomicInteger count;
+
     private final Expression expression;
     private final EvaluationRuntime runtime;
 
     public CeSqlFilter(String sqlExpression) {
         this.expression = Parser.parseDefault(sqlExpression);
         this.runtime = EvaluationRuntime.getDefault();
+        this.count = new AtomicInteger(0);
     }
 
     @Override
@@ -53,5 +57,15 @@ public class CeSqlFilter implements Filter {
                     evaluationException);
             return false;
         }
+    }
+
+    @Override
+    public int getCount() {
+        return this.count.get();
+    }
+
+    @Override
+    public int incrementCount() {
+        return this.count.incrementAndGet();
     }
 }

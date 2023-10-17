@@ -25,6 +25,7 @@ import io.cloudevents.lang.Nullable;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -64,6 +65,8 @@ public abstract class AttributesFilter implements Filter {
 
     private final List<AttributeEntry> attributes;
 
+    private final AtomicInteger count;
+
     /**
      * All args constructor.
      *
@@ -81,6 +84,7 @@ public abstract class AttributesFilter implements Filter {
                             }
                         })))
                 .collect(Collectors.toUnmodifiableList());
+        this.count = new AtomicInteger(0);
     }
 
     /**
@@ -131,5 +135,15 @@ public abstract class AttributesFilter implements Filter {
 
     private static boolean isNotEmpty(final String value) {
         return !(value == null || value.isEmpty());
+    }
+
+    @Override
+    public int getCount() {
+        return this.count.get();
+    }
+
+    @Override
+    public int incrementCount() {
+        return this.count.incrementAndGet();
     }
 }

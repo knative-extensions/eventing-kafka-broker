@@ -32,12 +32,17 @@ public interface Filter extends Predicate<CloudEvent> {
         return ce -> true;
     }
 
-    default void close() {
-        return;
+    default int getCount() {
+        return 0;
     }
+    ;
+
+    default int incrementCount() {
+        return 0;
+    }
+    ;
 
     default void close(Vertx vertx) {
         return;
     }
-    ;
 }

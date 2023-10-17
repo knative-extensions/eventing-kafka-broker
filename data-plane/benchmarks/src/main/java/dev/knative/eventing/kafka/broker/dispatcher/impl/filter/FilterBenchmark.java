@@ -35,7 +35,7 @@ public abstract class FilterBenchmark {
 
     Vertx vertx;
 
-    public static final long FILTER_REORDER_TIME_MILLISECONDS = 1000; // 1 seconds
+    public static final long FILTER_REORDER_TIME_MILLISECONDS = 10000; // 1 seconds
 
     @TearDown
     public void closeVertx() {

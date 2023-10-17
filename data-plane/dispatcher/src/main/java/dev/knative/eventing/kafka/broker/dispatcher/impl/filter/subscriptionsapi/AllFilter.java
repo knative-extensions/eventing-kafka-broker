@@ -21,6 +21,7 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -29,7 +30,9 @@ import org.slf4j.LoggerFactory;
 public class AllFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(AllFilter.class);
 
-    private final AtomicReference<ImmutableList<FilterCounter>> filters;
+    private final AtomicReference<ImmutableList<Filter>> filters;
+
+    private final AtomicInteger count;
 
     private final long periodicTimerId;
 
@@ -38,8 +41,8 @@ public class AllFilter implements Filter {
     public AllFilter(List<Filter> filters, Vertx vertx, long delayMilliseconds) {
         logger.debug("Starting with timeout {}", delayMilliseconds);
         this.periodicTimerId = vertx.setPeriodic(delayMilliseconds, this::reorder);
-        this.filters = new AtomicReference<>(
-                filters.stream().map(FilterCounter::new).collect(ImmutableList.toImmutableList()));
+        this.count = new AtomicInteger(0);
+        this.filters = new AtomicReference<>(filters.stream().collect(ImmutableList.toImmutableList()));
     }
 
     private void reorder(Long id) {
@@ -48,28 +51,40 @@ public class AllFilter implements Filter {
         }
         logger.debug("Reordering filters!");
         this.filters.updateAndGet((filterCounters -> filterCounters.stream()
-                .sorted(Comparator.comparingInt(FilterCounter::getCount).reversed())
+                .sorted(Comparator.comparingInt(Filter::getCount).reversed())
                 .collect(ImmutableList.toImmutableList())));
     }
 
-    private static boolean test(
-            CloudEvent cloudEvent, ImmutableList<FilterCounter> filters, Consumer<Boolean> shouldReorder) {
+    private static boolean test(CloudEvent cloudEvent, List<Filter> filters, Consumer<Boolean> shouldReorder) {
         logger.debug("Testing event against ALL filters. Event {}", cloudEvent);
-        for (int i = 0; i < filters.size(); i++) {
-            final var filterCounter = filters.get(i);
-            if (!filterCounter.getFilter().test(cloudEvent)) {
-                shouldReorder.accept(i != 0);
-                filterCounter.incrementCount();
-                logger.debug("Test failed. Filter {} Event {}", filterCounter.getFilter(), cloudEvent);
+        int i = 0;
+        for (final Filter filter : filters) {
+            if (!filter.test(cloudEvent)) {
+                int count = filter.incrementCount();
+                if (i != 0 && count > 2 * filters.get(i - 1).getCount()) {
+                    shouldReorder.accept(true);
+                }
+                filter.incrementCount();
+                logger.debug("Test failed. Filter {} Event {}", filter, cloudEvent);
                 return false;
             }
+            i++;
         }
         logger.debug("Test ALL filters succeeded. Event {}", cloudEvent);
         return true;
     }
 
+    @Override
+    public int getCount() {
+        return this.count.get();
+    }
+
+    @Override
+    public int incrementCount() {
+        return this.count.incrementAndGet();
+    }
+
     private void setShouldReorder(boolean shouldReorder) {
-        logger.debug("Filters should reorder!");
         this.shouldReorder = shouldReorder;
     }
 
@@ -82,6 +97,6 @@ public class AllFilter implements Filter {
     public void close(Vertx vertx) {
         logger.debug("Closing periodic reorder job");
         vertx.cancelTimer(this.periodicTimerId);
-        this.filters.get().forEach((f) -> f.getFilter().close(vertx));
+        this.filters.get().forEach((f) -> f.close(vertx));
     }
 }
