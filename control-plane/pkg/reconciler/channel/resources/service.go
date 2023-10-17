@@ -19,6 +19,8 @@ package resources
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/kmeta"
@@ -28,8 +30,12 @@ import (
 )
 
 const (
-	portName           = "http"
-	portNumber         = 80
+	portName   = "http"
+	portNumber = 80
+
+	TLSportName   = "https"
+	TLSportNumber = 443
+
 	MessagingRoleLabel = "messaging.knative.dev/role"
 	MessagingRole      = "kafka-channel"
 
@@ -62,7 +68,7 @@ func ExternalService(namespace, service string) ServiceOption {
 // MakeK8sService creates a new K8s Service for a Channel resource. It also sets the appropriate
 // OwnerReferences on the resource so handleObject can discover the Channel resource that 'owns' it.
 // As well as being garbage collected when the Channel is deleted.
-func MakeK8sService(kc *v1beta1.KafkaChannel, opts ...ServiceOption) (*corev1.Service, error) {
+func MakeK8sService(kc *v1beta1.KafkaChannel, logger *zap.Logger, opts ...ServiceOption) (*corev1.Service, error) {
 	// Add annotations
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -85,6 +91,11 @@ func MakeK8sService(kc *v1beta1.KafkaChannel, opts ...ServiceOption) (*corev1.Se
 					Name:     portName,
 					Protocol: corev1.ProtocolTCP,
 					Port:     portNumber,
+				},
+				{
+					Name:     TLSportName,
+					Protocol: corev1.ProtocolTCP,
+					Port:     TLSportNumber,
 				},
 			},
 		},
