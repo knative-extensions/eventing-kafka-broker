@@ -102,6 +102,38 @@ _Note: This test requires at least 5Gi of memory_
 LOCAL_DEVELOPMENT=true SKIP_INITIALIZE=true ./test/e2e-tests.sh
 ```
 
+### Run a single rekt test
+
+You can run a single rekt test instead of the full test suite with:
+
+```shell
+SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run <test_name> -parallel=12 -timeout=30m ./test/rekt
+```
+
+For example:
+
+```shell
+SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run TestEventTransformationForTrigger -parallel=12 -timeout=30m ./test/rekt
+```
+
+When you are running kafka broker related test, you may need to specify the broker class
+
+```shell
+ SYSTEM_NAMESPACE=knative-eventing BROKER_CLASS=Kafka go test -v -tags=e2e -count=1 -run TestBrokerTLSCARotation  -parallel=12 -timeout=30m ./test/e2e_new
+```
+
+Here are below parameters options you can use:
+
+-v prints verbose output from the tests
+-tags=e2e runs tests tagged as e2e tests
+-count=1 runs each test once rather than potentially multiple times
+-run <test_name> specifies the name of the single test to run
+-parallel=12 runs tests in parallel up to 12 at a time
+-timeout=30m sets the timeout for each test to 30 minutes
+./test/rekt specifies the directory containing the rekt tests
+SYSTEM_NAMESPACE=knative-eventing sets the namespace to use for the tests
+BROKER_CLASS=Kafka specifies to use the Kafka broker implementation for broker related tests
+
 ### Hack, build, test and iterate
 
 Once we have everything up and running we can start writing code, building, testing and iterating again and again.
