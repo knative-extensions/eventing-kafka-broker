@@ -64,7 +64,6 @@ func RotateSinkTLSCertificates(ctx context.Context) *feature.Feature {
 	}))
 
 	f.Setup("Sink has HTTPS address", kafkasink.ValidateAddress(sink, addressable.AssertHTTPSAddress))
-	//
 	event := cetest.FullEvent()
 	event.SetID(uuid.New().String())
 
@@ -76,7 +75,6 @@ func RotateSinkTLSCertificates(ctx context.Context) *feature.Feature {
 		eventshub.AddSequence,
 		eventshub.SendMultipleEvents(100, 3*time.Second),
 	))
-	//
 	f.Assert("Event sent", assert.OnStore(source).
 		MatchSentEvent(cetest.HasId(event.ID())).
 		AtLeast(1),
