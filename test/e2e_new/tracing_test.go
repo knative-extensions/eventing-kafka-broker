@@ -183,7 +183,7 @@ func brokerHasMatchingTraceTree(sourceName, sinkName, brokerName, eventID string
 				},
 			},
 		}
-		eventshub.StoreFromContext(ctx, sinkName).AssertAtLeast(t, 1,
+		eventshub.StoreFromContext(ctx, sinkName).AssertAtLeast(ctx, t, 1,
 			MatchKind(EventReceived),
 			tracing.TraceTreeMatches(sourceName, eventID, expectedTree),
 		)

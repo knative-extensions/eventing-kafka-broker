@@ -135,7 +135,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -152,7 +152,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantErr: true,
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusReady),
+				testProber: probertesting.MockNewProber(prober.StatusReady),
 			},
 		},
 		{
@@ -186,7 +186,7 @@ func TestReconcileKind(t *testing.T) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -371,7 +371,7 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -424,7 +424,7 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusUnknown),
+				testProber: probertesting.MockNewProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -1907,9 +1907,9 @@ func TestReconcileKind(t *testing.T) {
 	}
 
 	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
-		proberMock := probertesting.MockProber(prober.StatusReady)
+		proberMock := probertesting.MockNewProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
-			proberMock = p.(prober.Prober)
+			proberMock = p.(prober.NewProber)
 		}
 
 		var featureFlags *apisconfig.KafkaFeatureFlags
