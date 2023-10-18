@@ -83,10 +83,12 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     }
 
     public IngressProducer resolve(String host, String path) {
+      Logger logger = LoggerFactory.getLogger(ProducerHolder.class);
         // Ignore the host when there's a path given in the request.
         // That means, we support these modes:
         // - Request coming to "/path" --> path is used for matching
         // - Request coming to "/" --> hostname is used for matching
+      logger.error("[haha java] print the pathMapper: {}", pathMapper);
         final var p = pathMapper.get(removeTrailingSlash(path));
         if (p != null) {
             return p;
