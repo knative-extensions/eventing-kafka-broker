@@ -124,6 +124,7 @@ When you are running kafka broker related test, you may need to specify the brok
 
 Here are below parameters options you can use:
 
+```shell
 -v prints verbose output from the tests
 -tags=e2e runs tests tagged as e2e tests
 -count=1 runs each test once rather than potentially multiple times
@@ -133,6 +134,7 @@ Here are below parameters options you can use:
 ./test/rekt specifies the directory containing the rekt tests
 SYSTEM_NAMESPACE=knative-eventing sets the namespace to use for the tests
 BROKER_CLASS=Kafka specifies to use the Kafka broker implementation for broker related tests
+```
 
 ### Hack, build, test and iterate
 
