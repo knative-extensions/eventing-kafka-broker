@@ -22,20 +22,22 @@ import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
-@BenchmarkMode(Mode.All)
+@BenchmarkMode(Mode.Throughput)
 @Fork(1)
 @State(Scope.Thread)
+@Measurement(iterations = 3, time = 10)
+@Warmup(iterations = 3, time = 5)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public abstract class FilterBenchmark {
     Filter filter;
     CloudEvent cloudEvent;
 
-    @Setup
+    @Setup(Level.Trial)
     public void setupFilter() {
         this.filter = createFilter();
     }
 
-    @Setup
+    @Setup(Level.Trial)
     public void setupCloudEvent() {
         this.cloudEvent = createEvent();
     }
