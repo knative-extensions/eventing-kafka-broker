@@ -21,7 +21,6 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -53,6 +52,7 @@ public class AllFilter implements Filter {
         this.filters.updateAndGet((filterCounters -> filterCounters.stream()
                 .sorted(Comparator.comparingInt(Filter::getCount).reversed())
                 .collect(ImmutableList.toImmutableList())));
+        this.shouldReorder = false;
     }
 
     private static boolean test(CloudEvent cloudEvent, List<Filter> filters, Consumer<Boolean> shouldReorder) {
@@ -64,7 +64,6 @@ public class AllFilter implements Filter {
                 if (i != 0 && count > 2 * filters.get(i - 1).getCount()) {
                     shouldReorder.accept(true);
                 }
-                filter.incrementCount();
                 logger.debug("Test failed. Filter {} Event {}", filter, cloudEvent);
                 return false;
             }

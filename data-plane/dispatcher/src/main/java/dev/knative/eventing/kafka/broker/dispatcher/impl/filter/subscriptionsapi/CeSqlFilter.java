@@ -22,7 +22,6 @@ import io.cloudevents.sql.EvaluationRuntime;
 import io.cloudevents.sql.Expression;
 import io.cloudevents.sql.Parser;
 import io.cloudevents.sql.Type;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

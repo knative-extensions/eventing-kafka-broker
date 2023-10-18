@@ -25,8 +25,6 @@ import io.vertx.core.Vertx;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,7 +54,10 @@ public class AllFilterTest {
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AllFilter(ImmutableList.of(new ExactFilter(Map.of("id", "123-42"))), vertx, 500), true),
+                Arguments.of(
+                        event,
+                        new AllFilter(ImmutableList.of(new ExactFilter(Map.of("id", "123-42"))), vertx, 500),
+                        true),
                 Arguments.of(
                         event,
                         new AllFilter(

@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.*;
 import io.cloudevents.CloudEvent;
-import java.util.List;
 import java.util.Map;
 
 public class AnyFilterBenchmark {
@@ -119,7 +118,9 @@ public class AnyFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AnyFilter(
-                    ImmutableList.of(makePrefixFilter(), makePrefixFilterNoMatch()), vertx, FILTER_REORDER_TIME_MILLISECONDS);
+                    ImmutableList.of(makePrefixFilter(), makePrefixFilterNoMatch()),
+                    vertx,
+                    FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override

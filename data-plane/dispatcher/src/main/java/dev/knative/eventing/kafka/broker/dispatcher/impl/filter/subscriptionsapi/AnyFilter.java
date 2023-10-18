@@ -20,8 +20,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
 import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -50,9 +48,9 @@ public class AnyFilter implements Filter {
             return;
         }
         logger.debug("Reordering ANY filter!");
-        this.filters.set(this.filters.get().stream()
+        this.filters.updateAndGet((filterCounters -> filterCounters.stream()
                 .sorted(Comparator.comparingInt(Filter::getCount).reversed())
-                .collect(ImmutableList.toImmutableList()));
+                .collect(ImmutableList.toImmutableList())));
         this.shouldReorder = false;
     }
 
@@ -61,8 +59,8 @@ public class AnyFilter implements Filter {
         int i = 0;
         for (final Filter filter : filters) {
             if (filter.test(cloudEvent)) {
-//                int count = filter.incrementCount();
-                if (i != 0 && filter.incrementCount() > 2 * filters.get(i - 1).getCount()) {
+                int count = filter.incrementCount();
+                if (i != 0 && count > 2 * filters.get(i - 1).getCount()) {
                     shouldReorder.accept(true);
                 }
                 logger.debug("Test succeeded. Filter {} Event {}", filter, cloudEvent);

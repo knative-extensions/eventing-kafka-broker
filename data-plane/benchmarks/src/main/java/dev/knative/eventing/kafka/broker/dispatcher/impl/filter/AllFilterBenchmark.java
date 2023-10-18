@@ -23,7 +23,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import io.cloudevents.CloudEvent;
-import java.util.List;
 import java.util.Map;
 
 public class AllFilterBenchmark {

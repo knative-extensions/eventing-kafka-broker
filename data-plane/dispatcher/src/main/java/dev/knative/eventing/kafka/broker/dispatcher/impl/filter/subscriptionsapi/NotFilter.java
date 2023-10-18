@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Vertx;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
