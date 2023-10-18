@@ -65,7 +65,7 @@ public abstract class AttributesFilter implements Filter {
 
     private final List<AttributeEntry> attributes;
 
-    private final AtomicInteger count;
+    private int count;
 
     /**
      * All args constructor.
@@ -84,7 +84,7 @@ public abstract class AttributesFilter implements Filter {
                             }
                         })))
                 .collect(Collectors.toUnmodifiableList());
-        this.count = new AtomicInteger(0);
+        this.count = 0;
     }
 
     /**
@@ -139,11 +139,11 @@ public abstract class AttributesFilter implements Filter {
 
     @Override
     public int getCount() {
-        return this.count.get();
+        return this.count;
     }
 
     @Override
     public int incrementCount() {
-        return this.count.incrementAndGet();
+        return this.count++;
     }
 }

@@ -32,7 +32,7 @@ public class AllFilter implements Filter {
 
     private final AtomicReference<ImmutableList<Filter>> filters;
 
-    private final AtomicInteger count;
+    private int count;
 
     private final long periodicTimerId;
 
@@ -41,7 +41,7 @@ public class AllFilter implements Filter {
     public AllFilter(List<Filter> filters, Vertx vertx, long delayMilliseconds) {
         logger.debug("Starting with timeout {}", delayMilliseconds);
         this.periodicTimerId = vertx.setPeriodic(delayMilliseconds, this::reorder);
-        this.count = new AtomicInteger(0);
+        this.count = 0;
         this.filters = new AtomicReference<>(filters.stream().collect(ImmutableList.toImmutableList()));
     }
 
@@ -76,12 +76,12 @@ public class AllFilter implements Filter {
 
     @Override
     public int getCount() {
-        return this.count.get();
+        return this.count;
     }
 
     @Override
     public int incrementCount() {
-        return this.count.incrementAndGet();
+        return this.count++;
     }
 
     private void setShouldReorder(boolean shouldReorder) {

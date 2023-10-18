@@ -30,7 +30,7 @@ public class CeSqlFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
 
-    private final AtomicInteger count;
+    private int count;
 
     private final Expression expression;
     private final EvaluationRuntime runtime;
@@ -38,7 +38,7 @@ public class CeSqlFilter implements Filter {
     public CeSqlFilter(String sqlExpression) {
         this.expression = Parser.parseDefault(sqlExpression);
         this.runtime = EvaluationRuntime.getDefault();
-        this.count = new AtomicInteger(0);
+        this.count = 0;
     }
 
     @Override
@@ -61,11 +61,11 @@ public class CeSqlFilter implements Filter {
 
     @Override
     public int getCount() {
-        return this.count.get();
+        return this.count;
     }
 
     @Override
     public int incrementCount() {
-        return this.count.incrementAndGet();
+        return this.count++;
     }
 }

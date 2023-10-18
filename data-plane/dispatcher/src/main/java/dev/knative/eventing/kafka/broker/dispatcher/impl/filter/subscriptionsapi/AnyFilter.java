@@ -33,7 +33,7 @@ public class AnyFilter implements Filter {
 
     private final AtomicReference<ImmutableList<Filter>> filters;
 
-    private final AtomicInteger count;
+    private int count;
 
     private final long periodicTimerId;
 
@@ -41,7 +41,7 @@ public class AnyFilter implements Filter {
 
     public AnyFilter(List<Filter> filters, Vertx vertx, long delayMilliseconds) {
         this.periodicTimerId = vertx.setPeriodic(delayMilliseconds, this::reorder);
-        this.count = new AtomicInteger(0);
+        this.count = 0;
         this.filters = new AtomicReference<>(filters.stream().collect(ImmutableList.toImmutableList()));
     }
 
@@ -61,8 +61,8 @@ public class AnyFilter implements Filter {
         int i = 0;
         for (final Filter filter : filters) {
             if (filter.test(cloudEvent)) {
-                int count = filter.incrementCount();
-                if (i != 0 && count > 2 * filters.get(i - 1).getCount()) {
+//                int count = filter.incrementCount();
+                if (i != 0 && filter.incrementCount() > 2 * filters.get(i - 1).getCount()) {
                     shouldReorder.accept(true);
                 }
                 logger.debug("Test succeeded. Filter {} Event {}", filter, cloudEvent);
@@ -76,12 +76,12 @@ public class AnyFilter implements Filter {
 
     @Override
     public int getCount() {
-        return this.count.get();
+        return this.count;
     }
 
     @Override
     public int incrementCount() {
-        return this.count.incrementAndGet();
+        return this.count++;
     }
 
     private void setShouldReorder(boolean shouldReorder) {
