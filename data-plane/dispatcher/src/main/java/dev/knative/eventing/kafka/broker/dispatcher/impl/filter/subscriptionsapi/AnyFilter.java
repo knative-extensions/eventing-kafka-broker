@@ -39,10 +39,10 @@ public class AnyFilter implements Filter {
 
     private boolean shouldReorder;
 
-    public AnyFilter(List<Filter> filters, Vertx vertx, long delayMilliseconds) {
+    public AnyFilter(ImmutableList<Filter> filters, Vertx vertx, long delayMilliseconds) {
         this.periodicTimerId = vertx.setPeriodic(delayMilliseconds, this::reorder);
         this.count = 0;
-        this.filters = new AtomicReference<>(filters.stream().collect(ImmutableList.toImmutableList()));
+        this.filters = new AtomicReference<>(filters);
     }
 
     private void reorder(Long id) {

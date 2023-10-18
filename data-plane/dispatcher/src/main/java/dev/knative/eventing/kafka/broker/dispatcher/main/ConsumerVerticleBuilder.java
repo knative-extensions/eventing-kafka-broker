@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
+import com.google.common.collect.ImmutableList;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
@@ -198,7 +199,7 @@ public class ConsumerVerticleBuilder {
                 filters.stream()
                         .map((DataPlaneContract.DialectedFilter filter) ->
                                 ConsumerVerticleBuilder.getFilter(filter, vertx))
-                        .collect(Collectors.toList()),
+                        .collect(ImmutableList.toImmutableList()),
                 vertx,
                 FILTER_REORDER_TIME_MILLISECONDS);
     }
@@ -212,13 +213,13 @@ public class ConsumerVerticleBuilder {
             case ANY -> new AnyFilter(
                     filter.getAny().getFiltersList().stream()
                             .map((DataPlaneContract.DialectedFilter f) -> ConsumerVerticleBuilder.getFilter(f, vertx))
-                            .collect(Collectors.toList()),
+                            .collect(ImmutableList.toImmutableList()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
             case ALL -> new AllFilter(
                     filter.getAll().getFiltersList().stream()
                             .map((DataPlaneContract.DialectedFilter f) -> ConsumerVerticleBuilder.getFilter(f, vertx))
-                            .collect(Collectors.toList()),
+                            .collect(ImmutableList.toImmutableList()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
             case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());

@@ -38,11 +38,11 @@ public class AllFilter implements Filter {
 
     private boolean shouldReorder;
 
-    public AllFilter(List<Filter> filters, Vertx vertx, long delayMilliseconds) {
+    public AllFilter(ImmutableList<Filter> filters, Vertx vertx, long delayMilliseconds) {
         logger.debug("Starting with timeout {}", delayMilliseconds);
         this.periodicTimerId = vertx.setPeriodic(delayMilliseconds, this::reorder);
         this.count = 0;
-        this.filters = new AtomicReference<>(filters.stream().collect(ImmutableList.toImmutableList()));
+        this.filters = new AtomicReference<>(filters);
     }
 
     private void reorder(Long id) {

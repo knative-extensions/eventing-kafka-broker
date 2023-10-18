@@ -16,6 +16,7 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
+import com.google.common.collect.ImmutableList;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.ExactFilter;
@@ -51,7 +52,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter()), vertx, FILTER_REORDER_TIME_MILLISECONDS);
+            return new AllFilter(ImmutableList.of(makeExactFilter()), vertx, FILTER_REORDER_TIME_MILLISECONDS);
         }
 
         @Override
@@ -65,7 +66,7 @@ public class AllFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AllFilter(
-                    List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()),
+                    ImmutableList.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }
@@ -81,7 +82,7 @@ public class AllFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AllFilter(
-                    List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()),
+                    ImmutableList.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }
@@ -97,7 +98,7 @@ public class AllFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AllFilter(
-                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
+                    ImmutableList.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }
@@ -113,7 +114,7 @@ public class AllFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AllFilter(
-                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()),
+                    ImmutableList.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }
@@ -129,7 +130,7 @@ public class AllFilterBenchmark {
         @Override
         protected Filter createFilter() {
             return new AllFilter(
-                    List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
+                    ImmutableList.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()),
                     vertx,
                     FILTER_REORDER_TIME_MILLISECONDS);
         }

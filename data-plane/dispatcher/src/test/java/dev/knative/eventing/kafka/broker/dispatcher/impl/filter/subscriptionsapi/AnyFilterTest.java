@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -55,11 +56,11 @@ public class AnyFilterTest {
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AnyFilter(List.of(new ExactFilter(Map.of("id", "123-42"))), vertx, 500), true),
+                Arguments.of(event, new AnyFilter(ImmutableList.of(new ExactFilter(Map.of("id", "123-42"))), vertx, 500), true),
                 Arguments.of(
                         event,
                         new AnyFilter(
-                                List.of(
+                                ImmutableList.of(
                                         new ExactFilter(Map.of("id", "123-42")),
                                         new ExactFilter(Map.of("source", "/api/some-source"))),
                                 vertx,
@@ -68,7 +69,7 @@ public class AnyFilterTest {
                 Arguments.of(
                         event,
                         new AnyFilter(
-                                List.of(
+                                ImmutableList.of(
                                         new ExactFilter(Map.of("id", "123")),
                                         new ExactFilter(Map.of("source", "/api/some-source"))),
                                 vertx,
@@ -77,7 +78,7 @@ public class AnyFilterTest {
                 Arguments.of(
                         event,
                         new AnyFilter(
-                                List.of(
+                                ImmutableList.of(
                                         new ExactFilter(Map.of("id", "123-42")),
                                         new ExactFilter(Map.of("source", "/api/something-else"))),
                                 vertx,
@@ -86,12 +87,12 @@ public class AnyFilterTest {
                 Arguments.of(
                         event,
                         new AnyFilter(
-                                List.of(
+                                ImmutableList.of(
                                         new ExactFilter(Map.of("id", "123")),
                                         new ExactFilter(Map.of("source", "/api/something-else"))),
                                 vertx,
                                 500),
                         false),
-                Arguments.of(event, new AnyFilter(Collections.emptyList(), vertx, 500), false));
+                Arguments.of(event, new AnyFilter(ImmutableList.of(), vertx, 500), false));
     }
 }
