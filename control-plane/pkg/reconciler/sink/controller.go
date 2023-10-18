@@ -42,7 +42,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
-func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	eventing.RegisterConditionSet(base.IngressConditionSet)
 
@@ -74,7 +74,18 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 		)
 	}
 
-	impl := sinkreconciler.NewImpl(ctx, reconciler)
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	featureStore.WatchConfigs(watcher)
+
+	features := feature.FromContext(ctx)
+	caCerts, err := reconciler.getCaCerts()
+	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
+		logger.Warn("failed to get CA certs when at least one address uses TLS", zap.Error(err))
+	}
+	impl := sinkreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
+		return controller.Options{
+			ConfigStore: featureStore}
+	})
 	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)

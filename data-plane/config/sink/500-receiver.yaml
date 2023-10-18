@@ -206,6 +206,10 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
+    - name: https-container
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
     - name: https
       port: 443
       protocol: TCP

@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"time"
 
+	"knative.dev/eventing/test/rekt/resources/addressable"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -92,5 +94,25 @@ func AsKReference(name string, namespace string) *duckv1.KReference {
 		APIVersion: fmt.Sprintf("%s/%s", GVR().Group, GVR().Version),
 		Namespace:  namespace,
 		Name:       name,
+	}
+}
+
+// Address returns a sink's address.
+func Address(ctx context.Context, name string, timings ...time.Duration) (*duckv1.Addressable, error) {
+	return addressable.Address(ctx, GVR(), name, timings...)
+}
+
+// ValidateAddress validates the address retured by Address
+func ValidateAddress(name string, validate addressable.ValidateAddress, timings ...time.Duration) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		addr, err := Address(ctx, name, timings...)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if err := validate(addr); err != nil {
+			t.Error(err)
+			return
+		}
 	}
 }
