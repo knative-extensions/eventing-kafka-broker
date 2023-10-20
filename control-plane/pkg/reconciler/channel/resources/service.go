@@ -93,9 +93,9 @@ func MakeK8sService(kc *v1beta1.KafkaChannel, logger *zap.Logger, opts ...Servic
 					Port:     portNumber,
 				},
 				{
-					Name:     TLSportName,
+					Name:     tlsPortName,
 					Protocol: corev1.ProtocolTCP,
-					Port:     TLSportNumber,
+					Port:     tlsPortNumber,
 				},
 			},
 		},
