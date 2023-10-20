@@ -206,7 +206,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     @Override
     public void handle(HttpServerRequest request) {
 
-
         final var requestContext = new RequestContext(request);
 
         // Look up for the ingress producer
