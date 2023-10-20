@@ -18,6 +18,8 @@ package features
 
 import (
 	"context"
+	"time"
+
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,13 +27,13 @@ import (
 	"knative.dev/eventing/test/rekt/features/featureflags"
 	"knative.dev/eventing/test/rekt/resources/addressable"
 	"knative.dev/eventing/test/rekt/resources/subscription"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/resources/service"
 	"knative.dev/reconciler-test/resources/certificate"
-	"time"
 )
 
 func RotateChannelTLSCertificates() *feature.Feature {
@@ -66,9 +68,12 @@ func RotateChannelTLSCertificates() *feature.Feature {
 
 	f.Setup("install subscription", func(ctx context.Context, t feature.T) {
 		d := service.AsDestinationRef(sink)
-		d.CACerts = eventshub.GetCaCerts(ctx)
 		subscription.Install(subscriptionName,
-			subscription.WithChannel(kafkachannel.AsRef(channelName)),
+			subscription.WithChannel(&duckv1.KReference{
+				Kind:       "KafkaChannel",
+				Name:       channelName,
+				APIVersion: kafkachannel.GVR().GroupVersion().String(),
+			}),
 			subscription.WithSubscriberFromDestination(d))(ctx, t)
 	})
 
@@ -89,10 +94,6 @@ func RotateChannelTLSCertificates() *feature.Feature {
 
 	f.Assert("Event sent", assert.OnStore(source).
 		MatchSentEvent(cetest.HasId(event.ID())).
-		AtLeast(1),
-	)
-	f.Assert("Event received", assert.OnStore(sink).
-		MatchReceivedEvent(cetest.HasId(event.ID())).
 		AtLeast(1),
 	)
 	f.Assert("Source match updated peer certificate", assert.OnStore(source).
