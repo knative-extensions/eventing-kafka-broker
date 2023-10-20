@@ -19,6 +19,8 @@ package sink
 import (
 	"testing"
 
+	"knative.dev/pkg/configmap"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -58,7 +60,12 @@ func TestNewController(t *testing.T) {
 		Type: corev1.SecretTypeTLS,
 	})
 
-	controller := NewController(ctx, nil, &config.Env{
+	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "config-features",
+		},
+	},
+	), &config.Env{
 		IngressPodPort: "8080",
 	})
 

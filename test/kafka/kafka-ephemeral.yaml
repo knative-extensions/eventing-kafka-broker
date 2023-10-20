@@ -18,7 +18,7 @@ metadata:
   name: my-cluster
 spec:
   kafka:
-    version: 3.5.1
+    version: 3.6.0
     replicas: 3
     listeners:
       # PLAINTEXT
@@ -63,7 +63,7 @@ spec:
       transaction.state.log.replication.factor: 3
       transaction.state.log.min.isr: 2
       auto.create.topics.enable: false
-      inter.broker.protocol.version: "3.5"
+      inter.broker.protocol.version: "3.6"
     storage:
       type: ephemeral
   zookeeper:
