@@ -33,8 +33,8 @@ const (
 	portName   = "http"
 	portNumber = 80
 
-	TLSportName   = "https"
-	TLSportNumber = 443
+	tlsPortName   = "https"
+	tlsPortNumber = 443
 
 	MessagingRoleLabel = "messaging.knative.dev/role"
 	MessagingRole      = "kafka-channel"
