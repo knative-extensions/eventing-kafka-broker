@@ -100,21 +100,19 @@ func WithRetentionDuration(retentionDuration string) manifest.CfgFn {
 
 // AsRef returns a KRef for a Channel without namespace.
 func AsRef(name string) *duckv1.KReference {
-	apiVersion, kind := GVK().ToAPIVersionAndKind()
 	return &duckv1.KReference{
-		Kind:       kind,
-		APIVersion: apiVersion,
+		Kind:       EnvCfg.ChannelGK,
+		APIVersion: EnvCfg.ChannelV,
 		Name:       name,
 	}
 }
 
 // AsRef returns a KRef for a Channel without namespace.
 func AsDestinationRef(name string) *duckv1.Destination {
-	apiVersion, kind := GVK().ToAPIVersionAndKind()
 	return &duckv1.Destination{
 		Ref: &duckv1.KReference{
-			Kind:       kind,
-			APIVersion: apiVersion,
+			Kind:       EnvCfg.ChannelGK,
+			APIVersion: EnvCfg.ChannelV,
 			Name:       name,
 		},
 	}
