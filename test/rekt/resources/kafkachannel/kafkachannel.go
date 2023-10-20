@@ -19,9 +19,10 @@ package kafkachannel
 import (
 	"context"
 	"embed"
+	"time"
+
 	"knative.dev/eventing/test/rekt/resources/addressable"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/reconciler-test/pkg/feature"

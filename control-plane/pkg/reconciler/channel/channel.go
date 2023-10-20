@@ -704,7 +704,6 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 		return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 	}
 
-
 	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
 
 	if err != nil {

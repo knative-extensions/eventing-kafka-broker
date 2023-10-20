@@ -18,6 +18,7 @@ package channel
 
 import (
 	"context"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
 	"github.com/IBM/sarama"
