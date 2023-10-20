@@ -672,6 +672,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Ingress: &contract.Ingress{
 			Host:                       receiver.Host(channel.GetNamespace(), channel.GetName()),
 			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+			Path:                       receiver.Path(channel.GetNamespace(), resources.MakeChannelServiceName(channel.GetName())),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
