@@ -32,7 +32,7 @@ var (
 	cacheExpiryTime = time.Minute * 30
 )
 
-type IPsLister func(addressable Addressable) ([]string, error)
+type IPsLister func(addressable proberAddressable) ([]string, error)
 
 type asyncProber struct {
 	client    httpClient
@@ -47,7 +47,7 @@ type asyncProber struct {
 // NewAsync creates an async Prober.
 //
 // It reports status changes using the provided EnqueueFunc.
-func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPsLister, enqueue EnqueueFunc) Prober {
+func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPsLister, enqueue EnqueueFunc) prober {
 	logger := logging.FromContext(ctx).Desugar().
 		With(zap.String("scope", "prober"))
 
@@ -65,7 +65,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 	}
 }
 
-func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (Prober, error) {
+func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (prober, error) {
 	newClient, err := makeHttpClientWithTLS(caCerts)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqu
 	return NewAsync(ctx, newClient, port, IPsLister, enqueue), nil
 }
 
-func (a *asyncProber) Probe(ctx context.Context, addressable Addressable, expected Status) Status {
+func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, expected Status) Status {
 	address := addressable.Address
 	IPs, err := a.IPsLister(addressable)
 	if err != nil {
@@ -165,7 +165,7 @@ func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
 	a.enqueue(arg.(types.NamespacedName))
 }
 
-func (a *asyncProber) RotateRootCaCerts(caCerts *string) error {
+func (a *asyncProber) rotateRootCaCerts(caCerts *string) error {
 	newClient, err := makeHttpClientWithTLS(caCerts)
 	if err != nil {
 		return err

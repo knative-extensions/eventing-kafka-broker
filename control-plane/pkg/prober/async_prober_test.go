@@ -59,7 +59,7 @@ func TestAsyncProber(t *testing.T) {
 		name                string
 		pods                []*corev1.Pod
 		podsLabelsSelector  labels.Selector
-		addressable         Addressable
+		addressable         proberAddressable
 		responseStatusCode  int
 		wantStatus          Status
 		wantRequeueCountMin int
@@ -70,7 +70,7 @@ func TestAsyncProber(t *testing.T) {
 			name:               "no pods",
 			pods:               []*corev1.Pod{},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
+			addressable: proberAddressable{
 				Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
 				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
 			},
@@ -92,7 +92,7 @@ func TestAsyncProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
+			addressable: proberAddressable{
 				Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
 				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
 			},
@@ -115,7 +115,7 @@ func TestAsyncProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
+			addressable: proberAddressable{
 				Address:     &url.URL{Scheme: "http", Path: "/b1/b1"},
 				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
 			},
@@ -138,7 +138,7 @@ func TestAsyncProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: Addressable{
+			addressable: proberAddressable{
 				Address:     &url.URL{Scheme: "https", Path: "/b1/b1"},
 				ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
 			},
@@ -185,7 +185,7 @@ func TestAsyncProber(t *testing.T) {
 			u, _ := url.Parse(s.URL)
 
 			wantRequeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))
-			var IPsLister IPsLister = func(addressable Addressable) ([]string, error) {
+			var IPsLister IPsLister = func(addressable proberAddressable) ([]string, error) {
 				pods, err := podinformer.Get(ctx).Lister().List(tc.podsLabelsSelector)
 				if err != nil {
 					return nil, err
@@ -196,7 +196,7 @@ func TestAsyncProber(t *testing.T) {
 				}
 				return ips, nil
 			}
-			var prober Prober
+			var prober prober
 			var err error
 			if tc.useTLS {
 				prober, err = NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
@@ -210,7 +210,7 @@ func TestAsyncProber(t *testing.T) {
 			}
 
 			probeFunc := func() bool {
-				status := prober.Probe(ctx, tc.addressable, tc.wantStatus)
+				status := prober.probe(ctx, tc.addressable, tc.wantStatus)
 				return status == tc.wantStatus
 			}
 
@@ -258,7 +258,7 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 	u, err := url.Parse(addrString)
 	require.NoError(t, err)
 
-	addressable := Addressable{
+	addressable := proberAddressable{
 		Address:     &url.URL{Scheme: "https", Path: "/b1/b1", Host: addrString},
 		ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
 	}
@@ -273,7 +273,7 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 	}
 	podinformer.Get(ctx).Informer().GetStore().Add(pod)
 	labelSelector := labels.SelectorFromSet(map[string]string{"app": "p"})
-	var IPsLister IPsLister = func(addressable Addressable) ([]string, error) {
+	var IPsLister IPsLister = func(addressable proberAddressable) ([]string, error) {
 		pods, err := podinformer.Get(ctx).Lister().List(labelSelector)
 		if err != nil {
 			return nil, err
@@ -292,7 +292,7 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 	require.NoError(t, err)
 
 	probeFunc := func() bool {
-		status := prober.Probe(ctx, addressable, wantStatus)
+		status := prober.probe(ctx, addressable, wantStatus)
 		return status == wantStatus
 	}
 
@@ -302,7 +302,7 @@ func TestAsyncProberRotateCACerts(t *testing.T) {
 		require.Eventuallyf(tt, func() bool { return wantRequeueCountMin.Load() == 1 }, 5*time.Second, 250*time.Millisecond, "got %d, want 1", wantRequeueCountMin.Load())
 	})
 	t.Run("one pod - TLS certs after rotation", func(tt *testing.T) {
-		prober.RotateRootCaCerts(pointer.String(string(CA2)))
+		prober.rotateRootCaCerts(pointer.String(string(CA2)))
 		s.TLSConfig.GetCertificate = func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
 			cert, err := tls.X509KeyPair(Crt2, Key2)
 			return &cert, err

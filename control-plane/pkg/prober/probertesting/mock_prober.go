@@ -22,15 +22,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
 
-// MockProber returns a prober that always returns the provided status.
-func MockProber(status prober.Status) prober.Prober {
-	return prober.Func(func(ctx context.Context, addressable prober.Addressable, expected prober.Status) prober.Status {
-		return status
-	})
-}
-
 func MockNewProber(status prober.Status) prober.NewProber {
-	return prober.NewFunc(func(ctx context.Context, addressable prober.NewAddressable, expected prober.Status) prober.Status {
+	return prober.NewFunc(func(ctx context.Context, addressable prober.ProberAddressable, expected prober.Status) prober.Status {
 		return status
 	})
 }
