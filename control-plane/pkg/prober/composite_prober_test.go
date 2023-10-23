@@ -46,7 +46,7 @@ func TestCompositeProber(t *testing.T) {
 		name                     string
 		pods                     []*corev1.Pod
 		podsLabelsSelector       labels.Selector
-		addressable              NewAddressable
+		addressable              ProberAddressable
 		responseStatusCode       int
 		wantStatus               Status
 		wantRequeueCountMin      int
@@ -66,7 +66,7 @@ func TestCompositeProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: NewAddressable{
+			addressable: ProberAddressable{
 				AddressStatus: &duckv1.AddressStatus{
 					Address: &duckv1.Addressable{
 						URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
@@ -97,7 +97,7 @@ func TestCompositeProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: NewAddressable{
+			addressable: ProberAddressable{
 				AddressStatus: &duckv1.AddressStatus{
 					Address: &duckv1.Addressable{
 						URL: &apis.URL{Scheme: "https", Path: "/b1/b1"},
@@ -128,7 +128,7 @@ func TestCompositeProber(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: NewAddressable{
+			addressable: ProberAddressable{
 				AddressStatus: &duckv1.AddressStatus{
 					Address: &duckv1.Addressable{
 						URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
@@ -197,7 +197,7 @@ func TestCompositeProber(t *testing.T) {
 				}
 			}
 
-			var IPsLister IPsLister = func(addressable Addressable) ([]string, error) {
+			var IPsLister IPsLister = func(addressable proberAddressable) ([]string, error) {
 				pods, err := podinformer.Get(ctx).Lister().List(tc.podsLabelsSelector)
 				if err != nil {
 					return nil, err
@@ -238,7 +238,7 @@ func TestCompositeProberNoTLS(t *testing.T) {
 		name                     string
 		pods                     []*corev1.Pod
 		podsLabelsSelector       labels.Selector
-		addressable              NewAddressable
+		addressable              ProberAddressable
 		responseStatusCode       int
 		wantStatus               Status
 		wantRequeueCountMin      int
@@ -258,7 +258,7 @@ func TestCompositeProberNoTLS(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: NewAddressable{
+			addressable: ProberAddressable{
 				AddressStatus: &duckv1.AddressStatus{
 					Address: &duckv1.Addressable{
 						URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
@@ -289,7 +289,7 @@ func TestCompositeProberNoTLS(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: NewAddressable{
+			addressable: ProberAddressable{
 				AddressStatus: &duckv1.AddressStatus{
 					Address: &duckv1.Addressable{
 						URL: &apis.URL{Scheme: "https", Path: "/b1/b1"},
@@ -320,7 +320,7 @@ func TestCompositeProberNoTLS(t *testing.T) {
 				},
 			},
 			podsLabelsSelector: labels.SelectorFromSet(map[string]string{"app": "p"}),
-			addressable: NewAddressable{
+			addressable: ProberAddressable{
 				AddressStatus: &duckv1.AddressStatus{
 					Address: &duckv1.Addressable{
 						URL: &apis.URL{Scheme: "http", Path: "/b1/b1"},
@@ -389,7 +389,7 @@ func TestCompositeProberNoTLS(t *testing.T) {
 				}
 			}
 
-			var IPsLister IPsLister = func(addressable Addressable) ([]string, error) {
+			var IPsLister IPsLister = func(addressable proberAddressable) ([]string, error) {
 				pods, err := podinformer.Get(ctx).Lister().List(tc.podsLabelsSelector)
 				if err != nil {
 					return nil, err

@@ -30,30 +30,30 @@ func TestMockProber(t *testing.T) {
 		name        string
 		status      prober.Status
 		ctx         context.Context
-		addressable prober.Addressable
+		addressable prober.ProberAddressable
 	}{
 		{
 			name:        "unknown",
 			status:      prober.StatusUnknown,
 			ctx:         context.Background(),
-			addressable: prober.Addressable{},
+			addressable: prober.ProberAddressable{},
 		},
 		{
 			name:        "ready",
 			status:      prober.StatusReady,
 			ctx:         context.Background(),
-			addressable: prober.Addressable{},
+			addressable: prober.ProberAddressable{},
 		},
 		{
 			name:        "notReady",
 			status:      prober.StatusNotReady,
 			ctx:         context.Background(),
-			addressable: prober.Addressable{},
+			addressable: prober.ProberAddressable{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := MockProber(tt.status).Probe(tt.ctx, tt.addressable, tt.status)
+			got := MockNewProber(tt.status).Probe(tt.ctx, tt.addressable, tt.status)
 			if diff := cmp.Diff(tt.status, got); diff != "" {
 				t.Error("(-want, got)", diff)
 			}

@@ -30,12 +30,12 @@ func TestFuncProbe(t *testing.T) {
 
 	calls := atomic.NewInt32(0)
 	status := StatusReady
-	p := Func(func(ctx context.Context, addressable Addressable, expected Status) Status {
+	p := Func(func(ctx context.Context, addressable proberAddressable, expected Status) Status {
 		calls.Inc()
 		return status
 	})
 
-	s := p.Probe(context.Background(), Addressable{}, status)
+	s := p.probe(context.Background(), proberAddressable{}, status)
 
 	require.Equal(t, status, s, s.String())
 	require.Equal(t, int32(1), calls.Load())
@@ -60,7 +60,7 @@ func TestIPsListerFromService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := IPsListerFromService(tt.svc)(Addressable{})
+			got, err := IPsListerFromService(tt.svc)(proberAddressable{})
 			if tt.wantErr != (err != nil) {
 				t.Errorf("Got err %v, wantErr %v", err, tt.wantErr)
 			}
