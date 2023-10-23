@@ -156,10 +156,8 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 	err := r.schedule(ctx, cg) //de-schedule placements
 
 	if err != nil {
-		cg.Status.Placements = nil
-
 		// return an error to 1. update the status. 2. not clear the finalizer
-		return errors.New("placement list was not empty")
+		return cg.MarkScheduleConsumerFailed("Deschedule", fmt.Errorf("failed to unschedule consumer group: %w", err))
 	}
 
 	// Get consumers associated with the ConsumerGroup.
@@ -177,7 +175,7 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 	if err := r.deleteConsumerGroupMetadata(ctx, cg); err != nil {
 		// We retry a few times to delete Consumer group metadata from Kafka before giving up.
 		if v := r.DeleteConsumerGroupMetadataCounter.Inc(string(cg.GetUID())); v <= 5 {
-			return err
+			return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", fmt.Errorf("%w (retry num %d)", err, v))
 		}
 		r.DeleteConsumerGroupMetadataCounter.Del(string(cg.GetUID()))
 	}

@@ -23,7 +23,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -219,7 +218,7 @@ func ConsumerGroupOwnerRef(reference metav1.OwnerReference) ConsumerGroupOption 
 	}
 }
 
-func NewDeletedConsumeGroup(opts ...ConsumerGroupOption) runtime.Object {
+func NewDeletedConsumeGroup(opts ...ConsumerGroupOption) *kafkainternals.ConsumerGroup {
 	return NewConsumerGroup(
 		append(
 			opts,
@@ -229,7 +228,7 @@ func NewDeletedConsumeGroup(opts ...ConsumerGroupOption) runtime.Object {
 }
 
 func WithDeletedTimeStampConsumeGroup(cg *kafkainternals.ConsumerGroup) {
-	cg.GetObjectMeta().SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
+	cg.GetObjectMeta().SetDeletionTimestamp(&metav1.Time{Time: time.Date(2023, time.October, 23, 1, 0, 0, 0, &time.Location{})})
 }
 
 func WithConfigmapOwnerRef(ownerref *metav1.OwnerReference) reconcilertesting.ConfigMapOption {
