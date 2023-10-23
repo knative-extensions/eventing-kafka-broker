@@ -83,6 +83,12 @@ func (cg *ConsumerGroup) MarkInitializeOffsetFailed(reason string, err error) er
 	return err
 }
 
+func (cg *ConsumerGroup) MarkDeleteOffsetFailed(reason string, err error) error {
+	err = fmt.Errorf("failed to delete consumer group offset: %w", err)
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	return err
+}
+
 func (cg *ConsumerGroup) MarkScheduleSucceeded() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrue(ConditionConsumerGroupConsumersScheduled)
 }

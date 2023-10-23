@@ -2164,8 +2164,27 @@ func TestFinalizeKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"unable to delete the consumer group my.group.id: "+sarama.ErrClusterAuthorizationFailed.Error(),
+					"failed to delete consumer group offset: unable to delete the consumer group my.group.id: "+sarama.ErrClusterAuthorizationFailed.Error() + " (retry num 1)",
 				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewDeletedConsumeGroup(
+							ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIdConfig("my.group.id"),
+								),
+							)),
+						)
+
+						_ = cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", fmt.Errorf("unable to delete the consumer group my.group.id: kafka server: The client is not authorized to send this request type (retry num 1)"))
+
+						return cg
+					}(),
+				},
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
 		},
