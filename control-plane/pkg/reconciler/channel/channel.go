@@ -346,7 +346,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
 
-	proberAddressable := prober.NewAddressable{
+	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &addressableStatus,
 		ResourceKey: types.NamespacedName{
 			Namespace: channel.GetNamespace(),
@@ -429,7 +429,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
 	address := receiver.HTTPAddress(r.IngressHost, channel)
-	proberAddressable := prober.NewAddressable{
+	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
 			Addresses: []duckv1.Addressable{address},
