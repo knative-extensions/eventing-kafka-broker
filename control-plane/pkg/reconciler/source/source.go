@@ -97,12 +97,19 @@ func GetLabels(name string) map[string]string {
 	}
 }
 
-// Need to have an empty definition here to ensure that we can delete older sources which had a finalizer
-func (r Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+
+	err := r.InternalsClient.InternalV1alpha1().
+		ConsumerGroups(ks.GetNamespace()).
+		Delete(ctx, string(ks.UID), metav1.DeleteOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "DeleteConsumerGroup", err.Error())
+	}
+
 	return nil
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
+func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.KafkaSource) (*internalscg.ConsumerGroup, error) {
 	var deliverySpec *internalscg.DeliverySpec
 	deliveryOrder := DefaultDeliveryOrder
 	if ks.Spec.Ordering != nil {
