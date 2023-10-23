@@ -19,8 +19,6 @@ package channel
 import (
 	"context"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -104,8 +102,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler,
 		func(impl *controller.Impl) controller.Options {
 			return controller.Options{
-				ConfigStore:       featureStore,
-				PromoteFilterFunc: kafka.BrokerClassFilter(),
+				ConfigStore: featureStore,
 			}
 		})
 	IPsLister := prober.IdentityIPsLister()
