@@ -704,7 +704,6 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 	}
 
 	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
-
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
