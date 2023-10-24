@@ -39,7 +39,7 @@
     <maven.enforcer.plugin.version>3.4.1</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
-    <spotless.plugin.version>2.37.0</spotless.plugin.version>
+    <spotless.plugin.version>2.38.0</spotless.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.4.3</vertx.version>
@@ -64,7 +64,7 @@
     <quarkus.version>3.2.6.Final</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
-    <palantirJavaFormat.version>2.33.0</palantirJavaFormat.version>
+    <palantirJavaFormat.version>2.38.0</palantirJavaFormat.version>
   </properties>
 
   <modules>
