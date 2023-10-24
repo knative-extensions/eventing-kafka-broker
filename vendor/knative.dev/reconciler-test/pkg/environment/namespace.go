@@ -122,26 +122,12 @@ func (mr *MagicEnvironment) CreateNamespaceIfNeeded() error {
 			return fmt.Errorf("error copying the image pull Secret: %s", err)
 		}
 
-		for _, secret := range sa.ImagePullSecrets {
-			if secret.Name == mr.imagePullSecretName {
-				return nil
-			}
-		}
-
-		// Prevent overwriting existing imagePullSecrets
-		patch := `[{"op":"add","path":"/imagePullSecrets/-","value":{"name":"` + mr.imagePullSecretName + `"}}]`
-		if len(sa.ImagePullSecrets) == 0 {
-			patch = `[{"op":"add","path":"/imagePullSecrets","value":[{"name":"` + mr.imagePullSecretName + `"}]}]`
-		}
-
-		_, err = c.CoreV1().ServiceAccounts(mr.namespace).Patch(context.Background(), sa.Name, types.JSONPatchType,
-			[]byte(patch), metav1.PatchOptions{})
+		_, err = c.CoreV1().ServiceAccounts(mr.namespace).Patch(context.Background(), sa.Name, types.StrategicMergePatchType,
+			[]byte(`{"imagePullSecrets":[{"name":"`+mr.imagePullSecretName+`"}]}`), metav1.PatchOptions{})
 		if err != nil {
-			return fmt.Errorf("patch failed on NS/SA (%s/%s): %w",
-				mr.namespace, sa.Name, err)
+			return fmt.Errorf("patch failed on NS/SA (%s/%s): %s", mr.namespace, sa.Name, err)
 		}
 	}
-
 	return nil
 }
 
