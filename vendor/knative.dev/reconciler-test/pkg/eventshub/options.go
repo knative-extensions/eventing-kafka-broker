@@ -202,11 +202,6 @@ func DropEventsResponseHeaders(headers map[string]string) EventsHubOption {
 	)
 }
 
-// OIDCReceiverAudience sets the expected audience for received OIDC tokens on the receiver side
-func OIDCReceiverAudience(aud string) EventsHubOption {
-	return compose(envOption(OIDCReceiverAudienceEnv, aud), envOIDCEnabled())
-}
-
 // --- Sender options
 
 // InitialSenderDelay defines how much the sender has to wait (in millisecond), when started, before start sending events.
@@ -286,11 +281,6 @@ func OIDCExpiredToken() EventsHubOption {
 // OIDCInvalidAudience creates an OIDC token with an invalid audience
 func OIDCInvalidAudience() EventsHubOption {
 	return compose(envOption(OIDCGenerateInvalidAudienceTokenEnv, "true"), envOIDCEnabled())
-}
-
-// OIDCSinkAudience sets the Audience of the Sink
-func OIDCSinkAudience(aud string) EventsHubOption {
-	return oidcSinkAudience(&aud)
 }
 
 func oidcSinkAudience(aud *string) EventsHubOption {
