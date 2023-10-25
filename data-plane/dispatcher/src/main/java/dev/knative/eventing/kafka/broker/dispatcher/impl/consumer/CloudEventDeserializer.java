@@ -17,6 +17,8 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.cloudevents.CloudEvent;
+
+import java.nio.ByteBuffer;
 import java.util.Map;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -77,6 +79,20 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
         } catch (final Throwable ignored) {
             return new InvalidCloudEvent(data);
         }
+    }
+
+  /**
+   * Deserialize a record value from a byte buffer into a CloudEvent.
+   *
+   * @param topic   topic associated with the data
+   * @param headers headers associated with the record; may be empty.
+   * @param data    byte buffer; may be null;
+   *                implementations are recommended to handle null by returning a value or null rather than throwing an exception.
+   * @return deserialized typed data; may be null
+   */
+    @Override
+    public CloudEvent deserialize(final String topic, final Headers headers, ByteBuffer data) {
+      return this.deserialize(topic, headers, data.array());
     }
 
     @Override

@@ -40,6 +40,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
+
+import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -111,6 +113,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             final RecordDispatcherListener recordDispatcherListener,
             final ConsumerTracer consumerTracer,
             final MeterRegistry meterRegistry) {
+
         Objects.requireNonNull(consumerVerticleContext, "provide consumerVerticleContext");
         Objects.requireNonNull(filter, "provide filter");
         Objects.requireNonNull(subscriberSender, "provide subscriberSender");
@@ -362,7 +365,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         // headers even though the record is a valid CloudEvent.
         logDebug("Value is null", recordContext.getRecord());
         final var value = cloudEventDeserializer.deserialize(
-                recordContext.getRecord().topic(), recordContext.getRecord().headers(), null);
+                recordContext.getRecord().topic(), recordContext.getRecord().headers(), ByteBuffer.wrap(null));
         recordContext.setRecord(KafkaConsumerRecordUtils.copyRecordAssigningValue(recordContext.getRecord(), value));
         return recordContext;
     }
