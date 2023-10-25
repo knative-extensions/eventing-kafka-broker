@@ -40,7 +40,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
-
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.HashMap;
