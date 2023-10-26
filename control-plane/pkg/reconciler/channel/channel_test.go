@@ -1882,7 +1882,7 @@ func TestReconcileKind(t *testing.T) {
 						WithChannelAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								URL:     httpsURL(ChannelName, ChannelNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 							{
@@ -1985,13 +1985,13 @@ func TestReconcileKind(t *testing.T) {
 						WithChannelAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								URL:     httpsURL(ChannelName, ChannelNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 						}),
 						WithChannelAddress(duckv1.Addressable{
 							Name:    pointer.String("https"),
-							URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+							URL:     httpsURL(ChannelName, ChannelNamespace),
 							CACerts: pointer.String(testCaCerts),
 						}),
 						WithChannelAddessable(),
