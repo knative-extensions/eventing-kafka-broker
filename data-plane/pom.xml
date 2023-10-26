@@ -60,7 +60,7 @@
     <fabric8.kubernetes.version>6.7.2</fabric8.kubernetes.version>
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
-    <jib.version>3.3.2</jib.version>
+    <jib.version>3.4.0</jib.version>
     <quarkus.version>3.2.7.Final</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
