@@ -14,7 +14,7 @@ Lists of 232 third-party dependencies.
      (The Apache Software License, Version 2.0) Jackson datatype: JSR310 (com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2 - https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jsr310)
      (The Apache Software License, Version 2.0) jackson-module-scala (com.fasterxml.jackson.module:jackson-module-scala_2.12:2.15.2 - https://github.com/FasterXML/jackson-module-scala)
      (BSD 2-Clause License) zstd-jni (com.github.luben:zstd-jni:1.5.2-1 - https://github.com/luben/zstd-jni)
-     (The Apache Software License, Version 2.0) bucket4j-core (com.github.vladimir-bukhtoyarov:bucket4j-core:7.4.0 - http://github.com/vladimir-bukhtoyarov/bucket4j/bucket4j-core)
+     (The Apache Software License, Version 2.0) bucket4j-core (com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0 - http://github.com/vladimir-bukhtoyarov/bucket4j/bucket4j-core)
      (The Apache Software License, Version 2.0) FindBugs-jsr305 (com.google.code.findbugs:jsr305:3.0.2 - http://findbugs.sourceforge.net/)
      (Apache-2.0) Gson (com.google.code.gson:gson:2.10.1 - https://github.com/google/gson/gson)
      (Apache 2.0) error-prone annotations (com.google.errorprone:error_prone_annotations:2.19.1 - https://errorprone.info/error_prone_annotations)
