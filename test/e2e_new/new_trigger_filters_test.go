@@ -82,6 +82,22 @@ func TestKafkaBrokerAllFiltersTrigger(t *testing.T) {
 	env.Test(ctx, t, newfilters.AllFilterFeature(brokerName))
 }
 
+func TestMultipleSinksMultipleTriggers(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
+	env.Test(ctx, t, newfilters.MultipleTriggersAndSinksFeature(brokerName))
+}
+
 func InstallKafkaBroker(name string) *feature.Feature {
 	f := feature.NewFeatureNamed("Kafka broker")
 	f.Setup("install one partition configuration", single_partition_config.Install)
