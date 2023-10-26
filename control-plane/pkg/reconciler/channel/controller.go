@@ -81,6 +81,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	logger := logging.FromContext(ctx)
 
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	featureStore.WatchConfigs(watcher)
+
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
@@ -89,7 +92,19 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		)
 	}
 
-	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
+	features := feature.FromContext(ctx)
+	caCerts, err := reconciler.getCaCerts()
+	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
+		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
+		logger.Warn("Failed to get CA certs when at least one address uses TLS", zap.Error(err))
+	}
+
+	impl := kafkachannelreconciler.NewImpl(ctx, reconciler,
+		func(impl *controller.Impl) controller.Options {
+			return controller.Options{
+				ConfigStore: featureStore,
+			}
+		})
 	IPsLister := prober.IdentityIPsLister()
 	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, "", IPsLister, impl.EnqueueKey)
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)

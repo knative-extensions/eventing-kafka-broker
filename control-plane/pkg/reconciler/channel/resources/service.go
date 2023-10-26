@@ -28,8 +28,12 @@ import (
 )
 
 const (
-	portName           = "http"
-	portNumber         = 80
+	portName   = "http"
+	portNumber = 80
+
+	tlsPortName   = "https"
+	tlsPortNumber = 443
+
 	MessagingRoleLabel = "messaging.knative.dev/role"
 	MessagingRole      = "kafka-channel"
 
@@ -85,6 +89,11 @@ func MakeK8sService(kc *v1beta1.KafkaChannel, opts ...ServiceOption) (*corev1.Se
 					Name:     portName,
 					Protocol: corev1.ProtocolTCP,
 					Port:     portNumber,
+				},
+				{
+					Name:     tlsPortName,
+					Protocol: corev1.ProtocolTCP,
+					Port:     tlsPortNumber,
 				},
 			},
 		},
