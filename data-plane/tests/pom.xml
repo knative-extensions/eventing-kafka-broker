@@ -29,9 +29,7 @@
   <artifactId>tests</artifactId>
 
   <properties>
-    <java.version>20</java.version>
-    <!-- Used Loom Virtual Threads is still a preview feature in JDK20 -->
-    <argLine>--enable-preview</argLine>
+    <java.version>21</java.version>
   </properties>
 
   <dependencies>
