@@ -258,6 +258,19 @@ func DeleteResources(ctx context.Context, t T, refs []corev1.ObjectReference) er
 		return true, nil
 	})
 	if err != nil {
+		gv, _ := schema.ParseGroupVersion("eventing.knative.dev/v1alpha1")
+		cgs, _ := dc.Resource(apis.KindToResource(gv.WithKind("ConsumerGroup"))).Namespace(lastResource.Namespace).List(ctx, metav1.ListOptions{})
+		for _, cg := range cgs.Items {
+			LogReferences(corev1.ObjectReference{
+				Kind:            cg.GetKind(),
+				Namespace:       cg.GetNamespace(),
+				Name:            cg.GetName(),
+				UID:             cg.GetUID(),
+				APIVersion:      cg.GetAPIVersion(),
+				ResourceVersion: cg.GetResourceVersion(),
+			})
+		}
+
 		LogReferences(lastResource)(ctx, t)
 		return fmt.Errorf("failed to wait for resources to be deleted: %v", err)
 	}

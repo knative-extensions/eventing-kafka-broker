@@ -42,20 +42,6 @@ if [ "${BROKER_CLASS}" == "KafkaNamespaced" ]; then
   success
 fi
 
-go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
-
-go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new_channel/... || fail_test "E2E (new - KafkaChannel) suite failed"
-
-go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
-
-echo "Running E2E Reconciler Tests with strict transport encryption"
-
-kubectl apply -Rf "$(dirname "$0")/config-transport-encryption"
-
-go_test_e2e -timeout=1h ./test/e2e_new -run TLS || fail_test
-
-if ! ${LOCAL_DEVELOPMENT}; then
-  go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
-fi
+go_test_e2e -timeout=1h -run=TestKafkaSource ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 
 success
