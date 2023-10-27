@@ -258,7 +258,7 @@ func DeleteResources(ctx context.Context, t T, refs []corev1.ObjectReference) er
 		return true, nil
 	})
 	if err != nil {
-		gv, _ := schema.ParseGroupVersion("eventing.knative.dev/v1alpha1")
+		gv, _ := schema.ParseGroupVersion("internal.kafka.eventing.knative.dev/v1alpha1")
 		cgs, _ := dc.Resource(apis.KindToResource(gv.WithKind("ConsumerGroup"))).Namespace(lastResource.Namespace).List(ctx, metav1.ListOptions{})
 		for _, cg := range cgs.Items {
 			LogReferences(corev1.ObjectReference{
