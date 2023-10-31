@@ -126,7 +126,7 @@ Here are below parameters options you can use:
 
 ```shell
 -v prints verbose output from the tests
--tags=e2e runs tests tagged as e2e tests
+-tags=e2e uses files tagged as e2e when building the tests
 -count=1 runs each test once rather than potentially multiple times
 -run <test_name> specifies the name of the single test to run
 -parallel=12 runs tests in parallel up to 12 at a time
