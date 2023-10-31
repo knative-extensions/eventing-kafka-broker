@@ -116,7 +116,7 @@ For example:
 SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run TestEventTransformationForTrigger -parallel=12 -timeout=30m ./test/rekt
 ```
 
-When you are running kafka broker related test, you may need to specify the broker class
+When you are running kafka broker related tests, you may need to specify the broker class
 
 ```shell
  SYSTEM_NAMESPACE=knative-eventing BROKER_CLASS=Kafka go test -v -tags=e2e -count=1 -run TestBrokerTLSCARotation  -parallel=12 -timeout=30m ./test/e2e_new
