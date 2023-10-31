@@ -112,8 +112,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.ingressProducerStoreFactory = ingressProducerStoreFactory;
         this.ingressRequestHandler = ingressRequestHandler;
         this.secretVolume = new File(secretVolumePath);
-      this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
-      this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
+        this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
+        this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
     }
 
     public HttpServerOptions getHttpsServerOptions() {
