@@ -122,7 +122,7 @@ When you are running kafka broker related test, you may need to specify the brok
  SYSTEM_NAMESPACE=knative-eventing BROKER_CLASS=Kafka go test -v -tags=e2e -count=1 -run TestBrokerTLSCARotation  -parallel=12 -timeout=30m ./test/e2e_new
 ```
 
-Here are below parameters options you can use:
+Below are descriptions of the parameters you will normally use, as well as some other things you will often need to set while running the tests:
 
 ```shell
 -v prints verbose output from the tests
