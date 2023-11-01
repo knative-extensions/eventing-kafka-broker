@@ -181,10 +181,16 @@ For example, if you want to run all of the Exact Filter Benchmarks, you could ru
 ./hack/run.sh benchmark-filter ExactFilterBenchmark
 ```
 
+To run benchmarks for any filter benchmark , you can use:
+
+```shell
+./hack/run.sh benchmark-filter AnyFilterBenchmark
+```
+
 Alternatively, if you want to run all of the benchmarks you can run:
 
 ```shell
-./hack/run.sh benchmark-filters
+./hack/run.sh benchmark-filter AllFilterBenchmark
 ```
 
 ## Code generation
