@@ -190,7 +190,7 @@ To run benchmarks for any filter benchmark , you can use:
 Alternatively, if you want to run all of the benchmarks you can run:
 
 ```shell
-./hack/run.sh benchmark-filter AllFilterBenchmark
+./hack/run.sh benchmark-filters
 ```
 
 ## Code generation
