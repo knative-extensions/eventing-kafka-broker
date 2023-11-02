@@ -258,8 +258,14 @@ func DeleteResources(ctx context.Context, t T, refs []corev1.ObjectReference) er
 		return true, nil
 	})
 	if err != nil {
-		gv, _ := schema.ParseGroupVersion("internal.kafka.eventing.knative.dev/v1alpha1")
-		cgs, _ := dc.Resource(apis.KindToResource(gv.WithKind("ConsumerGroup"))).Namespace(lastResource.Namespace).List(ctx, metav1.ListOptions{})
+		gv, e := schema.ParseGroupVersion("internal.kafka.eventing.knative.dev/v1alpha1")
+		if e != nil {
+			t.Logf("Failed to parse groupversion: %v", e)
+		}
+		cgs, e := dc.Resource(apis.KindToResource(gv.WithKind("ConsumerGroup"))).Namespace(lastResource.Namespace).List(ctx, metav1.ListOptions{})
+		if e != nil {
+			t.Logf("Failed to get consumergroups: %v", e)
+		}
 		for _, cg := range cgs.Items {
 			LogReferences(corev1.ObjectReference{
 				Kind:            cg.GetKind(),
@@ -268,7 +274,7 @@ func DeleteResources(ctx context.Context, t T, refs []corev1.ObjectReference) er
 				UID:             cg.GetUID(),
 				APIVersion:      cg.GetAPIVersion(),
 				ResourceVersion: cg.GetResourceVersion(),
-			})
+			})(ctx, t)
 		}
 
 		LogReferences(lastResource)(ctx, t)
