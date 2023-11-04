@@ -576,6 +576,7 @@ func storeConfigMapAsStatusAnnotation(broker *eventing.Broker, cm *corev1.Config
 		kafka.DefaultTopicNumPartitionConfigMapKey:      true,
 		kafka.DefaultTopicReplicationFactorConfigMapKey: true,
 		kafka.BootstrapServersConfigMapKey:              true,
+		security.AuthSecretNameKey:                      true,
 	}
 
 	for k, v := range cm.Data {
