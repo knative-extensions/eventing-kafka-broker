@@ -49,6 +49,11 @@ func SetupBrokerAuthSsl(ctx context.Context) *feature.Feature {
 		kafkaauthsecret.WithSslData(ctx))
 }
 
+func SetupBrokerNoAuthSsl(ctx context.Context) *feature.Feature {
+	return SetupBrokerAuth(testpkg.BootstrapServersTlsNoAuth,
+		kafkaauthsecret.WithTlsNoAuthData(ctx))
+}
+
 func SetupBrokerAuthSaslPlaintextScram512(ctx context.Context) *feature.Feature {
 	return SetupBrokerAuth(testpkg.BootstrapServersSaslPlaintext,
 		kafkaauthsecret.WithSaslPlaintextScram512Data(ctx))
