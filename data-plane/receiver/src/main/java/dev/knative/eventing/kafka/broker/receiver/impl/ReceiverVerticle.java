@@ -74,9 +74,9 @@ import org.slf4j.LoggerFactory;
 public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
-    private final String secretVolumePath;
-    private final String tlsKeyFilePath;
-    private final String tlsCrtFilePath;
+    private final File tlsKeyFile;
+    private final File tlsCrtFile;
+    private final File secretVolume;
 
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
@@ -111,9 +111,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.httpsServerOptions = httpsServerOptions;
         this.ingressProducerStoreFactory = ingressProducerStoreFactory;
         this.ingressRequestHandler = ingressRequestHandler;
-        this.secretVolumePath = secretVolumePath;
-        this.tlsKeyFilePath = secretVolumePath + "/tls.key";
-        this.tlsCrtFilePath = secretVolumePath + "/tls.crt";
+        this.secretVolume = new File(secretVolumePath);
+        this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
+        this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -130,14 +130,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
         // check whether the secret volume is mounted
-        File secretVolume = new File(secretVolumePath);
         if (secretVolume.exists()) {
             // The secret volume is mounted, we should start the https server
             // check whether the tls.key and tls.crt files exist
-            File tlsKeyFile = new File(tlsKeyFilePath);
-            File tlsCrtFile = new File(tlsCrtFilePath);
 
-            if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+            if (this.tlsKeyFile.exists() && this.tlsCrtFile.exists() && httpsServerOptions != null) {
                 PemKeyCertOptions keyCertOptions =
                         new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
@@ -176,8 +173,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     // Set up the secret watcher
     private void setupSecretWatcher() {
         try {
-            File file = new File(secretVolumePath + "/tls.crt");
-            this.secretWatcher = new FileWatcher(file, this::updateServerConfig);
+            this.secretWatcher = new FileWatcher(this.tlsCrtFile, this::updateServerConfig);
             this.secretWatcher.start();
         } catch (IOException e) {
             logger.error("Failed to start SecretWatcher", e);
@@ -235,17 +231,15 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     public void updateServerConfig() {
 
         // This function will be called when the secret volume is updated
-        File tlsKeyFile = new File(tlsKeyFilePath);
-        File tlsCrtFile = new File(tlsCrtFilePath);
 
         // Check whether the tls.key and tls.crt files exist
-        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+        if (this.tlsKeyFile.exists() && this.tlsCrtFile.exists() && httpsServerOptions != null) {
             try {
                 // Update SSL configuration by passing the new value of the certificate and key
                 // Have to use value instead of path here otherwise the changes won't be applied
                 final var keyCertOptions = new PemKeyCertOptions()
-                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
-                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
+                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(this.tlsCrtFile.toPath())))
+                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(this.tlsKeyFile.toPath())));
 
                 httpsServer
                         .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
@@ -254,7 +248,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                                 e -> logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
 
             } catch (IOException e) {
-                logger.error("Failed to read file {}", tlsCrtFilePath, e);
+                logger.error("Failed to read file {}", tlsCrtFile.toPath(), e);
             }
         }
     }
