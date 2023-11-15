@@ -2,3 +2,5 @@ ExactFilterBenchmark
 NotFilterBenchmark
 PrefixFilterBenchmark
 SuffixFilterBenchmark
+AnyFilterBenchmark
+AllFilterBenchmark
