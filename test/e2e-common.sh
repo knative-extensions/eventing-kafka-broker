@@ -124,6 +124,14 @@ function knative_eventing() {
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   kafka_setup
+
+  echo ">> haha final check"
+      kubectl get secrets --all-namespaces
+      kubectl get certificates --all-namespaces
+      kubectl get certificaterequests --all-namespaces
+      kubectl get issuers --all-namespaces
+      kubectl describe issuers selfsigned-ca-issuer -n=knative-eventing
+      kubectl get issuers selfsigned-ca-issuer -n=knative-eventing -o yaml
 }
 
 function kafka_setup() {
