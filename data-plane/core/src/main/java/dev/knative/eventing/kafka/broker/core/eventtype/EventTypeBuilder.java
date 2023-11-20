@@ -17,6 +17,8 @@
 package dev.knative.eventing.kafka.broker.core.eventtype;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.OwnerReference;
+import java.util.List;
 
 public class EventTypeBuilder {
 
@@ -66,6 +68,11 @@ public class EventTypeBuilder {
 
     public EventTypeBuilder withNamespace(String namespace) {
         this.objectMetaBuilder.withNamespace(namespace);
+        return this;
+    }
+
+    public EventTypeBuilder withOwnerReference(OwnerReference ownerReference) {
+        this.objectMetaBuilder.withOwnerReferences(List.of(ownerReference));
         return this;
     }
 

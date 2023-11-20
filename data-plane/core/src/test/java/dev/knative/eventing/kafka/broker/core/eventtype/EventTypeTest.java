@@ -17,6 +17,8 @@
 package dev.knative.eventing.kafka.broker.core.eventtype;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
@@ -32,14 +34,21 @@ public class EventTypeTest {
     @Test
     public void testCreateEventType() {
         var eventTypeClient = kubernetesClient.resources(EventType.class);
+        OwnerReference ownerReference = new OwnerReferenceBuilder()
+                .withName("MyBroker")
+                .withKind("KafkaBroker")
+                .withApiVersion("eventing.knative.dev/v1")
+                .build();
+        KReference kReference = new KReference("eventing.knative.dev/v1", "KafkaBroker", "MyBroker", "default");
         eventTypeClient
                 .resource(new EventTypeBuilder()
-                        .withReference(new KReference("eventing.knative.dev/v1", "KafkaBroker", "MyBroker", "default"))
+                        .withReference(kReference)
                         .withSchema("sample schema")
                         .withSchemaDescription("sample schema description")
                         .withDescription("a sample event type")
                         .withName("sample.event.type")
                         .withNamespace("default")
+                        .withOwnerReference(ownerReference)
                         .build())
                 .create();
 
@@ -47,5 +56,13 @@ public class EventTypeTest {
                 eventTypeClient.inNamespace("default").list();
         Assertions.assertNotNull(eventTypeList);
         Assertions.assertEquals(1, eventTypeList.getItems().size());
+        EventType eventType = eventTypeList.getItems().get(0);
+        Assertions.assertEquals(eventType.getSpec().getReference(), kReference);
+        Assertions.assertEquals(eventType.getSpec().getSchema(), "sample schema");
+        Assertions.assertEquals(eventType.getSpec().getSchemaDescription(), "sample schema description");
+        Assertions.assertEquals(eventType.getSpec().getDescription(), "a sample event type");
+        Assertions.assertEquals(eventType.getMetadata().getName(), "sample.event.type");
+        Assertions.assertEquals(eventType.getMetadata().getNamespace(), "default");
+        Assertions.assertEquals(eventType.getMetadata().getOwnerReferences().get(0), ownerReference);
     }
 }
