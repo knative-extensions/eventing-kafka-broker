@@ -16,9 +16,8 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.cloudevents.CloudEvent;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-
 import java.util.function.Function;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
  * A CloudEventMutator returns a new {@link CloudEvent} created by mutating the CloudEvent in a

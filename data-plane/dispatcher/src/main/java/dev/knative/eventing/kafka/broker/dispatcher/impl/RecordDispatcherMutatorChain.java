@@ -38,7 +38,8 @@ public class RecordDispatcherMutatorChain implements RecordDispatcher {
 
     @Override
     public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record) {
-        return next.dispatch(KafkaConsumerRecordUtils.copyRecordAssigningValue(record, cloudEventMutator.apply(record)));
+        return next.dispatch(
+                KafkaConsumerRecordUtils.copyRecordAssigningValue(record, cloudEventMutator.apply(record)));
     }
 
     @Override
