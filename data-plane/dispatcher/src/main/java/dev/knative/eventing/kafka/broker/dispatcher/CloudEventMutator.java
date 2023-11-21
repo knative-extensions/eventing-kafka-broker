@@ -16,10 +16,13 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.cloudevents.CloudEvent;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 import java.util.function.Function;
 
 /**
- * A CloudEventMutator mutates a given CloudEvent.
+ * A CloudEventMutator returns a new {@link CloudEvent} created by mutating the CloudEvent in a
+ * given {@link ConsumerRecord}.
  */
 @FunctionalInterface
-public interface CloudEventMutator extends Function<CloudEvent, CloudEvent> {}
+public interface CloudEventMutator extends Function<ConsumerRecord<Object, CloudEvent>, CloudEvent> {}
