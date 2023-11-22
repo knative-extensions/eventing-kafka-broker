@@ -115,6 +115,21 @@ func TestKafkaSourceBinaryEvent(t *testing.T) {
 	env.Test(ctx, t, features.KafkaSourceBinaryEvent())
 }
 
+func TestKafkaSourceBinaryEventWithExtensions(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceBinaryEventWithExtensions())
+}
+
 func TestKafkaSourceStructuredEvent(t *testing.T) {
 	t.Parallel()
 
