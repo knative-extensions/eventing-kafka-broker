@@ -91,27 +91,19 @@ function knative_eventing() {
 
   wait_until_pods_running cert-manager || fail_test "Failed to setup cert-manager pods"
 
-#  if ! is_release_branch; then
+  if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-core.yaml"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-tls-networking.yaml"
 
-    echo ">> Adding the debugging log"
-    kubectl get secrets --all-namespaces
-    kubectl get certificates --all-namespaces
-    kubectl get certificaterequests --all-namespaces
-    kubectl get issuers --all-namespaces
-    kubectl describe issuers selfsigned-ca-issuer -n=knative-eventing
-    kubectl get issuers selfsigned-ca-issuer -n=knative-eventing -o yaml
+  else
+    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
+    kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
 
-
-
-#
-#  else
-#    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
-#    kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
-#  fi
+    echo ">> Intall Knative Eventing TLS from ${KNATIVE_EVENTING_RELEASE_TLS}"
+    kubectl apply -f "${KNATIVE_EVENTING_RELEASE_TLS}"
+  fi
 
   ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
 
@@ -124,14 +116,6 @@ function knative_eventing() {
   ./test/upload-test-images.sh "test/test_images" e2e || fail_test "Error uploading test images"
 
   kafka_setup
-
-  echo ">> haha final check"
-      kubectl get secrets --all-namespaces
-      kubectl get certificates --all-namespaces
-      kubectl get certificaterequests --all-namespaces
-      kubectl get issuers --all-namespaces
-      kubectl describe issuers selfsigned-ca-issuer -n=knative-eventing
-      kubectl get issuers selfsigned-ca-issuer -n=knative-eventing -o yaml
 }
 
 function kafka_setup() {
