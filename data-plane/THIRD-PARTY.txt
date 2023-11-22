@@ -1,5 +1,5 @@
 
-Lists of 232 third-party dependencies.
+Lists of 231 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.4.11 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.4.11 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.12.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -23,7 +23,6 @@ Lists of 232 third-party dependencies.
      (Apache License, Version 2.0) J2ObjC Annotations (com.google.j2objc:j2objc-annotations:2.8 - https://github.com/google/j2objc/)
      (BSD-3-Clause) Protocol Buffers [Core] (com.google.protobuf:protobuf-java:3.24.4 - https://developers.google.com/protocol-buffers/protobuf-java/)
      (BSD-3-Clause) Protocol Buffers [Util] (com.google.protobuf:protobuf-java-util:3.24.4 - https://developers.google.com/protocol-buffers/protobuf-java-util/)
-     (Apache 2.0) OkHttp Logging Interceptor (com.squareup.okhttp3:logging-interceptor:3.14.9 - https://github.com/square/okhttp/logging-interceptor)
      (Apache 2.0) MockWebServer (com.squareup.okhttp3:mockwebserver:3.12.12 - https://github.com/square/okhttp/mockwebserver)
      (Apache 2.0) OkHttp (com.squareup.okhttp3:okhttp:3.14.9 - https://github.com/square/okhttp/okhttp)
      (Apache 2.0) Okio (com.squareup.okio:okio:1.17.2 - https://github.com/square/okio/okio)
@@ -50,7 +49,7 @@ Lists of 232 third-party dependencies.
      (Apache License 2.0) Metrics Core (io.dropwizard.metrics:metrics-core:4.1.12.1 - https://metrics.dropwizard.io/metrics-core)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes :: Java Client (io.fabric8:kubernetes-client:6.7.2 - http://fabric8.io/kubernetes-client/)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes :: Java Client API (io.fabric8:kubernetes-client-api:6.7.2 - http://fabric8.io/kubernetes-client-api/)
-     (Apache License, Version 2.0) Fabric8 :: Kubernetes :: HttpClient :: OkHttp (io.fabric8:kubernetes-httpclient-okhttp:6.7.2 - http://fabric8.io/kubernetes-httpclient-okhttp/)
+     (Apache License, Version 2.0) Fabric8 :: Kubernetes :: HttpClient :: JDK (io.fabric8:kubernetes-httpclient-jdk:6.7.2 - http://fabric8.io/kubernetes-httpclient-jdk/)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes Model :: Admission Registration, Authentication and Authorization (io.fabric8:kubernetes-model-admissionregistration:6.7.2 - http://fabric8.io/kubernetes-model-generator/kubernetes-model-admissionregistration/)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes Model :: API Extensions (io.fabric8:kubernetes-model-apiextensions:6.7.2 - http://fabric8.io/kubernetes-model-generator/kubernetes-model-apiextensions/)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes Model :: Apps (io.fabric8:kubernetes-model-apps:6.7.2 - http://fabric8.io/kubernetes-model-generator/kubernetes-model-apps/)

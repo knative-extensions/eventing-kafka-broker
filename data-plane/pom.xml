@@ -201,10 +201,15 @@
         <version>${fabric8.kubernetes.version}</version>
         <exclusions>
           <exclusion>
-            <artifactId>okhttp</artifactId>
-            <groupId>com.squareup.okhttp3</groupId>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-httpclient-okhttp</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-httpclient-jdk</artifactId>
+        <version>${fabric8.kubernetes.version}</version>
       </dependency>
       <dependency>
         <groupId>io.fabric8</groupId>
