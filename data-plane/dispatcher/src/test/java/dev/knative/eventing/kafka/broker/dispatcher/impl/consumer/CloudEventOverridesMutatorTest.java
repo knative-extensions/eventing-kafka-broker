@@ -23,7 +23,6 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 

@@ -47,18 +47,18 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
     }
 
     private CloudEvent maybeDeserializeFromHeaders(ConsumerRecord<Object, CloudEvent> record) {
-      if (record.value() != null) {
-        return record.value();
-      }
-      // A valid CloudEvent in the CE binary protocol binding of Kafka
-      // might be composed by only Headers.
-      //
-      // KafkaConsumer doesn't call the deserializer if the value
-      // is null.
-      //
-      // That means that we get a record with a null value and some CE
-      // headers even though the record is a valid CloudEvent.
-      return cloudEventDeserializer.deserialize(record.topic(), record.headers(), null);
+        if (record.value() != null) {
+            return record.value();
+        }
+        // A valid CloudEvent in the CE binary protocol binding of Kafka
+        // might be composed by only Headers.
+        //
+        // KafkaConsumer doesn't call the deserializer if the value
+        // is null.
+        //
+        // That means that we get a record with a null value and some CE
+        // headers even though the record is a valid CloudEvent.
+        return cloudEventDeserializer.deserialize(record.topic(), record.headers(), null);
     }
 
     private void applyCloudEventOverrides(CloudEventBuilder builder) {
