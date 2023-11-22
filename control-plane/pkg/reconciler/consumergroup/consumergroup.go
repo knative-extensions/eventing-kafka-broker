@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -770,7 +771,7 @@ func (r *Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev
 
 func errorIsOneOf(err error, errs ...error) bool {
 	for _, e := range errs {
-		if errors.Is(err, e) {
+		if strings.Contains(err.Error(), e.Error()) {
 			return true
 		}
 	}
