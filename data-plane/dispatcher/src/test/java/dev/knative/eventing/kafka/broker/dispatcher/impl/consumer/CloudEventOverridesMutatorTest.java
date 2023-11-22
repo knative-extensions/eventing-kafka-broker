@@ -23,6 +23,8 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 
 public class CloudEventOverridesMutatorTest {
@@ -48,7 +50,7 @@ public class CloudEventOverridesMutatorTest {
         final var expected = CloudEventBuilder.from(given);
         extensions.forEach(expected::withExtension);
 
-        final var got = mutator.apply(given);
+        final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
 
         assertThat(got).isEqualTo(expected.build());
     }
@@ -68,7 +70,7 @@ public class CloudEventOverridesMutatorTest {
                 .withType("foo")
                 .build();
 
-        final var got = mutator.apply(given);
+        final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
 
         assertThat(got).isSameAs(given);
     }
