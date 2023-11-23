@@ -128,6 +128,7 @@ github.com/evanphx/json-patch/v5
 github.com/go-jose/go-jose/v3
 github.com/go-jose/go-jose/v3/cipher
 github.com/go-jose/go-jose/v3/json
+github.com/go-jose/go-jose/v3/jwt
 # github.com/go-kit/log v0.2.1
 ## explicit; go 1.17
 github.com/go-kit/log
@@ -618,7 +619,7 @@ golang.org/x/xerrors/internal
 # gomodules.xyz/jsonpatch/v2 v2.4.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
-# google.golang.org/api v0.150.0
+# google.golang.org/api v0.151.0
 ## explicit; go 1.19
 google.golang.org/api/googleapi
 google.golang.org/api/googleapi/transport
@@ -1302,7 +1303,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.39.1-0.20231117142309-2d1bfb5d54a9
+# knative.dev/eventing v0.39.1-0.20231123120018-116abe23fcf8
 ## explicit; go 1.19
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1463,10 +1464,10 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20231109190034-5deaddeb51a7
+# knative.dev/hack v0.0.0-20231122182901-eb352426ecc1
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20231115001034-97c7258e3a98
+# knative.dev/pkg v0.0.0-20231122190403-23f3ee2ee35b
 ## explicit; go 1.18
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1581,7 +1582,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20231115072946-99723665c94d
+# knative.dev/reconciler-test v0.0.0-20231123130922-55110f3262c7
 ## explicit; go 1.20
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
