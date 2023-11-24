@@ -46,7 +46,7 @@ public class RecordDispatcherMutatorChain implements RecordDispatcher {
                 record.serializedKeySize(),
                 record.serializedValueSize(),
                 record.key(),
-                cloudEventMutator.apply(record),
+                cloudEventMutator.apply(record.value()),
                 record.headers(),
                 record.leaderEpoch());
         return next.dispatch(newRecord);
