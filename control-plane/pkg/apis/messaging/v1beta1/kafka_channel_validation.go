@@ -47,6 +47,7 @@ func (kc *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
 	if apis.IsInUpdate(ctx) {
 		original := apis.GetBaseline(ctx).(*KafkaChannel)
 		errs = errs.Also(kc.CheckImmutableFields(ctx, original))
+		errs = errs.Also(kc.CheckSubscribersChangeAllowed(ctx, original))
 	}
 
 	return errs
@@ -122,12 +123,12 @@ func (kc *KafkaChannel) CheckSubscribersChangeAllowed(ctx context.Context, origi
 	}
 
 	if !canChangeChannelSpecAuth(ctx) {
-		return kc.checkSubsciberSpecAuthChanged(original, ctx)
+		return kc.checkSubsciberSpecAuthChanged(ctx, original)
 	}
 	return nil
 }
 
-func (kc *KafkaChannel) checkSubsciberSpecAuthChanged(original *KafkaChannel, ctx context.Context) *apis.FieldError {
+func (kc *KafkaChannel) checkSubsciberSpecAuthChanged(ctx context.Context, original *KafkaChannel) *apis.FieldError {
 	if diff, err := kmp.ShortDiff(original.Spec.Subscribers, kc.Spec.Subscribers); err != nil {
 		return &apis.FieldError{
 			Message: "Failed to diff Channel.Spec.Subscribers",
