@@ -28,6 +28,8 @@ import (
 	"knative.dev/pkg/kmp"
 )
 
+const kafkaControllerSAName = "system:serviceaccount:knative-eventing:kafka-controller"
+
 func (kc *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
 	errs := kc.Spec.Validate(ctx).ViaField("spec")
 
@@ -112,4 +114,45 @@ func (kc *KafkaChannel) CheckImmutableFields(_ context.Context, original *KafkaC
 	}
 
 	return nil
+}
+
+func (kc *KafkaChannel) CheckSubscribersChangeAllowed(ctx context.Context, original *KafkaChannel) *apis.FieldError {
+	if original == nil {
+		return nil
+	}
+
+	if !canChangeChannelSpecAuth(ctx) {
+		return kc.checkSubsciberSpecAuthChanged(original, ctx)
+	}
+	return nil
+}
+
+func (kc *KafkaChannel) checkSubsciberSpecAuthChanged(original *KafkaChannel, ctx context.Context) *apis.FieldError {
+	if diff, err := kmp.ShortDiff(original.Spec.Subscribers, kc.Spec.Subscribers); err != nil {
+		return &apis.FieldError{
+			Message: "Failed to diff Channel.Spec.Subscribers",
+			Paths:   []string{"spec.subscribers"},
+			Details: err.Error(),
+		}
+	} else if diff != "" {
+		user := apis.GetUserInfo(ctx)
+		userName := ""
+		if user != nil {
+			userName = user.Username
+		}
+		return &apis.FieldError{
+			Message: fmt.Sprintf("Channel.Spec.Subscribers changed by user %s which was not the %s service account", userName, kafkaControllerSAName),
+			Paths:   []string{"spec.subscribers"},
+			Details: diff,
+		}
+	}
+	return nil
+}
+
+func canChangeChannelSpecAuth(ctx context.Context) bool {
+	user := apis.GetUserInfo(ctx)
+	if user == nil {
+		return false
+	}
+	return user.Username == kafkaControllerSAName
 }
