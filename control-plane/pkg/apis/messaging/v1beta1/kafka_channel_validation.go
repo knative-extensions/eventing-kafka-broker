@@ -28,7 +28,7 @@ import (
 	"knative.dev/pkg/kmp"
 )
 
-const kafkaControllerSAName = "system:serviceaccount:knative-eventing:kafka-controller"
+const eventingControllerSAName = "system:serviceaccount:knative-eventing:eventing-controller"
 
 func (kc *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
 	errs := kc.Spec.Validate(ctx).ViaField("spec")
@@ -142,7 +142,7 @@ func (kc *KafkaChannel) checkSubsciberSpecAuthChanged(ctx context.Context, origi
 			userName = user.Username
 		}
 		return &apis.FieldError{
-			Message: fmt.Sprintf("Channel.Spec.Subscribers changed by user %s which was not the %s service account", userName, kafkaControllerSAName),
+			Message: fmt.Sprintf("Channel.Spec.Subscribers changed by user %s which was not the %s service account", userName, eventingControllerSAName),
 			Paths:   []string{"spec.subscribers"},
 			Details: diff,
 		}
@@ -155,5 +155,5 @@ func canChangeChannelSpecAuth(ctx context.Context) bool {
 	if user == nil {
 		return false
 	}
-	return user.Username == kafkaControllerSAName
+	return user.Username == eventingControllerSAName
 }
