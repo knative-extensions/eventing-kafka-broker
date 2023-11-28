@@ -603,7 +603,7 @@ func (r *Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternal
 		return err
 	}
 
-	scaledObject, err := keda.GenerateScaledObject(ctx, cg, cg.GetGroupVersionKind(), keda.GenerateScaleTarget(cg), triggers, *autoscalerDefaults)
+	scaledObject, err := keda.GenerateScaledObject(cg, cg.GetGroupVersionKind(), keda.GenerateScaleTarget(cg), triggers, *autoscalerDefaults)
 	if err != nil {
 		return err
 	}
