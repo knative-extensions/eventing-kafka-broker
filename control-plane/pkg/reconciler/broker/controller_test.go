@@ -89,6 +89,10 @@ func TestNewController(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: apisconfig.FlagsConfigName,
 			},
+		}, &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "config-features",
+			},
 		}),
 		env,
 	)

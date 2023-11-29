@@ -2164,7 +2164,7 @@ func TestFinalizeKind(t *testing.T) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to delete consumer group offset: unable to delete the consumer group my.group.id: "+sarama.ErrClusterAuthorizationFailed.Error() + " (retry num 1)",
+					"failed to delete consumer group offset: unable to delete the consumer group my.group.id: "+sarama.ErrClusterAuthorizationFailed.Error()+" (retry num 1)",
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
