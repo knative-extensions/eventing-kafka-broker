@@ -317,7 +317,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found",
+				"Warning InternalError failed to initialize consumer group offset: failed to get secret for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found",
 			},
 			WantCreates: []runtime.Object{},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -343,7 +343,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to create config options for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to get secret for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
 						return cg
 					}(),
 				},
@@ -709,7 +709,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				"Warning InternalError failed to initialize consumer group offset: failed to create config options for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found",
+				"Warning InternalError failed to initialize consumer group offset: failed to get secret for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found",
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -761,7 +761,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to create config options for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to get secret for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
 						return cg
 					}(),
 				},
@@ -1676,10 +1676,10 @@ func TestReconcileKind(t *testing.T) {
 			KubeClient:      kubeclient.Get(ctx),
 			KedaClient:      kedaclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+			GetkafkaClient: func(addrs []string, _ *corev1.Secret) (sarama.Client, error) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T: t,
 				}, nil
@@ -1819,10 +1819,10 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			KubeClient:      kubeclient.Get(ctx),
 			KedaClient:      kedaclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+			GetkafkaClient: func(addrs []string, _ *corev1.Secret) (sarama.Client, error) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T: t,
 				}, nil
@@ -2226,10 +2226,10 @@ func TestFinalizeKind(t *testing.T) {
 			SecretLister:    listers.GetSecretLister(),
 			ConfigMapLister: listers.GetConfigMapLister(),
 			PodLister:       listers.GetPodLister(),
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+			GetkafkaClient: func(addrs []string, _ *corev1.Secret) (sarama.Client, error) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T:                          t,
 					ErrorOnDeleteConsumerGroup: ErrorAssertOrNil(errorOnDeleteKafkaCG),

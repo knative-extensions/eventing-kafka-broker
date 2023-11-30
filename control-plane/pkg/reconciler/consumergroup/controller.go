@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
@@ -122,10 +122,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		PodLister:                          podinformer.Get(ctx).Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
-		NewKafkaClient:                     sarama.NewClient,
+		GetkafkaClient:                     clientpool.GetClient,
 		InitOffsetsFunc:                    offset.InitOffsets,
 		SystemNamespace:                    system.Namespace(),
-		NewKafkaClusterAdminClient:         sarama.NewClusterAdmin,
+		GetKafkaClusterAdmin:               clientpool.GetClusterAdmin,
 		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,

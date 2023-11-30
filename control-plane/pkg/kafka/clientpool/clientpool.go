@@ -51,6 +51,9 @@ type clientPool struct {
 	clients lru.Cache
 }
 
+type GetKafkaClientFunc func(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error)
+type GetKafkaClusterAdminFunc func(bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error)
+
 func newClusterAdminPool() *clientPool {
 	return &clientPool{
 		clients: *lru.NewWithEvictionFunc(maxClients, func(_ lru.Key, value interface{}) {
@@ -71,7 +74,7 @@ func (cap *clientPool) get(bootstrapServers []string, secret *corev1.Secret) (sa
 		return client, nil
 	}
 
-	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret))
+	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return nil, err
 	}
