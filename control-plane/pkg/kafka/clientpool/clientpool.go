@@ -93,10 +93,16 @@ func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clust
 	sort.SliceStable(bootstrapServers, func(i, j int) bool {
 		return bootstrapServers[i] < bootstrapServers[j]
 	})
-	return clusterAdminKey{
-		secretUID:        secret.GetUID(),
+
+	key := clusterAdminKey{
 		bootstrapServers: strings.Join(bootstrapServers, ","),
 	}
+
+	if secret != nil {
+		key.secretUID = secret.GetUID()
+	}
+
+	return key
 }
 
 func GetClusterAdmin(bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error) {
