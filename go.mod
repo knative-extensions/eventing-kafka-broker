@@ -28,6 +28,7 @@ require (
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.10.0
 	go.uber.org/zap v1.26.0
+	golang.org/x/sync v0.5.0
 	google.golang.org/protobuf v1.31.0
 	k8s.io/api v0.27.6
 	k8s.io/apiextensions-apiserver v0.27.6
@@ -134,7 +135,6 @@ require (
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.18.0 // indirect
 	golang.org/x/oauth2 v0.14.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/term v0.14.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
