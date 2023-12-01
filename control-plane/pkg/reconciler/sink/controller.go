@@ -19,7 +19,6 @@ package sink
 import (
 	"context"
 
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,6 +37,7 @@ import (
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -61,9 +61,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister:            configmapInformer.Lister(),
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		Env:                        configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		GetKafkaClusterAdmin: clientpool.GetClusterAdmin,
+		Env:                  configs,
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)

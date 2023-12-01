@@ -35,6 +35,7 @@ import (
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -61,11 +62,10 @@ type Reconciler struct {
 
 	ConfigMapLister corelisters.ConfigMapLister
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-
-	Prober prober.NewProber
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
+	Prober               prober.NewProber
 
 	IngressHost string
 }
@@ -108,23 +108,15 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		)
 	}
 
-	// get security option for Sarama with secret info in it
-	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-
 	if err := r.TrackSecret(secret, ks); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
-	if err != nil {
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
+	defer returnClusterAdmin()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdminClient.Close()
 
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 
@@ -379,23 +371,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 			)
 		}
 
-		// get security option for Sarama with secret info in it
-		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-
-		saramaConfig, err := kafka.GetSaramaConfig(securityOption)
-		if err != nil {
-			// even in error case, we return `normal`, since we are fine with leaving the
-			// topic undeleted e.g. when we lose connection
-			return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-		}
-
-		kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
+		kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
+		defer returnClusterAdmin()
 		if err != nil {
 			// even in error case, we return `normal`, since we are fine with leaving the
 			// topic undeleted e.g. when we lose connection
 			return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 		}
-		defer kafkaClusterAdminClient.Close()
 
 		topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {

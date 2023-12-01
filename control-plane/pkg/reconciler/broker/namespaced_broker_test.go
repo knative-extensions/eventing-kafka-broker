@@ -33,6 +33,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
@@ -497,7 +498,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			ServiceAccountLister:     listers.GetServiceAccountLister(),
 			ServiceLister:            listers.GetServiceLister(),
 			ClusterRoleBindingLister: listers.GetClusterRoleBindingLister(),
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, clientpool.ReturnClientFunc, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
 					ExpectedTopicDetail:                    expectedTopicDetail,
@@ -506,7 +507,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 					ExpectedTopics:                         []string{expectedTopicName},
 					ExpectedTopicsMetadataOnDescribeTopics: metadata,
 					T:                                      t,
-				}, nil
+				}, clientpool.NilReturnClientFunc, nil
 			},
 			Env:                                env,
 			Prober:                             proberMock,

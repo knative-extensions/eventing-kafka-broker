@@ -19,7 +19,6 @@ package channel
 import (
 	"context"
 
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -30,6 +29,7 @@ import (
 	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -69,14 +69,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
-		NewKafkaClient:             sarama.NewClient,
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
-		Env:                        configs,
-		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceLister:              serviceInformer.Lister(),
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
+		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
+		GetKafkaClient:       clientpool.GetClient,
+		GetKafkaClusterAdmin: clientpool.GetClusterAdmin,
+		InitOffsetsFunc:      offset.InitOffsets,
+		Env:                  configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		ServiceLister:        serviceInformer.Lister(),
+		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
 	}
 
 	logger := logging.FromContext(ctx)

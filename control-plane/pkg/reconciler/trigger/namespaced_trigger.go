@@ -30,6 +30,7 @@ import (
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -44,9 +45,9 @@ type NamespacedReconciler struct {
 
 	Env *config.Env
 
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-	NewKafkaClient             kafka.NewClientFunc
-	InitOffsetsFunc            kafka.InitOffsetsFunc
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
+	GetKafkaClient       clientpool.GetKafkaClientFunc
+	InitOffsetsFunc      kafka.InitOffsetsFunc
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -87,11 +88,11 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		Resolver:        r.Resolver,
 		Env:             r.Env,
 		// override
-		BrokerClass:                kafka.NamespacedBrokerClass,
-		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
-		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
-		NewKafkaClient:             r.NewKafkaClient,
-		InitOffsetsFunc:            r.InitOffsetsFunc,
+		BrokerClass:               kafka.NamespacedBrokerClass,
+		DataPlaneConfigMapLabeler: kafka.NamespacedDataplaneLabelConfigmapOption,
+		KafkaFeatureFlags:         apisconfig.DefaultFeaturesConfig(),
+		GetKafkaClusterAdmin:      r.GetKafkaClusterAdmin,
+		GetKafkaClient:            r.GetKafkaClient,
+		InitOffsetsFunc:           r.InitOffsetsFunc,
 	}
 }

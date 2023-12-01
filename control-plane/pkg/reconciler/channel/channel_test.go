@@ -37,6 +37,7 @@ import (
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
@@ -2135,10 +2136,10 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
-				return &kafkatesting.MockKafkaClient{}, nil
+			GetKafkaClient: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.Client, clientpool.ReturnClientFunc, error) {
+				return &kafkatesting.MockKafkaClient{}, clientpool.NilReturnClientFunc, nil
 			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, clientpool.ReturnClientFunc, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName: expectedTopicName,
 					ExpectedTopicDetail: sarama.TopicDetail{
@@ -2149,7 +2150,7 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 						},
 					},
 					T: t,
-				}, nil
+				}, clientpool.NilReturnClientFunc, nil
 			},
 			Prober:            proberMock,
 			IngressHost:       network.GetServiceHostname(env.IngressName, env.SystemNamespace),

@@ -43,6 +43,7 @@ import (
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
@@ -72,9 +73,9 @@ type Reconciler struct {
 
 	ConfigMapLister corelisters.ConfigMapLister
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
 
 	BootstrapServers string
 
@@ -148,14 +149,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		}
 	}
 
-	// get security option for Sarama with secret info in it
-	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-
 	if err := r.TrackSecret(secret, broker); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topic, err := r.reconcileBrokerTopic(broker, securityOption, statusConditionManager, topicConfig, logger)
+	topic, err := r.reconcileBrokerTopic(ctx, broker, secret, statusConditionManager, topicConfig, logger)
 	if err != nil {
 		return err
 	}
@@ -282,18 +280,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	return nil
 }
 
-func (r *Reconciler) reconcileBrokerTopic(broker *eventing.Broker, securityOption kafka.ConfigOption, statusConditionManager base.StatusConditionManager, topicConfig *kafka.TopicConfig, logger *zap.Logger) (string, reconciler.Event) {
+func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.Broker, secret *corev1.Secret, statusConditionManager base.StatusConditionManager, topicConfig *kafka.TopicConfig, logger *zap.Logger) (string, reconciler.Event) {
 
-	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
-	if err != nil {
-		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("error getting cluster admin config: %w", err))
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
+	defer returnClusterAdmin()
 	if err != nil {
 		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
-	defer kafkaClusterAdminClient.Close()
 
 	// if we have a custom topic annotation
 	// the topic is externally manged and we do NOT need to create it
@@ -419,9 +412,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 			}
 		}
 
-		// get security option for Sarama with secret info in it
-		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-		err = r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger)
+		err = r.finalizeNonExternalBrokerTopic(ctx, broker, secret, topicConfig, logger)
 
 		// if finalizeNonExternalBrokerTopic returns error that kafka is not reachable!
 		if err != nil {
@@ -496,21 +487,15 @@ func (r *Reconciler) deleteResourceFromContractConfigMap(ctx context.Context, lo
 	return nil
 }
 
-func (r *Reconciler) finalizeNonExternalBrokerTopic(broker *eventing.Broker, securityOption kafka.ConfigOption, topicConfig *kafka.TopicConfig, logger *zap.Logger) reconciler.Event {
-	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
-	if err != nil {
-		// even in error case, we return `normal`, since we are fine with leaving the
-		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-	}
+func (r *Reconciler) finalizeNonExternalBrokerTopic(ctx context.Context, broker *eventing.Broker, secret *corev1.Secret, topicConfig *kafka.TopicConfig, logger *zap.Logger) reconciler.Event {
 
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
+	defer returnClusterAdmin()
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdminClient.Close()
 
 	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {

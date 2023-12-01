@@ -42,6 +42,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -74,12 +75,12 @@ type Reconciler struct {
 
 	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
+	// GetKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
+	GetKafkaClient clientpool.GetKafkaClientFunc
 	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
 	// It's convenient to add this as Reconciler field so that we can mock the function used during the
 	// reconciliation loop.
@@ -417,22 +418,17 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	}
 	bootstrapServersArr := kafka.BootstrapServersArray(bootstrapServers)
 
-	saramaConfig, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret))
-	if err != nil {
-		return false, fmt.Errorf("failed to get sarama config: %w", err)
-	}
-
-	kafkaClient, err := r.NewKafkaClient(bootstrapServersArr, saramaConfig)
+	kafkaClient, returnClient, err := r.GetKafkaClient(ctx, bootstrapServersArr, secret)
+	defer returnClient()
 	if err != nil {
 		return false, fmt.Errorf("cannot obtain Kafka client, %w", err)
 	}
-	defer kafkaClient.Close()
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdminClient(bootstrapServersArr, saramaConfig)
+	kafkaClusterAdmin, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, bootstrapServersArr, secret)
+	defer returnClusterAdmin()
 	if err != nil {
 		return false, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdmin.Close()
 
 	// Existing Triggers might not yet have this annotation
 	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]

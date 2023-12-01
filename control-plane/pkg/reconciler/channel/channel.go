@@ -48,6 +48,7 @@ import (
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
@@ -79,13 +80,13 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
 
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
+	GetKafkaClient clientpool.GetKafkaClientFunc
 
 	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
 	// It's convenient to add this as Reconciler field so that we can mock the function used during the
@@ -163,9 +164,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
 	}
 
-	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
-
 	if err := r.TrackSecret(secret, channel); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
@@ -185,30 +183,17 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 
-	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
-	}
-
-	// Manually commit the offsets in KafkaChannel controller.
-	// That's because we want to make sure we initialize the offsets within the controller
-	// before dispatcher actually starts consuming messages.
-	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, kafkaClusterAdminSaramaConfig)
+	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
+	defer returnClusterAdmin()
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin: %w", err))
 	}
-	defer kafkaClusterAdminClient.Close()
 
-	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
+	kafkaClient, returnClient, err := r.GetKafkaClient(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
+	defer returnClient()
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka client: %w", err))
 	}
-	defer kafkaClient.Close()
 
 	// create the topic
 	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
@@ -479,23 +464,13 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return fmt.Errorf("failed to resolve auth context: %w", err)
 	}
 
-	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
-
-	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		// even in error case, we return `normal`, since we are fine with leaving the
-		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
+	defer returnClusterAdmin()
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdminClient.Close()
 
 	topicName, ok := channel.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {
