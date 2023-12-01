@@ -268,7 +268,8 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(bootstrapServers, kafakSecret)
+	kafkaClusterAdminClient, returnCaFunc, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
+	defer returnCaFunc()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
@@ -536,12 +537,14 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(bootstrapServers, kafkaSecret)
+	kafkaClusterAdminClient, returnCaFunc, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
+	defer returnCaFunc()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 
-	kafkaClient, err := r.GetkafkaClient(bootstrapServers, kafkaSecret)
+	kafkaClient, returnClientFunc, err := r.GetkafkaClient(ctx, bootstrapServers, kafkaSecret)
+	defer returnClientFunc()
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
