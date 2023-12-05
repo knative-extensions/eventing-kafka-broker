@@ -208,6 +208,19 @@ func (c *ReplicatingLRUCache) Remove(ctx context.Context, key interface{}) error
 	return nil
 }
 
+func (c *ReplicatingLRUCache) Keys() []interface{} {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	keys := make([]interface{}, 0, len(c.entries))
+
+	for k := range c.entries {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
 func (c *ReplicatingLRUCache) evictIfAtMaxCapacity(ctx context.Context) {
 	if c.evictionList.Len() >= c.maxSize {
 		toEvictValue := c.evictionList.Back().Value.(*cacheEntry)

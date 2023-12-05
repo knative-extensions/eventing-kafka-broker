@@ -25,9 +25,9 @@ import (
 
 	"github.com/IBM/sarama"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	"knative.dev/pkg/logging"
 )
 
 const (
@@ -54,7 +54,8 @@ func init() {
 
 // A comparable struct that includes the info we need to uniquely identify a kafka cluster admin
 type clientKey struct {
-	secretUID        types.UID
+	secretName       string
+	secretNamespace  string
 	bootstrapServers string
 }
 
@@ -86,19 +87,14 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 		return c, returnClient, nil
 	}
 
-	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
-	if err != nil {
-		return nil, NilReturnClientFunc, err
-	}
-
-	saramaClient, err := sarama.NewClient(bootstrapServers, config)
+	saramaClient, err := makeSaramaClient(bootstrapServers, secret)
 	if err != nil {
 		return nil, NilReturnClientFunc, err
 	}
 
 	// create a new client in the client pool, and acquire capacity to start using it right away
 	returnClient, err := cp.AddAndAcquire(ctx, key, saramaClient, func() (interface{}, error) {
-		saramaClient, err := sarama.NewClient(bootstrapServers, config)
+		saramaClient, err := makeSaramaClient(bootstrapServers, secret)
 		if err != nil {
 			return nil, err
 		}
@@ -121,10 +117,71 @@ func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clien
 	}
 
 	if secret != nil {
-		key.secretUID = secret.GetUID()
+		key.secretName = secret.GetName()
+		key.secretNamespace = secret.GetNamespace()
 	}
 
 	return key
+}
+
+func (key clientKey) matchesSecret(secret *corev1.Secret) bool {
+	return key.secretName == secret.GetName() && key.secretNamespace == secret.GetNamespace()
+}
+
+func (key clientKey) getBootstrapServers() []string {
+	return strings.Split(key.bootstrapServers, ",")
+}
+
+func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
+	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
+	if err != nil {
+		return nil, err
+	}
+
+	saramaClient, err := sarama.NewClient(bootstrapServers, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return saramaClient, nil
+}
+
+func (cp *clientPool) updateConnectionsWithSecret(ctx context.Context, secret *corev1.Secret) error {
+	cp.lock.Lock()
+	defer cp.lock.Unlock()
+	for _, k := range cp.Keys() {
+		key, ok := k.(clientKey)
+		if !ok {
+			logging.FromContext(ctx).Warn("failed to convert key to clientKey in Kafka clientpool", key)
+			continue
+		}
+
+		if key.matchesSecret(secret) {
+			saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
+			if err != nil {
+				return fmt.Errorf("failed to update sarama client with new secret: %v", err)
+			}
+
+			err = cp.Add(ctx, key, saramaClient, func() (interface{}, error) {
+				saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
+				if err != nil {
+					return nil, err
+				}
+				return saramaClient, nil
+			})
+
+			if err != nil {
+				return fmt.Errorf("failed to update the sarama client in the clientpool after recreating the client with the new secret: %v", err)
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func UpdateConnectionsWithSecret(ctx context.Context, secret *corev1.Secret) error {
+	return clients.updateConnectionsWithSecret(ctx, secret)
 }
 
 // GetClusterAdmin returns a sarama.ClusterAdmin along with a ReturnClientFunc. The ReturnClientFunc MUST be called by the caller.
