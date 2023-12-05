@@ -23,9 +23,11 @@ import (
 	"strings"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/test"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -567,36 +569,17 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	f := feature.NewFeatureNamed("KafkaSourceScalesToZeroWithKeda")
 
+	// we need to ensure that autoscaling is enabled for the rest of the feature to work
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
 	kafkaSource := feature.MakeRandomK8sName("kafka-source")
 	topic := feature.MakeRandomK8sName("topic")
 	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
 
-	senderOpts := []eventshub.EventsHubOption{
-		eventshub.InputHeader("ce-specversion", cloudevents.VersionV1),
-		eventshub.InputHeader("ce-type", "com.github.pull.create"),
-		eventshub.InputHeader("ce-source", "github.com/cloudevents/spec/pull"),
-		eventshub.InputHeader("ce-subject", "123"),
-		eventshub.InputHeader("ce-id", "A234-1234-1234"),
-		eventshub.InputHeader("content-type", "application/json"),
-		eventshub.InputHeader("ce-comexampleextension1", "value"),
-		eventshub.InputHeader("ce-comexampleothervalue", "5"),
-		eventshub.InputBody(marshalJSON(map[string]string{
-			"hello": "world",
-		})),
-	}
-	matcher := AllOf(
-		HasSpecVersion(cloudevents.VersionV1),
-		HasType("com.github.pull.create"),
-		HasSource("github.com/cloudevents/spec/pull"),
-		HasSubject("123"),
-		HasId("A234-1234-1234"),
-		HasDataContentType("application/json"),
-		HasData([]byte(`{"hello":"world"}`)),
-		HasExtension("comexampleextension1", "value"),
-		HasExtension("comexampleothervalue", "5"),
-	)
+	event := cetest.FullEvent()
+	event.SetID(uuid.New().String())
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
 	f.Setup("topic is ready", kafkatopic.IsReady(topic))
@@ -621,14 +604,11 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 
 	options := []eventshub.EventsHubOption{
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
+		eventshub.InputEvent(event),
 	}
-	options = append(options, senderOpts...)
 	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
 
-	f.Requirement("eventshub receiver gets event", matchEvent(receiver, matcher))
-
-	// we need to ensure that autoscaling is enabled for the rest of the feature to work
-	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.SourceScalingEnabled())
+	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(test.HasId(event.ID())).Exact(1))
 
 	// after the event is sent, the source should scale down to zero replicas
 	f.Alpha("KafkaSource").Must("Scale down to zero", verifyConsumerGroupReplicas(kafkaSource, 0, false))
