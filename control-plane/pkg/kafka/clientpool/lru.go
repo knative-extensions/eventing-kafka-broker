@@ -29,10 +29,9 @@ type cacheEntry struct {
 	key               interface{}
 	value             interface{}
 	capacity          semaphore.Weighted
-	replicaNum        int
 	evictionListEntry *list.Element
 	replicaListEntry  *list.Element
-	makeNewReplica    func() interface{}
+	makeNewReplica    CreateNewReplica
 }
 
 // A ReplicatingLRUCache is an LRU cache which makes a new replica of an entry when a Get request is made for an entry and all
@@ -43,15 +42,15 @@ type ReplicatingLRUCache struct {
 	entryCapacity int64
 	evictionList  *list.List
 	entries       map[interface{}]*list.List
-	cleanupFunc   func(key, val interface{}, replicaNum int)
+	cleanupFunc   func(key, val interface{})
 }
 
-type ReturnCapacityToCache func()
-type CreateNewReplica func() interface{}
+type CreateNewReplica func() (interface{}, error)
+type CleanupFunc func(key, val interface{})
 
 func NilReturnCapacityToCache() {}
 
-func NewReplicatingLRUCacheWithCleanupFunc(maxSize int, entryCapacity int64, cleanupFunc func(interface{}, interface{}, int)) (*ReplicatingLRUCache, error) {
+func NewReplicatingLRUCacheWithCleanupFunc(maxSize int, entryCapacity int64, cleanupFunc CleanupFunc) (*ReplicatingLRUCache, error) {
 	if maxSize <= 0 {
 		return nil, fmt.Errorf("maxSize must be > 0")
 	}
@@ -60,7 +59,7 @@ func NewReplicatingLRUCacheWithCleanupFunc(maxSize int, entryCapacity int64, cle
 	}
 
 	if cleanupFunc == nil {
-		cleanupFunc = func(_, _ interface{}, _ int) {}
+		cleanupFunc = func(_, _ interface{}) {}
 	}
 
 	return &ReplicatingLRUCache{
@@ -72,11 +71,20 @@ func NewReplicatingLRUCacheWithCleanupFunc(maxSize int, entryCapacity int64, cle
 	}, nil
 }
 
-func (c *ReplicatingLRUCache) Add(ctx context.Context, key interface{}, value interface{}, createNewReplica CreateNewReplica) {
+func (c *ReplicatingLRUCache) Add(ctx context.Context, key interface{}, value interface{}, createNewReplica CreateNewReplica) error {
+	returnFunc, err := c.AddAndAcquire(ctx, key, value, createNewReplica)
+	returnFunc()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *ReplicatingLRUCache) AddAndAcquire(ctx context.Context, key interface{}, value interface{}, createNewReplica CreateNewReplica) (ReturnClientFunc, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if createNewReplica == nil {
-		createNewReplica = func() interface{} { return nil }
+		createNewReplica = func() (interface{}, error) { return nil, nil }
 	}
 
 	// check if the element already exists
@@ -85,21 +93,41 @@ func (c *ReplicatingLRUCache) Add(ctx context.Context, key interface{}, value in
 		// For example, closing a connection on the old value
 		for oldElement := oldElements.Front(); oldElement != nil; oldElement = oldElement.Next() {
 			oldValue := oldElement.Value.(*cacheEntry)
-			c.cleanupFunc(key, oldValue.value, oldValue.replicaNum)
+			err := oldValue.capacity.Acquire(ctx, c.entryCapacity)
+			if err != nil {
+				return nil, err
+			}
+			c.cleanupFunc(key, oldValue.value)
+
 			// we are updating the value, so mark it as "new" for the LRU cache
 			c.evictionList.MoveToFront(oldElement)
 			oldValue.value = value
 			oldValue.makeNewReplica = createNewReplica
+
+			oldValue.capacity.Release(c.entryCapacity)
 		}
-		return
+
+		// let's acquire one of the newly updated values for the current caller
+		value := oldElements.Front().Value.(*cacheEntry)
+		err := value.capacity.Acquire(ctx, 1)
+		if err != nil {
+			return nil, err
+		}
+		return makeReturnCapacityToCacheFunc(value), nil
 	}
 
 	c.evictIfAtMaxCapacity(ctx)
 
-	c.makeNewEntry(key, value, 0, createNewReplica)
+	entry := c.makeNewEntry(key, value, createNewReplica)
+	err := entry.capacity.Acquire(ctx, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	return makeReturnCapacityToCacheFunc(entry), nil
 }
 
-func (c *ReplicatingLRUCache) Get(ctx context.Context, key interface{}) (interface{}, ReturnCapacityToCache, bool) {
+func (c *ReplicatingLRUCache) Get(ctx context.Context, key interface{}) (interface{}, ReturnClientFunc, bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -133,9 +161,21 @@ func (c *ReplicatingLRUCache) Get(ctx context.Context, key interface{}) (interfa
 
 	// all replicas are fully used, make a new one
 	c.evictIfAtMaxCapacity(ctx)
+
 	makeNewReplica := replicas.Back().Value.(*cacheEntry).makeNewReplica
-	entry := c.makeNewEntry(key, makeNewReplica(), count, makeNewReplica)
-	err := entry.capacity.Acquire(ctx, 1)
+	newValue, err := makeNewReplica()
+	// failed to make a new replica, use an existing replica once it becomes available
+	if err != nil {
+		entry := replicas.Back().Value.(*cacheEntry)
+		err = entry.capacity.Acquire(ctx, 1)
+		if err != nil {
+			return nil, NilReturnCapacityToCache, false
+		}
+		return entry.value, makeReturnCapacityToCacheFunc(entry), true
+	}
+
+	entry := c.makeNewEntry(key, newValue, makeNewReplica)
+	err = entry.capacity.Acquire(ctx, 1)
 	if err != nil {
 		return nil, NilReturnCapacityToCache, false
 	}
@@ -156,10 +196,10 @@ func (c *ReplicatingLRUCache) Remove(ctx context.Context, key interface{}) error
 
 		err := entry.capacity.Acquire(ctx, c.entryCapacity)
 		if err != nil {
-			return fmt.Errorf("error aquiring all the capacity of replica %d back: %v", entry.replicaNum, err)
+			return fmt.Errorf("error aquiring all the capacity of replica back: %v", err)
 		}
 
-		c.cleanupFunc(entry.key, entry.value, entry.replicaNum)
+		c.cleanupFunc(entry.key, entry.value)
 		c.evictionList.Remove(entry.evictionListEntry)
 	}
 
@@ -174,7 +214,7 @@ func (c *ReplicatingLRUCache) evictIfAtMaxCapacity(ctx context.Context) {
 
 		toEvictValue.capacity.Acquire(ctx, c.entryCapacity)
 
-		c.cleanupFunc(toEvictValue.key, toEvictValue.value, toEvictValue.replicaNum)
+		c.cleanupFunc(toEvictValue.key, toEvictValue.value)
 
 		c.evictionList.Remove(toEvictValue.evictionListEntry)
 
@@ -186,12 +226,11 @@ func (c *ReplicatingLRUCache) evictIfAtMaxCapacity(ctx context.Context) {
 	}
 }
 
-func (c *ReplicatingLRUCache) makeNewEntry(key, value interface{}, replicaNum int, makeNewReplica func() interface{}) *cacheEntry {
+func (c *ReplicatingLRUCache) makeNewEntry(key, value interface{}, makeNewReplica CreateNewReplica) *cacheEntry {
 	entry := &cacheEntry{
 		key:            key,
 		value:          value,
 		capacity:       *semaphore.NewWeighted(c.entryCapacity),
-		replicaNum:     replicaNum,
 		makeNewReplica: makeNewReplica,
 	}
 
@@ -211,7 +250,7 @@ func (c *ReplicatingLRUCache) makeNewEntry(key, value interface{}, replicaNum in
 	return entry
 }
 
-func makeReturnCapacityToCacheFunc(entry *cacheEntry) ReturnCapacityToCache {
+func makeReturnCapacityToCacheFunc(entry *cacheEntry) ReturnClientFunc {
 	return func() {
 		entry.capacity.Release(1)
 	}

@@ -24,16 +24,15 @@ import (
 	"sync"
 
 	"github.com/IBM/sarama"
-	"golang.org/x/sync/semaphore"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/lru"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
-	maxClients = 8
+	maxClients        = 8
+	capacityPerClient = 2
 )
 
 var (
@@ -41,7 +40,16 @@ var (
 )
 
 func init() {
-	clients = newClusterAdminPool()
+	cache, err := NewReplicatingLRUCacheWithCleanupFunc(maxClients, capacityPerClient, func(_, val interface{}) {
+		oldClient := val.(sarama.Client)
+		oldClient.Close()
+	})
+	if err != nil {
+		panic("kafka client pool tried to initialize with invalid paramters")
+	}
+	clients = &clientPool{
+		ReplicatingLRUCache: cache,
+	}
 }
 
 // A comparable struct that includes the info we need to uniquely identify a kafka cluster admin
@@ -50,15 +58,9 @@ type clientKey struct {
 	bootstrapServers string
 }
 
-type client struct {
-	rwMutex sync.RWMutex
-	sarama.Client
-}
-
 type clientPool struct {
-	clients      lru.Cache
-	poolCapacity *semaphore.Weighted
-	mutex        sync.Mutex
+	lock sync.Mutex
+	*ReplicatingLRUCache
 }
 
 type ReturnClientFunc func()
@@ -67,78 +69,46 @@ type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []strin
 
 func NilReturnClientFunc() {}
 
-func newClusterAdminPool() *clientPool {
-	sem := semaphore.NewWeighted(maxClients)
-	return &clientPool{
-		clients: *lru.NewWithEvictionFunc(maxClients, func(_ lru.Key, value interface{}) {
-			if c, ok := value.(*client); ok {
-				// make sure no one is currently using this client
-				c.rwMutex.Lock()
-				defer c.rwMutex.Unlock()
-				c.Close()
-				sem.Release(1)
-			}
-		}),
-		poolCapacity: sem,
-	}
-}
-
 func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
-	// LRU cache does not call the eviction function if a value is updated, so use a lock here to make sure we have no concurrency issues with ghost connections
-	cp.mutex.Lock()
-	defer cp.mutex.Unlock()
-
+	// the lru cache is concurrency safe, but if multiple users try and add the same key at the same time we will get the clients being rapidly closed and re-opened
+	// Instead, we can use a lock here to make sure that the accesses are one at a time
+	cp.lock.Lock()
+	defer cp.lock.Unlock()
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
 	key := makeClusterAdminKey(bootstrapServers, secret)
 
 	// if a corresponding connection already exists, lets use it
-	if val, ok := cp.clients.Get(key); ok {
-		c, ok := val.(*client)
+	if val, returnClient, ok := cp.Get(ctx, key); ok {
+		c, ok := val.(sarama.Client)
 		if !ok {
 			return nil, NilReturnClientFunc, fmt.Errorf("a value which was not a sarama.Client was in the client pool")
 		}
-		// clients are concurrency safe, but we use a read lock to allow multiple uses of the client while ensuring that the connection does not get closed while it is in use.
-		c.rwMutex.RLock()
-		return c, makeReturnClientFunc(c), nil
-	}
-
-	// if all connections are in use we don't want to be blocked as we need to signal to the pool to close the least recently used connection.
-	if ok := cp.poolCapacity.TryAcquire(1); !ok {
-		// This will remove the oldest client.
-		cp.clients.RemoveOldest()
-		// The eviction func in the cache will release 1 connection back to the pool after closing the connection.
-		cp.poolCapacity.Acquire(ctx, 1)
+		return c, returnClient, nil
 	}
 
 	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
-		// we didn't actually make a connection, release the connection back to the pool
-		cp.poolCapacity.Release(1)
 		return nil, NilReturnClientFunc, err
 	}
 
 	saramaClient, err := sarama.NewClient(bootstrapServers, config)
 	if err != nil {
-		// we didn't actually make a connection, release the connection back to the pool
-		cp.poolCapacity.Release(1)
 		return nil, NilReturnClientFunc, err
 	}
 
-	c := &client{
-		Client: saramaClient,
+	// create a new client in the client pool, and acquire capacity to start using it right away
+	returnClient, err := cp.AddAndAcquire(ctx, key, saramaClient, func() (interface{}, error) {
+		saramaClient, err := sarama.NewClient(bootstrapServers, config)
+		if err != nil {
+			return nil, err
+		}
+		return saramaClient, nil
+	})
+	if err != nil {
+		return nil, NilReturnClientFunc, fmt.Errorf("error creating a new client: %v", err)
 	}
 
-	// clients are concurrency safe, but we use a read lock to allow multiple uses of the client while ensuring that the connection does not get closed while it is in use.
-	c.rwMutex.RLock()
-	cp.clients.Add(key, c)
-	return c, makeReturnClientFunc(c), nil
-}
-
-// the return client func will release the read lock so that after all the in-use clients are returned, the client will be able to be closed if needed
-func makeReturnClientFunc(c *client) ReturnClientFunc {
-	return func() {
-		c.rwMutex.RUnlock()
-	}
+	return saramaClient, returnClient, nil
 }
 
 func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clientKey {

@@ -25,7 +25,7 @@ import (
 
 func TestAddValuesToCache(t *testing.T) {
 	evicted := []int{}
-	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(key, val interface{}, _ int) {
+	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(key, val interface{}) {
 		keyInt := key.(int)
 		valInt := val.(int)
 		assert.Equal(t, keyInt, valInt, "should have correct value for the key")
@@ -33,26 +33,26 @@ func TestAddValuesToCache(t *testing.T) {
 	})
 	assert.NoError(t, err, "creating the cache should not return an error")
 
-	cache.Add(context.TODO(), 1, 1, func() interface{} { return 1 })
+	cache.Add(context.TODO(), 1, 1, func() (interface{}, error) { return 1, nil })
 	assert.Contains(t, cache.entries, 1, "should contain the newly added key")
 
-	cache.Add(context.TODO(), 2, 2, func() interface{} { return 2 })
+	cache.Add(context.TODO(), 2, 2, func() (interface{}, error) { return 2, nil })
 	assert.Contains(t, cache.entries, 2, "should contain the newly added key")
 
-	cache.Add(context.TODO(), 3, 3, func() interface{} { return 3 })
+	cache.Add(context.TODO(), 3, 3, func() (interface{}, error) { return 3, nil })
 	assert.Contains(t, cache.entries, 3, "should contain the newly added key")
 
-	cache.Add(context.TODO(), 4, 4, func() interface{} { return 4 })
+	cache.Add(context.TODO(), 4, 4, func() (interface{}, error) { return 4, nil })
 	assert.Contains(t, cache.entries, 4, "should contain the newly added key")
 	assert.NotContains(t, cache.entries, 1, "should not contain the first key added")
 	assert.Contains(t, evicted, 1, "should contain the evicted key")
 }
 
 func TestGrowsReplicas(t *testing.T) {
-	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(_, _ interface{}, _ int) {})
+	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(_, _ interface{}) {})
 	assert.NoError(t, err, "creating the cache should not return an error")
 
-	cache.Add(context.TODO(), 1, 1, func() interface{} { return 1 })
+	cache.Add(context.TODO(), 1, 1, func() (interface{}, error) { return 1, nil })
 	assert.Contains(t, cache.entries, 1, "should contain the newly added key")
 
 	entry, returnFirstEntry, ok := cache.Get(context.TODO(), 1)
@@ -97,10 +97,10 @@ func TestGrowsReplicas(t *testing.T) {
 }
 
 func TestReplicasWithCapacityOver1(t *testing.T) {
-	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 2, func(_, _ interface{}, _ int) {})
+	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 2, func(_, _ interface{}) {})
 	assert.NoError(t, err, "creating the cache should not return an error")
 
-	cache.Add(context.TODO(), 1, 1, func() interface{} { return 1 })
+	cache.Add(context.TODO(), 1, 1, func() (interface{}, error) { return 1, nil })
 	assert.Contains(t, cache.entries, 1, "should contain the newly added key")
 
 	entry, returnFirstEntry, ok := cache.Get(context.TODO(), 1)
@@ -150,35 +150,33 @@ func TestReplicasWithCapacityOver1(t *testing.T) {
 }
 
 func TestInvalidCacheSize(t *testing.T) {
-	_, err := NewReplicatingLRUCacheWithCleanupFunc(0, 2, func(_, _ interface{}, _ int) {})
+	_, err := NewReplicatingLRUCacheWithCleanupFunc(0, 2, func(_, _ interface{}) {})
 	assert.Error(t, err, "the created cache should error with a size of 0")
 
-	_, err = NewReplicatingLRUCacheWithCleanupFunc(-1, 2, func(_, _ interface{}, _ int) {})
+	_, err = NewReplicatingLRUCacheWithCleanupFunc(-1, 2, func(_, _ interface{}) {})
 	assert.Error(t, err, "the created cache should error with a size less than 0")
 }
 
 func TestInvalidEntryCapacity(t *testing.T) {
-	_, err := NewReplicatingLRUCacheWithCleanupFunc(1, 0, func(_, _ interface{}, _ int) {})
+	_, err := NewReplicatingLRUCacheWithCleanupFunc(1, 0, func(_, _ interface{}) {})
 	assert.Error(t, err, "the created cache should error with an entry capacity of 0")
 
-	_, err = NewReplicatingLRUCacheWithCleanupFunc(1, -1, func(_, _ interface{}, _ int) {})
+	_, err = NewReplicatingLRUCacheWithCleanupFunc(1, -1, func(_, _ interface{}) {})
 	assert.Error(t, err, "the created cache should error with an entry capacity less than 0")
 }
 
 func TestAddExistingKeyCallsCleanupFunction(t *testing.T) {
 	keys := []int{}
-	replicas := []int{}
 	oldValues := []int{}
-	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(key, val interface{}, replicaNum int) {
+	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(key, val interface{}) {
 		keyInt := key.(int)
 		valInt := val.(int)
 		keys = append(keys, keyInt)
-		replicas = append(replicas, replicaNum)
 		oldValues = append(oldValues, valInt)
 	})
 	assert.NoError(t, err, "creating the cache should not fail with valid parameters")
 
-	cache.Add(context.TODO(), 1, 1, func() interface{} { return 1 })
+	cache.Add(context.TODO(), 1, 1, func() (interface{}, error) { return 1, nil })
 	assert.Contains(t, cache.entries, 1, "should contain the newly added key")
 
 	entry, returnFirstEntry, ok := cache.Get(context.TODO(), 1)
@@ -192,11 +190,10 @@ func TestAddExistingKeyCallsCleanupFunction(t *testing.T) {
 	returnFirstEntry()
 	returnSecondEntry()
 
-	cache.Add(context.TODO(), 1, 2, func() interface{} { return 1 })
+	cache.Add(context.TODO(), 1, 2, func() (interface{}, error) { return 1, nil })
 	assert.Contains(t, cache.entries, 1, "should contain the newly added key")
 
 	assert.ElementsMatch(t, keys, []int{1, 1}, "cleanup function should be called with key=1 twice")
-	assert.ElementsMatch(t, replicas, []int{0, 1}, "cleanup function should be called with replica=0 and replica=1")
 	assert.ElementsMatch(t, oldValues, []int{1, 1}, "cleanup function should be called with value=1 twice")
 
 	newValue, returnNewValue, ok := cache.Get(context.TODO(), 1)
@@ -208,18 +205,16 @@ func TestAddExistingKeyCallsCleanupFunction(t *testing.T) {
 
 func TestRemoveKey(t *testing.T) {
 	keys := []int{}
-	replicas := []int{}
 	oldValues := []int{}
-	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(key, val interface{}, replicaNum int) {
+	cache, err := NewReplicatingLRUCacheWithCleanupFunc(3, 1, func(key, val interface{}) {
 		keyInt := key.(int)
 		valInt := val.(int)
 		keys = append(keys, keyInt)
-		replicas = append(replicas, replicaNum)
 		oldValues = append(oldValues, valInt)
 	})
 	assert.NoError(t, err, "creating the cache should not fail with valid parameters")
 
-	cache.Add(context.TODO(), 1, 1, func() interface{} { return 1 })
+	cache.Add(context.TODO(), 1, 1, func() (interface{}, error) { return 1, nil })
 	assert.Contains(t, cache.entries, 1, "should contain the newly added key")
 
 	entry, returnFirstEntry, ok := cache.Get(context.TODO(), 1)
@@ -237,7 +232,6 @@ func TestRemoveKey(t *testing.T) {
 	assert.NotContains(t, cache.entries, 1, "should not contain the removed key")
 
 	assert.ElementsMatch(t, keys, []int{1, 1}, "cleanup function should be called with key=1 twice")
-	assert.ElementsMatch(t, replicas, []int{0, 1}, "cleanup function should be called with replica=0 and replica=1")
 	assert.ElementsMatch(t, oldValues, []int{1, 1}, "cleanup function should be called with value=1 twice")
 
 	_, _, ok = cache.Get(context.TODO(), 1)
