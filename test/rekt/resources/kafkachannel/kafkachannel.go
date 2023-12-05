@@ -21,6 +21,9 @@ import (
 	"embed"
 	"time"
 
+	"knative.dev/eventing/test/rekt/resources/addressable"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
@@ -32,6 +35,17 @@ var yaml embed.FS
 
 func GVR() schema.GroupVersionResource {
 	return schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1beta1", Resource: "kafkachannels"}
+}
+
+func GVK() schema.GroupVersionKind {
+	return schema.ParseGroupKind(EnvCfg.ChannelGK).WithVersion(EnvCfg.ChannelV)
+}
+
+var EnvCfg EnvConfig
+
+type EnvConfig struct {
+	ChannelGK string `envconfig:"CHANNEL_GROUP_KIND" default:"KafkaChannel.messaging.knative.dev" required:"true"`
+	ChannelV  string `envconfig:"CHANNEL_VERSION" default:"v1beta1" required:"true"`
 }
 
 // Install will create a KafkaChannel resource, using the latest version, augmented with the config fn options.
@@ -82,5 +96,45 @@ func WithReplicationFactor(replicationFactor string) manifest.CfgFn {
 func WithRetentionDuration(retentionDuration string) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
 		cfg["retentionDuration"] = retentionDuration
+	}
+}
+
+// AsRef returns a KRef for a Channel without namespace.
+func AsRef(name string) *duckv1.KReference {
+	return &duckv1.KReference{
+		Kind:       EnvCfg.ChannelGK,
+		APIVersion: EnvCfg.ChannelV,
+		Name:       name,
+	}
+}
+
+// AsRef returns a KRef for a Channel without namespace.
+func AsDestinationRef(name string) *duckv1.Destination {
+	return &duckv1.Destination{
+		Ref: &duckv1.KReference{
+			Kind:       EnvCfg.ChannelGK,
+			APIVersion: EnvCfg.ChannelV,
+			Name:       name,
+		},
+	}
+}
+
+// Address returns a Channel's address.
+func Address(ctx context.Context, name string, timings ...time.Duration) (*duckv1.Addressable, error) {
+	return addressable.Address(ctx, GVR(), name, timings...)
+}
+
+// ValidateAddress validates the address retured by Address
+func ValidateAddress(name string, validate addressable.ValidateAddress, timings ...time.Duration) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		addr, err := Address(ctx, name, timings...)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if err := validate(addr); err != nil {
+			t.Error(err)
+			return
+		}
 	}
 }

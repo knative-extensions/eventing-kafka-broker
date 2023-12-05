@@ -86,8 +86,12 @@ func TestNewController(t *testing.T) {
 		configmap.NewStaticWatcher(&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: apisconfig.FlagsConfigName,
+			}}, &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "config-features",
 			},
 		}),
+
 		configs,
 	)
 	if controller == nil {
