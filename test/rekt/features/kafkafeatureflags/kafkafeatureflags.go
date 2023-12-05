@@ -27,7 +27,7 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 )
 
-func SourceScalingEnabled() feature.ShouldRun {
+func AutoscalingEnabled() feature.ShouldRun {
 	return func(ctx context.Context, t feature.T) (feature.PrerequisiteResult, error) {
 		flags, err := getKafkaFeatureFlags(ctx, "config-kafka-features")
 		if err != nil {
