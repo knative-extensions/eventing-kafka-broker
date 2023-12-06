@@ -45,49 +45,7 @@ func TestNewTriggerFilters(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.TestSet(ctx, t, newfilters.NewFiltersFeatureSet(InstallKafkaBroker))
-}
-
-func TestKafkaBrokerAnyFiltersTrigger(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-
-	env.Test(ctx, t, newfilters.AnyFilterFeature(InstallKafkaBroker))
-}
-
-func TestKafkaBrokerAllFiltersTrigger(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-
-	env.Test(ctx, t, newfilters.AllFilterFeature(InstallKafkaBroker))
-}
-
-func TestMultipleSinksMultipleTriggers(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-
-	env.Test(ctx, t, newfilters.MultipleTriggersAndSinksFeature(InstallKafkaBroker))
+	env.ParallelTestSet(ctx, t, newfilters.NewFiltersFeatureSet(InstallKafkaBroker))
 }
 
 func InstallKafkaBroker(f *feature.Feature) string {
