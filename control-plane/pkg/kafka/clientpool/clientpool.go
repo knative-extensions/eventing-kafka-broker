@@ -40,15 +40,12 @@ var (
 )
 
 func init() {
-	cache, err := NewReplicatingLRUCacheWithCleanupFunc(maxClients, capacityPerClient, func(_, val interface{}) {
-		oldClient := val.(sarama.Client)
-		oldClient.Close()
-	})
+	cache, err := NewLRUCache(maxClients)
 	if err != nil {
 		panic("kafka client pool tried to initialize with invalid paramters")
 	}
 	clients = &clientPool{
-		ReplicatingLRUCache: cache,
+		LRUCache: cache,
 	}
 }
 
@@ -61,7 +58,7 @@ type clientKey struct {
 
 type clientPool struct {
 	lock sync.Mutex
-	*ReplicatingLRUCache
+	*LRUCache
 }
 
 type ReturnClientFunc func()
@@ -87,24 +84,19 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 		return c, returnClient, nil
 	}
 
-	saramaClient, err := makeSaramaClient(bootstrapServers, secret)
-	if err != nil {
-		return nil, NilReturnClientFunc, err
-	}
-
 	// create a new client in the client pool, and acquire capacity to start using it right away
-	returnClient, err := cp.AddAndAcquire(ctx, key, saramaClient, func() (interface{}, error) {
+	saramaClient, returnClient, err := cp.AddAndAcquire(ctx, key, func() (Closeable, error) {
 		saramaClient, err := makeSaramaClient(bootstrapServers, secret)
 		if err != nil {
 			return nil, err
 		}
 		return saramaClient, nil
-	})
+	}, capacityPerClient)
 	if err != nil {
 		return nil, NilReturnClientFunc, fmt.Errorf("error creating a new client: %v", err)
 	}
 
-	return saramaClient, returnClient, nil
+	return saramaClient.(sarama.Client), returnClient, nil
 }
 
 func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clientKey {
@@ -157,18 +149,13 @@ func (cp *clientPool) updateConnectionsWithSecret(ctx context.Context, secret *c
 		}
 
 		if key.matchesSecret(secret) {
-			saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
-			if err != nil {
-				return fmt.Errorf("failed to update sarama client with new secret: %v", err)
-			}
-
-			err = cp.Add(ctx, key, saramaClient, func() (interface{}, error) {
+			err := cp.Add(ctx, key, func() (Closeable, error) {
 				saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
 				if err != nil {
 					return nil, err
 				}
 				return saramaClient, nil
-			})
+			}, capacityPerClient)
 
 			if err != nil {
 				return fmt.Errorf("failed to update the sarama client in the clientpool after recreating the client with the new secret: %v", err)
