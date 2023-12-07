@@ -28,11 +28,6 @@
 
   <name>dispatcher-loom</name>
 
-  <properties>
-    <java.version>21</java.version>
-  </properties>
-
-
   <dependencies>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
@@ -76,9 +71,6 @@
       <configuration>
         <source>${java.version}</source>
         <target>${java.version}</target>
-        <compilerArgs>
-          <arg>--enable-preview</arg>
-        </compilerArgs>
       </configuration>
       </plugin>
       <plugin>
