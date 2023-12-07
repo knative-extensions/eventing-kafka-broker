@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	"knative.dev/pkg/logging"
 )
 
 const (
@@ -44,7 +45,7 @@ func init() {
 		panic("kafka client pool tried to initialize with invalid paramters")
 	}
 	clients = &clientPool{
-		LRUCache: cache,
+		cachePool: cache,
 	}
 }
 
@@ -57,7 +58,7 @@ type clientKey struct {
 
 type clientPool struct {
 	lock sync.Mutex
-	*LRUCache[clientKey, sarama.Client]
+	*cachePool[clientKey, sarama.Client]
 }
 
 type ReturnClientFunc func()
@@ -76,6 +77,27 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 
 	// if a corresponding connection already exists, lets use it
 	if val, returnClient, ok := cp.Get(ctx, key); ok {
+		// check that the value is still good, as there are still some write errors
+		ca, err := sarama.NewClusterAdminFromClient(val)
+		if err != nil {
+			returnClient()
+			return nil, NilReturnClientFunc, err
+		}
+		if _, err := ca.ListTopics(); err != nil {
+			logging.FromContext(ctx).Info("failed to list topics, refreshing brokers and metadata")
+			err := val.RefreshBrokers(bootstrapServers)
+			if err != nil {
+				returnClient()
+				logging.FromContext(ctx).Info("failed to refresh brokers")
+				return nil, NilReturnClientFunc, err
+			}
+			err = val.RefreshMetadata()
+			if err != nil {
+				returnClient()
+				logging.FromContext(ctx).Info("failed to refresh metadata")
+				return nil, NilReturnClientFunc, err
+			}
+		}
 		return val, returnClient, nil
 	}
 
@@ -88,6 +110,7 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 		return saramaClient, nil
 	}, capacityPerClient)
 	if err != nil {
+		returnClient()
 		return nil, NilReturnClientFunc, fmt.Errorf("error creating a new client: %v", err)
 	}
 
@@ -168,6 +191,7 @@ func GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *cor
 	}
 	ca, err := sarama.NewClusterAdminFromClient(c)
 	if err != nil {
+		returnFunc()
 		return nil, NilReturnClientFunc, err
 	}
 	return ca, returnFunc, nil
