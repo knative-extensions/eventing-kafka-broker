@@ -113,16 +113,21 @@ func (c *LRUCache[K, V]) AddAndAcquire(ctx context.Context, key K, createValue C
 		// For example, closing a connection on the old value
 		for i := 0; i < entry.inUse; i++ {
 			cacheVal := <-oldAvailble
-			newVal, err := createValue()
+			err := cacheVal.updateValue(createValue, available)
 			if err != nil {
-				return defaultValue, NilReturnCapacityToCache, fmt.Errorf("failed to create new value: %v", err)
+				return defaultValue, NilReturnCapacityToCache, fmt.Errorf("failed to create new value while updating existing value: %v", err)
 			}
-			cacheVal.updateValue(newVal, available)
+
+			// this was just updated, let's move it to the front so that it doesn't get evicted soon
+			c.evictionList.MoveToFront(cacheVal.evictionListEntry)
+
+			// this entry is now updated and available, can be used by other clients
 			entry.available <- cacheVal
 		}
 
 		// get an available value
 		cacheVal := <-entry.available
+		c.evictionList.MoveToFront(cacheVal.evictionListEntry)
 		cacheVal.lock.Lock()
 		return cacheVal.value, cacheVal.returnToCache, nil
 	}
@@ -135,6 +140,7 @@ func (c *LRUCache[K, V]) AddAndAcquire(ctx context.Context, key K, createValue C
 		c.evict() // need to evict an entry before we can make a new entry in the cache
 	}
 
+	// cacheVal will initially be at the front of the evictionList, no need to move it to the front here
 	cacheVal, err := c.makeNewEntryWithValue(key, createValue, maxEntries, c.capacity)
 	if err != nil {
 		return defaultValue, NilReturnCapacityToCache, err
@@ -293,12 +299,22 @@ func (c *LRUCache[K, V]) makeNewEntryWithValue(key K, makeNewValue CreateNewValu
 	return cacheVal, nil
 }
 
-func (cv *cacheValue[K, V]) updateValue(newValue V, newChan chan *cacheValue[K, V]) {
+func (cv *cacheValue[K, V]) updateValue(createNewValue CreateNewValue[V], newChan chan *cacheValue[K, V]) error {
 	cv.lock.Lock()
 	defer cv.lock.Unlock()
+	// close the old value first before opening a new one to ensure we never go over max connections
 	cv.value.Close()
+
+	// now create new value and set it accordingly
+	newValue, err := createNewValue()
+	if err != nil {
+		return err
+	}
 	cv.value = newValue
+
+	// we set a new return channel as the old one is being used to update values and this lets us not worry about this channel re-enqueuing itself multiple times in that channel
 	cv.returnChan = newChan
+	return nil
 }
 
 func (cv *cacheValue[K, V]) returnToCache() {
