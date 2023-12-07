@@ -23,44 +23,41 @@ import (
 	"sync"
 )
 
-type LRUCache struct {
+type LRUCache[K comparable, V Closeable] struct {
 	lock         sync.Mutex // protects changes to the evictionList
 	evictionList *list.List
 	capacity     chan int
-	entries      map[interface{}]*cacheEntry
+	maxCapacity  int
+	entries      map[K]*cacheEntry[K, V]
 }
 
-type cacheEntry struct {
+type cacheEntry[K comparable, V Closeable] struct {
 	lock          sync.Mutex // used to protect writes to inUse
-	available     chan *cacheValue
+	available     chan *cacheValue[K, V]
 	entryCapacity chan int // how much capacity is remaining for the current entry
 	cacheCapacity chan int // how much capacity is remaining for the whole cache
 	inUse         int      // how many entries are currently in use. Used to make sure we close all connections when updating/removing a value for a key
-	newValue      CreateNewValue
+	newValue      CreateNewValue[V]
 }
 
-type cacheValue struct {
-	lock              sync.Mutex       // used to indicate whether a caller is using the value currently, or if it is safe to access the value
-	returnChan        chan *cacheValue // this is the same channel as the parent "available" channel. Used to return the cacheValue to the available queue
+type cacheValue[K comparable, V Closeable] struct {
+	lock              sync.Mutex             // used to indicate whether a caller is using the value currently, or if it is safe to access the value
+	returnChan        chan *cacheValue[K, V] // this is the same channel as the parent "available" channel. Used to return the cacheValue to the available queue
 	evictionListEntry *list.Element
 	done              bool // done indicates if this value has been scheduled for deletion/has been deleted, as the cacheValue may still be in the values channel
-	key               interface{}
-	value             Closeable
+	key               K
+	value             V
 }
 
 type Closeable interface {
 	Close() error
 }
 
-type emptyCloseable struct{}
-
-func (e emptyCloseable) Close() error { return nil }
-
-type CreateNewValue func() (Closeable, error)
+type CreateNewValue[T Closeable] func() (T, error)
 
 func NilReturnCapacityToCache() {}
 
-func NewLRUCache(maxSize int) (*LRUCache, error) {
+func NewLRUCache[K comparable, V Closeable](maxSize int) (*LRUCache[K, V], error) {
 	if maxSize <= 0 {
 		return nil, fmt.Errorf("maxSize must be > 0")
 	}
@@ -71,14 +68,15 @@ func NewLRUCache(maxSize int) (*LRUCache, error) {
 		capacity <- 1
 	}
 
-	return &LRUCache{
+	return &LRUCache[K, V]{
 		evictionList: list.New(),
 		capacity:     capacity,
-		entries:      map[interface{}]*cacheEntry{},
+		maxCapacity:  maxSize,
+		entries:      map[K]*cacheEntry[K, V]{},
 	}, nil
 }
 
-func (c *LRUCache) Add(ctx context.Context, key interface{}, createValue CreateNewValue, maxEntries int) error {
+func (c *LRUCache[K, V]) Add(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int) error {
 	_, returnCapacity, err := c.AddAndAcquire(ctx, key, createValue, maxEntries)
 	defer returnCapacity()
 
@@ -89,20 +87,26 @@ func (c *LRUCache) Add(ctx context.Context, key interface{}, createValue CreateN
 	return nil
 }
 
-func (c *LRUCache) AddAndAcquire(ctx context.Context, key interface{}, createValue CreateNewValue, maxEntries int) (Closeable, ReturnClientFunc, error) {
+func (c *LRUCache[K, V]) AddAndAcquire(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int) (V, ReturnClientFunc, error) {
+	var defaultValue V
 	if createValue == nil {
-		return nil, NilReturnCapacityToCache, fmt.Errorf("createValue must be provided")
+		return defaultValue, NilReturnCapacityToCache, fmt.Errorf("createValue must be provided")
 	}
 
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
+	// we will never be able to acquire more than maxCapacity, so to keep logic simpler this allows us to assume maxEntries <= maxCapacity always
+	if maxEntries > c.maxCapacity {
+		maxEntries = c.maxCapacity
+	}
 
 	// check if the element already exists
 	if entry, ok := c.entries[key]; ok {
 		// switch the channel being used so we can update the cacheValues as they are beind returned without worrying about concurrency
 		entry.lock.Lock()
 		oldAvailble := entry.available
-		available := make(chan *cacheValue)
+		available := make(chan *cacheValue[K, V])
 		entry.available = available
 		entry.lock.Unlock()
 		// we need to call the Close function on the old values before setting the new value, in case the caller wants to clean up resources
@@ -111,7 +115,7 @@ func (c *LRUCache) AddAndAcquire(ctx context.Context, key interface{}, createVal
 			cacheVal := <-oldAvailble
 			newVal, err := createValue()
 			if err != nil {
-				return nil, NilReturnCapacityToCache, fmt.Errorf("failed to create new value: %v", err)
+				return defaultValue, NilReturnCapacityToCache, fmt.Errorf("failed to create new value: %v", err)
 			}
 			cacheVal.updateValue(newVal, available)
 			entry.available <- cacheVal
@@ -125,7 +129,7 @@ func (c *LRUCache) AddAndAcquire(ctx context.Context, key interface{}, createVal
 
 	select {
 	case <-ctx.Done():
-		return nil, NilReturnCapacityToCache, ctx.Err()
+		return defaultValue, NilReturnCapacityToCache, ctx.Err()
 	case <-c.capacity: // we have capacity to make a new entry in the cache
 	default:
 		c.evict() // need to evict an entry before we can make a new entry in the cache
@@ -133,7 +137,7 @@ func (c *LRUCache) AddAndAcquire(ctx context.Context, key interface{}, createVal
 
 	cacheVal, err := c.makeNewEntryWithValue(key, createValue, maxEntries, c.capacity)
 	if err != nil {
-		return nil, NilReturnCapacityToCache, err
+		return defaultValue, NilReturnCapacityToCache, err
 	}
 
 	cacheVal.lock.Lock()
@@ -141,24 +145,26 @@ func (c *LRUCache) AddAndAcquire(ctx context.Context, key interface{}, createVal
 	return cacheVal.value, cacheVal.returnToCache, nil
 }
 
-func (c *LRUCache) Get(ctx context.Context, key interface{}) (Closeable, ReturnClientFunc, bool) {
+func (c *LRUCache[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	var defaultValue V
+
 	entry, ok := c.entries[key]
 	if !ok {
-		return nil, NilReturnCapacityToCache, false
+		return defaultValue, NilReturnCapacityToCache, false
 	}
 
 	entry.lock.Lock()
 	defer entry.lock.Unlock()
 
-	var value *cacheValue
+	var value *cacheValue[K, V]
 	found := false
 	for !found {
 		select {
 		case <-ctx.Done():
-			return nil, NilReturnCapacityToCache, false
+			return defaultValue, NilReturnCapacityToCache, false
 		case value = <-entry.available:
 			// acquire a lock on the value so we can use it safely
 			value.lock.Lock()
@@ -182,7 +188,7 @@ func (c *LRUCache) Get(ctx context.Context, key interface{}) (Closeable, ReturnC
 			var err error
 			value, err = entry.makeValue(key, entry.available)
 			if err != nil {
-				return nil, NilReturnCapacityToCache, false
+				return defaultValue, NilReturnCapacityToCache, false
 			}
 
 			value.evictionListEntry = c.evictionList.PushFront(value)
@@ -197,11 +203,11 @@ func (c *LRUCache) Get(ctx context.Context, key interface{}) (Closeable, ReturnC
 	return value.value, value.returnToCache, true
 }
 
-func (c *LRUCache) Keys() []interface{} {
+func (c *LRUCache[K, V]) Keys() []K {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	keys := make([]interface{}, 0, len(c.entries))
+	keys := make([]K, 0, len(c.entries))
 
 	for k := range c.entries {
 		keys = append(keys, k)
@@ -210,9 +216,9 @@ func (c *LRUCache) Keys() []interface{} {
 	return keys
 }
 
-func (c *LRUCache) evict() {
+func (c *LRUCache[K, V]) evict() {
 	evict := c.evictionList.Back()
-	evictValue := evict.Value.(*cacheValue)
+	evictValue := evict.Value.(*cacheValue[K, V])
 	evictyEntry := c.entries[evictValue.key]
 
 	// it's okay if when removeValueKeepingCapacity is called this isn't the last value in the LRU cache anymore
@@ -223,14 +229,15 @@ func (c *LRUCache) evict() {
 // removeValueKeepingCapacity removes a value from the cache, but does not return capacity to the cache. It is the caller's responsibility
 // to return 1 capacity when appropriate. The locking seems slightly more complicated than it would if we deferred all unlocks,
 // however we lock and unlock manually to ensure that only one of value.lock and entry.lock are held at the same time to ensure no deadlocks
-func (c *LRUCache) removeValueKeepingCapacity(value *cacheValue, entry *cacheEntry) {
+func (c *LRUCache[K, V]) removeValueKeepingCapacity(value *cacheValue[K, V], entry *cacheEntry[K, V]) {
 
 	// acquire the valueLock so that we know no one is using this value and can safely close it
 	value.lock.Lock()
 	value.value.Close()
 	// this value may stay in a channel for a while before it is read, so switch the reference to the value to an emptry struct
 	// so that the value can be garbage collected
-	value.value = &emptyCloseable{}
+	var emptyValue V
+	value.value = emptyValue
 	// set the done variable so that if this entry is currently in an available channel it will not be used
 	value.done = true
 	// we need to unlock here rather than defer the unlock to prevent deadlocks
@@ -253,15 +260,15 @@ func (c *LRUCache) removeValueKeepingCapacity(value *cacheValue, entry *cacheEnt
 	entry.entryCapacity <- 1
 }
 
-func (c *LRUCache) makeNewEntryWithValue(key interface{}, makeNewValue CreateNewValue, maxEntries int, cacheCapacity chan int) (*cacheValue, error) {
-	available := make(chan *cacheValue, maxEntries)
+func (c *LRUCache[K, V]) makeNewEntryWithValue(key K, makeNewValue CreateNewValue[V], maxEntries int, cacheCapacity chan int) (*cacheValue[K, V], error) {
+	available := make(chan *cacheValue[K, V], maxEntries)
 	entryCapacity := make(chan int, maxEntries)
 
 	for i := 0; i < maxEntries; i++ {
 		entryCapacity <- 1
 	}
 
-	entry := &cacheEntry{
+	entry := &cacheEntry[K, V]{
 		available:     available,
 		entryCapacity: entryCapacity,
 		cacheCapacity: cacheCapacity,
@@ -286,7 +293,7 @@ func (c *LRUCache) makeNewEntryWithValue(key interface{}, makeNewValue CreateNew
 	return cacheVal, nil
 }
 
-func (cv *cacheValue) updateValue(newValue Closeable, newChan chan *cacheValue) {
+func (cv *cacheValue[K, V]) updateValue(newValue V, newChan chan *cacheValue[K, V]) {
 	cv.lock.Lock()
 	defer cv.lock.Unlock()
 	cv.value.Close()
@@ -294,20 +301,18 @@ func (cv *cacheValue) updateValue(newValue Closeable, newChan chan *cacheValue) 
 	cv.returnChan = newChan
 }
 
-func (cv *cacheValue) returnToCache() {
+func (cv *cacheValue[K, V]) returnToCache() {
 	defer cv.lock.Unlock()
-	if !cv.done {
-		cv.returnChan <- cv
-	}
+	cv.returnChan <- cv
 }
 
-func (ce *cacheEntry) makeValue(key interface{}, available chan *cacheValue) (*cacheValue, error) {
+func (ce *cacheEntry[K, V]) makeValue(key K, available chan *cacheValue[K, V]) (*cacheValue[K, V], error) {
 	ce.inUse++
 	value, err := ce.newValue()
 	if err != nil {
 		return nil, err
 	}
-	cacheVal := &cacheValue{
+	cacheVal := &cacheValue[K, V]{
 		key:        key,
 		returnChan: available,
 		value:      value,

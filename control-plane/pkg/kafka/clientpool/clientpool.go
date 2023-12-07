@@ -27,12 +27,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	"knative.dev/pkg/logging"
 )
 
 const (
-	maxClients        = 8
-	capacityPerClient = 2
+	maxClients        = 32
+	capacityPerClient = 8
 )
 
 var (
@@ -40,7 +39,7 @@ var (
 )
 
 func init() {
-	cache, err := NewLRUCache(maxClients)
+	cache, err := NewLRUCache[clientKey, sarama.Client](maxClients)
 	if err != nil {
 		panic("kafka client pool tried to initialize with invalid paramters")
 	}
@@ -58,7 +57,7 @@ type clientKey struct {
 
 type clientPool struct {
 	lock sync.Mutex
-	*LRUCache
+	*LRUCache[clientKey, sarama.Client]
 }
 
 type ReturnClientFunc func()
@@ -77,15 +76,11 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 
 	// if a corresponding connection already exists, lets use it
 	if val, returnClient, ok := cp.Get(ctx, key); ok {
-		c, ok := val.(sarama.Client)
-		if !ok {
-			return nil, NilReturnClientFunc, fmt.Errorf("a value which was not a sarama.Client was in the client pool")
-		}
-		return c, returnClient, nil
+		return val, returnClient, nil
 	}
 
 	// create a new client in the client pool, and acquire capacity to start using it right away
-	saramaClient, returnClient, err := cp.AddAndAcquire(ctx, key, func() (Closeable, error) {
+	saramaClient, returnClient, err := cp.AddAndAcquire(ctx, key, func() (sarama.Client, error) {
 		saramaClient, err := makeSaramaClient(bootstrapServers, secret)
 		if err != nil {
 			return nil, err
@@ -96,7 +91,7 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 		return nil, NilReturnClientFunc, fmt.Errorf("error creating a new client: %v", err)
 	}
 
-	return saramaClient.(sarama.Client), returnClient, nil
+	return saramaClient, returnClient, nil
 }
 
 func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clientKey {
@@ -141,15 +136,9 @@ func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.
 func (cp *clientPool) updateConnectionsWithSecret(ctx context.Context, secret *corev1.Secret) error {
 	cp.lock.Lock()
 	defer cp.lock.Unlock()
-	for _, k := range cp.Keys() {
-		key, ok := k.(clientKey)
-		if !ok {
-			logging.FromContext(ctx).Warn("failed to convert key to clientKey in Kafka clientpool", key)
-			continue
-		}
-
+	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
-			err := cp.Add(ctx, key, func() (Closeable, error) {
+			err := cp.Add(ctx, key, func() (sarama.Client, error) {
 				saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
 				if err != nil {
 					return nil, err
