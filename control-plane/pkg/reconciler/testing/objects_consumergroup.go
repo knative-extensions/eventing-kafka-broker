@@ -76,9 +76,8 @@ var (
 		autoscaler.AutoscalingMinScaleAnnotation:        "0",
 		autoscaler.AutoscalingMaxScaleAnnotation:        "5",
 		autoscaler.AutoscalingPollingIntervalAnnotation: "30",
-		autoscaler.AutoscalingCooldownPeriodAnnotation:  "300",
+		autoscaler.AutoscalingCooldownPeriodAnnotation:  "30",
 		autoscaler.AutoscalingLagThreshold:              "10",
-		autoscaler.AutoscalingActivationLagThreshold:    "1",
 	}
 )
 
