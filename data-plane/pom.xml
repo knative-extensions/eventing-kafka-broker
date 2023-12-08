@@ -28,7 +28,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>15</java.version>
+    <java.version>21</java.version>
 
     <!-- Maven plugins -->
     <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
