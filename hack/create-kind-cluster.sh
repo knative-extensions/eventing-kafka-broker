@@ -48,7 +48,7 @@ kubeadmConfigPatches:
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
-        "service-account-issuer": "kubernetes.default.svc"
+        "service-account-issuer": "https://kubernetes.default.svc"
         "service-account-signing-key-file": "/etc/kubernetes/pki/sa.key"
     networking:
       dnsDomain: "${CLUSTER_SUFFIX}"
