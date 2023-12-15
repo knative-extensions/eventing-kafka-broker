@@ -28,10 +28,6 @@
 
   <artifactId>tests</artifactId>
 
-  <properties>
-    <java.version>21</java.version>
-  </properties>
-
   <dependencies>
 
     <!-- These are added as runtime deps, so jacoco can see these -->
@@ -127,9 +123,6 @@
       <configuration>
         <source>${java.version}</source>
         <target>${java.version}</target>
-        <compilerArgs>
-          <arg>--enable-preview</arg>
-        </compilerArgs>
       </configuration>
       </plugin>
       <plugin>
