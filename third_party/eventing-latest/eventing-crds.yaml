@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -298,7 +298,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -501,7 +501,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -834,7 +834,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1004,7 +1004,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1170,7 +1170,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1459,7 +1459,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -1672,7 +1672,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1727,6 +1727,12 @@ spec:
                           type: string
                     uri:
                       description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
+                      type: string
+                    CACerts:
+                      type: string
+                      description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the reply.
+                    audience:
+                      description: Audience is the OIDC audience of the reply. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
                 steps:
                   description: Steps is the list of Destinations (processors / functions) that will be called in the order provided. Each step has its own delivery options
@@ -2033,7 +2039,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -2243,7 +2249,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2497,7 +2503,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231212-6e1fbeb2c"
+    app.kubernetes.io/version: "20231214-1f38c2e49"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
