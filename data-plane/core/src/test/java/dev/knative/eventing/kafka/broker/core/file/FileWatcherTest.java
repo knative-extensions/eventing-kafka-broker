@@ -33,6 +33,7 @@ public class FileWatcherTest {
     @BeforeEach
     public void setUp() throws Exception {
         // Create a temporary file for testing purposes
+      System.out.println("haha - Creating a temporary file for testing purposes");
         tempFile = Files.createTempFile("test", ".txt").toFile();
     }
 
@@ -51,13 +52,29 @@ public class FileWatcherTest {
 
         fileWatcher = new FileWatcher(tempFile, () -> {
             counter.incrementAndGet();
+            System.out.println("File change detected, and the current counter is: " + counter.get());
         });
+
+        System.out.println("1 - haha - The fileWatcher has been initialize, Starting the file watcher");
+
         fileWatcher.start();
 
+        System.out.println("2 - haha - The fileWatcher has been started, modifying the file");
+
         // Modify the file
+      // Add the lock
+//        synchronized (this) {
+//            System.out.println("The fileWatcher has been started, modifying the file");
+//            // Modify the file
+//            try (FileWriter writer = new FileWriter(tempFile)) {
+//                writer.write("Test Data");
+//            }
+//        }
         try (FileWriter writer = new FileWriter(tempFile)) {
             writer.write("Test Data");
         }
+
+        System.out.println("3 - haha - The file has been modified, waiting for the trigger function to be called");
 
         // Await until the trigger function is called twice: 1 is for the initial file
         // read, and 1 is for the file modification
