@@ -131,9 +131,11 @@ func SinkAddressable(configs *config.Env) func(obj duckv1.KRShaped) {
 
 func SinkReference() *contract.Reference {
 	return &contract.Reference{
-		Uuid:      SinkUUID,
-		Namespace: SinkNamespace,
-		Name:      SinkName,
+		Uuid:         SinkUUID,
+		Namespace:    SinkNamespace,
+		Name:         SinkName,
+		Kind:         "KafkaSink",
+		GroupVersion: eventing.SchemeGroupVersion.String(),
 	}
 }
 

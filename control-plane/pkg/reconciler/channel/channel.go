@@ -676,9 +676,11 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
-			Uuid:      string(channel.GetUID()),
-			Namespace: channel.GetNamespace(),
-			Name:      channel.GetName(),
+			Uuid:         string(channel.GetUID()),
+			Namespace:    channel.GetNamespace(),
+			Name:         channel.GetName(),
+			Kind:         "KafkaChannel",
+			GroupVersion: messagingv1beta1.SchemeGroupVersion.String(),
 		},
 	}
 
