@@ -94,8 +94,6 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 			}
 		}
 		return val, returnClient, nil
-	} else {
-		returnClient()
 	}
 
 	// create a new client in the client pool, and acquire capacity to start using it right away

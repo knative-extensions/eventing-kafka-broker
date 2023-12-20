@@ -69,6 +69,8 @@ func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	var defaultValue V
+
 	if time.Since(c.lastChecked) >= 5*time.Minute {
 		c.lastChecked = time.Now()
 		go c.cleanupEntries() // do this in another goroutine so that we don't block here
@@ -76,7 +78,12 @@ func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 
 	if entry, ok := c.entries[key]; ok {
 		value, returnValue, err := entry.getValue(ctx)
-		return value, returnValue, true, err
+		if err != nil {
+			returnValue()
+			return defaultValue, NilReturnCapacityToCache, true, err
+		}
+		
+		return value, returnValue, true, nil
 	}
 
 	available := make(chan *cacheValue[K, V], maxEntries)
@@ -100,7 +107,6 @@ func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 	<-capacity
 	value, err := entry.createCacheValue()
 	if err != nil {
-		var defaultValue V
 		capacity <- 1
 		return defaultValue, NilReturnCapacityToCache, false, err
 	}
@@ -126,7 +132,11 @@ func (c *cachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, 
 	}
 
 	value, returnValue, err := entry.getValue(ctx)
-	return value, returnValue, err == nil
+	if err != nil {
+		returnValue()
+		return defaultValue, NilReturnCapacityToCache, false
+	}
+	return value, returnValue, true
 
 }
 
