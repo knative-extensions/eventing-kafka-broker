@@ -80,11 +80,17 @@ func NewFeaturesConfigFromMap(cm *corev1.ConfigMap) (*KafkaFeatureFlags, error) 
 	nc := DefaultFeaturesConfig()
 	err := configmap.Parse(cm.Data,
 		asFlag("dispatcher.rate-limiter", &nc.features.DispatcherRateLimiter),
+		asFlag("dispatcher-rate-limiter", &nc.features.DispatcherRateLimiter),
 		asFlag("dispatcher.ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
+		asFlag("dispatcher-ordered-executor-metrics", &nc.features.DispatcherOrderedExecutorMetrics),
 		asFlag("controller.autoscaler", &nc.features.ControllerAutoscaler),
+		asFlag("controller-autoscaler-keda", &nc.features.ControllerAutoscaler),
 		asTemplate("triggers.consumergroup.template", &nc.features.TriggersConsumerGroupTemplate),
+		asTemplate("triggers-consumergroup-template", &nc.features.TriggersConsumerGroupTemplate),
 		asTemplate("brokers.topic.template", &nc.features.BrokersTopicTemplate),
+		asTemplate("brokers-topic-template", &nc.features.BrokersTopicTemplate),
 		asTemplate("channels.topic.template", &nc.features.ChannelsTopicTemplate),
+		asTemplate("channels-topic-template", &nc.features.ChannelsTopicTemplate),
 	)
 	return nc, err
 }

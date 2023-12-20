@@ -28,12 +28,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>15</java.version>
+    <java.version>21</java.version>
 
     <!-- Maven plugins -->
     <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
-    <maven.surefire.plugin.version>3.2.1</maven.surefire.plugin.version>
-    <maven.shade.plugin.version>3.5.0</maven.shade.plugin.version>
+    <maven.surefire.plugin.version>3.2.2</maven.surefire.plugin.version>
+    <maven.shade.plugin.version>3.5.1</maven.shade.plugin.version>
     <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
     <maven.jacoco.plugin.version>0.8.10</maven.jacoco.plugin.version>
     <maven.enforcer.plugin.version>3.4.1</maven.enforcer.plugin.version>
@@ -50,12 +50,12 @@
     <jackson.version>2.14.1</jackson.version>
     <protobuf.version>3.24.4</protobuf.version>
     <bucket4j.version>7.6.0</bucket4j.version>
-    <slf4j.version>2.0.4</slf4j.version>
+    <slf4j.version>2.0.9</slf4j.version>
     <ch.qos.logback.version>1.4.14</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>7.2</net.logstash.logback.encoder.version>
     <assertj.version>3.22.0</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
-    <junit.jupiter.version>5.9.1</junit.jupiter.version>
+    <junit.jupiter.version>5.10.1</junit.jupiter.version>
     <mokito.junit.jupiter.version>5.8.0</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>6.7.2</fabric8.kubernetes.version>
     <kafka.version>3.2.3</kafka.version>
@@ -443,7 +443,7 @@
             <!--  KinD e2e tests registry uses HTTP -->
             <allowInsecureRegistries>true</allowInsecureRegistries>
             <from>
-              <image>registry.access.redhat.com/ubi9/openjdk-17</image>
+              <image>registry.access.redhat.com/ubi9/openjdk-21</image>
               <platforms>
                 <platform>
                   <architecture>amd64</architecture>
@@ -487,6 +487,9 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven.surefire.plugin.version}</version>
           <configuration>
+            <systemPropertyVariables>
+                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+            </systemPropertyVariables>
             <!-- This is required for the jacoco maven plugin -->
             <argLine>${argLine}</argLine>
           </configuration>

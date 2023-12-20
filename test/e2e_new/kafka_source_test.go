@@ -21,6 +21,7 @@ package e2e_new
 
 import (
 	"testing"
+	"time"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/pkg/system"
@@ -206,4 +207,20 @@ func TestKafkaSourceUpdate(t *testing.T) {
 	// Kafka (through the same KafkaSink using same Kafka Topic). And verify that
 	// the new event is delivered properly.
 	env.Test(ctx, t, features.KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic))
+}
+
+func TestKafkaSourceKedaScaling(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceScalesToZeroWithKeda())
+
 }

@@ -1,5 +1,5 @@
 
-Lists of 231 third-party dependencies.
+Lists of 230 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.4.14 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.4.14 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.12.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -208,7 +208,7 @@ Lists of 231 third-party dependencies.
      (Apache License, version 2.0) JBoss Logging I18n Annotations (org.jboss.logging:jboss-logging-annotations:2.2.1.Final - http://www.jboss.org/jboss-logging-tools-parent/jboss-logging-annotations)
      (Apache License 2.0) JBoss Log Manager (Embedded) (org.jboss.logmanager:jboss-logmanager-embedded:1.1.1 - http://www.jboss.org/jboss-logmanager-embedded)
      (Apache License 2.0) JBoss Threads (org.jboss.threads:jboss-threads:3.5.0.Final - http://www.jboss.org/jboss-threads)
-     (Eclipse Public License v2.0) JUnit Jupiter (Aggregator) (org.junit.jupiter:junit-jupiter:5.9.1 - https://junit.org/junit5/)
+     (Eclipse Public License v2.0) JUnit Jupiter (Aggregator) (org.junit.jupiter:junit-jupiter:5.10.1 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter API (org.junit.jupiter:junit-jupiter-api:5.9.3 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter Engine (org.junit.jupiter:junit-jupiter-engine:5.9.3 - https://junit.org/junit5/)
      (Eclipse Public License v2.0) JUnit Jupiter Params (org.junit.jupiter:junit-jupiter-params:5.9.3 - https://junit.org/junit5/)
@@ -225,8 +225,7 @@ Lists of 231 third-party dependencies.
      (Apache-2.0) Scala Library (org.scala-lang:scala-library:2.12.15 - https://www.scala-lang.org/)
      (Apache-2.0) scala-collection-compat (org.scala-lang.modules:scala-collection-compat_2.12:2.6.0 - http://www.scala-lang.org/)
      (Apache-2.0) scala-java8-compat (org.scala-lang.modules:scala-java8-compat_2.12:1.0.2 - http://www.scala-lang.org/)
-     (MIT License) SLF4J API Module (org.slf4j:slf4j-api:2.0.4 - http://www.slf4j.org)
-     (MIT License) SLF4J NOP Binding (org.slf4j:slf4j-nop:2.0.4 - http://www.slf4j.org)
+     (MIT License) SLF4J API Module (org.slf4j:slf4j-api:2.0.9 - http://www.slf4j.org)
      (Apache License, Version 2.0) SnakeYAML Engine (org.snakeyaml:snakeyaml-engine:2.6 - https://bitbucket.org/snakeyaml/snakeyaml-engine)
      (Apache License 2.0) wildfly-common (org.wildfly.common:wildfly-common:1.5.4.Final-format-001 - http://www.jboss.org/wildfly-common)
      (Apache-2.0) snappy-java (org.xerial.snappy:snappy-java:1.1.10.5 - https://github.com/xerial/snappy-java)

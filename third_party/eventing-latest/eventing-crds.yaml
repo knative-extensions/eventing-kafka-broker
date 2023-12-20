@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -158,7 +158,7 @@ spec:
                       description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
                 namespaceSelector:
                   description: NamespaceSelector is a label selector to capture the namespaces that should be watched by the source.
@@ -298,7 +298,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -370,7 +370,7 @@ spec:
                           description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                           type: string
                         audience:
-                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                           type: string
                     retry:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
@@ -444,6 +444,9 @@ spec:
                 deadLetterSinkCACerts:
                   description: Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
                   type: string
+                deadLetterSinkAudience:
+                  description: OIDC audience of the dead letter sink.
+                  type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
@@ -498,7 +501,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -581,7 +584,7 @@ spec:
                           description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                           type: string
                         audience:
-                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                           type: string
                     retry:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
@@ -657,6 +660,13 @@ spec:
                       uid:
                         description: UID is used to understand the origin of the subscriber.
                         type: string
+                      auth:
+                        description: Auth provides the relevant information for OIDC authentication.
+                        type: object
+                        properties:
+                          serviceAccountName:
+                            description: ServiceAccountName is the name of the generated service account used for this components OIDC authentication.
+                            type: string
             status:
               description: Status represents the current state of the Channel. This data may be out of date.
               type: object
@@ -756,6 +766,9 @@ spec:
                 deadLetterSinkCACerts:
                   description: Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
                   type: string
+                deadLetterSinkAudience:
+                  description: OIDC audience of the dead letter sink.
+                  type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
@@ -821,7 +834,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -875,7 +888,7 @@ spec:
                       description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
                 # WARNING: the schema tool can not parse PodTemplateSpec, stub here and redirect to Deployment documentation.
                 template:
@@ -945,6 +958,9 @@ spec:
                 sinkCACerts:
                   description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                   type: string
+                sinkAudience:
+                  description: Audience is the OIDC audience of the sink.
+                  type: string
       additionalPrinterColumns:
         - name: Sink
           type: string
@@ -988,15 +1004,15 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
   versions:
     - &version
-      name: v1beta1
+      name: v1beta2
       served: true
-      storage: true
+      storage: false
       subresources:
         status: {}
       schema:
@@ -1106,9 +1122,14 @@ spec:
           type: string
           jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
     - !!merge <<: *version
-      name: v1beta2
+      name: v1beta1
       served: true
-      storage: false
+      storage: true
+      # This indicates the v1beta1 version of the custom resource is deprecated.
+      # API requests to this version receive a warning header in the server response.
+      deprecated: true
+      # This overrides the default warning returned to API clients making v1beta1 API requests.
+      deprecationWarning: "eventing.knative.dev/v1beta1 EventType is deprecated; see https://knative.dev/docs/eventing/event-registry/ for instructions to migrate to eventing.knative.dev/v1beta2 EventType"
       # v1beta1 schema is identical to the v1beta2 schema
   names:
     kind: EventType
@@ -1149,7 +1170,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1212,7 +1233,7 @@ spec:
                                 description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                                 type: string
                               audience:
-                                description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                                description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                                 type: string
                           retry:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
@@ -1438,7 +1459,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -1454,9 +1475,9 @@ spec:
   group: sources.knative.dev
   versions:
     - &version
-      name: v1beta2
+      name: v1
       served: true
-      storage: false
+      storage: true
       subresources:
         status: {}
       schema:
@@ -1517,7 +1538,7 @@ spec:
                       description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
                 timezone:
                   description: 'Timezone modifies the actual time relative to the specified timezone. Defaults to the system time zone. More general information about time zones: https://www.iana.org/time-zones List of valid timezone values: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
@@ -1603,9 +1624,14 @@ spec:
           type: string
           jsonPath: ".status.conditions[?(@.type=='Ready')].reason"
     - !!merge <<: *version
-      name: v1
+      name: v1beta2
       served: true
-      storage: true
+      storage: false
+      # This indicates the v1beta2 version of the custom resource is deprecated.
+      # API requests to this version receive a warning header in the server response.
+      deprecated: true
+      # This overrides the default warning returned to API clients making v1beta2 API requests.
+      deprecationWarning: "sources.knative.dev/v1beta2 PingSource is deprecated; see https://knative.dev/docs/eventing/sources/ping-source/ for instructions to migrate to sources.knative.dev/v1 PingSource"
       # v1 schema is identical to the v1beta2 schema
   names:
     categories:
@@ -1646,7 +1672,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1702,6 +1728,12 @@ spec:
                     uri:
                       description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
                       type: string
+                    CACerts:
+                      type: string
+                      description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the reply.
+                    audience:
+                      description: Audience is the OIDC audience of the reply. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
+                      type: string
                 steps:
                   description: Steps is the list of Destinations (processors / functions) that will be called in the order provided. Each step has its own delivery options
                   type: array
@@ -1745,7 +1777,7 @@ spec:
                                 description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                                 type: string
                               audience:
-                                description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                                description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                                 type: string
                           retry:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
@@ -2007,7 +2039,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -2061,7 +2093,7 @@ spec:
                       description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
                 subject:
                   description: Subject references the resource(s) whose "runtime contract" should be augmented by Binding implementations.
@@ -2167,6 +2199,12 @@ spec:
                 sinkCACerts:
                   description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                   type: string
+                sinkAudience:
+                  description: Audience is the OIDC audience of the sink.
+                  type: string
+                oidcTokenSecretName:
+                  description: Name of the secret with the OIDC token for the sink.
+                  type: string
       additionalPrinterColumns:
         - name: Sink
           type: string
@@ -2211,7 +2249,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2280,7 +2318,7 @@ spec:
                           description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                           type: string
                         audience:
-                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                           type: string
                     retry:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
@@ -2314,7 +2352,7 @@ spec:
                       description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
                 subscriber:
                   description: Subscriber is reference to (optional) function for processing events. Events from the Channel will be delivered here and replies are sent to a Destination as specified by the Reply.
@@ -2344,7 +2382,7 @@ spec:
                       description: Certification Authority (CA) certificates in PEM format that the subscription trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
             status:
               type: object
@@ -2400,6 +2438,9 @@ spec:
                       type: string
                     deadLetterSinkCACerts:
                       description: Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
+                      type: string
+                    deadLetterSinkAudience:
+                      description: OIDC audience of the dead letter sink.
                       type: string
                     replyUri:
                       description: ReplyURI is the fully resolved URI for the spec.reply.
@@ -2462,7 +2503,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231114-7a645f87c"
+    app.kubernetes.io/version: "20231217-5d7e104e5"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -2539,7 +2580,7 @@ spec:
                           description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                           type: string
                         audience:
-                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                           type: string
                     retry:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
@@ -2580,7 +2621,7 @@ spec:
                       description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                       type: string
                     audience:
-                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
                       type: string
             status:
               description: Status represents the current state of the Trigger. This data may be out of date.
@@ -2630,6 +2671,9 @@ spec:
                 deadLetterSinkCACerts:
                   description: Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
                   type: string
+                deadLetterSinkAudience:
+                  description: OIDC audience of the dead letter sink.
+                  type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
@@ -2639,6 +2683,9 @@ spec:
                   type: string
                 subscriberCACerts:
                   description: Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
+                  type: string
+                subscriberAudience:
+                  description: OIDC audience of the subscriber.
                   type: string
   names:
     kind: Trigger

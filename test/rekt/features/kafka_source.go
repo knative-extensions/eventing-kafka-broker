@@ -23,11 +23,14 @@ import (
 	"strings"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/test"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
@@ -48,6 +51,7 @@ import (
 	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkafeatureflags"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
@@ -560,4 +564,97 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 	f.Assert("sink receives event", matchEvent(receiver, matcher))
 
 	return f
+}
+
+func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
+	f := feature.NewFeatureNamed("KafkaSourceScalesToZeroWithKeda")
+
+	// we need to ensure that autoscaling is enabled for the rest of the feature to work
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
+	kafkaSource := feature.MakeRandomK8sName("kafka-source")
+	topic := feature.MakeRandomK8sName("topic")
+	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	receiver := feature.MakeRandomK8sName("eventshub-receiver")
+	sender := feature.MakeRandomK8sName("eventshub-sender")
+
+	event := cetest.FullEvent()
+	event.SetID(uuid.New().String())
+
+	f.Setup("install kafka topic", kafkatopic.Install(topic))
+	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+
+	// Binary content mode is default for Kafka Sink.
+	f.Setup("install kafkasink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
+	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+
+	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
+
+	kafkaSourceOpts := []manifest.CfgFn{
+		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+	}
+
+	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
+	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+
+	// check that the source initially has replicas = 0
+	f.Setup("Source should start with replicas = 0", verifyConsumerGroupReplicas(kafkaSource, 0, true))
+
+	options := []eventshub.EventsHubOption{
+		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
+		eventshub.InputEvent(event),
+	}
+	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
+
+	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(test.HasId(event.ID())).Exact(1))
+
+	// after the event is sent, the source should scale down to zero replicas
+	f.Alpha("KafkaSource").Must("Scale down to zero", verifyConsumerGroupReplicas(kafkaSource, 0, false))
+
+	return f
+}
+
+func verifyConsumerGroupReplicas(source string, replicas int32, allowNotFound bool) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		var seenReplicas int32
+		interval, timeout := environment.PollTimingsFromContext(ctx)
+		err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx context.Context) (bool, error) {
+			ns := environment.FromContext(ctx).Namespace()
+
+			ks, err := sourcesclient.Get(ctx).
+				SourcesV1beta1().
+				KafkaSources(ns).
+				Get(ctx, source, metav1.GetOptions{})
+			if err != nil {
+				if allowNotFound {
+					return false, nil
+				}
+				t.Fatal(err)
+			}
+
+			InternalsClient := consumergroupclient.Get(ctx)
+			cg, err := InternalsClient.InternalV1alpha1().
+				ConsumerGroups(ns).
+				Get(ctx, string(ks.UID), metav1.GetOptions{})
+
+			if err != nil {
+				if allowNotFound {
+					return false, nil
+				}
+				t.Fatal(err)
+			}
+
+			if *cg.Spec.Replicas != replicas {
+				seenReplicas = *cg.Spec.Replicas
+				return false, nil
+			}
+			return true, nil
+		})
+
+		if err != nil {
+			t.Errorf("failed to verify consumergroup replicas. Expected %d, final value was %d", replicas, seenReplicas)
+		}
+	}
 }
