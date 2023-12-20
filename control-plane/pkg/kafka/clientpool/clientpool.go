@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"sync"
 
 	"github.com/IBM/sarama"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +30,6 @@ import (
 )
 
 const (
-	maxClients        = 32
 	capacityPerClient = 8
 )
 
@@ -40,7 +38,7 @@ var (
 )
 
 func init() {
-	cache, err := NewLRUCache[clientKey, sarama.Client](maxClients)
+	cache, err := NewLRUCache[clientKey, sarama.Client]()
 	if err != nil {
 		panic("kafka client pool tried to initialize with invalid paramters")
 	}
@@ -57,7 +55,6 @@ type clientKey struct {
 }
 
 type clientPool struct {
-	lock sync.Mutex
 	*cachePool[clientKey, sarama.Client]
 }
 
@@ -68,12 +65,10 @@ type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []strin
 func NilReturnClientFunc() {}
 
 func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
-	// the lru cache is concurrency safe, but if multiple users try and add the same key at the same time we will get the clients being rapidly closed and re-opened
-	// Instead, we can use a lock here to make sure that the accesses are one at a time
-	cp.lock.Lock()
-	defer cp.lock.Unlock()
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
 	key := makeClusterAdminKey(bootstrapServers, secret)
+
+	logging.FromContext(ctx).Info("cali0707: about to get connection from clientpool")
 
 	// if a corresponding connection already exists, lets use it
 	if val, returnClient, ok := cp.Get(ctx, key); ok {
@@ -102,7 +97,7 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 	}
 
 	// create a new client in the client pool, and acquire capacity to start using it right away
-	saramaClient, returnClient, err := cp.AddAndAcquire(ctx, key, func() (sarama.Client, error) {
+	saramaClient, returnClient, _, err := cp.AddAndAcquire(ctx, key, func() (sarama.Client, error) {
 		saramaClient, err := makeSaramaClient(bootstrapServers, secret)
 		if err != nil {
 			return nil, err
@@ -156,12 +151,12 @@ func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.
 	return saramaClient, nil
 }
 
-func (cp *clientPool) updateConnectionsWithSecret(ctx context.Context, secret *corev1.Secret) error {
+func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
 	cp.lock.Lock()
 	defer cp.lock.Unlock()
 	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
-			err := cp.Add(ctx, key, func() (sarama.Client, error) {
+			exists, err := cp.UpdateIfExists(key, func() (sarama.Client, error) {
 				saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
 				if err != nil {
 					return nil, err
@@ -169,7 +164,7 @@ func (cp *clientPool) updateConnectionsWithSecret(ctx context.Context, secret *c
 				return saramaClient, nil
 			}, capacityPerClient)
 
-			if err != nil {
+			if err != nil && exists {
 				return fmt.Errorf("failed to update the sarama client in the clientpool after recreating the client with the new secret: %v", err)
 			}
 		}
@@ -179,8 +174,8 @@ func (cp *clientPool) updateConnectionsWithSecret(ctx context.Context, secret *c
 	return nil
 }
 
-func UpdateConnectionsWithSecret(ctx context.Context, secret *corev1.Secret) error {
-	return clients.updateConnectionsWithSecret(ctx, secret)
+func UpdateConnectionsWithSecret(secret *corev1.Secret) error {
+	return clients.updateConnectionsWithSecret(secret)
 }
 
 // GetClusterAdmin returns a sarama.ClusterAdmin along with a ReturnClientFunc. The ReturnClientFunc MUST be called by the caller.

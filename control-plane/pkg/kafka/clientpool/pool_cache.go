@@ -19,26 +19,32 @@ package clientpool
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
+	"time"
 )
 
 type cachePool[K comparable, V Closeable] struct {
-	lock    sync.RWMutex // protects changes to the evictionList
-	entries map[K]*cacheEntry[K, V]
+	lock        sync.RWMutex // protects changes to the evictionList
+	entries     map[K]*cacheEntry[K, V]
+	lastChecked time.Time
 }
 
 type cacheEntry[K comparable, V Closeable] struct {
-	lock      sync.RWMutex
-	available chan *cacheValue[K, V]
-	capacity  int // how many entries are currently in use. Used to make sure we close all connections when updating/removing a value for a key
+	lock             sync.RWMutex
+	available        chan *cacheValue[K, V]
+	capacity         chan int
+	maxCapacity      int
+	createValue      CreateNewValue[V]
+	willDeleteSoon   bool
+	doNotDeleteEntry bool
+	key              K
 }
 
 type cacheValue[K comparable, V Closeable] struct {
 	lock       sync.Mutex             // used to indicate whether a caller is using the value currently, or if it is safe to access the value
 	returnChan chan *cacheValue[K, V] // this is the same channel as the parent "available" channel. Used to return the cacheValue to the available queue
-	key        K
 	value      V
+	lastUsed   time.Time
 }
 
 type Closeable interface {
@@ -49,124 +55,68 @@ type CreateNewValue[T Closeable] func() (T, error)
 
 func NilReturnCapacityToCache() {}
 
-func NewLRUCache[K comparable, V Closeable](maxSize int) (*cachePool[K, V], error) {
-	if maxSize <= 0 {
-		return nil, fmt.Errorf("maxSize must be > 0")
-	}
-
+func NewLRUCache[K comparable, V Closeable]() (*cachePool[K, V], error) {
 	return &cachePool[K, V]{
-		entries: map[K]*cacheEntry[K, V]{},
+		entries:     map[K]*cacheEntry[K, V]{},
+		lastChecked: time.Now(),
 	}, nil
 }
 
-func (c *cachePool[K, V]) Add(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int) error {
-	_, returnCapacity, err := c.AddAndAcquire(ctx, key, createValue, maxEntries)
-	defer returnCapacity()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int) (V, ReturnClientFunc, error) {
+// AddAndAcquire adds a new value if there is not already a key in the cache, otherwise it returns a boolean indicating that the value already existed.
+// It also acquires one of the values for the pool. This MUST be returned by calling ReturnClientFunc when the caller is done with the returned value.
+// If you want to update the value, please call the Update method instead of AddAndAcquire.
+func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int) (V, ReturnClientFunc, bool, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	var defaultValue V
+	if time.Since(c.lastChecked) >= 5*time.Minute {
+		c.lastChecked = time.Now()
+		go c.cleanupEntries() // do this in another goroutine so that we don't block here
+	}
 
 	if entry, ok := c.entries[key]; ok {
-		newAvailable := make(chan *cacheValue[K, V], maxEntries)
-		entry.lock.Lock()
-		oldAvailable := entry.available
-		entry.available = newAvailable
-		entry.lock.Unlock()
-		// need to update all the existing entries
-		var err error = nil
-		j := 0
-		for i := 0; i < entry.capacity; i++ {
-			value := <-oldAvailable
-			if j > maxEntries {
-				value.lock.Lock()
-				value.value.Close()
-				value.lock.Unlock()
-				continue
-			}
-			newValue, e := createValue()
-			err = errors.Join(err, e)
-			value.updateValue(newValue, newAvailable)
-			if e == nil {
-				j++
-				newAvailable <- value
-			}
-		}
-		// we failed to fully initialize all the clients, so lets fail atomically rather than be in an inbetween state
-		if j != maxEntries {
-			entry.lock.Lock()
-			defer entry.lock.Unlock()
-			for i := 0; i < entry.capacity; i++ {
-				value := <-entry.available
-				// technically we don't need to lock the value, as no one else can read from the channel now
-				value.value.Close()
-
-			}
-			delete(c.entries, key)
-			return defaultValue, NilReturnCapacityToCache, fmt.Errorf("failed to create new values for every value in the cache: %v", err)
-		}
-
-		select {
-		case <-ctx.Done():
-			return defaultValue, NilReturnCapacityToCache, fmt.Errorf("timed out waiting for value from the cache after updating them: %v", ctx.Err())
-		case value := <-entry.available:
-			value.lock.Lock()
-			return value.value, value.returnToCache, nil
-
-		}
+		value, returnValue, err := entry.getValue(ctx)
+		return value, returnValue, true, err
 	}
 
 	available := make(chan *cacheValue[K, V], maxEntries)
-	entry := &cacheEntry[K, V]{
-		available: available,
-		capacity:  maxEntries,
-	}
+	capacity := make(chan int, maxEntries)
 
-	var err error = nil
-	j := 0
+	// need to fill up capacity chan initially so that we have starting capacity
 	for i := 0; i < maxEntries; i++ {
-		value, e := createValue()
-		err = errors.Join(err, e)
-		if e != nil {
-			continue
-		}
-
-		cacheValue := &cacheValue[K, V]{
-			returnChan: available,
-			key:        key,
-			value:      value,
-		}
-		available <- cacheValue
-		j++
+		capacity <- 1
 	}
 
-	// we failed to fully initialize all the clients, so lets fail atomically rather than be in an inbetween state
-	// if there was an error creating one of the clients, we need to close them all so that we don't leak memory
-	if err != nil {
-		for i := 0; i < j; i++ {
-			value := <-available
-			value.value.Close()
-		}
-		return defaultValue, NilReturnCapacityToCache, err
+	entry := &cacheEntry[K, V]{
+		available:   available,
+		maxCapacity: maxEntries,
+		createValue: createValue,
+		capacity:    capacity,
+		key:         key,
 	}
+
 	c.entries[key] = entry
-	value := <-available
-	value.lock.Lock()
-	return value.value, value.returnToCache, nil
+
+	<-capacity
+	value, err := entry.createCacheValue()
+	if err != nil {
+		var defaultValue V
+		capacity <- 1
+		return defaultValue, NilReturnCapacityToCache, false, err
+	}
+
+	value.acquireFromCache()
+	return value.value, value.returnToCache, false, nil
 }
 
 func (c *cachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
+
+	if time.Since(c.lastChecked) >= 5*time.Minute {
+		c.lastChecked = time.Now()
+		go c.cleanupEntries() // do this in another goroutine so that we don't block here
+	}
 
 	var defaultValue V
 
@@ -175,16 +125,9 @@ func (c *cachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, 
 		return defaultValue, NilReturnCapacityToCache, false
 	}
 
-	entry.lock.RLock()
-	defer entry.lock.RUnlock()
+	value, returnValue, err := entry.getValue(ctx)
+	return value, returnValue, err == nil
 
-	select {
-	case <-ctx.Done():
-		return defaultValue, NilReturnCapacityToCache, false
-	case value := <-entry.available:
-		value.lock.Lock()
-		return value.value, value.returnToCache, true
-	}
 }
 
 func (c *cachePool[K, V]) Keys() []K {
@@ -200,15 +143,219 @@ func (c *cachePool[K, V]) Keys() []K {
 	return keys
 }
 
-func (cv *cacheValue[K, V]) updateValue(newValue V, newAvailable chan *cacheValue[K, V]) {
+func (c *cachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], maxEntries int) (bool, error) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	entry, ok := c.entries[key]
+	if !ok {
+		return false, nil
+	}
+
+	newAvailable := make(chan *cacheValue[K, V], maxEntries)
+	newCapacity := make(chan int, maxEntries)
+
+	entry.lock.Lock()
+	availableCapacity := entry.getAvailableCapacity()
+	oldAvailable := entry.available
+	oldMaxCapacity := entry.maxCapacity
+	entry.available = newAvailable
+	entry.maxCapacity = maxEntries
+	entry.capacity = newCapacity
+	entry.lock.Unlock()
+
+	inUse := oldMaxCapacity - availableCapacity
+
+	if maxEntries > oldMaxCapacity {
+		for i := 0; i < maxEntries-inUse; i++ {
+			newCapacity <- 1
+		}
+	}
+
+	var err error
+	j := 0
+	for inUse > 0 {
+		value := <-oldAvailable
+		inUse -= 1
+		if j >= maxEntries {
+			value.lock.Lock()
+			value.value.Close()
+			value.lock.Unlock()
+			continue
+		}
+
+		e := value.updateValue(createValue, newAvailable)
+		if e != nil {
+			err = errors.Join(err, e)
+			continue
+		}
+
+		newAvailable <- value
+	}
+
+	if err != nil {
+		return true, err
+	}
+
+	return true, nil
+}
+
+func (c *cachePool[K, V]) cleanupEntries() {
+	c.lock.RLock()
+
+	toDelete := make([]*cacheEntry[K, V], 8)
+
+	for _, entry := range c.entries {
+		if noneLeft := entry.cleanupValues(); noneLeft {
+			toDelete = append(toDelete, entry)
+		}
+	}
+
+	c.lock.RUnlock()
+
+	if len(toDelete) > 0 {
+		c.lock.Lock()
+		defer c.lock.Unlock()
+		for _, entry := range toDelete {
+			entry.lock.Lock()
+			if !entry.doNotDeleteEntry {
+				delete(c.entries, entry.key)
+			}
+			entry.lock.Unlock()
+		}
+	}
+}
+
+func (cv *cacheValue[K, V]) updateValue(createNewValue CreateNewValue[V], newAvailable chan *cacheValue[K, V]) error {
 	cv.lock.Lock()
 	defer cv.lock.Unlock()
 	cv.value.Close()
+
+	newValue, err := createNewValue()
+	if err != nil {
+		return err
+	}
+
 	cv.value = newValue
 	cv.returnChan = newAvailable
+
+	return nil
+}
+
+func (ce *cacheEntry[K, V]) getValue(ctx context.Context) (V, ReturnClientFunc, error) {
+	ce.lock.RLock()
+	defer ce.lock.RUnlock()
+
+	var defaultValue V
+	if ce.willDeleteSoon {
+		ce.doNotDeleteEntry = true // we can write to this without acquiring the write lock as we only ever set it to true when read locked, and false when write locked
+	}
+
+	select {
+	case <-ctx.Done():
+		return defaultValue, NilReturnCapacityToCache, ctx.Err()
+	case value := <-ce.available:
+		value.acquireFromCache()
+		return value.value, value.returnToCache, nil
+	case <-ce.capacity:
+		value, err := ce.createCacheValue()
+		if err != nil {
+			ce.capacity <- 1
+			return defaultValue, NilReturnCapacityToCache, err
+		}
+
+		value.acquireFromCache()
+		return value.value, value.returnToCache, nil
+	}
+}
+
+func (ce *cacheEntry[K, V]) createCacheValue() (*cacheValue[K, V], error) {
+	val, err := ce.createValue()
+	if err != nil {
+		return nil, err
+	}
+
+	value := &cacheValue[K, V]{
+		returnChan: ce.available,
+		value:      val,
+	}
+
+	return value, nil
+
+}
+
+func (ce *cacheEntry[K, V]) cleanupValues() bool {
+	ce.lock.RLock()
+
+	stillValid := ce.getValidValuesAndCleanupOthers()
+	for _, value := range stillValid {
+		ce.available <- value
+	}
+
+	if ce.getAvailableCapacity() == ce.maxCapacity {
+		// all capacity is available, we should delete the entry
+		ce.lock.RUnlock()
+		ce.lock.Lock()
+		defer ce.lock.Unlock()
+
+		// we need to re-check this as the condition may no longer be true now that we have the write lock
+		ce.willDeleteSoon = ce.getAvailableCapacity() == ce.maxCapacity
+		return true
+	}
+
+	ce.lock.RUnlock()
+
+	return false
+}
+
+func (ce *cacheEntry[K, V]) getValidValuesAndCleanupOthers() []*cacheValue[K, V] {
+	stillValid := make([]*cacheValue[K, V], 8)
+L:
+	for {
+		select {
+		case value := <-ce.available:
+			value.lock.Lock()
+			if time.Since(value.lastUsed) >= time.Minute*30 {
+				value.value.Close()
+				ce.capacity <- 1
+			} else {
+				stillValid = append(stillValid, value)
+			}
+			value.lock.Unlock()
+		default:
+			break L
+		}
+	}
+
+	return stillValid
+}
+
+func (ce *cacheEntry[K, V]) getAvailableCapacity() int {
+	availableCapacity := 0
+L:
+	for {
+		select {
+		case <-ce.capacity:
+			availableCapacity += 1
+		default:
+			break L
+		}
+	}
+
+	// we need to return the available capacity
+	for i := 0; i < availableCapacity; i++ {
+		ce.capacity <- 1
+	}
+
+	return availableCapacity
 }
 
 func (cv *cacheValue[K, V]) returnToCache() {
 	defer cv.lock.Unlock()
 	cv.returnChan <- cv
+}
+
+func (cv *cacheValue[K, V]) acquireFromCache() {
+	cv.lock.Lock()
+	cv.lastUsed = time.Now()
 }

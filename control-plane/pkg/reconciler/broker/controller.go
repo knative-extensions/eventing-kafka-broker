@@ -19,7 +19,6 @@ package broker
 import (
 	"context"
 	"errors"
-	"time"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -157,15 +156,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 
 	handleSecretUpdate := func(obj interface{}) {
 		if secret, ok := obj.(*corev1.Secret); ok {
-			// the clientpool only uses the context to add a timeout for acquiring semaphores, so we only need a context with timeout not the global context
-			backgroundWithTimeout, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 
-			err := clientpool.UpdateConnectionsWithSecret(backgroundWithTimeout, secret)
+			err := clientpool.UpdateConnectionsWithSecret(secret)
 			if err != nil {
 				logger.Warn("failed to update the kafka client connections after secret change", err)
 			}
 
-			cancel()
 		}
 		reconciler.Tracker.OnChanged(obj)
 	}

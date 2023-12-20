@@ -159,15 +159,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	handleSecretUpdate := func(obj interface{}) {
 		if secret, ok := obj.(*corev1.Secret); ok {
-			// the clientpool only uses the context to add a timeout for acquiring semaphores, so we only need a context with timeout not the global context
-			backgroundWithTimeout, cancel := context.WithTimeout(context.Background(), time.Minute*2)
-
-			err := clientpool.UpdateConnectionsWithSecret(backgroundWithTimeout, secret)
+			err := clientpool.UpdateConnectionsWithSecret(secret)
 			if err != nil {
 				logger.Warn("failed to update the kafka client connections after secret change", err)
 			}
 
-			cancel()
 		}
 	}
 
