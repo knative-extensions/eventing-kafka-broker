@@ -43,8 +43,7 @@ func (tc *testCloseable) Close() error {
 }
 
 func TestAddThreeClientsAndAcquire(t *testing.T) {
-	pool, err := NewLRUCache[string, *testCloseable]()
-	assert.NoError(t, err, "creating the cache should have no error")
+	pool := NewLRUCache[string, *testCloseable]()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
@@ -79,8 +78,7 @@ func TestAddThreeClientsAndAcquire(t *testing.T) {
 }
 
 func TestAddSameKeyTwice(t *testing.T) {
-	pool, err := NewLRUCache[string, *testCloseable]()
-	assert.NoError(t, err, "creating the cache should have no error")
+	pool := NewLRUCache[string, *testCloseable]()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
@@ -106,8 +104,7 @@ func TestAddSameKeyTwice(t *testing.T) {
 }
 
 func TestAddAndGetKeyWithoutReturningClient(t *testing.T) {
-	pool, err := NewLRUCache[string, *testCloseable]()
-	assert.NoError(t, err, "creating the cache should have no error")
+	pool := NewLRUCache[string, *testCloseable]()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
@@ -131,8 +128,7 @@ func TestAddAndGetKeyWithoutReturningClient(t *testing.T) {
 }
 
 func TestNoMoreGetsUntilReturn(t *testing.T) {
-	pool, err := NewLRUCache[string, *testCloseable]()
-	assert.NoError(t, err, "creating the cache should have no error")
+	pool := NewLRUCache[string, *testCloseable]()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
@@ -175,8 +171,7 @@ func TestNoMoreGetsUntilReturn(t *testing.T) {
 }
 
 func TestGetBeforeAdd(t *testing.T) {
-	pool, err := NewLRUCache[string, *testCloseable]()
-	assert.NoError(t, err, "creating the cache should have no error")
+	pool := NewLRUCache[string, *testCloseable]()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 
 	_, _, exists, err := pool.Get(ctx, "1")
@@ -188,9 +183,8 @@ func TestGetBeforeAdd(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	pool, err := NewLRUCache[string, *testCloseable]()
-	assert.NoError(t, err, "creating the cache should have no error")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
+	pool := NewLRUCache[string, *testCloseable]()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
