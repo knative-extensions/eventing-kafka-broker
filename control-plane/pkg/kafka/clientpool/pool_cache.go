@@ -19,11 +19,12 @@ package clientpool
 import (
 	"context"
 	"errors"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 )
 
-type cachePool[K comparable, V Closeable] struct {
+type CachePool[K comparable, V Closeable] struct {
 	lock        sync.RWMutex // protects changes to the evictionList
 	entries     map[K]*cacheEntry[K, V]
 	lastChecked time.Time
@@ -55,8 +56,8 @@ type CreateNewValue[T Closeable] func() (T, error)
 
 func NilReturnCapacityToCache() {}
 
-func NewLRUCache[K comparable, V Closeable]() (*cachePool[K, V], error) {
-	return &cachePool[K, V]{
+func NewLRUCache[K comparable, V Closeable]() (*CachePool[K, V], error) {
+	return &CachePool[K, V]{
 		entries:     map[K]*cacheEntry[K, V]{},
 		lastChecked: time.Now(),
 	}, nil
@@ -65,34 +66,45 @@ func NewLRUCache[K comparable, V Closeable]() (*cachePool[K, V], error) {
 // AddAndAcquire adds a new value if there is not already a key in the cache, otherwise it returns a boolean indicating that the value already existed.
 // It also acquires one of the values for the pool. This MUST be returned by calling ReturnClientFunc when the caller is done with the returned value.
 // If you want to update the value, please call the Update method instead of AddAndAcquire.
-func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int) (V, ReturnClientFunc, bool, error) {
+func (c *CachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue CreateNewValue[V], maxEntries int, logger *zap.SugaredLogger) (V, ReturnClientFunc, bool, error) {
+	logger.Info("cali0707: in AddAndAcquire, about to acquire Lock")
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
+	logger.Info("cali0707: in AddAndAcquire, acquired Lock")
 
 	var defaultValue V
 
 	if time.Since(c.lastChecked) >= 5*time.Minute {
+		logger.Info("cali0707: in AddAndAcquire, need to clean up entries")
+
 		c.lastChecked = time.Now()
 		go c.cleanupEntries() // do this in another goroutine so that we don't block here
 	}
 
 	if entry, ok := c.entries[key]; ok {
-		value, returnValue, err := entry.getValue(ctx)
+		logger.Info("cali0707: in AddAndAcquire, found an entry going to try and get value")
+		value, returnValue, err := entry.getValue(ctx, logger)
 		if err != nil {
+			logger.Info("cali0707: in AddAndAcquire, found an entry but failed to get value")
 			returnValue()
 			return defaultValue, NilReturnCapacityToCache, true, err
 		}
-		
+		logger.Info("cali0707: in AddAndAcquire, found an entry and got a value")
 		return value, returnValue, true, nil
 	}
+
+	logger.Info("cali0707: in AddAndAcquire, did not find an entry, going to create a new one")
 
 	available := make(chan *cacheValue[K, V], maxEntries)
 	capacity := make(chan int, maxEntries)
 
+	logger.Info("cali0707: in AddAndAcquire, made channels, going to fill capacity")
 	// need to fill up capacity chan initially so that we have starting capacity
 	for i := 0; i < maxEntries; i++ {
 		capacity <- 1
 	}
+	logger.Info("cali0707: in AddAndAcquire, made channels, filled capacity")
 
 	entry := &cacheEntry[K, V]{
 		available:   available,
@@ -105,21 +117,34 @@ func (c *cachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 	c.entries[key] = entry
 
 	<-capacity
+	logger.Info("cali0707: in AddAndAcquire, made channels, acquired 1 capacity")
+
 	value, err := entry.createCacheValue()
+
 	if err != nil {
+		logger.Info("cali0707: in AddAndAcquire, made channels, error creating 1 value", zap.Error(err))
+
 		capacity <- 1
 		return defaultValue, NilReturnCapacityToCache, false, err
 	}
+	logger.Info("cali0707: in AddAndAcquire, made channels, created 1 value")
 
 	value.acquireFromCache()
+
+	logger.Info("cali0707: in AddAndAcquire, made channels, acquired new value")
+
 	return value.value, value.returnToCache, false, nil
 }
 
-func (c *cachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, bool) {
+func (c *CachePool[K, V]) Get(ctx context.Context, key K, logger *zap.SugaredLogger) (V, ReturnClientFunc, bool, error) {
+	logger.Info("cali0707: in Get, about to acquire RLock")
 	c.lock.RLock()
 	defer c.lock.RUnlock()
+	logger.Info("cali0707: in Get, acquired RLock")
 
 	if time.Since(c.lastChecked) >= 5*time.Minute {
+		logger.Info("cali0707: in Get, need to clean up entries")
+
 		c.lastChecked = time.Now()
 		go c.cleanupEntries() // do this in another goroutine so that we don't block here
 	}
@@ -128,19 +153,25 @@ func (c *cachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, 
 
 	entry, ok := c.entries[key]
 	if !ok {
-		return defaultValue, NilReturnCapacityToCache, false
+		logger.Info("cali0707: in Get, no entry found for the key")
+		return defaultValue, NilReturnCapacityToCache, false, nil
 	}
 
-	value, returnValue, err := entry.getValue(ctx)
+	logger.Info("cali0707: in Get, entry found for the key, going to acquire a value")
+
+	value, returnValue, err := entry.getValue(ctx, logger)
 	if err != nil {
+		logger.Info("cali0707: in Get, entry found for the key, failed to acquire a value")
 		returnValue()
-		return defaultValue, NilReturnCapacityToCache, false
+		return defaultValue, NilReturnCapacityToCache, true, err
 	}
-	return value, returnValue, true
+
+	logger.Info("cali0707: in Get, entry found for the key, got a value")
+	return value, returnValue, true, nil
 
 }
 
-func (c *cachePool[K, V]) Keys() []K {
+func (c *CachePool[K, V]) Keys() []K {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -153,7 +184,7 @@ func (c *cachePool[K, V]) Keys() []K {
 	return keys
 }
 
-func (c *cachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], maxEntries int) (bool, error) {
+func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], maxEntries int) (bool, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -210,10 +241,10 @@ func (c *cachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 	return true, nil
 }
 
-func (c *cachePool[K, V]) cleanupEntries() {
+func (c *CachePool[K, V]) cleanupEntries() {
 	c.lock.RLock()
 
-	toDelete := make([]*cacheEntry[K, V], 8)
+	toDelete := make([]*cacheEntry[K, V], 0, 8)
 
 	for _, entry := range c.entries {
 		if noneLeft := entry.cleanupValues(); noneLeft {
@@ -252,27 +283,40 @@ func (cv *cacheValue[K, V]) updateValue(createNewValue CreateNewValue[V], newAva
 	return nil
 }
 
-func (ce *cacheEntry[K, V]) getValue(ctx context.Context) (V, ReturnClientFunc, error) {
+func (ce *cacheEntry[K, V]) getValue(ctx context.Context, logger *zap.SugaredLogger) (V, ReturnClientFunc, error) {
+	logger.Info("cali0707: in getValue, about to acquire cacheEntry RLock")
 	ce.lock.RLock()
 	defer ce.lock.RUnlock()
+
+	logger.Info("cali0707: in getValue, acquired cacheEntry RLock")
 
 	var defaultValue V
 	if ce.willDeleteSoon {
 		ce.doNotDeleteEntry = true // we can write to this without acquiring the write lock as we only ever set it to true when read locked, and false when write locked
 	}
 
+	logger.Info("cali0707: in getValue, about to enter select")
+
 	select {
 	case <-ctx.Done():
+		logger.Info("cali0707: in getValue, context cancelled")
 		return defaultValue, NilReturnCapacityToCache, ctx.Err()
 	case value := <-ce.available:
+		logger.Info("cali0707: in getValue, found available entry, about to acquire from cache")
 		value.acquireFromCache()
+		logger.Info("cali0707: in getValue, found available entry, acquired from cache")
 		return value.value, value.returnToCache, nil
 	case <-ce.capacity:
+		logger.Info("cali0707: in getValue, found available capacity, about to create a cache value")
 		value, err := ce.createCacheValue()
 		if err != nil {
+			logger.Info("cali0707: in getValue, found available capacity, failed to create value, returning capacity")
+
 			ce.capacity <- 1
 			return defaultValue, NilReturnCapacityToCache, err
 		}
+
+		logger.Info("cali0707: in getValue, created value, about to acquire from the cache")
 
 		value.acquireFromCache()
 		return value.value, value.returnToCache, nil
@@ -319,7 +363,7 @@ func (ce *cacheEntry[K, V]) cleanupValues() bool {
 }
 
 func (ce *cacheEntry[K, V]) getValidValuesAndCleanupOthers() []*cacheValue[K, V] {
-	stillValid := make([]*cacheValue[K, V], 8)
+	stillValid := make([]*cacheValue[K, V], 0, 8)
 L:
 	for {
 		select {

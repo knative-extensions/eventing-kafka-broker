@@ -19,6 +19,7 @@ package clientpool
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"sort"
 	"strings"
 
@@ -43,7 +44,7 @@ func init() {
 		panic("kafka client pool tried to initialize with invalid paramters")
 	}
 	clients = &clientPool{
-		cachePool: cache,
+		CachePool: cache,
 	}
 }
 
@@ -55,7 +56,7 @@ type clientKey struct {
 }
 
 type clientPool struct {
-	*cachePool[clientKey, sarama.Client]
+	*CachePool[clientKey, sarama.Client]
 }
 
 type ReturnClientFunc func()
@@ -68,10 +69,13 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
 	key := makeClusterAdminKey(bootstrapServers, secret)
 
-	logging.FromContext(ctx).Info("cali0707: about to get connection from clientpool")
+	logger := logging.FromContext(ctx)
+
+	logger.Info("cali0707: about to get connection from clientpool", zap.Any("key", key))
 
 	// if a corresponding connection already exists, lets use it
-	if val, returnClient, ok := cp.Get(ctx, key); ok {
+	if val, returnClient, ok, err := cp.Get(ctx, key, logger); ok && err == nil {
+		logger.Info("cali0707: successfully got a value")
 		// check that the value is still good, as there are still some write errors
 		ca, err := sarama.NewClusterAdminFromClient(val)
 		if err != nil {
@@ -79,22 +83,31 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 			return nil, NilReturnClientFunc, err
 		}
 		if _, err := ca.ListTopics(); err != nil {
-			logging.FromContext(ctx).Info("failed to list topics, refreshing brokers and metadata")
+			logger.Info("cali0707: failed to list topics, refreshing brokers and metadata")
 			err := val.RefreshBrokers(bootstrapServers)
 			if err != nil {
 				returnClient()
-				logging.FromContext(ctx).Info("failed to refresh brokers")
+				logger.Info("cali0707: failed to refresh brokers")
 				return nil, NilReturnClientFunc, err
 			}
 			err = val.RefreshMetadata()
 			if err != nil {
 				returnClient()
-				logging.FromContext(ctx).Info("failed to refresh metadata")
+				logger.Info("cali0707: failed to refresh metadata")
 				return nil, NilReturnClientFunc, err
 			}
 		}
+
+		logger.Info("cali0707: the value in the cache was valid, returning")
 		return val, returnClient, nil
+	} else if err != nil {
+		returnClient()
+		logger.Info("cali0707: an error occurred while getting the value from the cache", zap.Error(err))
+		// the context timed out, any future actions will also fail
+		return nil, NilReturnClientFunc, fmt.Errorf("error getting an existing client: %v", err)
 	}
+
+	logger.Info("cali0707: failed to get an existing client, going to create one")
 
 	// create a new client in the client pool, and acquire capacity to start using it right away
 	saramaClient, returnClient, _, err := cp.AddAndAcquire(ctx, key, func() (sarama.Client, error) {
@@ -103,12 +116,14 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 			return nil, err
 		}
 		return saramaClient, nil
-	}, capacityPerClient)
+	}, capacityPerClient, logger)
 	if err != nil {
+		logger.Info("cali0707: failed to make a new client in the pool", zap.Error(err))
 		returnClient()
 		return nil, NilReturnClientFunc, fmt.Errorf("error creating a new client: %v", err)
 	}
 
+	logger.Info("cali0707: successfully made a new client in the pool")
 	return saramaClient, returnClient, nil
 }
 
@@ -152,8 +167,6 @@ func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.
 }
 
 func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
-	cp.lock.Lock()
-	defer cp.lock.Unlock()
 	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
 			exists, err := cp.UpdateIfExists(key, func() (sarama.Client, error) {
