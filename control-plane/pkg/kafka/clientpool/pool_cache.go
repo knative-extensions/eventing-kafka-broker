@@ -31,14 +31,12 @@ type CachePool[K comparable, V Closeable] struct {
 }
 
 type cacheEntry[K comparable, V Closeable] struct {
-	lock             sync.RWMutex
-	available        chan *cacheValue[K, V]
-	capacity         chan int
-	maxCapacity      int
-	createValue      CreateNewValue[V]
-	willDeleteSoon   bool
-	doNotDeleteEntry bool
-	key              K
+	lock        sync.RWMutex
+	available   chan *cacheValue[K, V]
+	capacity    chan int
+	maxCapacity int
+	createValue CreateNewValue[V]
+	key         K
 }
 
 type cacheValue[K comparable, V Closeable] struct {
@@ -184,57 +182,91 @@ func (c *CachePool[K, V]) Keys() []K {
 	return keys
 }
 
-func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], maxEntries int) (bool, error) {
+func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], maxEntries int, logger *zap.SugaredLogger) (bool, error) {
+	logger.Info("cali0707 in UpdateIfExists, about to acquire RLock")
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
+	logger.Info("cali0707 in UpdateIfExists, acquired RLock")
+
 	entry, ok := c.entries[key]
 	if !ok {
+		logger.Info("cali0707 in UpdateIfExists, no matching entry")
 		return false, nil
 	}
 
 	newAvailable := make(chan *cacheValue[K, V], maxEntries)
 	newCapacity := make(chan int, maxEntries)
 
+	logger.Info("cali0707 in UpdateIfExists, made channels, about to get entry lock")
+
 	entry.lock.Lock()
+	logger.Info("cali0707 in UpdateIfExists, acquired entry Lock, about to get capacity")
 	availableCapacity := entry.getAvailableCapacity()
+	logger.Info("cali0707 in UpdateIfExists, acquired entry lock and got available capacity")
 	oldAvailable := entry.available
 	oldMaxCapacity := entry.maxCapacity
 	entry.available = newAvailable
 	entry.maxCapacity = maxEntries
 	entry.capacity = newCapacity
-	entry.lock.Unlock()
+	entry.createValue = createValue
 
 	inUse := oldMaxCapacity - availableCapacity
 
-	if maxEntries > oldMaxCapacity {
+	if maxEntries-inUse > 0 {
+		logger.Info("cali0707 in UpdateIfExists, about to update entry capacity")
+
 		for i := 0; i < maxEntries-inUse; i++ {
 			newCapacity <- 1
 		}
+		logger.Info("cali0707 in UpdateIfExists, updated entry capacity")
+
 	}
+
+	entry.lock.Unlock()
+
+	logger.Info("cali0707 in UpdateIfExists, unlocked entry")
 
 	var err error
 	j := 0
 	for inUse > 0 {
+		logger.Info("cali0707 in UpdateIfExists, about to get oldAvailable value")
 		value := <-oldAvailable
+		logger.Info("cali0707 in UpdateIfExists, got oldAvailable value")
 		inUse -= 1
 		if j >= maxEntries {
+			logger.Info("cali0707 in UpdateIfExists, about to close extra value")
 			value.lock.Lock()
 			value.value.Close()
 			value.lock.Unlock()
+			logger.Info("cali0707 in UpdateIfExists, closed extra value")
+
 			continue
 		}
 
+		logger.Info("cali0707 in UpdateIfExists, about to update value")
+
 		e := value.updateValue(createValue, newAvailable)
 		if e != nil {
+			logger.Info("cali0707 in UpdateIfExists, error updating value")
+
+			entry.capacity <- 1 // this value is no longer in use
+			logger.Info("cali0707 in UpdateIfExists, returned capacity after failed updating value")
+
 			err = errors.Join(err, e)
 			continue
 		}
 
+		logger.Info("cali0707 in UpdateIfExists, updated value")
+		j += 1
 		newAvailable <- value
 	}
 
-	if err != nil {
+	logger.Info("cali0707 in UpdateIfExists, saw all values from oldAvailable")
+
+	if err != nil && j == 0 {
+		logger.Info("cali0707 in UpdateIfExists, saw at least one error")
+
 		return true, err
 	}
 
@@ -242,27 +274,12 @@ func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 }
 
 func (c *CachePool[K, V]) cleanupEntries() {
-	c.lock.RLock()
-
-	toDelete := make([]*cacheEntry[K, V], 0, 8)
+	c.lock.Lock()
+	defer c.lock.Unlock()
 
 	for _, entry := range c.entries {
 		if noneLeft := entry.cleanupValues(); noneLeft {
-			toDelete = append(toDelete, entry)
-		}
-	}
-
-	c.lock.RUnlock()
-
-	if len(toDelete) > 0 {
-		c.lock.Lock()
-		defer c.lock.Unlock()
-		for _, entry := range toDelete {
-			entry.lock.Lock()
-			if !entry.doNotDeleteEntry {
-				delete(c.entries, entry.key)
-			}
-			entry.lock.Unlock()
+			delete(c.entries, entry.key)
 		}
 	}
 }
@@ -291,9 +308,6 @@ func (ce *cacheEntry[K, V]) getValue(ctx context.Context, logger *zap.SugaredLog
 	logger.Info("cali0707: in getValue, acquired cacheEntry RLock")
 
 	var defaultValue V
-	if ce.willDeleteSoon {
-		ce.doNotDeleteEntry = true // we can write to this without acquiring the write lock as we only ever set it to true when read locked, and false when write locked
-	}
 
 	logger.Info("cali0707: in getValue, about to enter select")
 
@@ -339,27 +353,15 @@ func (ce *cacheEntry[K, V]) createCacheValue() (*cacheValue[K, V], error) {
 }
 
 func (ce *cacheEntry[K, V]) cleanupValues() bool {
-	ce.lock.RLock()
+	ce.lock.Lock()
+	defer ce.lock.Unlock()
 
 	stillValid := ce.getValidValuesAndCleanupOthers()
 	for _, value := range stillValid {
 		ce.available <- value
 	}
 
-	if ce.getAvailableCapacity() == ce.maxCapacity {
-		// all capacity is available, we should delete the entry
-		ce.lock.RUnlock()
-		ce.lock.Lock()
-		defer ce.lock.Unlock()
-
-		// we need to re-check this as the condition may no longer be true now that we have the write lock
-		ce.willDeleteSoon = ce.getAvailableCapacity() == ce.maxCapacity
-		return true
-	}
-
-	ce.lock.RUnlock()
-
-	return false
+	return ce.getAvailableCapacity() == ce.maxCapacity
 }
 
 func (ce *cacheEntry[K, V]) getValidValuesAndCleanupOthers() []*cacheValue[K, V] {

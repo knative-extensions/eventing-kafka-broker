@@ -100,11 +100,13 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 
 		logger.Info("cali0707: the value in the cache was valid, returning")
 		return val, returnClient, nil
-	} else if err != nil {
+	} else {
 		returnClient()
-		logger.Info("cali0707: an error occurred while getting the value from the cache", zap.Error(err))
-		// the context timed out, any future actions will also fail
-		return nil, NilReturnClientFunc, fmt.Errorf("error getting an existing client: %v", err)
+		if err != nil {
+			logger.Info("cali0707: an error occurred while getting the value from the cache", zap.Error(err))
+			// the context timed out, any future actions will also fail
+			return nil, NilReturnClientFunc, fmt.Errorf("error getting an existing client: %v", err)
+		}
 	}
 
 	logger.Info("cali0707: failed to get an existing client, going to create one")
@@ -167,6 +169,10 @@ func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.
 }
 
 func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
+	logger, err := zap.NewProduction()
+	if err != nil {
+		logger = zap.NewNop()
+	}
 	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
 			exists, err := cp.UpdateIfExists(key, func() (sarama.Client, error) {
@@ -175,7 +181,7 @@ func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
 					return nil, err
 				}
 				return saramaClient, nil
-			}, capacityPerClient)
+			}, capacityPerClient, logger.Sugar())
 
 			if err != nil && exists {
 				return fmt.Errorf("failed to update the sarama client in the clientpool after recreating the client with the new secret: %v", err)
