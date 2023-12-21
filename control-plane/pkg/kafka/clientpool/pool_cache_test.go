@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 )
 
 type testCloseable struct {
@@ -48,11 +47,9 @@ func TestAddThreeClientsAndAcquire(t *testing.T) {
 	assert.NoError(t, err, "creating the cache should have no error")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-	logger := zaptest.NewLogger(t).Sugar()
-
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
-	}, 8, logger)
+	}, 8)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value1.data)
@@ -60,7 +57,7 @@ func TestAddThreeClientsAndAcquire(t *testing.T) {
 
 	value2, returnValue2, exists, err := pool.AddAndAcquire(ctx, "2", func() (*testCloseable, error) {
 		return &testCloseable{data: 2}, nil
-	}, 8, logger)
+	}, 8)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, value2.data)
@@ -68,7 +65,7 @@ func TestAddThreeClientsAndAcquire(t *testing.T) {
 
 	value3, returnValue3, exists, err := pool.AddAndAcquire(ctx, "3", func() (*testCloseable, error) {
 		return &testCloseable{data: 3}, nil
-	}, 8, logger)
+	}, 8)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 3, value3.data)
@@ -85,11 +82,10 @@ func TestAddSameKeyTwice(t *testing.T) {
 	pool, err := NewLRUCache[string, *testCloseable]()
 	assert.NoError(t, err, "creating the cache should have no error")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	logger := zaptest.NewLogger(t).Sugar()
 
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
-	}, 8, logger)
+	}, 8)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value1.data)
@@ -97,7 +93,7 @@ func TestAddSameKeyTwice(t *testing.T) {
 
 	value2, returnValue2, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
-	}, 8, logger)
+	}, 8)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value2.data)
@@ -114,17 +110,15 @@ func TestAddAndGetKeyWithoutReturningClient(t *testing.T) {
 	assert.NoError(t, err, "creating the cache should have no error")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-	logger := zaptest.NewLogger(t).Sugar()
-
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
-	}, 8, logger)
+	}, 8)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value1.data)
 	assert.False(t, exists)
 
-	value2, returnValue2, exists, err := pool.Get(ctx, "1", logger)
+	value2, returnValue2, exists, err := pool.Get(ctx, "1")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value2.data)
@@ -141,17 +135,15 @@ func TestNoMoreGetsUntilReturn(t *testing.T) {
 	assert.NoError(t, err, "creating the cache should have no error")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-	logger := zaptest.NewLogger(t).Sugar()
-
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
-	}, 2, logger)
+	}, 2)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value1.data)
 	assert.False(t, exists)
 
-	value2, returnValue2, exists, err := pool.Get(ctx, "1", logger)
+	value2, returnValue2, exists, err := pool.Get(ctx, "1")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value2.data)
@@ -159,7 +151,7 @@ func TestNoMoreGetsUntilReturn(t *testing.T) {
 
 	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Millisecond*250)
 
-	_, returnValue3, exists, err := pool.Get(ctx2, "1", logger)
+	_, returnValue3, exists, err := pool.Get(ctx2, "1")
 
 	assert.Error(t, err)
 	assert.True(t, exists)
@@ -167,7 +159,7 @@ func TestNoMoreGetsUntilReturn(t *testing.T) {
 	returnValue3()
 	returnValue1()
 
-	value3, returnValue3, exists, err := pool.Get(ctx, "1", logger)
+	value3, returnValue3, exists, err := pool.Get(ctx, "1")
 
 	assert.NoError(t, err)
 	assert.True(t, exists)
@@ -187,9 +179,7 @@ func TestGetBeforeAdd(t *testing.T) {
 	assert.NoError(t, err, "creating the cache should have no error")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 
-	logger := zaptest.NewLogger(t).Sugar()
-
-	_, _, exists, err := pool.Get(ctx, "1", logger)
+	_, _, exists, err := pool.Get(ctx, "1")
 
 	assert.NoError(t, err)
 	assert.False(t, exists)
@@ -202,17 +192,15 @@ func TestUpdate(t *testing.T) {
 	assert.NoError(t, err, "creating the cache should have no error")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
 
-	logger := zaptest.NewLogger(t).Sugar()
-
 	value1, returnValue1, exists, err := pool.AddAndAcquire(ctx, "1", func() (*testCloseable, error) {
 		return &testCloseable{data: 1}, nil
-	}, 2, logger)
+	}, 2)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value1.data)
 	assert.False(t, exists)
 
-	value2, returnValue2, exists, err := pool.Get(ctx, "1", logger)
+	value2, returnValue2, exists, err := pool.Get(ctx, "1")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, value2.data)
@@ -225,12 +213,12 @@ func TestUpdate(t *testing.T) {
 		return &testCloseable{
 			data: 2,
 		}, nil
-	}, 2, logger)
+	}, 2)
 
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	value3, returnValue3, exists, err := pool.Get(ctx, "1", logger)
+	value3, returnValue3, exists, err := pool.Get(ctx, "1")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, value3.data)

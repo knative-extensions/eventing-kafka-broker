@@ -19,11 +19,12 @@ package clientpool
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"sort"
 	"strings"
 
 	"github.com/IBM/sarama"
+	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
@@ -71,11 +72,11 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 
 	logger := logging.FromContext(ctx)
 
-	logger.Info("cali0707: about to get connection from clientpool", zap.Any("key", key))
+	logger.Debug("about to get connection from clientpool", zap.Any("key", key))
 
 	// if a corresponding connection already exists, lets use it
-	if val, returnClient, ok, err := cp.Get(ctx, key, logger); ok && err == nil {
-		logger.Info("cali0707: successfully got a value")
+	if val, returnClient, ok, err := cp.Get(ctx, key); ok && err == nil {
+		logger.Debug("successfully got a client from the clientpool")
 		// check that the value is still good, as there are still some write errors
 		ca, err := sarama.NewClusterAdminFromClient(val)
 		if err != nil {
@@ -83,33 +84,32 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 			return nil, NilReturnClientFunc, err
 		}
 		if _, err := ca.ListTopics(); err != nil {
-			logger.Info("cali0707: failed to list topics, refreshing brokers and metadata")
+			logger.Debug("failed to list topics with connection from clientpool, refreshing brokers and metadata")
 			err := val.RefreshBrokers(bootstrapServers)
 			if err != nil {
 				returnClient()
-				logger.Info("cali0707: failed to refresh brokers")
+				logger.Debug("failed to refresh brokers")
 				return nil, NilReturnClientFunc, err
 			}
 			err = val.RefreshMetadata()
 			if err != nil {
 				returnClient()
-				logger.Info("cali0707: failed to refresh metadata")
+				logger.Debug("failed to refresh metadata")
 				return nil, NilReturnClientFunc, err
 			}
 		}
 
-		logger.Info("cali0707: the value in the cache was valid, returning")
 		return val, returnClient, nil
 	} else {
 		returnClient()
 		if err != nil {
-			logger.Info("cali0707: an error occurred while getting the value from the cache", zap.Error(err))
+			logger.Debug("an error occurred while getting the value from the cache", zap.Error(err))
 			// the context timed out, any future actions will also fail
 			return nil, NilReturnClientFunc, fmt.Errorf("error getting an existing client: %v", err)
 		}
 	}
 
-	logger.Info("cali0707: failed to get an existing client, going to create one")
+	logger.Debug("failed to get an existing client, going to create one")
 
 	// create a new client in the client pool, and acquire capacity to start using it right away
 	saramaClient, returnClient, _, err := cp.AddAndAcquire(ctx, key, func() (sarama.Client, error) {
@@ -118,14 +118,13 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 			return nil, err
 		}
 		return saramaClient, nil
-	}, capacityPerClient, logger)
+	}, capacityPerClient)
 	if err != nil {
-		logger.Info("cali0707: failed to make a new client in the pool", zap.Error(err))
+		logger.Debug("failed to make a new client in the pool", zap.Error(err))
 		returnClient()
 		return nil, NilReturnClientFunc, fmt.Errorf("error creating a new client: %v", err)
 	}
 
-	logger.Info("cali0707: successfully made a new client in the pool")
 	return saramaClient, returnClient, nil
 }
 
@@ -169,10 +168,6 @@ func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.
 }
 
 func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		logger = zap.NewNop()
-	}
 	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
 			exists, err := cp.UpdateIfExists(key, func() (sarama.Client, error) {
@@ -181,7 +176,7 @@ func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
 					return nil, err
 				}
 				return saramaClient, nil
-			}, capacityPerClient, logger.Sugar())
+			}, capacityPerClient)
 
 			if err != nil && exists {
 				return fmt.Errorf("failed to update the sarama client in the clientpool after recreating the client with the new secret: %v", err)
