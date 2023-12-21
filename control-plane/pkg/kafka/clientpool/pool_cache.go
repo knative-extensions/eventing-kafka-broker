@@ -53,11 +53,11 @@ type CreateNewValue[T Closeable] func() (T, error)
 
 func NilReturnCapacityToCache() {}
 
-func NewLRUCache[K comparable, V Closeable]() (*CachePool[K, V], error) {
+func NewLRUCache[K comparable, V Closeable]() *CachePool[K, V] {
 	return &CachePool[K, V]{
 		entries:     map[K]*cacheEntry[K, V]{},
 		lastChecked: time.Now(),
-	}, nil
+	}
 }
 
 // AddAndAcquire adds a new value if there is not already a key in the cache, otherwise it returns a boolean indicating that the value already existed.

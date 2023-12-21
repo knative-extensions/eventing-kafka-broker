@@ -40,10 +40,8 @@ var (
 )
 
 func init() {
-	cache, err := NewLRUCache[clientKey, sarama.Client]()
-	if err != nil {
-		panic("kafka client pool tried to initialize with invalid paramters")
-	}
+	cache := NewLRUCache[clientKey, sarama.Client]()
+
 	clients = &clientPool{
 		CachePool: cache,
 	}
