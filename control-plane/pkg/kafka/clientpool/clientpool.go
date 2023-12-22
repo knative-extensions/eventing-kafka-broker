@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	capacityPerClient = 8
+	capacityPerClient = 16
 )
 
 var (
