@@ -24,9 +24,11 @@ import (
 )
 
 type CachePool[K comparable, V Closeable] struct {
-	lock        sync.RWMutex // protects changes to the evictionList
-	entries     map[K]*cacheEntry[K, V]
-	lastChecked time.Time
+	lock           sync.RWMutex // protects changes to the evictionList
+	entries        map[K]*cacheEntry[K, V]
+	lastChecked    time.Time
+	recheckPeriod  time.Duration // how long before rechecking entries for cleanup
+	expiryDuration time.Duration // how long before an entry expires
 }
 
 type cacheEntry[K comparable, V Closeable] struct {
@@ -39,7 +41,6 @@ type cacheEntry[K comparable, V Closeable] struct {
 }
 
 type cacheValue[K comparable, V Closeable] struct {
-	lock       sync.Mutex             // used to indicate whether a caller is using the value currently, or if it is safe to access the value
 	returnChan chan *cacheValue[K, V] // this is the same channel as the parent "available" channel. Used to return the cacheValue to the available queue
 	value      V
 	lastUsed   time.Time
@@ -53,10 +54,12 @@ type CreateNewValue[T Closeable] func() (T, error)
 
 func NilReturnCapacityToCache() {}
 
-func NewLRUCache[K comparable, V Closeable]() *CachePool[K, V] {
+func NewLRUCache[K comparable, V Closeable](recheckPeriod, expiryDuration time.Duration) *CachePool[K, V] {
 	return &CachePool[K, V]{
-		entries:     map[K]*cacheEntry[K, V]{},
-		lastChecked: time.Now(),
+		entries:        map[K]*cacheEntry[K, V]{},
+		lastChecked:    time.Now(),
+		recheckPeriod:  recheckPeriod,
+		expiryDuration: expiryDuration,
 	}
 }
 
@@ -69,7 +72,7 @@ func (c *CachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 
 	var defaultValue V
 
-	if time.Since(c.lastChecked) >= 5*time.Minute {
+	if time.Since(c.lastChecked) >= c.recheckPeriod {
 		c.lastChecked = time.Now()
 		go c.cleanupEntries() // do this in another goroutine so that we don't block here
 	}
@@ -118,7 +121,7 @@ func (c *CachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, 
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	if time.Since(c.lastChecked) >= 5*time.Minute {
+	if time.Since(c.lastChecked) >= c.recheckPeriod {
 		c.lastChecked = time.Now()
 		go c.cleanupEntries() // do this in another goroutine so that we don't block here
 	}
@@ -153,6 +156,9 @@ func (c *CachePool[K, V]) Keys() []K {
 	return keys
 }
 
+// UpdateIfExists updates the values in the entry corresponding to key if the entry exists
+// This is mostly non-blocking, as new Get requests for key will return updated values even before
+// all values have been updated
 func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], maxEntries int) (bool, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
@@ -190,9 +196,8 @@ func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 		value := <-oldAvailable
 		inUse -= 1
 		if j >= maxEntries {
-			value.lock.Lock()
+			// we have enough updated values now, any more would exceed the new max so just close these
 			value.value.Close()
-			value.lock.Unlock()
 			continue
 		}
 
@@ -218,15 +223,13 @@ func (c *CachePool[K, V]) cleanupEntries() {
 	defer c.lock.Unlock()
 
 	for _, entry := range c.entries {
-		if noneLeft := entry.cleanupValues(); noneLeft {
+		if noneLeft := entry.cleanupValues(c.expiryDuration); noneLeft {
 			delete(c.entries, entry.key)
 		}
 	}
 }
 
 func (cv *cacheValue[K, V]) updateValue(createNewValue CreateNewValue[V], newAvailable chan *cacheValue[K, V]) error {
-	cv.lock.Lock()
-	defer cv.lock.Unlock()
 	cv.value.Close()
 
 	newValue, err := createNewValue()
@@ -279,11 +282,11 @@ func (ce *cacheEntry[K, V]) createCacheValue() (*cacheValue[K, V], error) {
 
 }
 
-func (ce *cacheEntry[K, V]) cleanupValues() bool {
+func (ce *cacheEntry[K, V]) cleanupValues(expiryDuration time.Duration) bool {
 	ce.lock.Lock()
 	defer ce.lock.Unlock()
 
-	stillValid := ce.getValidValuesAndCleanupOthers()
+	stillValid := ce.getValidValuesAndCleanupOthers(expiryDuration)
 	for _, value := range stillValid {
 		ce.available <- value
 	}
@@ -291,20 +294,18 @@ func (ce *cacheEntry[K, V]) cleanupValues() bool {
 	return ce.getAvailableCapacity() == ce.maxCapacity
 }
 
-func (ce *cacheEntry[K, V]) getValidValuesAndCleanupOthers() []*cacheValue[K, V] {
+func (ce *cacheEntry[K, V]) getValidValuesAndCleanupOthers(expiryDuration time.Duration) []*cacheValue[K, V] {
 	stillValid := make([]*cacheValue[K, V], 0, 8)
 L:
 	for {
 		select {
 		case value := <-ce.available:
-			value.lock.Lock()
-			if time.Since(value.lastUsed) >= time.Minute*30 {
+			if time.Since(value.lastUsed) >= expiryDuration {
 				value.value.Close()
 				ce.capacity <- 1
 			} else {
 				stillValid = append(stillValid, value)
 			}
-			value.lock.Unlock()
 		default:
 			break L
 		}
@@ -334,11 +335,9 @@ L:
 }
 
 func (cv *cacheValue[K, V]) returnToCache() {
-	defer cv.lock.Unlock()
 	cv.returnChan <- cv
 }
 
 func (cv *cacheValue[K, V]) acquireFromCache() {
-	cv.lock.Lock()
 	cv.lastUsed = time.Now()
 }

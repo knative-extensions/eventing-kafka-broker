@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
@@ -40,10 +41,13 @@ var (
 )
 
 func init() {
-	cache := NewLRUCache[clientKey, sarama.Client]()
+	cache := NewLRUCache[clientKey, sarama.Client](5*time.Minute, 30*time.Minute)
 
 	clients = &clientPool{
-		CachePool: cache,
+		CachePool:                 cache,
+		newSaramaClient:           sarama.NewClient,
+		newClusterAdminFromClient: sarama.NewClusterAdminFromClient,
+		capacityPerClient:         capacityPerClient,
 	}
 }
 
@@ -56,6 +60,9 @@ type clientKey struct {
 
 type clientPool struct {
 	*CachePool[clientKey, sarama.Client]
+	newSaramaClient           kafka.NewClientFunc // use this to mock the function for tests
+	newClusterAdminFromClient kafka.NewClusterAdminFromClientFunc
+	capacityPerClient         int
 }
 
 type ReturnClientFunc func()
@@ -76,7 +83,7 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 	if val, returnClient, ok, err := cp.Get(ctx, key); ok && err == nil {
 		logger.Debug("successfully got a client from the clientpool")
 		// check that the value is still good, as there are still some write errors
-		ca, err := sarama.NewClusterAdminFromClient(val)
+		ca, err := cp.newClusterAdminFromClient(val)
 		if err != nil {
 			returnClient()
 			return nil, NilReturnClientFunc, err
@@ -111,12 +118,12 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 
 	// create a new client in the client pool, and acquire capacity to start using it right away
 	saramaClient, returnClient, _, err := cp.AddAndAcquire(ctx, key, func() (sarama.Client, error) {
-		saramaClient, err := makeSaramaClient(bootstrapServers, secret)
+		saramaClient, err := cp.makeSaramaClient(bootstrapServers, secret)
 		if err != nil {
 			return nil, err
 		}
 		return saramaClient, nil
-	}, capacityPerClient)
+	}, cp.capacityPerClient)
 	if err != nil {
 		logger.Debug("failed to make a new client in the pool", zap.Error(err))
 		returnClient()
@@ -151,13 +158,13 @@ func (key clientKey) getBootstrapServers() []string {
 	return strings.Split(key.bootstrapServers, ",")
 }
 
-func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
+func (cp *clientPool) makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
 	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return nil, err
 	}
 
-	saramaClient, err := sarama.NewClient(bootstrapServers, config)
+	saramaClient, err := cp.newSaramaClient(bootstrapServers, config)
 	if err != nil {
 		return nil, err
 	}
@@ -169,12 +176,12 @@ func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
 	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
 			exists, err := cp.UpdateIfExists(key, func() (sarama.Client, error) {
-				saramaClient, err := makeSaramaClient(key.getBootstrapServers(), secret)
+				saramaClient, err := cp.makeSaramaClient(key.getBootstrapServers(), secret)
 				if err != nil {
 					return nil, err
 				}
 				return saramaClient, nil
-			}, capacityPerClient)
+			}, cp.capacityPerClient)
 
 			if err != nil && exists {
 				return fmt.Errorf("failed to update the sarama client in the clientpool after recreating the client with the new secret: %v", err)
@@ -186,22 +193,27 @@ func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
 	return nil
 }
 
+func (cp *clientPool) getClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error) {
+	c, returnFunc, err := cp.get(ctx, bootstrapServers, secret)
+	if err != nil {
+		return nil, NilReturnClientFunc, err
+	}
+	ca, err := cp.newClusterAdminFromClient(c)
+	if err != nil {
+		returnFunc()
+		return nil, NilReturnClientFunc, err
+	}
+	return ca, returnFunc, nil
+
+}
+
 func UpdateConnectionsWithSecret(secret *corev1.Secret) error {
 	return clients.updateConnectionsWithSecret(secret)
 }
 
 // GetClusterAdmin returns a sarama.ClusterAdmin along with a ReturnClientFunc. The ReturnClientFunc MUST be called by the caller.
 func GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error) {
-	c, returnFunc, err := clients.get(ctx, bootstrapServers, secret)
-	if err != nil {
-		return nil, NilReturnClientFunc, err
-	}
-	ca, err := sarama.NewClusterAdminFromClient(c)
-	if err != nil {
-		returnFunc()
-		return nil, NilReturnClientFunc, err
-	}
-	return ca, returnFunc, nil
+	return clients.getClusterAdmin(ctx, bootstrapServers, secret)
 }
 
 // GetClient returns a sarama.Client along with a ReturnClientFunc. The ReturnClientFunc MUST be called by the caller.

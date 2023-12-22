@@ -53,6 +53,9 @@ type NewClusterAdminClientFunc func(addrs []string, config *sarama.Config) (sara
 // NewClientFunc creates new sarama.Client.
 type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, error)
 
+// NewClusterAdminFromClientFunc creates new sarama.ClusterAdmin from sarama.Client
+type NewClusterAdminFromClientFunc func(sarama.Client) (sarama.ClusterAdmin, error)
+
 // GetSaramaConfig returns Kafka Client configuration with the given options applied.
 func GetSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
