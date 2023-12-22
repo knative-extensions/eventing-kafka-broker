@@ -18,6 +18,7 @@ package testing
 
 import (
 	"fmt"
+
 	"github.com/IBM/sarama"
 )
 
