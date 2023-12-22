@@ -23,6 +23,7 @@ import (
 	"time"
 )
 
+type zeroSized struct{}
 type CachePool[K comparable, V Closeable] struct {
 	lock           sync.RWMutex // protects changes to the evictionList
 	entries        map[K]*cacheEntry[K, V]
@@ -34,7 +35,7 @@ type CachePool[K comparable, V Closeable] struct {
 type cacheEntry[K comparable, V Closeable] struct {
 	lock        sync.RWMutex
 	available   chan *cacheValue[K, V]
-	capacity    chan int
+	capacity    chan zeroSized
 	maxCapacity int
 	createValue CreateNewValue[V]
 	key         K
@@ -87,11 +88,11 @@ func (c *CachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 	}
 
 	available := make(chan *cacheValue[K, V], maxEntries)
-	capacity := make(chan int, maxEntries)
+	capacity := make(chan zeroSized, maxEntries)
 
 	// need to fill up capacity chan initially so that we have starting capacity
 	for i := 0; i < maxEntries; i++ {
-		capacity <- 1
+		capacity <- zeroSized{}
 	}
 
 	entry := &cacheEntry[K, V]{
@@ -109,7 +110,7 @@ func (c *CachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 	value, err := entry.createCacheValue()
 
 	if err != nil {
-		capacity <- 1
+		capacity <- zeroSized{}
 		return defaultValue, NilReturnCapacityToCache, false, err
 	}
 
@@ -169,7 +170,7 @@ func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 	}
 
 	newAvailable := make(chan *cacheValue[K, V], maxEntries)
-	newCapacity := make(chan int, maxEntries)
+	newCapacity := make(chan zeroSized, maxEntries)
 
 	entry.lock.Lock()
 	availableCapacity := entry.getAvailableCapacity()
@@ -184,7 +185,7 @@ func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 
 	if maxEntries-inUse > 0 {
 		for i := 0; i < maxEntries-inUse; i++ {
-			newCapacity <- 1
+			newCapacity <- zeroSized{}
 		}
 	}
 
@@ -203,7 +204,7 @@ func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 
 		e := value.updateValue(createValue, newAvailable)
 		if e != nil {
-			entry.capacity <- 1 // this value is no longer in use
+			entry.capacity <- zeroSized{} // this value is no longer in use
 			err = errors.Join(err, e)
 			continue
 		}
@@ -258,7 +259,7 @@ func (ce *cacheEntry[K, V]) getValue(ctx context.Context) (V, ReturnClientFunc, 
 	case <-ce.capacity:
 		value, err := ce.createCacheValue()
 		if err != nil {
-			ce.capacity <- 1
+			ce.capacity <- zeroSized{}
 			return defaultValue, NilReturnCapacityToCache, err
 		}
 
@@ -302,7 +303,7 @@ L:
 		case value := <-ce.available:
 			if time.Since(value.lastUsed) >= expiryDuration {
 				value.value.Close()
-				ce.capacity <- 1
+				ce.capacity <- zeroSized{}
 			} else {
 				stillValid = append(stillValid, value)
 			}
@@ -328,7 +329,7 @@ L:
 
 	// we need to return the available capacity
 	for i := 0; i < availableCapacity; i++ {
-		ce.capacity <- 1
+		ce.capacity <- zeroSized{}
 	}
 
 	return availableCapacity
