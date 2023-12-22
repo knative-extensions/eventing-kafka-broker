@@ -23,6 +23,8 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 )
 
@@ -140,4 +142,66 @@ func TestGetClusterAdmin(t *testing.T) {
 	returnClient3()
 
 	cancel()
+}
+
+func TestListTopicsError(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+	cache := NewLRUCache[clientKey, sarama.Client](5*time.Minute, 30*time.Minute)
+
+	clients := &clientPool{
+		CachePool: cache,
+		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
+			return &kafkatesting.MockKafkaClient{}, nil
+		},
+		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
+			return &kafkatesting.MockKafkaClusterAdmin{}, nil
+		},
+		capacityPerClient: 2,
+	}
+
+	_, returnValue, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	returnValue()
+	assert.NoError(t, err)
+
+	_, returnValue, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	returnValue()
+	assert.NoError(t, err)
+
+	clients.newSaramaClient = func(_ []string, _ *sarama.Config) (sarama.Client, error) {
+		return &kafkatesting.MockKafkaClient{ShouldFailRefreshBrokers: true}, nil
+	}
+
+	err = clients.updateConnectionsWithSecret(nil)
+	assert.NoError(t, err)
+
+	_, returnValue, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	returnValue()
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "failed to refresh brokers")
+
+	clients.newSaramaClient = func(_ []string, _ *sarama.Config) (sarama.Client, error) {
+		return &kafkatesting.MockKafkaClient{ShouldFailRefreshMetadata: true}, nil
+	}
+
+	err = clients.updateConnectionsWithSecret(nil)
+	assert.NoError(t, err)
+
+	_, returnValue, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	returnValue()
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "failed to refresh metadata")
+
+	cancel()
+}
+
+func TestMakeClientKey(t *testing.T) {
+	key1 := makeClusterAdminKey([]string{"localhost:9090", "localhost:9091", "localhost:9092"}, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "secret", Namespace: "knative-eventing"}})
+	key2 := makeClusterAdminKey([]string{"localhost:9092", "localhost:9091", "localhost:9090"}, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "secret", Namespace: "knative-eventing"}})
+	key3 := makeClusterAdminKey([]string{"localhost:9090", "localhost:9091", "localhost:9092"}, nil)
+
+	assert.Equal(t, key1, key2)
+	assert.NotEqual(t, key1, key3)
 }

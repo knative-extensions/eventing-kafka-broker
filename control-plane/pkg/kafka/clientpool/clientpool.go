@@ -151,6 +151,9 @@ func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clien
 }
 
 func (key clientKey) matchesSecret(secret *corev1.Secret) bool {
+	if secret == nil {
+		return key.secretName == "" && key.secretNamespace == ""
+	}
 	return key.secretName == secret.GetName() && key.secretNamespace == secret.GetNamespace()
 }
 
