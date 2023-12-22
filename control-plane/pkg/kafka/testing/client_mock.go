@@ -17,12 +17,15 @@
 package testing
 
 import (
+	"fmt"
 	"github.com/IBM/sarama"
 )
 
 type MockKafkaClient struct {
-	CloseError error
-	IsClosed   bool
+	CloseError                error
+	IsClosed                  bool
+	ShouldFailRefreshMetadata bool
+	ShouldFailRefreshBrokers  bool
 }
 
 var _ sarama.Client = &MockKafkaClient{}
@@ -80,11 +83,20 @@ func (m MockKafkaClient) OfflineReplicas(topic string, partitionID int32) ([]int
 }
 
 func (m MockKafkaClient) RefreshBrokers(addrs []string) error {
-	panic("implement me")
+	if len(addrs) == 0 {
+		return fmt.Errorf("provide at least one broker to refresh them")
+	}
+	if m.ShouldFailRefreshBrokers {
+		return fmt.Errorf("failed to refresh brokers")
+	}
+	return nil
 }
 
 func (m MockKafkaClient) RefreshMetadata(topics ...string) error {
-	panic("implement me")
+	if m.ShouldFailRefreshMetadata {
+		return fmt.Errorf("failed to refresh metadata")
+	}
+	return nil
 }
 
 func (m MockKafkaClient) GetOffset(topic string, partitionID int32, time int64) (int64, error) {
