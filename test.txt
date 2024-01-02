@@ -2,3 +2,5 @@ Test results
 1. 2023-12-18 15:46 EST - Test passed
 2. 2023-12-18 16:33 EST - Test passed, but  Errors:
                                            Error:    LoomDataPlaneTest.execute(Vertx, VertxTestContext) » TopicExists Topic 'knative-eventing-42-kafka-broker-42' already exists.
+
+3. 2023-12-20 5:35 AM EST - Test passed
