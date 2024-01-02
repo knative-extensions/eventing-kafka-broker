@@ -27,7 +27,6 @@ type zeroSized struct{}
 type CachePool[K comparable, V Closeable] struct {
 	lock           sync.RWMutex // protects changes to the evictionList
 	entries        map[K]*cacheEntry[K, V]
-	lastChecked    time.Time
 	recheckPeriod  time.Duration // how long before rechecking entries for cleanup
 	expiryDuration time.Duration // how long before an entry expires
 }
@@ -56,12 +55,15 @@ type CreateNewValue[T Closeable] func() (T, error)
 func NilReturnCapacityToCache() {}
 
 func NewLRUCache[K comparable, V Closeable](recheckPeriod, expiryDuration time.Duration) *CachePool[K, V] {
-	return &CachePool[K, V]{
+	cp := &CachePool[K, V]{
 		entries:        map[K]*cacheEntry[K, V]{},
-		lastChecked:    time.Now(),
 		recheckPeriod:  recheckPeriod,
 		expiryDuration: expiryDuration,
 	}
+
+	go cp.cleanupEntries()
+
+	return cp
 }
 
 // AddAndAcquire adds a new value if there is not already a key in the cache, otherwise it returns a boolean indicating that the value already existed.
@@ -72,11 +74,6 @@ func (c *CachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 	defer c.lock.Unlock()
 
 	var defaultValue V
-
-	if time.Since(c.lastChecked) >= c.recheckPeriod {
-		c.lastChecked = time.Now()
-		go c.cleanupEntries() // do this in another goroutine so that we don't block here
-	}
 
 	if entry, ok := c.entries[key]; ok {
 		value, returnValue, err := entry.getValue(ctx)
@@ -121,11 +118,6 @@ func (c *CachePool[K, V]) AddAndAcquire(ctx context.Context, key K, createValue 
 func (c *CachePool[K, V]) Get(ctx context.Context, key K) (V, ReturnClientFunc, bool, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-
-	if time.Since(c.lastChecked) >= c.recheckPeriod {
-		c.lastChecked = time.Now()
-		go c.cleanupEntries() // do this in another goroutine so that we don't block here
-	}
 
 	var defaultValue V
 
@@ -220,13 +212,16 @@ func (c *CachePool[K, V]) UpdateIfExists(key K, createValue CreateNewValue[V], m
 }
 
 func (c *CachePool[K, V]) cleanupEntries() {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	for _, entry := range c.entries {
-		if noneLeft := entry.cleanupValues(c.expiryDuration); noneLeft {
-			delete(c.entries, entry.key)
+	t := time.NewTimer(c.recheckPeriod)
+	defer t.Stop()
+	for range t.C {
+		c.lock.Lock()
+		for _, entry := range c.entries {
+			if noneLeft := entry.cleanupValues(c.expiryDuration); noneLeft {
+				delete(c.entries, entry.key)
+			}
 		}
+		c.lock.Unlock()
 	}
 }
 
