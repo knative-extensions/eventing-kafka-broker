@@ -35,6 +35,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
+	triggerv2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger/v2"
 )
 
 const (
@@ -72,7 +73,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "trigger-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return trigger.NewController(ctx, watcher, brokerEnv)
+				return triggerv2.NewController(ctx, brokerEnv)
 			},
 		},
 
