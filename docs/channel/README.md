@@ -4,7 +4,6 @@
 
 This repository contains another KafkaChannel implementation, which we believe is more flexible and scalable.
 
-.
 
 While working on other KafkaChannel implementations we realized we could reuse the dataplane for other Knative Kafka
 components, namely Knative KafkaBroker and the Knative KafkaSink.
@@ -16,6 +15,14 @@ The dataplane is designed in a way that it only communicates the control plane v
 
 ## Comparison with other KafkaChannel implementations
 
+> [!NOTE]
+> Consolidated and Distributed Kafka channel are deprecated.
+
+You may find a comparison of this new KafkaChannel implementation with
+the [consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/75310cc459911463d4885d662ce3789996075142/pkg/channel/consolidated/README.md)
+and
+the [distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/75310cc459911463d4885d662ce3789996075142/pkg/channel/distributed/README.md)
+implementations.
 
 |                         | New KafkaChannel                                        | Consolidated KafkaChannel (Not supported anymore)                               | Distributed KafkaChannel (Not supported anymore)                                                             |
 |-------------------------|---------------------------------------------------------|---------------------------------------------------------|--------------------------------------------------------------------------------------|
