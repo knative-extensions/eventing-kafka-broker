@@ -4,13 +4,8 @@
 
 This repository contains another KafkaChannel implementation, which we believe is more flexible and scalable.
 
-There are already 2 other KafkaChannel implementations:
-the [consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
-and
-the [distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
-.
 
-While working on these 2 channel implementations, we realized we could reuse the dataplane for other Knative Kafka
+While working on other KafkaChannel implementations we realized we could reuse the dataplane for other Knative Kafka
 components, namely Knative KafkaBroker and the Knative KafkaSink.
 
 The dataplane is designed in a way that it only communicates the control plane via a configmap and thus it is:
@@ -20,13 +15,16 @@ The dataplane is designed in a way that it only communicates the control plane v
 
 ## Comparison with other KafkaChannel implementations
 
+> [!NOTE]
+> Consolidated and Distributed channel are deprecated.
+
 You may find a comparison of this new KafkaChannel implementation with
-the [consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/consolidated/README.md)
+the [deprecated consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/75310cc459911463d4885d662ce3789996075142/pkg/channel/consolidated/README.md)
 and
-the [distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/distributed/README.md)
+the [deprecated distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/75310cc459911463d4885d662ce3789996075142/pkg/channel/distributed/README.md)
 implementations.
 
-|                         | New KafkaChannel                                        | Consolidated KafkaChannel                               | Distributed KafkaChannel                                                             |
+|                         | New KafkaChannel                                        | Consolidated KafkaChannel (Not supported anymore)                               | Distributed KafkaChannel (Not supported anymore)                                                             |
 |-------------------------|---------------------------------------------------------|---------------------------------------------------------|--------------------------------------------------------------------------------------|
 | Delivery Guarantees     | At least once                                           | At least once                                           | At least once                                                                        |
 | Scalability             | Ingress and egress are in different pods and scalable** | Ingress and egress are in the same pod and not scalable | Ingress and egress are in different pods but not scalable                            |
@@ -156,8 +154,7 @@ implementations.
 
 ## Usage
 
-The API for the new KafkaChannel implementation is the same with the consolidated KafkaChannel. You can use your existing
-KafkaChannel custom objects as is, or you can create the `KafkaChannel` custom objects just like before:
+You can create the `KafkaChannel` custom objects just like:
 
    ```yaml
    apiVersion: messaging.knative.dev/v1beta1
@@ -177,6 +174,8 @@ the WebHook to `1`, `1`, and `PT168H` respectively.
 
 ## Migration
 
+> [!NOTE]
+> Consolidated and Distributed KafkaChannel are not supported anymore, please migrate to the new implementation.
 ### Breaking changes from consolidated channel
 
 There are a few breaking changes however automated migration is possible for migrations from the consolidated channel
@@ -370,7 +369,7 @@ or the whole Knative Kafka suite (`eventing-kafka.yaml`).
 
 You may find an example run of the automated migration below.
 
-Please note that the commands are run on a cluster that has Knative eventing and consolidated KafkaChannel already installed.
+Please note that the commands are run on a cluster that has Knative eventing already installed.
 
 ```sh
 
