@@ -167,6 +167,8 @@ the WebHook to `1`, `1`, and `PT168H` respectively.
 
 ## Migration
 
+> [!NOTE]
+> Consolidated and Distributed KafkaChannel are not supported anymore, please migrate to the new implementation.
 ### Breaking changes from consolidated channel
 
 There are a few breaking changes however automated migration is possible for migrations from the consolidated channel
