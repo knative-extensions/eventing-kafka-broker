@@ -16,7 +16,7 @@ The dataplane is designed in a way that it only communicates the control plane v
 ## Comparison with other KafkaChannel implementations
 
 > [!NOTE]
-> Consolidated and Distributed Kafka channel are deprecated.
+> Consolidated and Distributed channel are deprecated.
 
 You may find a comparison of this new KafkaChannel implementation with
 the [consolidated KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/75310cc459911463d4885d662ce3789996075142/pkg/channel/consolidated/README.md)
