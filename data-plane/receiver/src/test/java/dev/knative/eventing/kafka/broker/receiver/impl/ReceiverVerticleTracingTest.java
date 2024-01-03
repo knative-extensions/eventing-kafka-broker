@@ -104,7 +104,7 @@ public abstract class ReceiverVerticleTracingTest {
         this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
         this.webClient = WebClient.create(
-                vertx, (WebClientOptions) new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
+                vertx, new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
         this.mockProducer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
 
         this.store = new IngressProducerReconcilableStore(
@@ -178,7 +178,7 @@ public abstract class ReceiverVerticleTracingTest {
 
         assertThat(response.statusCode()).isEqualTo(ACCEPTED.code());
 
-        if (mockProducer.history().size() > 0) {
+        if (!mockProducer.history().isEmpty()) {
             assertThat(mockProducer.history()).extracting(ProducerRecord::value).containsExactlyInAnyOrder(inputEvent);
 
             assertThat(mockProducer.history())

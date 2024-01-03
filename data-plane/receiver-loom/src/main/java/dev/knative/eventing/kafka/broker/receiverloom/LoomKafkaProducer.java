@@ -53,8 +53,12 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         this.isClosed = new AtomicBoolean(false);
         this.vertx = (VertxInternal) v;
         final var ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
-        this.tracer =
-                new ProducerTracer(ctxInt.tracer(), TracingPolicy.PROPAGATE, "" /* TODO add bootrstrap servers */);
+        if (ctxInt.tracer() != null) {
+          this.tracer =
+            new ProducerTracer(ctxInt.tracer(), TracingPolicy.PROPAGATE, "" /* TODO add bootrstrap servers */);
+        } else {
+          this.tracer = null;
+        }
 
         sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
     }
