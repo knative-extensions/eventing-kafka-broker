@@ -41,6 +41,7 @@ import (
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	"knative.dev/eventing/pkg/apis/feature"
 )
 
 type Reconciler struct {
@@ -150,14 +151,17 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
 	}
 
+	filter, filters := reconcileFilters(ctx, c)
+
 	egress := &contract.Egress{
-		ConsumerGroup: c.Spec.Configs.Configs["group.id"],
-		Destination:   destinationAddr.URL.String(),
-		ReplyStrategy: nil, // Reply will be added by reconcileReplyStrategy
-		Filter:        reconcileFilters(c),
-		Uid:           string(c.UID),
-		EgressConfig:  egressConfig,
-		DeliveryOrder: reconcileDeliveryOrder(c),
+		ConsumerGroup:   c.Spec.Configs.Configs["group.id"],
+		Destination:     destinationAddr.URL.String(),
+		ReplyStrategy:   nil, // Reply will be added by reconcileReplyStrategy
+		Filter:          filter,
+		DialectedFilter: filters,
+		Uid:             string(c.UID),
+		EgressConfig:    egressConfig,
+		DeliveryOrder:   reconcileDeliveryOrder(c),
 
 		KeyType: 0, // TODO handle key type
 
@@ -294,15 +298,25 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 	return nil
 }
 
-func reconcileFilters(c *kafkainternals.Consumer) *contract.Filter {
+func reconcileFilters(ctx context.Context, c *kafkainternals.Consumer) (*contract.Filter, []*contract.DialectedFilter) {
 	if c.Spec.Filters == nil {
-		return nil
-	}
-	if c.Spec.Filters.Filter != nil {
-		return &contract.Filter{Attributes: c.Spec.Filters.Filter.Attributes}
+		return nil, nil
 	}
 
-	return nil
+	var filter *contract.Filter
+	filters := make([]*contract.DialectedFilter, 0, 8)
+
+	if c.Spec.Filters.Filter != nil {
+		filter = &contract.Filter{Attributes: c.Spec.Filters.Filter.Attributes}
+	}
+
+	if feature.FromContext(ctx).IsEnabled(feature.NewTriggerFilters) && c.Spec.Filters.Filters != nil {
+		for _, f := range c.Spec.Filters.Filters {
+			filters = append(filters, contract.FromSubscriptionFilter(f))
+		}
+	}
+
+	return filter, filters
 }
 
 type contractMutatorFunc func(logger *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) int

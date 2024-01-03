@@ -20,6 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/pkg/logging"
+
 	"github.com/kelseyhightower/envconfig"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -58,7 +61,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KafkaFeatureFlags:   config.DefaultFeaturesConfig(),
 	}
 
-	impl := creconciler.NewImpl(ctx, r)
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	featureStore.WatchConfigs(watcher)
+
+	impl := creconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{ConfigStore: featureStore}
+	})
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
