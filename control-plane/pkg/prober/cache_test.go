@@ -31,11 +31,11 @@ func TestInMemoryLocalCache(t *testing.T) {
 	d := time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), d*2)
 	defer cancel()
-	c := NewLocalExpiringCache(ctx, d)
+	c := NewLocalExpiringCache[string, int](ctx, d)
 	testCache(t, ctx, c, d)
 }
 
-func testCache(t *testing.T, ctx context.Context, c Cache, d time.Duration) {
+func testCache(t *testing.T, ctx context.Context, c Cache[string, int], d time.Duration) {
 	var wg sync.WaitGroup
 	errors := make(chan error, 1)
 
@@ -74,14 +74,14 @@ func testCache(t *testing.T, ctx context.Context, c Cache, d time.Duration) {
 	}
 }
 
-func verifyNoExpired(errors chan<- error) func(key string, arg interface{}) {
-	return func(key string, arg interface{}) {
+func verifyNoExpired(errors chan<- error) func(key string, arg int) {
+	return func(_ string, _ int) {
 		errors <- fmt.Errorf("unexpected call to onExpired callback")
 	}
 }
 
-func verifyOnExpired(expectedKey string, expectedArg interface{}, wg *sync.WaitGroup, errors chan<- error) func(key string, arg interface{}) {
-	return func(key string, arg interface{}) {
+func verifyOnExpired(expectedKey string, expectedArg int, wg *sync.WaitGroup, errors chan<- error) func(key string, arg int) {
+	return func(key string, arg int) {
 		if expectedKey != key {
 			errors <- fmt.Errorf("expected key to be %v got %v", expectedKey, key)
 		}

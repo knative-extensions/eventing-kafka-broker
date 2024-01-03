@@ -38,7 +38,7 @@ type asyncProber struct {
 	client    httpClient
 	enqueue   EnqueueFunc
 	logger    *zap.Logger
-	cache     Cache
+	cache     Cache[string, types.NamespacedName]
 	IPsLister IPsLister
 	port      string
 	clientMu  sync.Mutex
@@ -58,7 +58,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		client:    client,
 		enqueue:   enqueue,
 		logger:    logger,
-		cache:     NewLocalExpiringCache(ctx, cacheExpiryTime),
+		cache:     NewLocalExpiringCache[string, types.NamespacedName](ctx, cacheExpiryTime),
 		IPsLister: IPsLister,
 		port:      port,
 		clientMu:  sync.Mutex{},
@@ -161,8 +161,8 @@ func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, 
 	return *aggregatedCurrentKnownStatus
 }
 
-func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
-	a.enqueue(arg.(types.NamespacedName))
+func (a *asyncProber) enqueueArg(_ string, arg types.NamespacedName) {
+	a.enqueue(arg)
 }
 
 func (a *asyncProber) rotateRootCaCerts(caCerts *string) error {
