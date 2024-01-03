@@ -437,51 +437,29 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	// Existing Triggers might not yet have this annotation
 	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
 	if !ok {
+
 		// Check if a consumer group exists with the old naming convention
 		groupID = string(trigger.UID)
 
-		valid, err := kafka.AreConsumerGroupsPresentAndValid(kafkaClusterAdmin, groupID)
+		exists, err := kafka.AreConsumerGroupsPresentAndValid(kafkaClusterAdmin, groupID)
 		if err != nil {
-			if isPermissionError(err) {
-				return false, nil
-			} else {
-				logger.Warn(
-					"unable to query for existing consumergroup:",
-					zap.Error(err),
-				)
-				return false, fmt.Errorf("error checking consumer group: %w", err)
-			}
+			return false, fmt.Errorf("error checking consumer group exists: %w", err)
 		}
 
-		// No existing consumer groups, use new naming
-		if !valid {
+		if exists {
+			// Consumer group already exists, use it
+			trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
+		} else {
+			// Generate new group ID
 			groupID, err = r.KafkaFeatureFlags.ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
 			if err != nil {
 				return false, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
 			}
+
+			trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
 		}
 
-		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
 	}
-
-	// Helper function to check if error is permission related
-	func isPermissionError (err error) bool {
-
-		// Check if error type is sarama.ErrTopicAuthorizationFailed
-		if errors.Is(err, sarama.ErrTopicAuthorizationFailed) {
-		  return true
-		}
-	  
-		// Check if error contains common permission denied substrings
-		permissionErrors := []string{"permission denied", "access denied", "authorization failed"}
-		for _, substr := range permissionErrors {
-		  if strings.Contains(strings.ToLower(err.Error()), substr) {
-			return true
-		  }
-		}
-	  
-		return false
-	  }
 
 	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
 	if err != nil {
