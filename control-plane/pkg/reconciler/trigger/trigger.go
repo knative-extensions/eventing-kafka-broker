@@ -442,7 +442,15 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 
 		valid, err := kafka.AreConsumerGroupsPresentAndValid(kafkaClusterAdmin, groupID)
 		if err != nil {
-			return false, fmt.Errorf("unable to query for existing consumergroup: %w", err)
+			if isPermissionError(err) {
+				return false, nil
+			} else {
+				logger.Warn(
+					"unable to query for existing consumergroup:",
+					zap.Error(err),
+				)
+				return false, fmt.Errorf("error checking consumer group: %w", err)
+			}
 		}
 
 		// No existing consumer groups, use new naming
@@ -455,6 +463,25 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 
 		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
 	}
+
+	// Helper function to check if error is permission related
+	func isPermissionError (err error) bool {
+
+		// Check if error type is sarama.ErrTopicAuthorizationFailed
+		if errors.Is(err, sarama.ErrTopicAuthorizationFailed) {
+		  return true
+		}
+	  
+		// Check if error contains common permission denied substrings
+		permissionErrors := []string{"permission denied", "access denied", "authorization failed"}
+		for _, substr := range permissionErrors {
+		  if strings.Contains(strings.ToLower(err.Error()), substr) {
+			return true
+		  }
+		}
+	  
+		return false
+	  }
 
 	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)
 	if err != nil {
