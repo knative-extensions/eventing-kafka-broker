@@ -46,28 +46,6 @@ func NewDeployment(name, namespace string, do ...DeploymentOption) *appsv1.Deplo
 	return d
 }
 
-type StatefulSetOption func(*appsv1.StatefulSet)
-
-func NewStatefulSet(name, namespace string, sso ...StatefulSetOption) *appsv1.StatefulSet {
-	ss := &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name: name,
-		},
-		Spec: appsv1.StatefulSetSpec{
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{}},
-				},
-			},
-		},
-	}
-	for _, opt := range sso {
-		opt(ss)
-	}
-	return ss
-}
-
 func WithDeploymentLabels(labels map[string]string) DeploymentOption {
 	return func(d *appsv1.Deployment) {
 		d.ObjectMeta.Labels = labels
