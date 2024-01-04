@@ -26,6 +26,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
 
 func TestGetClient(t *testing.T) {
@@ -33,17 +34,16 @@ func TestGetClient(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-	cache := NewLRUCache[clientKey, sarama.Client](5*time.Minute, 30*time.Minute)
+	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
 	clients := &clientPool{
-		CachePool: cache,
+		Cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{}, nil
 		},
 		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
 			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}}, nil
 		},
-		capacityPerClient: 2,
 	}
 
 	client1, returnClient1, err := clients.get(ctx, []string{"localhost:9092"}, nil)
@@ -62,26 +62,16 @@ func TestGetClient(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	shortContext, cancelShortContext := context.WithTimeout(context.Background(), time.Millisecond*200)
-
-	client3, returnClient3, err := clients.get(shortContext, []string{"localhost:9092"}, nil)
-	returnClient3()
-	cancelShortContext()
-
-	assert.Error(t, err)
-	assert.Nil(t, client3)
-
-	returnClient1()
-
-	client3, returnClient3, err = clients.get(ctx, []string{"localhost:9092"}, nil)
+	client3, returnClient3, err := clients.get(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
 
 	controller, err = client3.Controller()
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	returnClient2()
-	returnClient3()
+	returnClient1(false)
+	returnClient2(false)
+	returnClient3(false)
 
 	cancel()
 }
@@ -91,17 +81,16 @@ func TestGetClusterAdmin(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-	cache := NewLRUCache[clientKey, sarama.Client](5*time.Minute, 30*time.Minute)
+	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
 	clients := &clientPool{
-		CachePool: cache,
+		Cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{}, nil
 		},
 		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
 			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}}, nil
 		},
-		capacityPerClient: 2,
 	}
 
 	client1, returnClient1, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
@@ -120,79 +109,16 @@ func TestGetClusterAdmin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	shortContext, cancelShortContext := context.WithTimeout(context.Background(), time.Millisecond*200)
-
-	client3, returnClient3, err := clients.getClusterAdmin(shortContext, []string{"localhost:9092"}, nil)
-	returnClient3()
-	cancelShortContext()
-
-	assert.Error(t, err)
-	assert.Nil(t, client3)
-
-	returnClient1()
-
-	client3, returnClient3, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	client3, returnClient3, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
 
 	topics, err = client3.ListTopics()
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	returnClient2()
-	returnClient3()
-
-	cancel()
-}
-
-func TestListTopicsError(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-
-	cache := NewLRUCache[clientKey, sarama.Client](5*time.Minute, 30*time.Minute)
-
-	clients := &clientPool{
-		CachePool: cache,
-		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
-			return &kafkatesting.MockKafkaClient{}, nil
-		},
-		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
-			return &kafkatesting.MockKafkaClusterAdmin{}, nil
-		},
-		capacityPerClient: 2,
-	}
-
-	_, returnValue, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
-	returnValue()
-	assert.NoError(t, err)
-
-	_, returnValue, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
-	returnValue()
-	assert.NoError(t, err)
-
-	clients.newSaramaClient = func(_ []string, _ *sarama.Config) (sarama.Client, error) {
-		return &kafkatesting.MockKafkaClient{ShouldFailRefreshBrokers: true}, nil
-	}
-
-	err = clients.updateConnectionsWithSecret(nil)
-	assert.NoError(t, err)
-
-	_, returnValue, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
-	returnValue()
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "failed to refresh brokers")
-
-	clients.newSaramaClient = func(_ []string, _ *sarama.Config) (sarama.Client, error) {
-		return &kafkatesting.MockKafkaClient{ShouldFailRefreshMetadata: true}, nil
-	}
-
-	err = clients.updateConnectionsWithSecret(nil)
-	assert.NoError(t, err)
-
-	_, returnValue, err = clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
-	returnValue()
-	assert.Error(t, err)
-	assert.ErrorContains(t, err, "failed to refresh metadata")
+	returnClient1(false)
+	returnClient2(false)
+	returnClient3(false)
 
 	cancel()
 }

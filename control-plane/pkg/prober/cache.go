@@ -52,22 +52,22 @@ func (s Status) String() string {
 }
 
 // Cache is a key-status store.
-type Cache[K comparable, V interface{}] interface {
+type Cache[K comparable, V, A interface{}] interface {
 	// GetStatus retries the status associated with the given key.
-	GetStatus(key K) Status
-	// Get retrieves the status and value associated with the given key.
-	Get(key K) (V, Status)
+	Get(key K) (V, bool)
 	// UpsertStatus add or updates the status associated with the given key.
 	// Once the given key expires the onExpired callback will be called passing the arg parameter.
-	UpsertStatus(key K, status Status, arg V, onExpired ExpirationFunc[K, V])
+	UpsertStatus(key K, value V, arg A, onExpired ExpirationFunc[K, V, A])
 	// Expire will expire the given key.
 	Expire(key K)
+	// Keys returns all of the keys currently in the cache that have not expired
+	Keys() []K
 }
 
 // ExpirationFunc is a callback called once an entry in the cache is expired.
-type ExpirationFunc[K comparable, V interface{}] func(key K, arg V)
+type ExpirationFunc[K comparable, V, A interface{}] func(key K, value V, arg A)
 
-type localExpiringCache[K comparable, V interface{}] struct {
+type localExpiringCache[K comparable, V, A interface{}] struct {
 	// mu protects targets and entries
 	mu sync.RWMutex
 	// targets is a map of key-pointer to an element in the entries list.
@@ -79,16 +79,16 @@ type localExpiringCache[K comparable, V interface{}] struct {
 	expiration time.Duration
 }
 
-type value[K comparable, V interface{}] struct {
-	status     Status
+type value[K comparable, V, A interface{}] struct {
 	lastUpsert time.Time
 	key        K
-	arg        V
-	onExpired  ExpirationFunc[K, V]
+	value      V
+	arg        A
+	onExpired  ExpirationFunc[K, V, A]
 }
 
-func NewLocalExpiringCache[K comparable, V interface{}](ctx context.Context, expiration time.Duration) Cache[K, V] {
-	c := &localExpiringCache[K, V]{
+func NewLocalExpiringCache[K comparable, V, A interface{}](ctx context.Context, expiration time.Duration) Cache[K, V, A] {
+	c := &localExpiringCache[K, V, A]{
 		mu:         sync.RWMutex{},
 		targets:    make(map[K]*list.Element, 64),
 		entries:    list.New().Init(),
@@ -107,28 +107,23 @@ func NewLocalExpiringCache[K comparable, V interface{}](ctx context.Context, exp
 	return c
 }
 
-func (c *localExpiringCache[K, V]) Get(key K) (V, Status) {
+func (c *localExpiringCache[K, V, A]) Get(key K) (V, bool) {
 	var defaultValue V
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	if v, ok := c.targets[key]; ok {
-		value := v.Value.(*value[K, V])
+		value := v.Value.(*value[K, V, A])
 		if !c.isExpired(value, time.Now()) {
-			return value.arg, value.status
+			return value.value, true
 		}
 	}
-	return defaultValue, StatusUnknown
+	return defaultValue, false
 
 }
 
-func (c *localExpiringCache[K, V]) GetStatus(key K) Status {
-	_, status := c.Get(key)
-	return status
-}
-
-func (c *localExpiringCache[K, V]) UpsertStatus(key K, status Status, arg V, onExpired ExpirationFunc[K, V]) {
+func (c *localExpiringCache[K, V, A]) UpsertStatus(key K, val V, arg A, onExpired ExpirationFunc[K, V, A]) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -137,12 +132,27 @@ func (c *localExpiringCache[K, V]) UpsertStatus(key K, status Status, arg V, onE
 		c.entries.Remove(v)
 	}
 
-	value := &value[K, V]{status: status, lastUpsert: time.Now(), key: key, arg: arg, onExpired: onExpired}
+	value := &value[K, V, A]{value: val, lastUpsert: time.Now(), key: key, arg: arg, onExpired: onExpired}
 	element := c.entries.PushBack(value)
 	c.targets[key] = element
 }
 
-func (c *localExpiringCache[K, V]) Expire(key K) {
+func (c *localExpiringCache[K, V, A]) Keys() []K {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	keys := make([]K, 0, len(c.targets))
+	for k, v := range c.targets {
+		value := v.Value.(*value[K, V, A])
+		if !c.isExpired(value, time.Now()) {
+			keys = append(keys, k)
+		}
+	}
+
+	return keys
+}
+
+func (c *localExpiringCache[K, V, A]) Expire(key K) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -154,21 +164,21 @@ func (c *localExpiringCache[K, V]) Expire(key K) {
 	delete(c.targets, key)
 }
 
-func (c *localExpiringCache[K, V]) removeExpiredEntries(now time.Time) {
+func (c *localExpiringCache[K, V, A]) removeExpiredEntries(now time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	for curr := c.entries.Front(); curr != nil && c.isExpired(curr.Value.(*value[K, V]), now); {
-		v := curr.Value.(*value[K, V])
+	for curr := c.entries.Front(); curr != nil && c.isExpired(curr.Value.(*value[K, V, A]), now); {
+		v := curr.Value.(*value[K, V, A])
 		delete(c.targets, v.key)
 		prev := curr
 		curr = curr.Next()
 		c.entries.Remove(prev)
 
-		v.onExpired(v.key, v.arg)
+		v.onExpired(v.key, v.value, v.arg)
 	}
 }
 
-func (c *localExpiringCache[K, V]) isExpired(v *value[K, V], now time.Time) bool {
+func (c *localExpiringCache[K, V, A]) isExpired(v *value[K, V, A], now time.Time) bool {
 	return v.lastUpsert.Add(c.expiration).Before(now)
 }
