@@ -103,8 +103,7 @@ public abstract class ReceiverVerticleTracingTest {
 
         this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
-        this.webClient = WebClient.create(
-                vertx, new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
+        this.webClient = WebClient.create(vertx, new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS));
         this.mockProducer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
 
         this.store = new IngressProducerReconcilableStore(
