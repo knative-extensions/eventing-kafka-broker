@@ -422,7 +422,7 @@ func (r *NamespacedReconciler) createResourceFromSystemConfigMap(broker *eventin
 func (r *NamespacedReconciler) createManifestFromSystemStatefulSet(broker *eventing.Broker, name string) (unstructured.Unstructured, error) {
 	sysStatefulSet, err := r.StatefulSetLister.StatefulSets(r.SystemNamespace).Get(name)
 	if err != nil {
-		return unstructured.Unstructured{}, fmt.Errorf("failed to get Deployment %s/%s: %w", r.SystemNamespace, name, err)
+		return unstructured.Unstructured{}, fmt.Errorf("failed to get StatefulSet %s/%s: %w", r.SystemNamespace, name, err)
 	}
 
 	cm := &appsv1.StatefulSet{
