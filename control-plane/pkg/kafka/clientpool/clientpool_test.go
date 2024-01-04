@@ -69,9 +69,9 @@ func TestGetClient(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	returnClient1(false)
-	returnClient2(false)
-	returnClient3(false)
+	returnClient1(nil)
+	returnClient2(nil)
+	returnClient3(nil)
 
 	cancel()
 }
@@ -116,9 +116,9 @@ func TestGetClusterAdmin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	returnClient1(false)
-	returnClient2(false)
-	returnClient3(false)
+	returnClient1(nil)
+	returnClient2(nil)
+	returnClient3(nil)
 
 	cancel()
 }

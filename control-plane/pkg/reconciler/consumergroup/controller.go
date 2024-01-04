@@ -131,7 +131,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
-		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, 20*time.Minute),
+		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, 20*time.Minute),
 	}
 
 	consumerInformer := consumer.Get(ctx)

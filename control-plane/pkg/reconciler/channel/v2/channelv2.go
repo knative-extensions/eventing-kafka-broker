@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -177,7 +178,8 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 
 	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	defer returnClusterAdmin()
+	var returnOnce sync.Once
+	defer returnOnce.Do(func() { returnClusterAdmin(nil) })
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
@@ -185,6 +187,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	// create the topic
 	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 	if err != nil {
+		returnOnce.Do(func() { returnClusterAdmin(err) })
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
 	logger.Debug("Topic created", zap.Any("topic", topic))
@@ -463,7 +466,8 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 
 	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	defer returnClusterAdmin()
+	var returnOnce sync.Once
+	defer returnOnce.Do(func() { returnClusterAdmin(nil) })
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
@@ -476,6 +480,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
+		returnOnce.Do(func() { returnClusterAdmin(err) })
 		return err
 	}
 

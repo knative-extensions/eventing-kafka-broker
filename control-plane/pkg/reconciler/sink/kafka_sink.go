@@ -19,6 +19,7 @@ package sink
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -114,7 +115,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
-	defer returnClusterAdmin()
+	var returnOnce sync.Once
+	defer returnOnce.Do(func() { returnClusterAdmin(nil) })
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
@@ -127,6 +129,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, ks.Spec.Topic, topicConfig)
 		if err != nil {
+			returnOnce.Do(func() { returnClusterAdmin(err) })
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}
 	} else {
@@ -136,6 +139,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {
+			returnOnce.Do(func() { returnClusterAdmin(err) })
 			return statusConditionManager.TopicsNotPresentOrInvalidErr([]string{ks.Spec.Topic}, err)
 		}
 		if !isPresentAndValid {
@@ -375,7 +379,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		}
 
 		kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
-		defer returnClusterAdmin()
+		var returnOnce sync.Once
+		defer returnOnce.Do(func() { returnClusterAdmin(nil) })
 		if err != nil {
 			// even in error case, we return `normal`, since we are fine with leaving the
 			// topic undeleted e.g. when we lose connection
@@ -384,6 +389,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 
 		topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {
+			returnOnce.Do(func() { returnClusterAdmin(err) })
 			return err
 		}
 		logger.Debug("Topic deleted", zap.String("topic", topic))

@@ -1691,7 +1691,7 @@ func TestReconcileKind(t *testing.T) {
 			SystemNamespace:                    systemNamespace,
 			AutoscalerConfig:                   "",
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
-			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, time.Second),
+			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 			EnqueueKey:                         func(key string) {},
 		}
 
@@ -1833,7 +1833,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			},
 			SystemNamespace:                    systemNamespace,
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
-			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, time.Second),
+			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 			EnqueueKey:                         func(key string) {},
 		}
 
@@ -2238,7 +2238,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			KafkaFeatureFlags:                  configapis.DefaultFeaturesConfig(),
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
-			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, time.Second),
+			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 		}
 
 		return consumergroup.NewReconciler(

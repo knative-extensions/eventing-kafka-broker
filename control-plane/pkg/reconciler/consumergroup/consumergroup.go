@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -171,7 +172,7 @@ type Reconciler struct {
 	// When there is high load and multiple consumer group schedule calls, we get many
 	// `dial tcp 10.130.4.8:9092: i/o timeout` errors when trying to connect to Kafka.
 	// This leads to increased "time to readiness" for consumer groups.
-	InitOffsetLatestInitialOffsetCache prober.Cache
+	InitOffsetLatestInitialOffsetCache prober.Cache[string, prober.Status, struct{}]
 
 	EnqueueKey func(key string)
 }
@@ -269,13 +270,15 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
 	kafkaClusterAdminClient, returnCaFunc, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
-	defer returnCaFunc()
+	var returnOnce sync.Once
+	defer returnOnce.Do(func() { returnCaFunc(nil) })
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	if err = kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errorIsOneOf(err, sarama.ErrUnknownTopicOrPartition, sarama.ErrGroupIDNotFound) {
+		returnOnce.Do(func() { returnCaFunc(err) })
 		return fmt.Errorf("unable to delete the consumer group %s: %w", groupId, err)
 	}
 
@@ -526,7 +529,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 		return nil
 	}
 
-	if status := r.InitOffsetLatestInitialOffsetCache.GetStatus(keyOf(cg)); status == prober.StatusReady {
+	if status, ok := r.InitOffsetLatestInitialOffsetCache.Get(keyOf(cg)); ok && status == prober.StatusReady {
 		return nil
 	}
 
@@ -538,13 +541,15 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
 	kafkaClusterAdminClient, returnCaFunc, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
-	defer returnCaFunc()
+	var clusterAdminOnce sync.Once
+	defer clusterAdminOnce.Do(func() { returnCaFunc(nil) })
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 
 	kafkaClient, returnClientFunc, err := r.GetkafkaClient(ctx, bootstrapServers, kafkaSecret)
-	defer returnClientFunc()
+	var clientOnce sync.Once
+	defer clientOnce.Do(func() { returnClientFunc(nil) })
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
@@ -553,10 +558,12 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	topics := cg.Spec.Template.Spec.Topics
 
 	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId); err != nil {
+		clusterAdminOnce.Do(func() { returnCaFunc(err) })
+		clientOnce.Do(func() { returnClientFunc(err) })
 		return fmt.Errorf("failed to initialize offset: %w", err)
 	}
 
-	r.InitOffsetLatestInitialOffsetCache.UpsertStatus(keyOf(cg), prober.StatusReady, nil, func(key string, arg interface{}) {
+	r.InitOffsetLatestInitialOffsetCache.UpsertStatus(keyOf(cg), prober.StatusReady, struct{}{}, func(key string, _ prober.Status, _ struct{}) {
 		r.EnqueueKey(key)
 	})
 

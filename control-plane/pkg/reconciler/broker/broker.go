@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -282,8 +283,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.Broker, secret *corev1.Secret, statusConditionManager base.StatusConditionManager, topicConfig *kafka.TopicConfig, logger *zap.Logger) (string, reconciler.Event) {
 
+	var once sync.Once
 	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
-	defer returnClusterAdmin()
+	defer once.Do(func() { returnClusterAdmin(nil) })
 	if err != nil {
 		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
@@ -294,6 +296,7 @@ func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.
 	if externalTopic {
 		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdminClient, topicName)
 		if err != nil {
+			once.Do(func() { returnClusterAdmin(err) })
 			return "", statusConditionManager.TopicsNotPresentOrInvalidErr([]string{topicName}, err)
 		}
 		if !isPresentAndValid {
@@ -314,6 +317,7 @@ func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.
 
 		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 		if err != nil {
+			once.Do(func() { returnClusterAdmin(err) })
 			return "", statusConditionManager.FailedToCreateTopic(topic, err)
 		}
 	}
@@ -490,7 +494,8 @@ func (r *Reconciler) deleteResourceFromContractConfigMap(ctx context.Context, lo
 func (r *Reconciler) finalizeNonExternalBrokerTopic(ctx context.Context, broker *eventing.Broker, secret *corev1.Secret, topicConfig *kafka.TopicConfig, logger *zap.Logger) reconciler.Event {
 
 	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
-	defer returnClusterAdmin()
+	var once sync.Once
+	defer once.Do(func() { returnClusterAdmin(nil) })
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
@@ -503,6 +508,7 @@ func (r *Reconciler) finalizeNonExternalBrokerTopic(ctx context.Context, broker 
 	}
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
+		once.Do(func() { returnClusterAdmin(err) })
 		return err
 	}
 

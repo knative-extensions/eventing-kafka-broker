@@ -66,11 +66,11 @@ type clientPool struct {
 	newClusterAdminFromClient kafka.NewClusterAdminFromClientFunc
 }
 
-type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error)
-type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error)
-type ReturnClientFunc func(bool)
+type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error)
+type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error)
+type ReturnClientFunc func(error)
 
-func NilReturnClientFunc(bool) {}
+func NilReturnClientFunc(error) {}
 
 func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
@@ -88,9 +88,9 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 		cp.lock.RUnlock()
 
 		val.lock.RLock()
-		return val, func(shouldExpire bool) {
+		return val, func(err error) {
 			val.lock.RUnlock()
-			if shouldExpire {
+			if err != nil && strings.Contains(err.Error(), "broken pipe") {
 				cp.Expire(key)
 			}
 		}, nil
@@ -107,9 +107,9 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 		logger.Debug("successfully got a client from the clientpool")
 
 		val.lock.RLock()
-		return val, func(shouldExpire bool) {
+		return val, func(err error) {
 			val.lock.RUnlock()
-			if shouldExpire {
+			if err != nil && strings.Contains(err.Error(), "broken pipe") {
 				cp.Expire(key)
 			}
 		}, nil
@@ -131,9 +131,9 @@ func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret
 	})
 
 	val.lock.RLock()
-	return val, func(shouldExpire bool) {
+	return val, func(err error) {
 		val.lock.RUnlock()
-		if shouldExpire {
+		if err != nil && strings.Contains(err.Error(), "broken pipe") {
 			cp.Expire(key)
 		}
 	}, nil
@@ -212,7 +212,7 @@ func (cp *clientPool) getClusterAdmin(ctx context.Context, bootstrapServers []st
 	}
 	ca, err := cp.newClusterAdminFromClient(c)
 	if err != nil {
-		returnFunc(true)
+		returnFunc(err)
 		return nil, NilReturnClientFunc, err
 	}
 	return ca, returnFunc, nil
