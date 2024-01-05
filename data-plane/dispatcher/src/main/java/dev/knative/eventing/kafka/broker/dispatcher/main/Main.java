@@ -84,7 +84,7 @@ public class Main {
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
         consumerConfig.put(
                 ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
-                InvalidCloudEventInterceptor.class.getName() + "," + NullCloudEventInterceptor.class.getName());
+                NullCloudEventInterceptor.class.getName() + "," + InvalidCloudEventInterceptor.class.getName());
 
         // Read WebClient config
         JsonObject webClientConfig = Configurations.readPropertiesAsJsonSync(env.getWebClientConfigFilePath());
