@@ -20,11 +20,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"k8s.io/client-go/kubernetes"
 	"log"
 
-	"knative.dev/pkg/environment"
+	"k8s.io/client-go/kubernetes"
 
+	"knative.dev/pkg/environment"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
 )
