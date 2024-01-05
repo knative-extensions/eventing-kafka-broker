@@ -417,7 +417,12 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	}
 	bootstrapServersArr := kafka.BootstrapServersArray(bootstrapServers)
 
-	saramaConfig, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret))
+	securityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse secret data for kafka: %w", err)
+	}
+
+	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		return false, fmt.Errorf("failed to get sarama config: %w", err)
 	}

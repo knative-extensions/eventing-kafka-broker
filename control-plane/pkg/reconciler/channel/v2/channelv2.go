@@ -155,13 +155,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		)
 	}
 
-	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+	// get security option for Sarama with secret info in it
+	saramaSecurityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
 	}
-
-	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
 
 	if channel.Status.Annotations == nil {
 		channel.Status.Annotations = make(map[string]string)
@@ -211,6 +209,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
+	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
+	}
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
 	if err != nil {
@@ -464,13 +466,11 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		)
 	}
 
-	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-	if err != nil {
-		return fmt.Errorf("failed to resolve auth context: %w", err)
-	}
-
 	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
+	saramaSecurityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
+	if err != nil {
+		return fmt.Errorf("failed to parse kafka secret data: %w", err)
+	}
 
 	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {

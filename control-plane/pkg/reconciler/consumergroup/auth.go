@@ -36,11 +36,7 @@ func (r *Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals
 			return nil, err
 		}
 
-		authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-		if err != nil {
-			return nil, err
-		}
-		return security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret), nil
+		return security.NewSaramaSecurityOptionFromSecret(secret)
 
 	} else if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
 		auth, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, cg.GetNamespace(), *cg.Spec.Template.Spec.Auth.NetSpec)
@@ -53,7 +49,7 @@ func (r *Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals
 		}
 	}
 
-	return security.NewSaramaSecurityOptionFromSecret(secret), nil
+	return security.NewSaramaSecurityOptionFromSecret(secret)
 }
 
 type NetSpecSecretLocator struct {

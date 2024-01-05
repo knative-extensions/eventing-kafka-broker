@@ -149,7 +149,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	// get security option for Sarama with secret info in it
-	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+	securityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
+	if err != nil {
+		return fmt.Errorf("failed to parse secret data for kafka: %w", err)
+	}
 
 	if err := r.TrackSecret(secret, broker); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
@@ -420,7 +423,11 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		}
 
 		// get security option for Sarama with secret info in it
-		securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
+		securityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
+		if err != nil {
+			return fmt.Errorf("failed to parse secret data for kafka: %w", err)
+		}
+
 		err = r.finalizeNonExternalBrokerTopic(broker, securityOption, topicConfig, logger)
 
 		// if finalizeNonExternalBrokerTopic returns error that kafka is not reachable!
