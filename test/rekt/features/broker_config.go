@@ -55,7 +55,7 @@ func BrokerWithCustomReplicationFactorAndNumPartitions(env environment.Environme
 	if err != nil {
 		panic("failed to create broker topic name")
 	}
-	f.Setup("Topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("Topic is ready", kafkatopic.IsReady(topic))
 
 	f.Assert("Replication factor", kafkatopic.HasReplicationFactor(topic, replicationFactor))
 	f.Assert("Number of partitions", kafkatopic.HasNumPartitions(topic, numPartitions))
