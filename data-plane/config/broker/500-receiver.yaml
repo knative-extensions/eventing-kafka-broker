@@ -15,7 +15,7 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: kafka-broker-receiver
   namespace: knative-eventing
@@ -25,6 +25,8 @@ metadata:
     app.kubernetes.io/component: kafka-broker-receiver
     app.kubernetes.io/name: knative-eventing
 spec:
+  serviceName: kafka-broker-receiver
+  podManagementPolicy: "Parallel"
   selector:
     matchLabels:
       app: kafka-broker-receiver
