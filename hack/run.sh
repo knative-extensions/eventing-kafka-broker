@@ -33,6 +33,7 @@ function usage() {
 	echo "   teardown-chaos                                          Remove chaosduck"
 	echo "   profiler                                                Run profiling tests"
 	echo "   generate                                                Run code generators"
+	echo "   deploy-control-plane                                    Build and deploy control plane tests"
 	echo "   build-from-source                                       Build artifacts from source"
 	echo "   build-for-source-from-source                            Build artifacts from source for source bundle only"
 	echo "   benchmark-filter <bencmark_class_name>                  Run the filter benchmarks for <benchmark_class_name>"
@@ -54,6 +55,8 @@ elif [[ "${action}" == "deploy-source" ]]; then
 	source "${ROOT_DIR}"/test/e2e-common.sh && test_source_setup
 elif [[ "${action}" == "build-from-source" ]]; then
 	source "${ROOT_DIR}"/test/e2e-common.sh && build_components_from_source
+elif [[ "${action}" == "deploy-control-plane" ]]; then
+	source "${ROOT_DIR}"/test/e2e-common.sh && build_control_plane_from_source
 elif [[ "${action}" == "build-for-source-from-source" ]]; then
 	source "${ROOT_DIR}"/test/e2e-common.sh && build_source_components_from_source
 elif [[ "${action}" == "teardown" ]]; then

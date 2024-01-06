@@ -146,6 +146,21 @@ function build_components_from_source() {
   return $?
 }
 
+function build_control_plane_from_source() {
+
+  # Remove existing control plane artifacts if they exist
+  [ -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
+  [ -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" ] && rm "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}"
+
+  header "Control plane setup"
+  control_plane_setup || fail_test "Failed to set up control plane components"
+
+  header "Building Monitoring artifacts"
+  build_monitoring_artifacts || fail_test "Failed to create monitoring artifacts"
+
+  return $?
+}
+
 function build_source_components_from_source() {
 
   [ -f "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" ] && rm "${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}"
