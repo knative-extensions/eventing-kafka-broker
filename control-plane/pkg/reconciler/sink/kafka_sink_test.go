@@ -1086,7 +1086,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -1140,7 +1140,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusUnknown),
+				testProber: probertesting.MockNewProber(prober.StatusUnknown),
 			},
 		},
 		{
@@ -1359,7 +1359,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -1410,7 +1410,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -1461,7 +1461,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusNotReady),
+				testProber: probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 		{
@@ -1513,7 +1513,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			},
 			WantErr: true,
 			OtherTestData: map[string]interface{}{
-				testProber: probertesting.MockProber(prober.StatusReady),
+				testProber: probertesting.MockNewProber(prober.StatusReady),
 			},
 		},
 		{
@@ -1579,7 +1579,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 			OtherTestData: map[string]interface{}{
 				wantErrorOnDeleteTopic: errDeleteTopic,
 				wantTopicName:          "topic-2",
-				testProber:             probertesting.MockProber(prober.StatusNotReady),
+				testProber:             probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 	}
@@ -1645,9 +1645,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			errorOnDescribeTopics = isPresentError.(error)
 		}
 
-		proberMock := probertesting.MockProber(prober.StatusReady)
+		proberMock := probertesting.MockNewProber(prober.StatusReady)
 		if p, ok := row.OtherTestData[testProber]; ok {
-			proberMock = p.(prober.Prober)
+			proberMock = p.(prober.NewProber)
 		}
 
 		reconciler := &sink.Reconciler{

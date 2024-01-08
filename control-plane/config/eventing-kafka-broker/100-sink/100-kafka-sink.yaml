@@ -106,12 +106,31 @@ spec:
               type: object
               properties:
                 address:
-                  description: 'Kafka Sink is Addressable. It exposes the endpoint as an
-                      URI to get events delivered to a Kafka topic.'
+                  description: Kafka Sink is Addressable. It exposes the endpoint as an URI to get events delivered into the Kafka topic.
                   type: object
                   properties:
+                    name:
+                      type: string
                     url:
                       type: string
+                    CACerts:
+                      type: string
+                    audience:
+                      type: string
+                addresses:
+                  description: Kafka Sink is Addressable. It exposes the endpoints as URIs to get events delivered into the Kafka topic.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
+                      audience:
+                        type: string
                 annotations:
                   description: 'Annotations is additional Status fields for the Resource
                       to save some additional State as well as convey more information
