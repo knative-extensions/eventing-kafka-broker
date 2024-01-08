@@ -39,6 +39,7 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
@@ -88,6 +89,10 @@ var (
 	exponential = eventingduck.BackoffPolicyExponential
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
+)
+
+const (
+	kafkaFeatureFlags = "kafka-feature-flags"
 )
 
 type EgressBuilder struct {
@@ -2949,6 +2954,13 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 
 		logger := logging.FromContext(ctx)
 
+		var featureFlags *apisconfig.KafkaFeatureFlags
+		if v, ok := row.OtherTestData[kafkaFeatureFlags]; ok {
+			featureFlags = v.(*apisconfig.KafkaFeatureFlags)
+		} else {
+			featureFlags = apisconfig.DefaultFeaturesConfig()
+		}
+
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
 				KubeClient:                   kubeclient.Get(ctx),
@@ -2972,6 +2984,7 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 			Env:                       env,
 			BrokerClass:               kafka.BrokerClass,
 			DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
+			KafkaFeatureFlags:         featureFlags,
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
