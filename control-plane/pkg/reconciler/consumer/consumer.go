@@ -212,14 +212,26 @@ func (r *Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consum
 			return fmt.Errorf("failed to get secret: %w", err)
 		}
 
-		authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-		if err != nil {
-			return err
+		if _, ok := secret.Data[security.ProtocolKey]; !ok {
+			authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+			if err != nil {
+				return err
+			}
+
+			resource.Auth = &contract.Resource_MultiAuthSecret{
+				MultiAuthSecret: authContext.MultiSecretReference,
+			}
+		} else {
+			resource.Auth = &contract.Resource_AuthSecret{
+				AuthSecret: &contract.Reference{
+					Uuid:      string(secret.UID),
+					Namespace: secret.Namespace,
+					Name:      secret.Name,
+					Version:   secret.ResourceVersion,
+				},
+			}
 		}
 
-		resource.Auth = &contract.Resource_MultiAuthSecret{
-			MultiAuthSecret: authContext.MultiSecretReference,
-		}
 		return nil
 	}
 
