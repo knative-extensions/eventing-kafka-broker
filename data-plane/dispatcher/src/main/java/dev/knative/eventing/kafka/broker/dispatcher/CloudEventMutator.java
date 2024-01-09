@@ -19,7 +19,7 @@ import io.cloudevents.CloudEvent;
 import java.util.function.Function;
 
 /**
- * A CloudEventMutator mutates a given CloudEvent.
+ * A CloudEventMutator mutates a given CloudEvent
  */
 @FunctionalInterface
 public interface CloudEventMutator extends Function<CloudEvent, CloudEvent> {}
