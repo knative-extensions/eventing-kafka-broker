@@ -21,12 +21,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
+import java.net.URI;
 import java.util.Objects;
 
 @JsonDeserialize
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"broker", "reference", "description", "schema", "schemaData"})
+@JsonPropertyOrder({"type", "source", "schema", "schemaData", "broker", "reference", "description"})
 public class EventTypeSpec implements KubernetesResource {
+
+    @JsonProperty("type")
+    private String type;
+
+    @JsonProperty("source")
+    private URI source;
 
     @JsonProperty("broker")
     private String broker;
@@ -38,20 +45,68 @@ public class EventTypeSpec implements KubernetesResource {
     private String description;
 
     @JsonProperty("schema")
-    private String schema;
+    private URI schema;
 
-    @JsonProperty("schemaDescription")
-    private String schemaDescription;
+    @JsonProperty("schemaData")
+    private String schemaData;
 
     public EventTypeSpec() {}
 
     public EventTypeSpec(
-            String broker, KReference reference, String description, String schema, String schemaDescription) {
+            String type,
+            URI source,
+            URI schema,
+            String schemaData,
+            String broker,
+            KReference reference,
+            String description) {
+        this.type = type;
+        this.source = source;
+        this.schema = schema;
+        this.schemaData = schemaData;
         this.broker = broker;
         this.reference = reference;
         this.description = description;
+    }
+
+    @JsonProperty("type")
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @JsonProperty("type")
+    public String getType() {
+        return this.type;
+    }
+
+    @JsonProperty("source")
+    public void setSource(URI source) {
+        this.source = source;
+    }
+
+    @JsonProperty("source")
+    public URI getSource() {
+        return this.source;
+    }
+
+    @JsonProperty("schema")
+    public URI getSchema() {
+        return this.schema;
+    }
+
+    @JsonProperty("schema")
+    public void setSchema(URI schema) {
         this.schema = schema;
-        this.schemaDescription = schemaDescription;
+    }
+
+    @JsonProperty("schemaData")
+    public String getSchemaData() {
+        return this.schemaData;
+    }
+
+    @JsonProperty("schemaData")
+    public void setSchemaData(String schemaData) {
+        this.schemaData = schemaData;
     }
 
     @JsonProperty("broker")
@@ -84,30 +139,11 @@ public class EventTypeSpec implements KubernetesResource {
         this.description = description;
     }
 
-    @JsonProperty("schema")
-    public String getSchema() {
-        return this.schema;
-    }
-
-    @JsonProperty("schema")
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
-    @JsonProperty("schemaDescription")
-    public String getSchemaDescription() {
-        return this.schemaDescription;
-    }
-
-    @JsonProperty("schemaDescription")
-    public void setSchemaDescription(String schemaDescription) {
-        this.schemaDescription = schemaDescription;
-    }
-
     public String toString() {
-        return "EventType{broker: " + this.getBroker() + ", " + "reference: "
+        return "EventType{broker: " + this.getBroker() + ", reference: "
                 + this.getReference().toString() + ", description: " + this.getDescription() + ", schema: "
-                + this.getSchema() + ", schemaDescription:" + this.getSchemaDescription();
+                + this.getSchema().toString() + ", schemaData: " + this.getSchemaData() + ", type: " + this.getType()
+                + ", source: " + this.getSource().toString() + "}";
     }
 
     @Override
@@ -119,7 +155,7 @@ public class EventTypeSpec implements KubernetesResource {
                 && Objects.equals(this.getReference(), that.getReference())
                 && Objects.equals(this.getDescription(), that.getDescription())
                 && Objects.equals(this.getSchema(), that.getSchema())
-                && Objects.equals(this.getSchemaDescription(), that.getSchemaDescription());
+                && Objects.equals(this.getSchemaData(), that.getSchemaData());
     }
 
     protected boolean canEqual(Object o) {
@@ -129,10 +165,6 @@ public class EventTypeSpec implements KubernetesResource {
     @Override
     public int hashCode() {
         return Objects.hash(
-                this.getBroker(),
-                this.getReference(),
-                this.getDescription(),
-                this.getSchema(),
-                this.getSchemaDescription());
+                this.getBroker(), this.getReference(), this.getDescription(), this.getSchema(), this.getSchemaData());
     }
 }
