@@ -51,10 +51,10 @@ public interface IngressProducer {
      */
     DataPlaneContract.Reference getReference();
 
-  /**
-   * @return whether event type autocreate is enabled
-   */
-  default boolean isEventTypeAutocreateEnabled() {
-    return false;
-  }
+    /**
+     * @return whether event type autocreate is enabled
+     */
+    default boolean isEventTypeAutocreateEnabled() {
+        return false;
+    }
 }

@@ -154,7 +154,12 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             rc.increment();
 
             final var ingressInfo = new IngressProducerImpl(
-                    rc.getValue().getProducer(), resource, ingress.getPath(), ingress.getHost(), producerProps, ingress.getEnableAutoCreateEventTypes());
+                    rc.getValue().getProducer(),
+                    resource,
+                    ingress.getPath(),
+                    ingress.getHost(),
+                    producerProps,
+                    ingress.getEnableAutoCreateEventTypes());
 
             if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
                 throw new IllegalArgumentException(
@@ -275,8 +280,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                 final String path,
                 final String host,
                 final Properties producerProperties,
-                final boolean eventTypeAutocreateEnabled
-                ) {
+                final boolean eventTypeAutocreateEnabled) {
             this.producer = producer;
             this.topic = resource.getTopics(0);
             this.reference = resource.getReference();
@@ -315,7 +319,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
         @Override
         public boolean isEventTypeAutocreateEnabled() {
-          return eventTypeAutocreateEnabled;
+            return eventTypeAutocreateEnabled;
         }
     }
 

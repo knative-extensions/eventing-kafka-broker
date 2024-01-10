@@ -1,5 +1,3 @@
-package dev.knative.eventing.kafka.broker.core.eventtype;
-
 /*
  * Copyright © 2018 Knative Authors (knative-dev@googlegroups.com)
  *
@@ -15,6 +13,8 @@ package dev.knative.eventing.kafka.broker.core.eventtype;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package dev.knative.eventing.kafka.broker.core.eventtype;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.core.v1.CloudEventBuilder;

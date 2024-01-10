@@ -26,12 +26,8 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class EventTypeCreatorImpl implements EventTypeCreator {
-
-    private static final Logger logger = LoggerFactory.getLogger(EventTypeCreatorImpl.class);
 
     private static final Integer DNS1123_SUBDOMAIN_MAX_LENGTH = 253;
 
@@ -70,15 +66,12 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
 
     @Override
     public void create(CloudEvent event, DataPlaneContract.Reference ownerReference) {
-        logger.debug("cali0707: creating a new eventtype");
         if (this.messageDigest == null) {
-            logger.debug("cali0707: message digest was null");
             return;
         }
 
         var name = this.getName(event, ownerReference);
         if (this.eventTypeExists(name, ownerReference)) {
-            logger.debug("cali0707: eventtype already exists, not creating one");
             return;
         }
 
@@ -97,10 +90,6 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
                 .withSchema(event.getDataSchema())
                 .withDescription("Event Type auto-created by controller");
 
-        logger.debug("cali0707: eventtype about to be created");
-
         this.eventTypeClient.resource(et.build()).create();
-
-        logger.debug("cali0707: eventtype create request made");
     }
 }

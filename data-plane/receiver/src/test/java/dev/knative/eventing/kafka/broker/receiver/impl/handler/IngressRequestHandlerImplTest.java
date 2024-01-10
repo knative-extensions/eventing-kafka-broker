@@ -98,7 +98,6 @@ public class IngressRequestHandlerImplTest {
             public DataPlaneContract.Reference getReference() {
                 return DataPlaneContract.Reference.newBuilder().build();
             }
-
         });
 
         verifySetStatusCodeAndTerminateResponse(statusCode, response);

@@ -130,19 +130,16 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
                     return publishRecord(producer, record)
                             .onSuccess(m -> {
-                              logger.info("cali0707: in succeeded");
                                 requestContext
                                         .getRequest()
                                         .response()
                                         .setStatusCode(RECORD_PRODUCED)
                                         .end();
 
-                              logger.info("cali0707: producer.isEventTypeAutocreateEnabled(): {}", producer.isEventTypeAutocreateEnabled());
-                              if (producer.isEventTypeAutocreateEnabled()) {
-                                logger.info("cali0707: about to create eventtype");
-                                this.eventTypeCreator.create(record.value(), producer.getReference());
-                                logger.info("cali0707: created eventtype");
-                              }
+                                if (producer.isEventTypeAutocreateEnabled()) {
+                                    logger.info("EventType Autocreate is enabled, going to create eventtype");
+                                    this.eventTypeCreator.create(record.value(), producer.getReference());
+                                }
 
                                 final var tags = RECORD_PRODUCED_COMMON_TAGS
                                         .and(resourceTags)
@@ -151,8 +148,6 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                                         .register(meterRegistry)
                                         .record(requestContext.performLatency());
                                 Metrics.eventCount(tags).register(meterRegistry).increment();
-
-
                             })
                             .onFailure(cause -> {
                                 requestContext
@@ -184,9 +179,8 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         return ingress.send(record).onComplete(ar -> {
             if (ar.succeeded()) {
                 if (logger.isDebugEnabled()) {
-                  logger.debug("cali0707: succeeded in publishRecord");
                     logger.debug(
-                            "cali0707 Record produced {} {} {} {} {}",
+                            "Record produced {} {} {} {} {}",
                             keyValue("topic", ar.result().topic()),
                             keyValue("partition", ar.result().partition()),
                             keyValue("offset", ar.result().offset()),
