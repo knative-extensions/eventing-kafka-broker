@@ -88,7 +88,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		)
 	}
 
-	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	var globalResync func(interface{})
+
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(_ string, obj interface{}) {
+		if globalResync != nil {
+			globalResync(obj)
+		}
+	})
 	featureStore.WatchConfigs(watcher)
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
@@ -126,7 +132,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	globalResync := func(_ interface{}) {
+	globalResync = func(_ interface{}) {
 		impl.GlobalResync(brokerInformer.Informer())
 	}
 
