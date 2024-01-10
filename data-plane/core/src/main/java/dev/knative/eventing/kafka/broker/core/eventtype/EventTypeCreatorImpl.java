@@ -14,52 +14,33 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.dispatcher.impl;
+package dev.knative.eventing.kafka.broker.core.eventtype;
 
-import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
-import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeBuilder;
-import dev.knative.eventing.kafka.broker.core.eventtype.KReference;
-import dev.knative.eventing.kafka.broker.dispatcher.EventTypeCreator;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EventTypeCreatorImpl implements EventTypeCreator {
 
+    private static final Logger logger = LoggerFactory.getLogger(EventTypeCreatorImpl.class);
+
     private static final Integer DNS1123_SUBDOMAIN_MAX_LENGTH = 253;
-
-    private final OwnerReference ownerReference;
-
-    private final KReference kReference;
 
     private final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
 
     private MessageDigest messageDigest;
 
-    EventTypeCreatorImpl(
-            KubernetesClient kubernetesClient,
-            String ownerName,
-            String ownerNamespace,
-            String ownerApiVersion,
-            String ownerKind,
-            String ownerUid
-            ) {
+    public EventTypeCreatorImpl(KubernetesClient kubernetesClient) {
         this.eventTypeClient = kubernetesClient.resources(EventType.class);
-        this.ownerReference = new OwnerReferenceBuilder()
-                .withName(ownerName)
-                .withKind(ownerKind)
-                .withApiVersion(ownerApiVersion)
-                .withUid(ownerUid)
-                .build();
-        this.kReference = new KReference(ownerApiVersion, ownerKind, ownerName, ownerNamespace);
         try {
             this.messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ignored) {
@@ -67,46 +48,59 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
         }
     }
 
-    private String getName(CloudEvent event) {
-        final var suffixString =
-                event.getType() + event.getSource() + this.kReference.getNamespace() + this.kReference.getName();
+    private String getName(CloudEvent event, DataPlaneContract.Reference reference) {
+        final var suffixString = event.getType() + event.getSource() + reference.getNamespace() + reference.getName();
         this.messageDigest.reset();
         this.messageDigest.update(suffixString.getBytes());
         final var suffix = Hex.encodeHexString(this.messageDigest.digest());
-        final var name =
-                String.format("et-%s-%s", this.kReference.getName(), suffix).toLowerCase();
+        final var name = String.format("et-%s-%s", reference.getName(), suffix).toLowerCase();
         if (name.length() > DNS1123_SUBDOMAIN_MAX_LENGTH) {
             return name.substring(0, DNS1123_SUBDOMAIN_MAX_LENGTH);
         }
         return name;
     }
 
-    private boolean eventTypeExists(String etName) {
-      var et = this.eventTypeClient.inNamespace(this.kReference.getNamespace()).withName(etName).get();
-      return et != null;
+    private boolean eventTypeExists(String etName, DataPlaneContract.Reference reference) {
+        var et = this.eventTypeClient
+                .inNamespace(reference.getNamespace())
+                .withName(etName)
+                .get();
+        return et != null;
     }
 
     @Override
-    public void create(CloudEvent event) {
+    public void create(CloudEvent event, DataPlaneContract.Reference ownerReference) {
+        logger.debug("cali0707: creating a new eventtype");
         if (this.messageDigest == null) {
+            logger.debug("cali0707: message digest was null");
             return;
         }
 
-        var name = this.getName(event);
-        if (this.eventTypeExists(name)) {
-          return;
+        var name = this.getName(event, ownerReference);
+        if (this.eventTypeExists(name, ownerReference)) {
+            logger.debug("cali0707: eventtype already exists, not creating one");
+            return;
         }
 
         var et = new EventTypeBuilder()
-                .withReference(this.kReference)
-                .withOwnerReference(this.ownerReference)
-                .withNamespace(this.kReference.getNamespace())
+                .withReference(KReference.fromDataPlaneReference(ownerReference))
+                .withOwnerReference(new OwnerReferenceBuilder()
+                        .withName(ownerReference.getName())
+                        .withKind(ownerReference.getKind())
+                        .withApiVersion(ownerReference.getGroupVersion())
+                        .withUid(ownerReference.getUuid())
+                        .build())
+                .withNamespace(ownerReference.getNamespace())
                 .withName(name)
                 .withType(event.getType())
                 .withSource(event.getSource())
                 .withSchema(event.getDataSchema())
                 .withDescription("Event Type auto-created by controller");
 
+        logger.debug("cali0707: eventtype about to be created");
+
         this.eventTypeClient.resource(et.build()).create();
+
+        logger.debug("cali0707: eventtype create request made");
     }
 }

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.dispatcher;
+package dev.knative.eventing.kafka.broker.core.eventtype;
 
-import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 
 /**
  * This interface provides an abstraction for creating {@link EventType} instances from {@link CloudEvent} instances.
  */
+@FunctionalInterface
 public interface EventTypeCreator {
-    default void create(CloudEvent event) {}
+    void create(CloudEvent event, DataPlaneContract.Reference reference);
 }
