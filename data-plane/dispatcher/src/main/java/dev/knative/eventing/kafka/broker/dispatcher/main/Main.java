@@ -132,7 +132,6 @@ public class Main {
 
             File file = new File(env.getDataPlaneConfigFilePath());
             FileWatcher fileWatcher = new FileWatcher(file, () -> publisher.updateContract(file));
-            fileWatcher.start();
 
             //     Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());

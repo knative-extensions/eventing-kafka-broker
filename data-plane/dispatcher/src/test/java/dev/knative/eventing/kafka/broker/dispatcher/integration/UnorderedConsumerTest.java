@@ -104,8 +104,6 @@ public class UnorderedConsumerTest {
                 new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
         final var fileWatcher = new FileWatcher(file, () -> contractPublisher.updateContract(file));
 
-        fileWatcher.start();
-
         ContractPublisherTest.write(file, contract);
 
         await().atMost(6, TimeUnit.SECONDS)

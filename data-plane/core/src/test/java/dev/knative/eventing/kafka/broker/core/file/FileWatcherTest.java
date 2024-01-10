@@ -52,7 +52,6 @@ public class FileWatcherTest {
         fileWatcher = new FileWatcher(tempFile, () -> {
             counter.incrementAndGet();
         });
-        fileWatcher.start();
 
         // Modify the file
         try (FileWriter writer = new FileWriter(tempFile)) {
@@ -72,7 +71,6 @@ public class FileWatcherTest {
         fileWatcher = new FileWatcher(tempFile, () -> {
             counter.incrementAndGet();
         });
-        fileWatcher.start();
 
         // Await until the trigger function is called once: 1 is for the initial file
         // read

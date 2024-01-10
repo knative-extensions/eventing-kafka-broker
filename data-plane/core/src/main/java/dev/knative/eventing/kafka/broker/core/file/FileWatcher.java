@@ -32,9 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class is responsible for watching a given file and reports update or execute a trigger function.
  * <p>
- * Using {@link #start()}, this class will create a background thread running
- * the file watcher.
- * You can interrupt such thread with {@link #close()}
+ * You can interrupt the background thread with {@link #close()}
  * <p>
  * This class is thread safe, and it cannot start more than one watch at the
  * time.
@@ -44,52 +42,31 @@ public class FileWatcher implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
     private final File toWatch;
-    private Runnable triggerFunction;
+    private final Runnable triggerFunction;
 
-    private Thread watcherThread;
-    private WatchService watcher;
+    private final Thread watcherThread;
+    private final WatchService watcher;
 
     /**
      * All args constructor.
      *
-     * @param contractConsumer updates receiver.
+     * @param triggerFunction updates receiver.
      * @param file             file to watch
      */
-    public FileWatcher(File file, Runnable triggerFunction) {
+    public FileWatcher(File file, Runnable triggerFunction) throws IOException {
         Objects.requireNonNull(file, "provide file");
         Objects.requireNonNull(triggerFunction, "provide trigger function");
 
         this.triggerFunction = triggerFunction;
         this.toWatch = file.getAbsoluteFile();
+        this.watcher = FileSystems.getDefault().newWatchService();
+
+        this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
+        this.watcherThread.start();
     }
 
     public Thread getWatcherThread() {
         return this.watcherThread;
-    }
-
-    /**
-     * Start the watcher thread.
-     * This is going to create a new deamon thread, which can be stopped using
-     * {@link #close()}.
-     *
-     * @throws IOException           if an error happened while starting to watch
-     * @throws IllegalStateException if the watcher is already running
-     */
-    public void start() throws IOException {
-        synchronized (this) {
-            if (this.watcherThread != null) {
-                throw new IllegalStateException("Watcher thread is already up and running");
-            }
-
-            // Start watching
-            this.watcher = FileSystems.getDefault().newWatchService();
-            toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-
-            // Start the watcher thread
-            this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
-        }
-
-        this.watcherThread.start();
     }
 
     @Override
@@ -98,7 +75,7 @@ public class FileWatcher implements AutoCloseable {
             throw new IllegalStateException("Watcher thread is not running");
         }
         this.watcherThread.interrupt();
-        this.watcherThread = null;
+        this.watcherThread.join();
     }
 
     public void run() {

@@ -30,7 +30,6 @@ import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
@@ -40,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -98,7 +96,7 @@ public class Main {
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
         // Configure the verticle to deploy and the deployment options
-        final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
+        final ReceiverVerticleFactory receiverVerticleFactory = new ReceiverVerticleFactory(
                 env,
                 producerConfigs,
                 Metrics.getRegistry(),
@@ -120,10 +118,10 @@ public class Main {
                     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
             File file = new File(env.getDataPlaneConfigFilePath());
             FileWatcher fileWatcher = new FileWatcher(file, () -> publisher.updateContract(file));
-            fileWatcher.start();
 
             // Register shutdown hook for graceful shutdown.
-            Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
+            Shutdown.registerHook(
+                    vertx, publisher, fileWatcher, receiverVerticleFactory, openTelemetry.getSdkTracerProvider());
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the receiver", ex);
