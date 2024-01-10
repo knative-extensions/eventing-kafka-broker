@@ -21,6 +21,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
@@ -70,10 +71,15 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
     private final RequestToRecordMapper requestToRecordMapper;
     private final MeterRegistry meterRegistry;
 
+    private final EventTypeCreator eventTypeCreator;
+
     public IngressRequestHandlerImpl(
-            final RequestToRecordMapper requestToRecordMapper, final MeterRegistry meterRegistry) {
+            final RequestToRecordMapper requestToRecordMapper,
+            final MeterRegistry meterRegistry,
+            final EventTypeCreator eventTypeCreator) {
         this.requestToRecordMapper = requestToRecordMapper;
         this.meterRegistry = meterRegistry;
+        this.eventTypeCreator = eventTypeCreator;
     }
 
     @Override
@@ -124,11 +130,19 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
                     return publishRecord(producer, record)
                             .onSuccess(m -> {
+                              logger.info("cali0707: in succeeded");
                                 requestContext
                                         .getRequest()
                                         .response()
                                         .setStatusCode(RECORD_PRODUCED)
                                         .end();
+
+                              logger.info("cali0707: producer.isEventTypeAutocreateEnabled(): {}", producer.isEventTypeAutocreateEnabled());
+                              if (producer.isEventTypeAutocreateEnabled()) {
+                                logger.info("cali0707: about to create eventtype");
+                                this.eventTypeCreator.create(record.value(), producer.getReference());
+                                logger.info("cali0707: created eventtype");
+                              }
 
                                 final var tags = RECORD_PRODUCED_COMMON_TAGS
                                         .and(resourceTags)
@@ -137,6 +151,8 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                                         .register(meterRegistry)
                                         .record(requestContext.performLatency());
                                 Metrics.eventCount(tags).register(meterRegistry).increment();
+
+
                             })
                             .onFailure(cause -> {
                                 requestContext
@@ -168,8 +184,9 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         return ingress.send(record).onComplete(ar -> {
             if (ar.succeeded()) {
                 if (logger.isDebugEnabled()) {
+                  logger.debug("cali0707: succeeded in publishRecord");
                     logger.debug(
-                            "Record produced {} {} {} {} {}",
+                            "cali0707 Record produced {} {} {} {} {}",
                             keyValue("topic", ar.result().topic()),
                             keyValue("partition", ar.result().partition()),
                             keyValue("offset", ar.result().offset()),

@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -48,14 +49,15 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final MeterRegistry metricsRegistry,
             final HttpServerOptions httpServerOptions,
             final HttpServerOptions httpsServerOptions,
-            final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
+            final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
+            final EventTypeCreator eventTypeCreator) {
         {
             this.env = env;
             this.producerConfigs = producerConfigs;
             this.httpServerOptions = httpServerOptions;
             this.httpsServerOptions = httpsServerOptions;
-            this.ingressRequestHandler =
-                    new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
+            this.ingressRequestHandler = new IngressRequestHandlerImpl(
+                    StrictRequestToRecordMapper.getInstance(), metricsRegistry, eventTypeCreator);
             this.kafkaProducerFactory = kafkaProducerFactory;
         }
     }

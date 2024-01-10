@@ -81,7 +81,7 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, statusCode);
 
-        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry());
+        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, reference) -> {}));
 
         handler.handle(new RequestContext(request), new IngressProducer() {
             @Override
@@ -98,6 +98,7 @@ public class IngressRequestHandlerImplTest {
             public DataPlaneContract.Reference getReference() {
                 return DataPlaneContract.Reference.newBuilder().build();
             }
+
         });
 
         verifySetStatusCodeAndTerminateResponse(statusCode, response);
@@ -112,7 +113,7 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, IngressRequestHandlerImpl.MAPPER_FAILED);
 
-        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry());
+        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, reference) -> {}));
 
         handler.handle(new RequestContext(request), new IngressProducer() {
             @Override

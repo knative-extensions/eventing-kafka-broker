@@ -42,7 +42,8 @@ public class ReceiverVerticleFactoryTest {
                 mock(MeterRegistry.class),
                 mock(HttpServerOptions.class),
                 mock(HttpServerOptions.class),
-                mock(MockReactiveProducerFactory.class));
+                mock(MockReactiveProducerFactory.class),
+                ((event, reference) -> {}));
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
     }

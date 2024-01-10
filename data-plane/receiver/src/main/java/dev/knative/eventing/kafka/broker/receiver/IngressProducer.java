@@ -50,4 +50,11 @@ public interface IngressProducer {
      * @return the resource associated with this producer.
      */
     DataPlaneContract.Reference getReference();
+
+  /**
+   * @return whether event type autocreate is enabled
+   */
+  default boolean isEventTypeAutocreateEnabled() {
+    return false;
+  }
 }
