@@ -29,7 +29,8 @@
   <name>dispatcher-loom</name>
 
   <properties>
-    <java.version>21</java.version>
+    <java.version>20</java.version>
+    <argLine>--enable-preview</argLine>
   </properties>
 
 
@@ -87,7 +88,7 @@
         <version>${jib.version}</version>
         <configuration>
           <from>
-            <image>docker.io/library/eclipse-temurin:21-jre</image>
+            <image>docker.io/library/eclipse-temurin:20-jre</image>
             <platforms>
               <platform>
                 <architecture>amd64</architecture>
