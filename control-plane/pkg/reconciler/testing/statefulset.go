@@ -34,6 +34,16 @@ func NewStatefulSet(name, namespace string, sso ...StatefulSetOption) *appsv1.St
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{}},
+					Volumes: []corev1.Volume{{
+						Name: "contract-resources",
+						VolumeSource: corev1.VolumeSource{
+							ConfigMap: &corev1.ConfigMapVolumeSource{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "contract-resources",
+								},
+							},
+						},
+					}},
 				},
 			},
 		},

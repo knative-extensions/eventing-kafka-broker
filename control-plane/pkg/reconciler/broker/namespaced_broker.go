@@ -426,7 +426,7 @@ func (r *NamespacedReconciler) createManifestFromSystemStatefulSet(broker *event
 	}
 
 	spec := sysStatefulSet.Spec
-	if *spec.Replicas != 1 {
+	if spec.Replicas != nil && *spec.Replicas != 1 {
 		spec.Replicas = pointer.Int32(1)
 	}
 
