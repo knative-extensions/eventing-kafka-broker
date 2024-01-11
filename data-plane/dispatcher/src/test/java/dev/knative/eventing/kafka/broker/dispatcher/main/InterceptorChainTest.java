@@ -42,7 +42,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 
 public class InterceptorChainTest {
-    public class InterceptorChain {
+    public static class InterceptorChain {
         InvalidCloudEventInterceptor invalidCloudEventInterceptor;
         NullCloudEventInterceptor nullCloudEventInterceptor;
 
