@@ -425,6 +425,32 @@ func (r *NamespacedReconciler) createManifestFromSystemStatefulSet(broker *event
 		return unstructured.Unstructured{}, fmt.Errorf("failed to get StatefulSet %s/%s: %w", r.SystemNamespace, name, err)
 	}
 
+	spec := sysStatefulSet.Spec
+	if *spec.Replicas != 1 {
+		spec.Replicas = pointer.Int32(1)
+	}
+
+	foundContractResource := false
+	for _, volume := range spec.Template.Spec.Volumes {
+		if volume.Name == "contract-resources" {
+			foundContractResource = true
+		}
+	}
+	if !foundContractResource {
+		// need to add the contract resource volume to the spec
+		spec.Template.Spec.Volumes = append(spec.Template.Spec.Volumes, corev1.Volume{
+			Name: "contract-resources",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "contract-resources",
+					},
+				},
+			},
+		})
+
+	}
+
 	cm := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{Kind: "StatefulSet", APIVersion: appsv1.SchemeGroupVersion.String()},
 		ObjectMeta: metav1.ObjectMeta{
@@ -433,7 +459,7 @@ func (r *NamespacedReconciler) createManifestFromSystemStatefulSet(broker *event
 			Labels:      sysStatefulSet.Labels,
 			Annotations: sysStatefulSet.Annotations,
 		},
-		Spec: sysStatefulSet.Spec,
+		Spec: spec,
 	}
 	return unstructuredFromObject(cm)
 }
