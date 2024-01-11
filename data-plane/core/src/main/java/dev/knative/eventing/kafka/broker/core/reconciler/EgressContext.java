@@ -15,13 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler;
 
-import io.vertx.core.Future;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import java.util.Set;
 
-public interface EgressReconcilerListener {
-
-    Future<Void> onNewEgress(EgressContext egressContext);
-
-    Future<Void> onUpdateEgress(EgressContext egressContext);
-
-    Future<Void> onDeleteEgress(EgressContext egressContext);
-}
+public record EgressContext(
+        DataPlaneContract.Resource resource, DataPlaneContract.Egress egress, Set<String> trustBundles) {}

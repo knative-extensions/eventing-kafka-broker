@@ -56,7 +56,7 @@ public class ConsumerDeployerVerticleTest {
         final var numEgresses = numEgresses(resources);
         final var checkpoints = context.checkpoint(1);
 
-        final var consumerDeployer = new ConsumerDeployerVerticle((resource, egress) -> new AbstractVerticle() {}, 100);
+        final var consumerDeployer = new ConsumerDeployerVerticle(egressContext -> new AbstractVerticle() {}, 100);
 
         vertx.deployVerticle(consumerDeployer)
                 .toCompletionStage()
@@ -86,7 +86,7 @@ public class ConsumerDeployerVerticleTest {
         final var checkpoint = context.checkpoint(1);
 
         final var consumerDeployer = new ConsumerDeployerVerticle(
-                (resource, egress) -> {
+                egressContext -> {
                     throw new UnsupportedOperationException();
                 },
                 100);
@@ -130,7 +130,7 @@ public class ConsumerDeployerVerticleTest {
 
         final var checkpoints = context.checkpoint(2);
 
-        final var consumerDeployer = new ConsumerDeployerVerticle((resource, egress) -> new AbstractVerticle() {}, 100);
+        final var consumerDeployer = new ConsumerDeployerVerticle(egressContext -> new AbstractVerticle() {}, 100);
 
         vertx.deployVerticle(consumerDeployer)
                 .toCompletionStage()
@@ -189,7 +189,7 @@ public class ConsumerDeployerVerticleTest {
 
         final var checkpoints = context.checkpoint(2);
 
-        final var consumerDeployer = new ConsumerDeployerVerticle((resource, egress) -> new AbstractVerticle() {}, 100);
+        final var consumerDeployer = new ConsumerDeployerVerticle(egressContext -> new AbstractVerticle() {}, 100);
 
         vertx.deployVerticle(consumerDeployer)
                 .toCompletionStage()
@@ -255,7 +255,7 @@ public class ConsumerDeployerVerticleTest {
 
         final var checkpoints = context.checkpoint(3);
 
-        final var consumerDeployer = new ConsumerDeployerVerticle((resource, egress) -> new AbstractVerticle() {}, 100);
+        final var consumerDeployer = new ConsumerDeployerVerticle(egressContext -> new AbstractVerticle() {}, 100);
 
         vertx.deployVerticle(consumerDeployer)
                 .toCompletionStage()
@@ -321,7 +321,7 @@ public class ConsumerDeployerVerticleTest {
 
         final var checkpoints = context.checkpoint(2);
 
-        final var consumerDeployer = new ConsumerDeployerVerticle((resource, egress) -> new AbstractVerticle() {}, 100);
+        final var consumerDeployer = new ConsumerDeployerVerticle(egressContext -> new AbstractVerticle() {}, 100);
 
         vertx.deployVerticle(consumerDeployer)
                 .toCompletionStage()
@@ -358,7 +358,7 @@ public class ConsumerDeployerVerticleTest {
     @Test
     public void shouldThrowIfEgressesInitialCapacityIsLessOrEqualToZero(final Vertx vertx) {
         Assertions.assertThrows(
-                IllegalArgumentException.class, () -> new ConsumerDeployerVerticle((resource, egress) -> null, -1));
+                IllegalArgumentException.class, () -> new ConsumerDeployerVerticle(egressContext -> null, -1));
     }
 
     private static int numEgresses(Collection<DataPlaneContract.Resource> resources) {
