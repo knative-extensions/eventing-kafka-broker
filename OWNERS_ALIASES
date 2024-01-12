@@ -2,6 +2,8 @@
 # Do not modify this file, instead modify peribolos/knative-extensions.yaml
 
 aliases:
+  backstage-plugins-reviewers: []
+  backstage-plugins-writers: []
   client-wg-leads:
   - dsimansk
   - navidshaikh
@@ -65,17 +67,16 @@ aliases:
   - spolti
   - vaibhavjainwiz
   eventing-natss-approvers:
+  - astelmashenko
+  - dan-j
   - zhaojizhuang
   eventing-prometheus-approvers:
   - lberk
   - matzew
   eventing-rabbitmq-approvers:
   - andrew-su
-  - bbtong
   - chunyilyu
-  - dolfolife
   - gabo1208
-  - ikvmw
   - joeeltgroth
   - salaboy
   - xtreme-sameer-vohra
@@ -91,6 +92,7 @@ aliases:
   - pierDipi
   eventing-writers:
   - aliok
+  - cali0707
   - creydr
   - lionelvillard
   - matzew
@@ -165,28 +167,30 @@ aliases:
   - rhuss
   knative-admin:
   - Cali0707
+  - Leo6Leo
   - ReToCode
+  - aliok
   - creydr
-  - csantanapr
   - davidhadas
   - dprotaso
   - dsimansk
-  - itsmurugappan
+  - evankanderson
   - knative-automation
   - knative-prow-releaser-robot
   - knative-prow-robot
   - knative-prow-updater-robot
   - knative-test-reporter-robot
-  - kvmware
-  - lance
+  - krsna-m
   - nainaz
   - pierDipi
   - psschwei
+  - puerco
   - salaboy
   - skonto
   - upodroid
   knative-release-leads:
   - Cali0707
+  - Leo6Leo
   - ReToCode
   - creydr
   - dsimansk
@@ -201,14 +205,12 @@ aliases:
   net-certmanager-approvers: []
   net-contour-approvers:
   - KauzClay
-  - carlisia
   - dprotaso
   net-gateway-api-approvers:
   - dprotaso
   - nak3
   net-http01-approvers: []
   net-istio-approvers:
-  - AngeloDanducci
   - nak3
   - skonto
   net-kourier-approvers:
@@ -222,14 +224,14 @@ aliases:
   - houshengbo
   - upodroid
   productivity-leads:
-  - kvmware
+  - krsna-m
   - upodroid
   productivity-wg-leads:
-  - kvmware
+  - krsna-m
   - upodroid
   productivity-writers:
   - cardil
-  - kvmware
+  - krsna-m
   - upodroid
   security-guard-approvers:
   - davidhadas
@@ -247,17 +249,16 @@ aliases:
   - psschwei
   - skonto
   serving-progressive-rollout-approvers:
+  - alexagriffith
   - houshengbo
   - sukumargaonkar
   - yuzisun
   serving-reviewers:
   - KauzClay
   - jsanin-vmw
-  - kauana
-  - kvmware
+  - krsna-m
   - retocode
   - skonto
-  - xtreme-vikram-yadav
   serving-triage:
   - KauzClay
   - retocode
@@ -270,16 +271,16 @@ aliases:
   - psschwei
   - skonto
   steering-committee:
-  - csantanapr
-  - itsmurugappan
-  - lance
+  - aliok
+  - evankanderson
   - nainaz
+  - puerco
   - salaboy
   technical-oversight-committee:
   - davidhadas
   - dprotaso
   - dsimansk
-  - kvmware
+  - krsna-m
   - psschwei
   ux-wg-leads:
   - cali0707

@@ -54,25 +54,6 @@
       <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>dispatcher-vertx</artifactId>
       <version>${project.version}</version>
-      <exclusions> <!-- Exclude logging and noop -->
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.logstash.logback</groupId>
-          <artifactId>logstash-logback-encoder</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-nop</artifactId>
-      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 
@@ -81,7 +62,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>3.5.1</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -97,15 +78,6 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
               <filters>
-                <filter>
-                  <artifact>dev.knative.eventing.kafka.broker:dispatcher</artifact>
-                  <excludes>
-                    <!-- Exclude logging, we add slf4j-nop as dep -->
-                    <exclude>ch/qos/logback/**</exclude>
-                    <exclude>net/logstash/logback/**</exclude>
-                    <exclude>org/slf4j/**</exclude>
-                  </excludes>
-                </filter>
                 <filter>
                   <!--
                       Shading signed JARs will fail without this.

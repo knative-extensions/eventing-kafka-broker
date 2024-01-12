@@ -91,7 +91,7 @@ func setupSubscription(f *feature.Feature, name string, receiverName string) {
 			Kind:       "Service",
 			Name:       receiverName,
 			APIVersion: "v1",
-		}, ""),
+		}, "", ""),
 	))
 }
 

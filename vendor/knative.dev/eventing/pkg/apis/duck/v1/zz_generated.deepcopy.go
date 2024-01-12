@@ -189,6 +189,11 @@ func (in *DeliveryStatus) DeepCopyInto(out *DeliveryStatus) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DeadLetterSinkAudience != nil {
+		in, out := &in.DeadLetterSinkAudience, &out.DeadLetterSinkAudience
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -345,6 +350,11 @@ func (in *SubscriberSpec) DeepCopyInto(out *SubscriberSpec) {
 	if in.Delivery != nil {
 		in, out := &in.Delivery, &out.Delivery
 		*out = new(DeliverySpec)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Auth != nil {
+		in, out := &in.Auth, &out.Auth
+		*out = new(duckv1.AuthStatus)
 		(*in).DeepCopyInto(*out)
 	}
 	return

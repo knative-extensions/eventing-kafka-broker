@@ -36,6 +36,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -187,9 +188,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 		Reference: &contract.Reference{
-			Uuid:      string(ks.GetUID()),
-			Namespace: ks.GetNamespace(),
-			Name:      ks.GetName(),
+			Uuid:         string(ks.GetUID()),
+			Namespace:    ks.GetNamespace(),
+			Name:         ks.GetName(),
+			Kind:         "KafkaSink",
+			GroupVersion: eventingv1alpha1.SchemeGroupVersion.String(),
 		},
 	}
 	if ks.Spec.HasAuthConfig() {

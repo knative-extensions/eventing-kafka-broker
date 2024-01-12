@@ -38,7 +38,6 @@ func defaultConfig() *AutoscalerConfig {
 			AutoscalingPollingIntervalAnnotation: DefaultPollingInterval,
 			AutoscalingCooldownPeriodAnnotation:  DefaultCooldownPeriod,
 			AutoscalingLagThreshold:              DefaultLagThreshold,
-			AutoscalingActivationLagThreshold:    DefaultActivationLagThreshold,
 		},
 	}
 }

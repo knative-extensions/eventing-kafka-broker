@@ -21,6 +21,11 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/eventing/pkg/apis/feature"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/kmeta"
+	pkgreconciler "knative.dev/pkg/reconciler"
+
 	"go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -35,8 +40,9 @@ import (
 // GetOIDCServiceAccountNameForResource returns the service account name to use
 // for OIDC authentication for the given resource.
 func GetOIDCServiceAccountNameForResource(gvk schema.GroupVersionKind, objectMeta metav1.ObjectMeta) string {
-	sa := fmt.Sprintf("oidc-%s-%s-%s", gvk.GroupKind().Group, gvk.GroupKind().Kind, objectMeta.GetName())
-
+	suffix := fmt.Sprintf("-oidc-%s-%s", gvk.Group, gvk.Kind)
+	parent := objectMeta.GetName()
+	sa := kmeta.ChildName(parent, suffix)
 	return strings.ToLower(sa)
 }
 
@@ -92,5 +98,29 @@ func EnsureOIDCServiceAccountExistsForResource(ctx context.Context, serviceAccou
 		return fmt.Errorf("service account %s not owned by %s %s", sa.Name, gvk.Kind, objectMeta.Name)
 	}
 
+	return nil
+}
+
+type OIDCIdentityStatusMarker interface {
+	MarkOIDCIdentityCreatedSucceeded()
+	MarkOIDCIdentityCreatedSucceededWithReason(reason, messageFormat string, messageA ...interface{})
+	MarkOIDCIdentityCreatedFailed(reason, messageFormat string, messageA ...interface{})
+}
+
+func SetupOIDCServiceAccount(ctx context.Context, flags feature.Flags, serviceAccountLister corev1listers.ServiceAccountLister, kubeclient kubernetes.Interface, gvk schema.GroupVersionKind, objectMeta metav1.ObjectMeta, marker OIDCIdentityStatusMarker, setAuthStatus func(a *duckv1.AuthStatus)) pkgreconciler.Event {
+	if flags.IsOIDCAuthentication() {
+		saName := GetOIDCServiceAccountNameForResource(gvk, objectMeta)
+		setAuthStatus(&duckv1.AuthStatus{
+			ServiceAccountName: &saName,
+		})
+		if err := EnsureOIDCServiceAccountExistsForResource(ctx, serviceAccountLister, kubeclient, gvk, objectMeta); err != nil {
+			marker.MarkOIDCIdentityCreatedFailed("Unable to resolve service account for OIDC authentication", "%v", err)
+			return err
+		}
+		marker.MarkOIDCIdentityCreatedSucceeded()
+	} else {
+		setAuthStatus(nil)
+		marker.MarkOIDCIdentityCreatedSucceededWithReason(fmt.Sprintf("%s feature disabled", feature.OIDCAuthentication), "")
+	}
 	return nil
 }

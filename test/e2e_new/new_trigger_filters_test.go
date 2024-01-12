@@ -44,70 +44,23 @@ func TestNewTriggerFilters(t *testing.T) {
 		k8s.WithEventListener,
 		environment.Managed(t),
 	)
-	brokerName := feature.MakeRandomK8sName("broker")
 
-	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
-	env.TestSet(ctx, t, newfilters.FiltersFeatureSet(brokerName))
+	env.ParallelTestSet(ctx, t, newfilters.NewFiltersFeatureSet(InstallKafkaBroker))
 }
 
-func TestKafkaBrokerAnyFiltersTrigger(t *testing.T) {
-	t.Parallel()
+func InstallKafkaBroker(f *feature.Feature) string {
+	brokerName := feature.MakeRandomK8sName("kafka-broker")
 
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-	brokerName := feature.MakeRandomK8sName("broker")
+	install, cmName := single_partition_config.MakeInstall()
 
-	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
-	env.Test(ctx, t, newfilters.AnyFilterFeature(brokerName))
-}
-
-func TestKafkaBrokerAllFiltersTrigger(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-	brokerName := feature.MakeRandomK8sName("broker")
-
-	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
-	env.Test(ctx, t, newfilters.AllFilterFeature(brokerName))
-}
-
-func TestMultipleSinksMultipleTriggers(t *testing.T) {
-	t.Parallel()
-
-	ctx, env := global.Environment(
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
-		environment.Managed(t),
-	)
-	brokerName := feature.MakeRandomK8sName("broker")
-
-	env.Prerequisite(ctx, t, InstallKafkaBroker(brokerName))
-	env.Test(ctx, t, newfilters.MultipleTriggersAndSinksFeature(brokerName))
-}
-
-func InstallKafkaBroker(name string) *feature.Feature {
-	f := feature.NewFeatureNamed("Kafka broker")
-	f.Setup("install one partition configuration", single_partition_config.Install)
-	f.Setup("install broker", broker.Install(
-		name,
+	f.Setup("install one partition configuration", install)
+	f.Setup("install kafka broker", broker.Install(
+		brokerName,
 		broker.WithBrokerClass(kafka.BrokerClass),
-		broker.WithConfig(single_partition_config.ConfigMapName),
+		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(name))
-	f.Setup("broker is addressable", broker.IsAddressable(name))
+	f.Setup("kafka broker is ready", broker.IsReady(brokerName))
+	f.Setup("kafka broker is addressable", broker.IsAddressable(brokerName))
 
-	return f
+	return brokerName
 }

@@ -212,10 +212,10 @@ public class ConsumerVerticleBuilder {
         };
     }
 
-    private WebClientOptions createWebClientOptionsFromCACerts(String CACerts) {
-        if (CACerts != null && !CACerts.isEmpty()) {
+    private WebClientOptions createWebClientOptionsFromCACerts(final String caCerts) {
+        if (caCerts != null && !caCerts.isEmpty()) {
             return new WebClientOptions(consumerVerticleContext.getWebClientOptions())
-                    .setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(CACerts)));
+                    .setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(caCerts)));
         }
         return consumerVerticleContext.getWebClientOptions();
     }

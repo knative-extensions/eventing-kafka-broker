@@ -28,12 +28,6 @@
 
   <name>receiver-loom</name>
 
-  <properties>
-    <java.version>20</java.version>
-    <argLine>--enable-preview</argLine>
-  </properties>
-
-
   <dependencies>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
@@ -94,9 +88,6 @@
       <configuration>
         <source>${java.version}</source>
         <target>${java.version}</target>
-        <compilerArgs>
-          <arg>--enable-preview</arg>
-        </compilerArgs>
       </configuration>
       </plugin>
       <plugin>
@@ -105,7 +96,7 @@
         <version>${jib.version}</version>
         <configuration>
           <from>
-            <image>docker.io/library/eclipse-temurin:20-jre</image>
+            <image>docker.io/library/eclipse-temurin:21-jre</image>
             <platforms>
               <platform>
                 <architecture>amd64</architecture>

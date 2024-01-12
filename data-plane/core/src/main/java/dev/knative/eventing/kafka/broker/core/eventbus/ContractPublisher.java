@@ -19,6 +19,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import com.google.protobuf.util.JsonFormat.Parser;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -44,6 +45,8 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
     private final EventBus eventBus;
     private final String address;
 
+    private final Parser parser = JsonFormat.parser().ignoringUnknownFields();
+
     private long lastContract;
 
     public ContractPublisher(EventBus eventBus, String address) {
@@ -68,7 +71,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
         }
         try (final var fileReader = new FileReader(newContract);
                 final var bufferedReader = new BufferedReader(fileReader)) {
-            final var contract = parseFromJson(bufferedReader);
+            final var contract = this.parseFromJson(bufferedReader);
             if (contract == null) {
                 return;
             }
@@ -89,10 +92,10 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
         }
     }
 
-    public static DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
+    public DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
         try {
             final var contract = DataPlaneContract.Contract.newBuilder();
-            JsonFormat.parser().merge(content, contract);
+            this.parser.merge(content, contract);
             return contract.build();
         } catch (final InvalidProtocolBufferException ex) {
             logger.debug("failed to parse from JSON", ex);
