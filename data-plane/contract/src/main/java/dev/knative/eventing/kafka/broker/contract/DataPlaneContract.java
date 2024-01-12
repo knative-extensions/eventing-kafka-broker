@@ -25927,6 +25927,45 @@ public final class DataPlaneContract {
          * <code>repeated .Resource resources = 2;</code>
          */
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder getResourcesOrBuilder(int index);
+
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @return A list containing the trustBundles.
+         */
+        java.util.List<java.lang.String> getTrustBundlesList();
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @return The count of trustBundles.
+         */
+        int getTrustBundlesCount();
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @param index The index of the element to return.
+         * @return The trustBundles at the given index.
+         */
+        java.lang.String getTrustBundles(int index);
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @param index The index of the value to return.
+         * @return The bytes of the trustBundles at the given index.
+         */
+        com.google.protobuf.ByteString getTrustBundlesBytes(int index);
     }
     /**
      * Protobuf type {@code Contract}
@@ -25943,6 +25982,7 @@ public final class DataPlaneContract {
 
         private Contract() {
             resources_ = java.util.Collections.emptyList();
+            trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
         @java.lang.Override
@@ -25989,6 +26029,15 @@ public final class DataPlaneContract {
                                     extensionRegistry));
                             break;
                         }
+                        case 26: {
+                            java.lang.String s = input.readStringRequireUtf8();
+                            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                                trustBundles_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000002;
+                            }
+                            trustBundles_.add(s);
+                            break;
+                        }
                         default: {
                             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
                                 done = true;
@@ -26004,6 +26053,9 @@ public final class DataPlaneContract {
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) != 0)) {
                     resources_ = java.util.Collections.unmodifiableList(resources_);
+                }
+                if (((mutable_bitField0_ & 0x00000002) != 0)) {
+                    trustBundles_ = trustBundles_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -26080,6 +26132,55 @@ public final class DataPlaneContract {
             return resources_.get(index);
         }
 
+        public static final int TRUSTBUNDLES_FIELD_NUMBER = 3;
+        private com.google.protobuf.LazyStringList trustBundles_;
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @return A list containing the trustBundles.
+         */
+        public com.google.protobuf.ProtocolStringList getTrustBundlesList() {
+            return trustBundles_;
+        }
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @return The count of trustBundles.
+         */
+        public int getTrustBundlesCount() {
+            return trustBundles_.size();
+        }
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @param index The index of the element to return.
+         * @return The trustBundles at the given index.
+         */
+        public java.lang.String getTrustBundles(int index) {
+            return trustBundles_.get(index);
+        }
+        /**
+         * <pre>
+         * PEM encoded CA trust bundles for HTTP client.
+         * </pre>
+         *
+         * <code>repeated string trustBundles = 3;</code>
+         * @param index The index of the value to return.
+         * @return The bytes of the trustBundles at the given index.
+         */
+        public com.google.protobuf.ByteString getTrustBundlesBytes(int index) {
+            return trustBundles_.getByteString(index);
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -26100,6 +26201,9 @@ public final class DataPlaneContract {
             for (int i = 0; i < resources_.size(); i++) {
                 output.writeMessage(2, resources_.get(i));
             }
+            for (int i = 0; i < trustBundles_.size(); i++) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 3, trustBundles_.getRaw(i));
+            }
             unknownFields.writeTo(output);
         }
 
@@ -26114,6 +26218,14 @@ public final class DataPlaneContract {
             }
             for (int i = 0; i < resources_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, resources_.get(i));
+            }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < trustBundles_.size(); i++) {
+                    dataSize += computeStringSizeNoTag(trustBundles_.getRaw(i));
+                }
+                size += dataSize;
+                size += 1 * getTrustBundlesList().size();
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -26133,6 +26245,7 @@ public final class DataPlaneContract {
 
             if (getGeneration() != other.getGeneration()) return false;
             if (!getResourcesList().equals(other.getResourcesList())) return false;
+            if (!getTrustBundlesList().equals(other.getTrustBundlesList())) return false;
             if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
@@ -26149,6 +26262,10 @@ public final class DataPlaneContract {
             if (getResourcesCount() > 0) {
                 hash = (37 * hash) + RESOURCES_FIELD_NUMBER;
                 hash = (53 * hash) + getResourcesList().hashCode();
+            }
+            if (getTrustBundlesCount() > 0) {
+                hash = (37 * hash) + TRUSTBUNDLES_FIELD_NUMBER;
+                hash = (53 * hash) + getTrustBundlesList().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -26293,6 +26410,8 @@ public final class DataPlaneContract {
                 } else {
                     resourcesBuilder_.clear();
                 }
+                trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000002);
                 return this;
             }
 
@@ -26330,6 +26449,11 @@ public final class DataPlaneContract {
                 } else {
                     result.resources_ = resourcesBuilder_.build();
                 }
+                if (((bitField0_ & 0x00000002) != 0)) {
+                    trustBundles_ = trustBundles_.getUnmodifiableView();
+                    bitField0_ = (bitField0_ & ~0x00000002);
+                }
+                result.trustBundles_ = trustBundles_;
                 onBuilt();
                 return result;
             }
@@ -26407,6 +26531,16 @@ public final class DataPlaneContract {
                             resourcesBuilder_.addAllMessages(other.resources_);
                         }
                     }
+                }
+                if (!other.trustBundles_.isEmpty()) {
+                    if (trustBundles_.isEmpty()) {
+                        trustBundles_ = other.trustBundles_;
+                        bitField0_ = (bitField0_ & ~0x00000002);
+                    } else {
+                        ensureTrustBundlesIsMutable();
+                        trustBundles_.addAll(other.trustBundles_);
+                    }
+                    onChanged();
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -26743,6 +26877,146 @@ public final class DataPlaneContract {
                 return resourcesBuilder_;
             }
 
+            private com.google.protobuf.LazyStringList trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+
+            private void ensureTrustBundlesIsMutable() {
+                if (!((bitField0_ & 0x00000002) != 0)) {
+                    trustBundles_ = new com.google.protobuf.LazyStringArrayList(trustBundles_);
+                    bitField0_ |= 0x00000002;
+                }
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @return A list containing the trustBundles.
+             */
+            public com.google.protobuf.ProtocolStringList getTrustBundlesList() {
+                return trustBundles_.getUnmodifiableView();
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @return The count of trustBundles.
+             */
+            public int getTrustBundlesCount() {
+                return trustBundles_.size();
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @param index The index of the element to return.
+             * @return The trustBundles at the given index.
+             */
+            public java.lang.String getTrustBundles(int index) {
+                return trustBundles_.get(index);
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @param index The index of the value to return.
+             * @return The bytes of the trustBundles at the given index.
+             */
+            public com.google.protobuf.ByteString getTrustBundlesBytes(int index) {
+                return trustBundles_.getByteString(index);
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @param index The index to set the value at.
+             * @param value The trustBundles to set.
+             * @return This builder for chaining.
+             */
+            public Builder setTrustBundles(int index, java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureTrustBundlesIsMutable();
+                trustBundles_.set(index, value);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @param value The trustBundles to add.
+             * @return This builder for chaining.
+             */
+            public Builder addTrustBundles(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureTrustBundlesIsMutable();
+                trustBundles_.add(value);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @param values The trustBundles to add.
+             * @return This builder for chaining.
+             */
+            public Builder addAllTrustBundles(java.lang.Iterable<java.lang.String> values) {
+                ensureTrustBundlesIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, trustBundles_);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearTrustBundles() {
+                trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000002);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * PEM encoded CA trust bundles for HTTP client.
+             * </pre>
+             *
+             * <code>repeated string trustBundles = 3;</code>
+             * @param value The bytes of the trustBundles to add.
+             * @return This builder for chaining.
+             */
+            public Builder addTrustBundlesBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+                ensureTrustBundlesIsMutable();
+                trustBundles_.add(value);
+                onChanged();
+                return this;
+            }
+
             @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
@@ -26943,21 +27217,21 @@ public final class DataPlaneContract {
                     + "\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025"
                     + ".MultiSecretReferenceH\000\0221\n\023cloudEventOve"
                     + "rrides\030\n \001(\0132\024.CloudEventOverrides\022\035\n\tre"
-                    + "ference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"<\n\010Con"
+                    + "ference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"R\n\010Con"
                     + "tract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002"
-                    + " \003(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expo"
-                    + "nential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r"
-                    + "\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n"
-                    + "\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tBy"
-                    + "teArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\n"
-                    + "STRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECH"
-                    + "ANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USE"
-                    + "R_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Proto"
-                    + "col\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007"
-                    + "\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eve"
-                    + "nting.kafka.broker.contractB\021DataPlaneCo"
-                    + "ntractZ\032control-plane/pkg/contractb\006prot"
-                    + "o3"
+                    + " \003(\0132\t.Resource\022\024\n\014trustBundles\030\003 \003(\t*,\n"
+                    + "\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linea"
+                    + "r\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007O"
+                    + "RDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integ"
+                    + "er\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013Conte"
+                    + "ntMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013Se"
+                    + "cretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020"
+                    + "\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022"
+                    + "\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000"
+                    + "\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SS"
+                    + "L\020\003B[\n*dev.knative.eventing.kafka.broker"
+                    + ".contractB\021DataPlaneContractZ\032control-pl"
+                    + "ane/pkg/contractb\006proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
@@ -27137,7 +27411,7 @@ public final class DataPlaneContract {
         internal_static_Contract_descriptor = getDescriptor().getMessageTypes().get(20);
         internal_static_Contract_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Contract_descriptor, new java.lang.String[] {
-                    "Generation", "Resources",
+                    "Generation", "Resources", "TrustBundles",
                 });
     }
 
