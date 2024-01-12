@@ -90,10 +90,10 @@ function knative_eventing() {
   kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
 
   timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "$CERT_MANAGER_NAMESPACE" || fail_test "Failed to install cert manager"
+  wait_until_pods_running "cert-manager" || fail_test "Failed to install cert manager"
 
   timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "$CERT_MANAGER_NAMESPACE" || fail_test "Failed to install trust manager"
+  wait_until_pods_running "cert-manager" || fail_test "Failed to install trust manager"
 
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
