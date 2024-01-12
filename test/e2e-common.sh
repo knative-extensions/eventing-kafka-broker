@@ -40,7 +40,7 @@ readonly LATEST_RELEASE_VERSION=$(latest_version)
 readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-extensions/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
-readonly CERTMANAGER_CONFIG=${CERTMANAGER_CONFIG:-"./third_party/cert-manager/"}
+readonly CERTMANAGER_CONFIG=${CERTMANAGER_CONFIG:-"./third_party/cert-manager"}
 
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -87,9 +87,13 @@ function knative_teardown() {
 
 function knative_eventing() {
   # we need cert-manager installed to be able to create the issuers
-  kubectl apply -Rf "${CERTMANAGER_CONFIG}"
+  kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
 
-  wait_until_pods_running cert-manager || fail_test "Failed to setup cert-manager pods"
+  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
+  wait_until_pods_running "$CERT_MANAGER_NAMESPACE" || fail_test "Failed to install cert manager"
+
+  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
+  wait_until_pods_running "$CERT_MANAGER_NAMESPACE" || fail_test "Failed to install trust manager"
 
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
