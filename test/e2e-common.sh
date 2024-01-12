@@ -210,6 +210,19 @@ function install_head() {
   kubectl replace -f ./test/config/100-config-kafka-features.yaml
 }
 
+function install_control_plane_from_source() {
+  echo "Installing control plane from source"
+
+  kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+  kubectl apply -f "${EVENTING_KAFKA_TLS_NETWORK_ARTIFACT}" || return $?
+
+  # Restore test config.
+  kubectl replace -f ./test/config/100-config-tracing.yaml
+  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  
+}
+
 function install_latest_release_source() {
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
