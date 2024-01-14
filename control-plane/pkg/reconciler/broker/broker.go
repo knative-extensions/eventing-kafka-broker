@@ -19,6 +19,8 @@ package broker
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
 	"strings"
 	"time"
 
@@ -259,6 +261,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		httpAddress := receiver.HTTPAddress(ingressHost, broker)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
+	}
+	if feature.FromContext(ctx).IsOIDCAuthentication() {
+		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
+		broker.Status.Address.Audience = &audience
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
+		broker.Status.Address.Audience = nil
 	}
 
 	proberAddressable := prober.ProberAddressable{
