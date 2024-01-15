@@ -19,7 +19,6 @@ package broker
 import (
 	"context"
 	"fmt"
-	"knative.dev/pkg/logging"
 	"strings"
 	"time"
 
@@ -35,6 +34,7 @@ import (
 	"knative.dev/eventing/pkg/auth"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
