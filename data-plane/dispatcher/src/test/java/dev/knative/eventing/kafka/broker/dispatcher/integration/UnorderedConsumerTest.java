@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
 import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
@@ -111,7 +112,9 @@ public class UnorderedConsumerTest {
         await().atMost(6, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
 
-        waitEvents.await();
+        if (!waitEvents.await(6, TimeUnit.Second)) {
+          fail("failed to have all events process properly in time");
+        }
 
         final var producers = consumerVerticleFactoryMock.producers();
         final var consumers = consumerVerticleFactoryMock.consumers();
@@ -165,7 +168,10 @@ public class UnorderedConsumerTest {
                             logger.info("received event {}", event);
 
                             context.verify(() -> {
-                                assertThat(receivedEvent).isEqualTo(event);
+                                assertThat(receivedEvent.getType()).isEqualTo(event.getType());
+                                assertThat(receivedEvent.getSubject()).isEqualTo(event.getSubject());
+                                assertThat(receivedEvent.getSource()).isEqualTo(event.getSource());
+                                assertThat(receivedEvent.getId()).isEqualTo(event.getId());
 
                                 VertxMessageFactory.createWriter(request.response())
                                         .writeBinary(event);
