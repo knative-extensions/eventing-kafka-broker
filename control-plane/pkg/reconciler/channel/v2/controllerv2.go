@@ -106,7 +106,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
-
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialTLSContext = func(ctx context.Context, net, addr string) (net.Conn, error) {
 		clientConfig := eventingtls.NewDefaultClientConfig()

@@ -31,11 +31,11 @@ import (
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
@@ -44,6 +44,12 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
+
+	"knative.dev/eventing/test/rekt/features/source"
+
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
@@ -90,7 +96,7 @@ func SetupKafkaSources(prefix string, n int) *feature.Feature {
 			name,
 			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithTopics([]string{topicName}),
-			kafkasource.WithSink(&duckv1.KReference{Kind: "Service", Name: sink, APIVersion: "v1"}, ""),
+			kafkasource.WithSink(service.AsDestinationRef(sink)),
 		))
 
 		f.Assert(fmt.Sprintf("kafkasource %s is ready", name), kafkasource.IsReady(name))
@@ -188,7 +194,7 @@ func ScaleKafkaSource() *feature.Feature {
 	f.Setup("scale kafkasource", kafkasource.Install(source,
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topicName}),
-		kafkasource.WithSink(service.AsKReference(sink), ""),
+		kafkasource.WithSink(service.AsDestinationRef(sink)),
 		kafkasource.WithAnnotations(map[string]string{
 			// Disable autoscaling for this KafkaSource since we want to have the expected replicas
 			// in the status reflected without the autoscaler intervention.
@@ -218,7 +224,7 @@ func KafkaSourceInitialOffsetEarliest(count int, topic string) *feature.Feature 
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithInitialOffset(sources.OffsetEarliest),
-		kafkasource.WithSink(service.AsKReference(sink), ""),
+		kafkasource.WithSink(service.AsDestinationRef(sink)),
 	))
 	f.Setup("KafkaSource is ready", kafkasource.IsReady(source))
 
@@ -318,7 +324,7 @@ func kafkaSourceFeature(name string,
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
 	kafkaSourceOpts := []manifest.CfgFn{
-		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		kafkasource.WithTopics([]string{kafkaSourceCfg.topic}),
 	}
 	kafkaSourceOpts = append(kafkaSourceOpts, kafkaSourceCfg.opts...)
@@ -539,6 +545,107 @@ func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
 	)
 }
 
+func KafkaSourceTLSSink() *feature.Feature {
+
+	kafkaSource := feature.MakeRandomK8sName("kafkaSource")
+	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	topic := feature.MakeRandomK8sName("tls-sink-topic")
+	receiver := feature.MakeRandomK8sName("eventshub-receiver")
+	sender := feature.MakeRandomK8sName("eventshub-sender")
+	event := FullEvent()
+	event.SetID(uuid.NewString())
+
+	f := feature.NewFeature()
+	f.Setup("install kafka topic", kafkatopic.Install(topic))
+	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+
+	// Binary content mode is default for Kafka Sink.
+	f.Setup("install KafkaSink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
+	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+
+	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiverTLS))
+
+	f.Setup("install kafka source", func(ctx context.Context, t feature.T) {
+		d := service.AsDestinationRef(receiver)
+		d.CACerts = eventshub.GetCaCerts(ctx)
+		kafkasource.Install(kafkaSource,
+			kafkasource.WithTopics([]string{topic}),
+			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithSink(d),
+		)(ctx, t)
+	})
+	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+
+	f.Requirement("install eventshub sender", eventshub.Install(sender,
+		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
+		eventshub.InputEvent(event),
+	))
+
+	f.Stable("KafkaSource as event source").
+		Must("delivers events on sink with ref",
+			assert.OnStore(receiver).
+				MatchReceivedEvent(HasId(event.ID())).
+				AtLeast(1)).
+		Must("Set sinkURI to HTTPS endpoint", source.ExpectHTTPSSink(kafkasource.GVR(), kafkaSource)).
+		Must("Set sinkCACerts to non empty CA certs", source.ExpectCACerts(kafkasource.GVR(), kafkaSource))
+
+	return f
+}
+
+func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
+
+	kafkaSource := feature.MakeRandomK8sName("kafkaSource")
+	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	topic := feature.MakeRandomK8sName("tls-sink-topic")
+	receiver := feature.MakeRandomK8sName("eventshub-receiver")
+	sender := feature.MakeRandomK8sName("eventshub-sender")
+	event := FullEvent()
+	event.SetID(uuid.NewString())
+
+	f := feature.NewFeature()
+	f.Setup("install kafka topic", kafkatopic.Install(topic))
+	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+
+	// Binary content mode is default for Kafka Sink.
+	f.Setup("install KafkaSink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
+	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+
+	f.Setup("install eventshub receiver", eventshub.Install(receiver,
+		eventshub.StartReceiverTLS,
+		eventshub.IssuerRef(eventingtlstesting.IssuerKind, eventingtlstesting.IssuerName),
+	))
+
+	f.Setup("install kafka source", func(ctx context.Context, t feature.T) {
+		d := &duckv1.Destination{
+			URI: &apis.URL{
+				Scheme: "https", // Force using https
+				Host:   network.GetServiceHostname(receiver, environment.FromContext(ctx).Namespace()),
+			},
+			CACerts: nil, // CA certs are in the trust-bundle
+		}
+		kafkasource.Install(kafkaSource,
+			kafkasource.WithTopics([]string{topic}),
+			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithSink(d),
+		)(ctx, t)
+	})
+	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+
+	f.Requirement("install eventshub sender", eventshub.Install(sender,
+		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
+		eventshub.InputEvent(event),
+	))
+
+	f.Stable("KafkaSource as event source").
+		Must("delivers events on sink with ref",
+			assert.OnStore(receiver).
+				MatchReceivedEvent(HasId(event.ID())).
+				AtLeast(1)).
+		Must("Set sinkURI to HTTPS endpoint", source.ExpectHTTPSSink(kafkasource.GVR(), kafkaSource))
+
+	return f
+}
+
 func KafkaSourceSASL() *feature.Feature {
 	e := cetest.FullEvent()
 	senderOptions := []eventshub.EventsHubOption{
@@ -571,7 +678,7 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
 	kafkaSourceUpdateOpts := []manifest.CfgFn{
-		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		// Keep the original topic.
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
@@ -626,7 +733,7 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
 	kafkaSourceOpts := []manifest.CfgFn{
-		kafkasource.WithSink(service.AsKReference(receiver), ""),
+		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 	}

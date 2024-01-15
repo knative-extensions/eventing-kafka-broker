@@ -211,7 +211,6 @@ func TestCompositeProber(t *testing.T) {
 				return ips, nil
 			}
 
-
 			httpUrl, _ := url.Parse(httpServer.URL)
 			httpsUrl, _ := url.Parse(httpsServer.URL)
 			requeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))

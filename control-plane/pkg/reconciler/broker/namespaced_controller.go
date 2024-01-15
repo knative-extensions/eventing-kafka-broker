@@ -121,7 +121,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	reconciler.IPsLister = prober.NewIPListerWithMapping()
 
-
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialTLSContext = func(ctx context.Context, net, addr string) (net.Conn, error) {
 		clientConfig := eventingtls.NewDefaultClientConfig()

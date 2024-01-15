@@ -57,6 +57,10 @@ var (
 		EnableRateLimiter:            false,
 		EnableOrderedExecutorMetrics: false,
 	}
+
+	DefaultEnv = &config.Env{
+		SystemNamespace: "knative-eventing",
+	}
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -839,17 +843,18 @@ func TestReconcileKind(t *testing.T) {
 		},
 	}
 
-	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+	table.Test(t, NewFactory(DefaultEnv, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := &Reconciler{
-			SerDe:               contract.FormatSerDe{Format: contract.Json},
-			Resolver:            resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
-			Tracker:             &FakeTracker{},
-			ConsumerGroupLister: listers.GetConsumerGroupLister(),
-			SecretLister:        listers.GetSecretLister(),
-			PodLister:           listers.GetPodLister(),
-			KubeClient:          kubeclient.Get(ctx),
-			KafkaFeatureFlags:   configapis.DefaultFeaturesConfig(),
+			SerDe:                      contract.FormatSerDe{Format: contract.Json},
+			Resolver:                   resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
+			Tracker:                    &FakeTracker{},
+			ConsumerGroupLister:        listers.GetConsumerGroupLister(),
+			SecretLister:               listers.GetSecretLister(),
+			PodLister:                  listers.GetPodLister(),
+			KubeClient:                 kubeclient.Get(ctx),
+			KafkaFeatureFlags:          configapis.DefaultFeaturesConfig(),
+			TrustBundleConfigMapLister: listers.GetConfigMapLister().ConfigMaps(env.SystemNamespace),
 		}
 
 		return creconciler.NewReconciler(
