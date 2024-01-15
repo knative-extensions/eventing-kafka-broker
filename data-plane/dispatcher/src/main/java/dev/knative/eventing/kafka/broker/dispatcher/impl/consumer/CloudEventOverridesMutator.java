@@ -29,8 +29,6 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
 
     private final DataPlaneContract.CloudEventOverrides cloudEventOverrides;
 
-    private static final CloudEventDeserializer cloudEventDeserializer = new CloudEventDeserializer();
-
     public CloudEventOverridesMutator(final DataPlaneContract.CloudEventOverrides cloudEventOverrides) {
         this.cloudEventOverrides = cloudEventOverrides;
     }
