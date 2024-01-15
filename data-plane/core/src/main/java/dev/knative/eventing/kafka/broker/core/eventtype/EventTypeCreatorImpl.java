@@ -20,9 +20,9 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
@@ -33,10 +33,15 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
 
     private final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
 
+    private final Lister<EventType> eventTypeLister;
+
     private MessageDigest messageDigest;
 
-    public EventTypeCreatorImpl(KubernetesClient kubernetesClient) {
-        this.eventTypeClient = kubernetesClient.resources(EventType.class);
+    public EventTypeCreatorImpl(
+            MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
+            Lister<EventType> eventTypeLister) {
+        this.eventTypeClient = eventTypeClient;
+        this.eventTypeLister = eventTypeLister;
         try {
             this.messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ignored) {
@@ -57,11 +62,12 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
     }
 
     private boolean eventTypeExists(String etName, DataPlaneContract.Reference reference) {
-        var et = this.eventTypeClient
-                .inNamespace(reference.getNamespace())
-                .withName(etName)
-                .get();
-        return et != null;
+        try {
+            var et = this.eventTypeLister.namespace(reference.getNamespace()).get(etName);
+            return et != null;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @Override
@@ -90,6 +96,9 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
                 .withSchema(event.getDataSchema())
                 .withDescription("Event Type auto-created by controller");
 
-        this.eventTypeClient.resource(et.build()).create();
+        try {
+            this.eventTypeClient.resource(et.build()).create();
+        } catch (Exception ignored) {
+        }
     }
 }

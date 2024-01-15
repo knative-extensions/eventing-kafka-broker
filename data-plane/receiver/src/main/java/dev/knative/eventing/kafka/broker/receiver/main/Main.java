@@ -20,8 +20,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
-import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
-import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
@@ -31,6 +30,7 @@ import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
@@ -100,7 +100,10 @@ public class Main {
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-        final EventTypeCreator eventTypeCreator = new EventTypeCreatorImpl(new KubernetesClientBuilder().build());
+        final var kubernetesClient = new KubernetesClientBuilder().build();
+        final var eventTypeClient = kubernetesClient.resources(EventType.class);
+        final var eventTypeInformer = eventTypeClient.inform();
+        final var eventTypeLister = new Lister<>(eventTypeInformer.getIndexer());
 
         // Configure the verticle to deploy and the deployment options
         final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
@@ -110,7 +113,8 @@ public class Main {
                 httpServerOptions,
                 httpsServerOptions,
                 kafkaProducerFactory,
-                eventTypeCreator);
+                eventTypeClient,
+                eventTypeLister);
         DeploymentOptions deploymentOptions =
                 new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
 
@@ -129,7 +133,8 @@ public class Main {
             fileWatcher.start();
 
             // Register shutdown hook for graceful shutdown.
-            Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
+            Shutdown.registerHook(
+                    vertx, publisher, fileWatcher, eventTypeInformer, openTelemetry.getSdkTracerProvider());
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the receiver", ex);

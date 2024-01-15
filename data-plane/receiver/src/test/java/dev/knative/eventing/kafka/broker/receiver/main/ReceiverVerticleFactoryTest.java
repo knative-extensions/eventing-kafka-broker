@@ -19,8 +19,11 @@ package dev.knative.eventing.kafka.broker.receiver.main;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
@@ -36,6 +39,7 @@ public class ReceiverVerticleFactoryTest {
 
     @Test
     public void shouldCreateMultipleReceiverVerticleInstances() {
+      var mockClient = mock(KubernetesClient.class);
         final var supplier = new ReceiverVerticleFactory(
                 mock(ReceiverEnv.class),
                 mock(Properties.class),
@@ -43,7 +47,9 @@ public class ReceiverVerticleFactoryTest {
                 mock(HttpServerOptions.class),
                 mock(HttpServerOptions.class),
                 mock(MockReactiveProducerFactory.class),
-                ((event, reference) -> {}));
+          mockClient.resources(EventType.class),
+          mock(Lister.class)
+                );
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
     }

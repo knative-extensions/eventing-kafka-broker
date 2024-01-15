@@ -71,19 +71,15 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
     private final RequestToRecordMapper requestToRecordMapper;
     private final MeterRegistry meterRegistry;
 
-    private final EventTypeCreator eventTypeCreator;
-
     public IngressRequestHandlerImpl(
-            final RequestToRecordMapper requestToRecordMapper,
-            final MeterRegistry meterRegistry,
-            final EventTypeCreator eventTypeCreator) {
+            final RequestToRecordMapper requestToRecordMapper, final MeterRegistry meterRegistry) {
         this.requestToRecordMapper = requestToRecordMapper;
         this.meterRegistry = meterRegistry;
-        this.eventTypeCreator = eventTypeCreator;
     }
 
     @Override
-    public void handle(final RequestContext requestContext, final IngressProducer producer) {
+    public void handle(
+            final RequestContext requestContext, final IngressProducer producer, EventTypeCreator eventTypeCreator) {
 
         final Tags resourceTags = Metrics.resourceRefTags(producer.getReference());
 
@@ -138,7 +134,7 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
                                 if (producer.isEventTypeAutocreateEnabled()) {
                                     logger.info("EventType Autocreate is enabled, going to create eventtype");
-                                    this.eventTypeCreator.create(record.value(), producer.getReference());
+                                    eventTypeCreator.create(record.value(), producer.getReference());
                                 }
 
                                 final var tags = RECORD_PRODUCED_COMMON_TAGS

@@ -21,6 +21,7 @@ import io.cloudevents.core.v1.CloudEventBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import java.net.URI;
@@ -34,7 +35,10 @@ public class EventTypeCreatorImplTest {
 
     @Test
     public void testCreate() {
-        var eventTypeCreator = new EventTypeCreatorImpl(kubernetesClient);
+        final var eventTypeClient = kubernetesClient.resources(EventType.class);
+        final var informer = eventTypeClient.inform();
+        final var eventTypeLister = new Lister<>(informer.getIndexer());
+        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister);
         var event = new CloudEventBuilder()
                 .withType("example.event.type")
                 .withSource(URI.create("/example/source"))
@@ -49,7 +53,8 @@ public class EventTypeCreatorImplTest {
                 .setUuid("12345")
                 .build();
         eventTypeCreator.create(event, reference);
-        var eventTypeClient = kubernetesClient.resources(EventType.class);
+
+        informer.close();
 
         KubernetesResourceList<EventType> eventTypeList =
                 eventTypeClient.inNamespace("default").list();
