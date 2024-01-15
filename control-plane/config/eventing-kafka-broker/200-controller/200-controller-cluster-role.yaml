@@ -220,6 +220,8 @@ rules:
       - "eventtypes"
     verbs:
       - get
+      - list
+      - watch
       - create
 
   # messaging.knative.dev resources and finalizers we care about.
