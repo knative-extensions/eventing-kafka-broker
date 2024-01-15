@@ -2946,6 +2946,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						withTriggerStatusGroupIdAnnotation(TriggerUUID),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
 							URL: &apis.URL{
 								Scheme: "http",
