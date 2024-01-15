@@ -18,11 +18,16 @@ package channel
 
 import (
 	"context"
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/eventingtls"
 
 	"knative.dev/eventing/pkg/apis/feature"
 	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
@@ -30,6 +35,7 @@ import (
 	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -92,13 +98,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		)
 	}
 
-	features := feature.FromContext(ctx)
-	caCerts, err := reconciler.getCaCerts()
-	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
-		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
-		logger.Warn("Failed to get CA certs when at least one address uses TLS", zap.Error(err))
-	}
-
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler,
 		func(impl *controller.Impl) controller.Options {
 			return controller.Options{
@@ -107,7 +106,20 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		})
 	IPsLister := prober.IdentityIPsLister()
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
-	reconciler.Prober, err = prober.NewComposite(ctx, "", "", IPsLister, impl.EnqueueKey, &caCerts)
+
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialTLSContext = func(ctx context.Context, net, addr string) (net.Conn, error) {
+		clientConfig := eventingtls.NewDefaultClientConfig()
+		clientConfig.TrustBundleConfigMapLister = reconciler.ConfigMapLister.ConfigMaps(reconciler.SystemNamespace)
+		clientConfig.CACerts, _ = reconciler.getCaCerts()
+
+		tlsConfig, err := eventingtls.GetTLSClientConfig(clientConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get TLS client config: %w", err)
+		}
+		return network.DialTLSWithBackOff(ctx, net, addr, tlsConfig)
+	}
+	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, "", "", IPsLister, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
@@ -133,16 +145,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		Handler:    controller.HandleAll(globalResync),
 	})
 
-	rotateCACerts := func(obj interface{}) {
-		newCerts, err := reconciler.getCaCerts()
-		if err != nil && (features.IsPermissiveTransportEncryption() || features.IsStrictTransportEncryption()) {
-			// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
-			logger.Warn("Failed to get new CA certs while rotating CA certs when at least one address uses TLS", zap.Error(err))
-		}
-		reconciler.Prober.RotateRootCaCerts(&newCerts)
-		globalResync(obj)
-	}
-
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
@@ -154,10 +156,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	reconciler.Tracker = impl.Tracker
 
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
-	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithName(kafkaChannelTLSSecretName),
-		Handler:    controller.HandleAll(rotateCACerts),
-	})
 
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
@@ -168,6 +166,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))
+	parts := strings.Split(eventingtls.TrustBundleLabelSelector, "=")
+	configmapinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.FilterWithLabel(parts[0], parts[1]),
+		Handler:    controller.HandleAll(globalResync),
+	})
 
 	channelInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,

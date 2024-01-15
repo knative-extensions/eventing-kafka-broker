@@ -21,12 +21,15 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
+	"knative.dev/eventing/pkg/eventingtls"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
@@ -48,14 +51,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	consumerInformer := consumer.Get(ctx)
+	trustBundleConfigMapInformer := configmapinformer.Get(ctx, eventingtls.TrustBundleLabelSelector)
 
 	r := &Reconciler{
-		SerDe:               formatSerDeFromString(controllerConfig.ContractConfigMapFormat),
-		ConsumerGroupLister: consumergroup.Get(ctx).Lister(),
-		SecretLister:        secretinformer.Get(ctx).Lister(),
-		PodLister:           podinformer.Get(ctx).Lister(),
-		KubeClient:          kubeclient.Get(ctx),
-		KafkaFeatureFlags:   config.DefaultFeaturesConfig(),
+		SerDe:                      formatSerDeFromString(controllerConfig.ContractConfigMapFormat),
+		ConsumerGroupLister:        consumergroup.Get(ctx).Lister(),
+		SecretLister:               secretinformer.Get(ctx).Lister(),
+		PodLister:                  podinformer.Get(ctx).Lister(),
+		KubeClient:                 kubeclient.Get(ctx),
+		KafkaFeatureFlags:          config.DefaultFeaturesConfig(),
+		TrustBundleConfigMapLister: trustBundleConfigMapInformer.Lister().ConfigMaps(system.Namespace()),
 	}
 
 	impl := creconciler.NewImpl(ctx, r)
@@ -78,6 +83,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	cgreconciler.ResyncOnStatefulSetChange(ctx, globalResync)
+
+	trustBundleConfigMapInformer.Informer().AddEventHandler(controller.HandleAll(globalResync))
 
 	return impl
 }
