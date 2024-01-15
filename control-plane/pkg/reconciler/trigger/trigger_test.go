@@ -188,6 +188,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -259,6 +260,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -336,6 +338,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withDelivery,
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -406,6 +409,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -477,6 +481,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -555,6 +560,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withDelivery,
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -718,6 +724,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -767,6 +774,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerFailed(
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
@@ -811,6 +819,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerFailed(
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
@@ -836,6 +845,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -860,6 +870,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerFailed("wrong", ""),
 					),
 				},
@@ -885,6 +896,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -915,6 +927,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -980,6 +993,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1065,6 +1079,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							useNewFilters,
 						),
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -1375,6 +1390,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							useNewFilters,
 						),
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -1679,6 +1695,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							useNewFilters,
 						),
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -2075,6 +2092,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -2101,6 +2119,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2221,6 +2240,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2251,6 +2271,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2275,6 +2296,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2441,6 +2463,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2607,6 +2630,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2839,6 +2863,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
