@@ -131,7 +131,7 @@ public abstract class ReceiverVerticleTracingTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-          () -> (((event, reference) -> {})),
+                () -> (((event, reference) -> {})),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
                 SECRET_VOLUME_PATH);
 

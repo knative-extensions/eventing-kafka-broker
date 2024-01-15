@@ -379,7 +379,7 @@ public abstract class AbstractDataPlaneTest {
                 v -> new IngressProducerReconcilableStore(
                         AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveProducerFactory()
                                 .create(v, properties)),
-          () -> (((event, reference) -> {})),
+                () -> (((event, reference) -> {})),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
                 SECRET_VOLUME_PATH);
 

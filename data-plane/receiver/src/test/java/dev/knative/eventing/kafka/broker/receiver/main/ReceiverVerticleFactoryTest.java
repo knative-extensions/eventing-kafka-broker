@@ -39,7 +39,7 @@ public class ReceiverVerticleFactoryTest {
 
     @Test
     public void shouldCreateMultipleReceiverVerticleInstances() {
-      var mockClient = mock(KubernetesClient.class);
+        var mockClient = mock(KubernetesClient.class);
         final var supplier = new ReceiverVerticleFactory(
                 mock(ReceiverEnv.class),
                 mock(Properties.class),
@@ -47,9 +47,8 @@ public class ReceiverVerticleFactoryTest {
                 mock(HttpServerOptions.class),
                 mock(HttpServerOptions.class),
                 mock(MockReactiveProducerFactory.class),
-          mockClient.resources(EventType.class),
-          mock(Lister.class)
-                );
+                mockClient.resources(EventType.class),
+                mock(Lister.class));
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
     }

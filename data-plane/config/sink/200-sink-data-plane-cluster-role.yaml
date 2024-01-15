@@ -36,5 +36,7 @@ rules:
       - eventtypes
     verbs:
       - get
+      - list
+      - watch
       - create
 

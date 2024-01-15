@@ -62,6 +62,9 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
     }
 
     private boolean eventTypeExists(String etName, DataPlaneContract.Reference reference) {
+      if (this.eventTypeLister == null) {
+        return false;
+      }
         try {
             var et = this.eventTypeLister.namespace(reference.getNamespace()).get(etName);
             return et != null;

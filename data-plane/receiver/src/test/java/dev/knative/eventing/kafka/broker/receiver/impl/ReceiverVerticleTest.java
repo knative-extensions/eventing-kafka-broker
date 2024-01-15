@@ -148,7 +148,7 @@ public class ReceiverVerticleTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-          () -> (((event, reference) -> {})),
+                () -> (((event, reference) -> {})),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), registry),
                 SECRET_VOLUME_PATH);
         vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));

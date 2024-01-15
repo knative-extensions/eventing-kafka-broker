@@ -30,6 +30,7 @@ import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
@@ -41,6 +42,9 @@ import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -102,8 +106,17 @@ public class Main {
 
         final var kubernetesClient = new KubernetesClientBuilder().build();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
-        final var eventTypeInformer = eventTypeClient.inform();
-        final var eventTypeLister = new Lister<>(eventTypeInformer.getIndexer());
+        SharedIndexInformer<EventType> eventTypeInformer = null;
+        Lister<EventType> eventTypeLister = null;
+        try {
+          eventTypeInformer = eventTypeClient.inform();
+        } catch (Exception informerException) {
+          logger.warn("the data-plane does not have sufficient permissions to list/watch eventtypes. This will lead to unnecessary CREATE requests if eventtype-auto-create is enabled: {}", informerException);
+        }
+        if (eventTypeInformer != null) {
+          eventTypeLister = new Lister<>(eventTypeInformer.getIndexer());
+      }
+
 
         // Configure the verticle to deploy and the deployment options
         final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
@@ -132,9 +145,15 @@ public class Main {
             FileWatcher fileWatcher = new FileWatcher(file, () -> publisher.updateContract(file));
             fileWatcher.start();
 
+            var closeables = new ArrayList<>(Arrays.asList(publisher, fileWatcher, openTelemetry.getSdkTracerProvider()));
+
+            if (eventTypeInformer != null) {
+              closeables.add(eventTypeInformer);
+            }
+
             // Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(
-                    vertx, publisher, fileWatcher, eventTypeInformer, openTelemetry.getSdkTracerProvider());
+                    vertx, closeables.toArray(new AutoCloseable[0]));
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the receiver", ex);
