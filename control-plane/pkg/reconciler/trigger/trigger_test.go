@@ -143,6 +143,80 @@ func triggerReconciliationWithOIDC(t *testing.T, format string, env config.Env) 
 
 	table := TableTest{
 		{
+			Name: "OIDC: creates OIDC service account",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				newTrigger(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceeded(),
+						reconcilertesting.WithTriggerOIDCServiceAccountName(makeTriggerOIDCServiceAccount().Name),
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+			WantCreates: []runtime.Object{
+				makeTriggerOIDCServiceAccount(),
+			},
+		},
+		{
 			Name: "OIDC: Trigger not ready on invalid OIDC service account",
 			Objects: []runtime.Object{
 				NewBroker(
@@ -215,80 +289,6 @@ func triggerReconciliationWithOIDC(t *testing.T, format string, env config.Env) 
 						reconcilertesting.WithTriggerSubscribedUnknown("", ""),
 					),
 				},
-			},
-		},
-		{
-			Name: "OIDC: creates OIDC service account",
-			Objects: []runtime.Object{
-				NewBroker(
-					BrokerReady,
-					WithTopicStatusAnnotation(BrokerTopic()),
-					WithBootstrapServerStatusAnnotation(bootstrapServers),
-				),
-				newTrigger(),
-				NewService(),
-				NewConfigMapFromContract(&contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Uid:     BrokerUUID,
-							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
-						},
-					},
-				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
-				BrokerDispatcherPod(env.SystemNamespace, nil),
-				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
-					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
-				),
-			},
-			Key: testKey,
-			WantEvents: []string{
-				finalizerUpdatedEvent,
-			},
-			WantPatches: []clientgotesting.PatchActionImpl{
-				patchFinalizers(),
-			},
-			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
-					Resources: []*contract.Resource{
-						{
-							Uid:     BrokerUUID,
-							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
-							Egresses: []*contract.Egress{
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
-								},
-							},
-						},
-					},
-					Generation: 1,
-				}),
-				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
-					base.VolumeGenerationAnnotationKey: "1",
-				}),
-			},
-			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
-				{
-					Object: newTrigger(
-						reconcilertesting.WithInitTriggerConditions,
-						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceeded(),
-						reconcilertesting.WithTriggerOIDCServiceAccountName(makeTriggerOIDCServiceAccount().Name),
-						reconcilertesting.WithTriggerSubscribed(),
-						withSubscriberURI,
-						reconcilertesting.WithTriggerDependencyReady(),
-						reconcilertesting.WithTriggerBrokerReady(),
-						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
-						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
-					),
-				},
-			},
-			WantCreates: []runtime.Object{
-				makeTriggerOIDCServiceAccount(),
 			},
 		},
 	}

@@ -98,7 +98,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
-
+	errOIDC := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
+		trigger.Status.Auth = as
+	})
 	statusConditionManager := statusConditionManager{
 		Trigger:  trigger,
 		Configs:  r.Env,
@@ -217,10 +219,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	logger.Debug("Contract config map updated")
-	if err := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
-		trigger.Status.Auth = as
-	}); err != nil {
-		return err
+	if errOIDC != nil {
+		return errOIDC
 	}
 
 	return statusConditionManager.reconciled()
