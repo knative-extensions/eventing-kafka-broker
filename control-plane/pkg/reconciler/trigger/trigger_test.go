@@ -26,6 +26,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
@@ -45,6 +46,7 @@ import (
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
@@ -121,6 +123,180 @@ func TestTriggerWithNewFiltersReconciler(t *testing.T) {
 	for _, f := range Formats {
 		triggerReconciliation(t, f, *DefaultEnv, true)
 	}
+}
+
+func TestTriggerReconcilerWithOIDC(t *testing.T) {
+	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
+
+	t.Parallel()
+
+	for _, f := range Formats {
+		triggerReconciliationWithOIDC(t, f, *DefaultEnv)
+	}
+}
+
+func triggerReconciliationWithOIDC(t *testing.T, format string, env config.Env) {
+
+	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
+
+	env.ContractConfigMapFormat = format
+
+	table := TableTest{
+		{
+			Name: "OIDC: Trigger not ready on invalid OIDC service account",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				newTrigger(),
+				makeTriggerOIDCServiceAccountWithoutOwnerRef(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+			},
+			WantErr: true,
+			Key:     testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(corev1.EventTypeWarning, "InternalError", fmt.Sprintf("service account %s not owned by Trigger %s", makeTriggerOIDCServiceAccountWithoutOwnerRef().Name, TriggerName)),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedFailed("Unable to resolve service account for OIDC authentication", fmt.Sprintf("service account %s not owned by Trigger %s", makeTriggerOIDCServiceAccountWithoutOwnerRef().Name, TriggerName)),
+						reconcilertesting.WithTriggerOIDCServiceAccountName(makeTriggerOIDCServiceAccountWithoutOwnerRef().Name),
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyUnknown("", ""),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerSubscribedUnknown("", ""),
+					),
+				},
+			},
+		},
+		{
+			Name: "OIDC: creates OIDC service account",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				newTrigger(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: TriggerUUID,
+									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceeded(),
+						reconcilertesting.WithTriggerOIDCServiceAccountName(makeTriggerOIDCServiceAccount().Name),
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+			WantCreates: []runtime.Object{
+				makeTriggerOIDCServiceAccount(),
+			},
+		},
+	}
+
+	for i := range table {
+		table[i].Name = table[i].Name + " - " + format
+	}
+	useTableWithFlags(t, table, &env, map[string]feature.Flag{feature.OIDCAuthentication: feature.Enabled})
 }
 
 func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFilters bool) {
@@ -2993,6 +3169,7 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 			},
 			BrokerLister:              listers.GetBrokerLister(),
 			ConfigMapLister:           listers.GetConfigMapLister(),
+			ServiceAccountLister:      listers.GetServiceAccountLister(),
 			EventingClient:            eventingclient.Get(ctx),
 			Resolver:                  nil,
 			Env:                       env,
@@ -3061,6 +3238,24 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 	)
 }
 
+func makeTriggerOIDCServiceAccount() *corev1.ServiceAccount {
+	return auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+		Name:      TriggerName,
+		Namespace: TriggerNamespace,
+		UID:       TriggerUUID,
+	})
+}
+
+func makeTriggerOIDCServiceAccountWithoutOwnerRef() *corev1.ServiceAccount {
+	sa := auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+		Name:      TriggerName,
+		Namespace: TriggerNamespace,
+		UID:       TriggerUUID,
+	})
+	sa.OwnerReferences = nil
+
+	return sa
+}
 func newTriggerWithCert(options ...reconcilertesting.TriggerOption) runtime.Object {
 	return reconcilertesting.NewTrigger(
 		TriggerName,

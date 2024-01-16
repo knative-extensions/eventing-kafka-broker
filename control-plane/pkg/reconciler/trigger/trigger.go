@@ -90,11 +90,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	if err := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
-		trigger.Status.Auth = as
-	}); err != nil {
-		return err
-	}
+
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.reconcileKind(ctx, trigger)
 	})
@@ -221,6 +217,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	logger.Debug("Contract config map updated")
+	if err := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
+		trigger.Status.Auth = as
+	}); err != nil {
+		return err
+	}
 
 	return statusConditionManager.reconciled()
 }
