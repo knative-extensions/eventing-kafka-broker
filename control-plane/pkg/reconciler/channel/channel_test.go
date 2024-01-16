@@ -188,6 +188,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -262,6 +263,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
@@ -338,6 +340,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -408,6 +411,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -482,6 +486,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{},
@@ -554,6 +559,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -631,6 +637,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -713,6 +720,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -795,6 +803,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -883,6 +892,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -1173,6 +1183,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -1270,6 +1281,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -1376,6 +1388,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -1479,6 +1492,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							Egresses: []*contract.Egress{{
@@ -1557,6 +1571,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -1626,6 +1641,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -1738,6 +1754,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},
@@ -1823,6 +1840,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
@@ -1864,7 +1882,7 @@ func TestReconcileKind(t *testing.T) {
 						WithChannelAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								URL:     httpsURL(ChannelName, ChannelNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 							{
@@ -1925,6 +1943,7 @@ func TestReconcileKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
@@ -1966,13 +1985,13 @@ func TestReconcileKind(t *testing.T) {
 						WithChannelAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								URL:     httpsURL(ChannelName, ChannelNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 						}),
 						WithChannelAddress(duckv1.Addressable{
 							Name:    pointer.String("https"),
-							URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+							URL:     httpsURL(ChannelName, ChannelNamespace),
 							CACerts: pointer.String(testCaCerts),
 						}),
 						WithChannelAddessable(),
@@ -2014,6 +2033,7 @@ func TestFinalizeKind(t *testing.T) {
 							BootstrapServers: ChannelBootstrapServers,
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 								Host: receiver.Host(ChannelNamespace, ChannelName),
 							},
 						},

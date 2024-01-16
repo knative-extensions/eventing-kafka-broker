@@ -393,6 +393,11 @@ func NewPerChannelService(env *config.Env) *corev1.Service {
 					Protocol: corev1.ProtocolTCP,
 					Port:     80,
 				},
+				{
+					Name:     "https",
+					Protocol: corev1.ProtocolTCP,
+					Port:     443,
+				},
 			},
 		},
 	}
