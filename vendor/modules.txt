@@ -1437,6 +1437,7 @@ knative.dev/eventing/test/conformance/helpers
 knative.dev/eventing/test/conformance/helpers/tracing
 knative.dev/eventing/test/e2e/helpers
 knative.dev/eventing/test/experimental/features/delivery_timeout
+knative.dev/eventing/test/experimental/features/eventtype_autocreate
 knative.dev/eventing/test/flags
 knative.dev/eventing/test/lib
 knative.dev/eventing/test/lib/dropevents
@@ -1470,6 +1471,7 @@ knative.dev/eventing/test/rekt/resources/channel
 knative.dev/eventing/test/rekt/resources/channel_impl
 knative.dev/eventing/test/rekt/resources/containersource
 knative.dev/eventing/test/rekt/resources/delivery
+knative.dev/eventing/test/rekt/resources/eventtype
 knative.dev/eventing/test/rekt/resources/pingsource
 knative.dev/eventing/test/rekt/resources/subscription
 knative.dev/eventing/test/rekt/resources/trigger

@@ -23,13 +23,17 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/eventing/test/experimental/features/eventtype_autocreate"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
+	"knative.dev/eventing/test/rekt/resources/broker"
 )
 
 const (
@@ -228,4 +232,38 @@ func TestNamespacedBrokerNamespaceDeletion(t *testing.T) {
 	env.Test(ctx, t, features.SetupNamespace(namespace))
 	env.Test(ctx, t, features.SetupNamespacedBroker(name))
 	env.Test(ctx, t, features.CleanupNamespace(namespace))
+}
+
+func TestBrokerEventTypeAutoCreate(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	env.Prerequisite(ctx, t, InstallBroker(brokerName))
+	env.Test(ctx, t, eventtype_autocreate.AutoCreateEventTypesOnBroker(brokerName))
+}
+
+func InstallBroker(brokerName string) *feature.Feature {
+	install, cmName := single_partition_config.MakeInstall()
+
+	f := feature.NewFeature()
+
+	f.Setup("install one partition configuration", install)
+	f.Setup("install kafka broker", broker.Install(
+		brokerName,
+		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithConfig(cmName),
+	))
+	f.Requirement("kafka broker is ready", broker.IsReady(brokerName))
+	f.Requirement("kafka broker is addressable", broker.IsAddressable(brokerName))
+
+	return f
 }
