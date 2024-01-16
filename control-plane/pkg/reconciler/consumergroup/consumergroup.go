@@ -178,6 +178,8 @@ type Reconciler struct {
 func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 	recordExpectedReplicasMetric(ctx, cg)
 
+	r.setBlockOwnerDeletion(cg, false)
+
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
@@ -766,6 +768,12 @@ func (r *Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev
 		return fmt.Errorf("failed to create ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
 	}
 	return nil
+}
+
+func (r *Reconciler) setBlockOwnerDeletion(cg *kafkainternals.ConsumerGroup, shouldBlock bool) {
+	for i := range cg.OwnerReferences {
+		cg.OwnerReferences[i].BlockOwnerDeletion = &shouldBlock
+	}
 }
 
 func errorIsOneOf(err error, errs ...error) bool {
