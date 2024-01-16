@@ -65,7 +65,7 @@ type Reconciler struct {
 
 	BrokerLister         eventinglisters.BrokerLister
 	ConfigMapLister      corelisters.ConfigMapLister
-	serviceAccountLister corelisters.ServiceAccountLister
+	ServiceAccountLister corelisters.ServiceAccountLister
 	EventingClient       eventingclientset.Interface
 	Resolver             *resolver.URIResolver
 
@@ -90,7 +90,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	if err := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.serviceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
+	if err := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
 		trigger.Status.Auth = as
 	}); err != nil {
 		return err
