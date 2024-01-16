@@ -497,8 +497,14 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 			if c.Status.SubscriberURI != nil {
 				cg.Status.SubscriberURI = c.Status.SubscriberURI
 			}
+			if c.Status.SubscriberCACerts != nil {
+				cg.Status.SubscriberCACerts = c.Status.SubscriberCACerts
+			}
 			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
 				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
+			}
+			if c.Status.DeliveryStatus.DeadLetterSinkCACerts != nil {
+				cg.Status.DeliveryStatus.DeadLetterSinkCACerts = c.Status.DeadLetterSinkCACerts
 			}
 		} else if condition == nil { // Propagate only a single false condition
 			cond := c.GetConditionSet().Manage(c.GetStatus()).GetTopLevelCondition()

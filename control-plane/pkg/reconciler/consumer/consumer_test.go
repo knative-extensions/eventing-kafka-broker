@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
@@ -836,6 +837,7 @@ func TestReconcileKind(t *testing.T) {
 						c.MarkReconcileContractSucceeded()
 						c.MarkBindSucceeded()
 						c.Status.SubscriberURI, _ = apis.ParseURL(ServiceHTTPSURL)
+						c.Status.SubscriberCACerts = pointer.String(string(eventingtlstesting.CA))
 						return c
 					}(),
 				},
