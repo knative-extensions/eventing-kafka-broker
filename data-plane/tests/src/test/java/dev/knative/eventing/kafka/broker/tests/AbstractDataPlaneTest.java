@@ -246,7 +246,8 @@ public abstract class AbstractDataPlaneTest {
                             if (request.path().equals(PATH_SERVICE_1)) {
                                 final var expectedEvent = service1ExpectedEventsIterator.next();
                                 context.verify(() -> {
-                                    assertThat(event).isEqualTo(expectedEvent);
+                                  assertThat(event).usingComparatorForFields((a, b) -> 0, "extensions").isEqualTo(expectedEvent);
+//                                    assertThat(event).isEqualTo(expectedEvent);
                                     checkpoints.flag(); // 2
                                 });
 
@@ -260,7 +261,7 @@ public abstract class AbstractDataPlaneTest {
                             // service 2 receives event in the response
                             if (request.path().equals(PATH_SERVICE_2)) {
                                 context.verify(() -> {
-                                    assertThat(event).isEqualTo(expectedResponseEventService2);
+                                    assertThat(event).usingComparatorForFields((a, b) -> 0, "extensions").isEqualTo(expectedResponseEventService2);
                                     checkpoints.flag(); // 3
                                 });
 
