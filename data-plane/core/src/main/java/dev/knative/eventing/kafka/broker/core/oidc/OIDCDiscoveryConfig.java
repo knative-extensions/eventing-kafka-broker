@@ -32,73 +32,75 @@ import org.slf4j.LoggerFactory;
 
 public class OIDCDiscoveryConfig {
 
-  private static final Logger logger = LoggerFactory.getLogger(TokenVerifier.class);
+    private static final Logger logger = LoggerFactory.getLogger(TokenVerifier.class);
 
-  private String issuer;
+    private String issuer;
 
-  private JwksVerificationKeyResolver jwksVerificationKeyResolver;
+    private JwksVerificationKeyResolver jwksVerificationKeyResolver;
 
-  private OIDCDiscoveryConfig() {}
+    private OIDCDiscoveryConfig() {}
 
-  public String getIssuer() {
-    return issuer;
-  }
+    public String getIssuer() {
+        return issuer;
+    }
 
-  public JwksVerificationKeyResolver getJwksVerificationKeyResolver() {
-    return jwksVerificationKeyResolver;
-  }
+    public JwksVerificationKeyResolver getJwksVerificationKeyResolver() {
+        return jwksVerificationKeyResolver;
+    }
 
-  public static Future<OIDCDiscoveryConfig> build(Vertx vertx) {
-    Config kubeConfig = new ConfigBuilder().build();
+    public static Future<OIDCDiscoveryConfig> build(Vertx vertx) {
+        Config kubeConfig = new ConfigBuilder().build();
 
-    WebClientOptions webClientOptions = new WebClientOptions()
-      .setPemTrustOptions(new PemTrustOptions().addCertPath(kubeConfig.getCaCertFile()));
-    WebClient webClient = WebClient.create(vertx, webClientOptions);
+        WebClientOptions webClientOptions = new WebClientOptions()
+                .setPemTrustOptions(new PemTrustOptions().addCertPath(kubeConfig.getCaCertFile()));
+        WebClient webClient = WebClient.create(vertx, webClientOptions);
 
-    OIDCDiscoveryConfig oidcDiscoveryConfig = new OIDCDiscoveryConfig();
+        OIDCDiscoveryConfig oidcDiscoveryConfig = new OIDCDiscoveryConfig();
 
-    return webClient
-      .getAbs("https://kubernetes.default.svc/.well-known/openid-configuration")
-      .bearerTokenAuthentication(kubeConfig.getAutoOAuthToken())
-      .send()
-      .compose(res -> {
-        logger.debug("Got raw OIDC discovery info: " + res.bodyAsString());
+        return webClient
+                .getAbs("https://kubernetes.default.svc/.well-known/openid-configuration")
+                .bearerTokenAuthentication(kubeConfig.getAutoOAuthToken())
+                .send()
+                .compose(res -> {
+                    logger.debug("Got raw OIDC discovery info: " + res.bodyAsString());
 
-        try {
-          ObjectMapper mapper = new ObjectMapper();
-          OIDCInfo oidcInfo = mapper.readValue(res.bodyAsString(), OIDCInfo.class);
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        OIDCInfo oidcInfo = mapper.readValue(res.bodyAsString(), OIDCInfo.class);
 
-          oidcDiscoveryConfig.issuer = oidcInfo.getIssuer();
+                        oidcDiscoveryConfig.issuer = oidcInfo.getIssuer();
 
-          return webClient
-            .getAbs(oidcInfo.getJwks().toString())
-            .bearerTokenAuthentication(kubeConfig.getAutoOAuthToken())
-            .send();
+                        return webClient
+                                .getAbs(oidcInfo.getJwks().toString())
+                                .bearerTokenAuthentication(kubeConfig.getAutoOAuthToken())
+                                .send();
 
-        } catch (JsonProcessingException e) {
-          logger.error("Failed to parse OIDC discovery info", e);
+                    } catch (JsonProcessingException e) {
+                        logger.error("Failed to parse OIDC discovery info", e);
 
-          return Future.failedFuture(e);
-        }
-      }).compose(res -> {
-        if (res.statusCode() >= 200 && res.statusCode() < 300) {
-          try {
-            JsonWebKeySet jsonWebKeySet = new JsonWebKeySet(res.bodyAsString());
-            logger.debug("Got JWKeys: " + jsonWebKeySet.toJson());
+                        return Future.failedFuture(e);
+                    }
+                })
+                .compose(res -> {
+                    if (res.statusCode() >= 200 && res.statusCode() < 300) {
+                        try {
+                            JsonWebKeySet jsonWebKeySet = new JsonWebKeySet(res.bodyAsString());
+                            logger.debug("Got JWKeys: " + jsonWebKeySet.toJson());
 
-            oidcDiscoveryConfig.jwksVerificationKeyResolver = new JwksVerificationKeyResolver(jsonWebKeySet.getJsonWebKeys());
+                            oidcDiscoveryConfig.jwksVerificationKeyResolver =
+                                    new JwksVerificationKeyResolver(jsonWebKeySet.getJsonWebKeys());
 
-            return Future.succeededFuture(oidcDiscoveryConfig);
-          } catch (JoseException t) {
-            logger.error("Failed to parse JWKeys", t);
+                            return Future.succeededFuture(oidcDiscoveryConfig);
+                        } catch (JoseException t) {
+                            logger.error("Failed to parse JWKeys", t);
 
-            return Future.failedFuture(t);
-          }
-        }
+                            return Future.failedFuture(t);
+                        }
+                    }
 
-        logger.error("Got unexpected response code for JWKey URL: " + res.statusCode());
+                    logger.error("Got unexpected response code for JWKey URL: " + res.statusCode());
 
-        return Future.failedFuture("unexpected response code on JWKeys URL: " + res.statusCode());
-      });
-  }
+                    return Future.failedFuture("unexpected response code on JWKeys URL: " + res.statusCode());
+                });
+    }
 }

@@ -196,7 +196,7 @@ Lists of 230 third-party dependencies.
      (The Apache License, Version 2.0) org.apiguardian:apiguardian-api (org.apiguardian:apiguardian-api:1.1.2 - https://github.com/apiguardian-team/apiguardian)
      (Apache License, Version 2.0) AssertJ fluent assertions (org.assertj:assertj-core:3.22.0 - https://assertj.github.io/doc/assertj-core/)
      (Apache 2.0) Awaitility (org.awaitility:awaitility:4.2.0 - http://awaitility.org)
-     (The Apache Software License, Version 2.0) jose4j (org.bitbucket.b_c:jose4j:0.7.9 - https://bitbucket.org/b_c/jose4j/)
+     (The Apache Software License, Version 2.0) jose4j (org.bitbucket.b_c:jose4j:0.9.4 - https://bitbucket.org/b_c/jose4j/)
      (The MIT License) Checker Qual (org.checkerframework:checker-qual:3.34.0 - https://checkerframework.org/)
      (Apache License, Version 2.0) MicroProfile Config API (org.eclipse.microprofile.config:microprofile-config-api:3.0.3 - https://microprofile.io/project/eclipse/microprofile-config/microprofile-config-api)
      (Apache License, Version 2.0) MicroProfile Context Propagation (org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3 - http://microprofile.io/microprofile-context-propagation-api)
