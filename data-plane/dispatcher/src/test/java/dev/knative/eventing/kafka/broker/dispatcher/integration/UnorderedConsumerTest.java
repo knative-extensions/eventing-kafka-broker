@@ -112,8 +112,8 @@ public class UnorderedConsumerTest {
         await().atMost(6, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
 
-        if (!waitEvents.await(6, TimeUnit.Second)) {
-          fail("failed to have all events process properly in time");
+        if (!waitEvents.await(6, TimeUnit.SECONDS)) {
+            fail("failed to have all events process properly in time");
         }
 
         final var producers = consumerVerticleFactoryMock.producers();
