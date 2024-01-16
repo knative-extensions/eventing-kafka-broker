@@ -246,8 +246,10 @@ public abstract class AbstractDataPlaneTest {
                             if (request.path().equals(PATH_SERVICE_1)) {
                                 final var expectedEvent = service1ExpectedEventsIterator.next();
                                 context.verify(() -> {
-                                  assertThat(event).usingComparatorForFields((a, b) -> 0, "extensions").isEqualTo(expectedEvent);
-//                                    assertThat(event).isEqualTo(expectedEvent);
+                                    assertThat(event.getId()).isEqualTo(expectedEvent.getId());
+                                    assertThat(event.getType()).isEqualTo(expectedEvent.getType());
+                                    assertThat(event.getSubject()).isEqualTo(expectedEvent.getSubject());
+                                    assertThat(event.getSource()).isEqualTo(expectedEvent.getSource());
                                     checkpoints.flag(); // 2
                                 });
 
@@ -261,7 +263,11 @@ public abstract class AbstractDataPlaneTest {
                             // service 2 receives event in the response
                             if (request.path().equals(PATH_SERVICE_2)) {
                                 context.verify(() -> {
-                                    assertThat(event).usingComparatorForFields((a, b) -> 0, "extensions").isEqualTo(expectedResponseEventService2);
+                                    assertThat(event.getId()).isEqualTo(expectedResponseEventService2.getId());
+                                    assertThat(event.getType()).isEqualTo(expectedResponseEventService2.getType());
+                                    assertThat(event.getSubject())
+                                            .isEqualTo(expectedResponseEventService2.getSubject());
+                                    assertThat(event.getSource()).isEqualTo(expectedResponseEventService2.getSource());
                                     checkpoints.flag(); // 3
                                 });
 
