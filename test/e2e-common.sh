@@ -269,30 +269,6 @@ function test_setup() {
   kubectl rollout restart deployment -n knative-eventing kafka-channel-dispatcher
 }
 
-function test_control_plane_setup() {
-
-  # Call the function to install control plane components from source
-  install_control_plane_from_source || return $?
-
-  install_head || return $?
-
-  wait_until_pods_running knative-eventing || fail_test "System did not come up"
-
-  # Apply test configurations, and restart data plane components (we don't have hot reload)
-  ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
-
-  create_sasl_secrets || fail_test "Failed to create SASL secrets"
-  create_tls_secrets || fail_test "Failed to create TLS secrets"
-  setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
-
-  kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
-  kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
-  kubectl rollout restart deployment -n knative-eventing kafka-broker-dispatcher
-  kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
-  kubectl rollout restart deployment -n knative-eventing kafka-channel-receiver
-  kubectl rollout restart deployment -n knative-eventing kafka-channel-dispatcher
-}
-
 function test_teardown() {
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || fail_test "Failed to tear down control plane"
   kubectl delete --ignore-not-found -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || fail_test "Failed to tear down kafka broker"
