@@ -518,11 +518,12 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 	recordReadyReplicasMetric(ctx, cg)
 
 	if cg.Spec.Replicas != nil && *cg.Spec.Replicas == 0 {
-		subscriber, err := r.Resolver.URIFromDestinationV1(ctx, cg.Spec.Template.Spec.Subscriber, cg)
+		subscriber, err := r.Resolver.AddressableFromDestinationV1(ctx, cg.Spec.Template.Spec.Subscriber, cg)
 		if err != nil {
 			return condition, fmt.Errorf("failed to resolve subscribed URI: %w", err)
 		}
-		cg.Status.SubscriberURI = subscriber
+		cg.Status.SubscriberURI = subscriber.URL
+		cg.Status.SubscriberCACerts = subscriber.CACerts
 	}
 
 	return condition, nil
