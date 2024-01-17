@@ -81,27 +81,24 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, statusCode);
 
-        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry());
+        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, reference) -> null));
 
-        handler.handle(
-                new RequestContext(request),
-                new IngressProducer() {
-                    @Override
-                    public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
-                        return producer;
-                    }
+        handler.handle(new RequestContext(request), new IngressProducer() {
+            @Override
+            public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
+                return producer;
+            }
 
-                    @Override
-                    public String getTopic() {
-                        return "1-12345";
-                    }
+            @Override
+            public String getTopic() {
+                return "1-12345";
+            }
 
-                    @Override
-                    public DataPlaneContract.Reference getReference() {
-                        return DataPlaneContract.Reference.newBuilder().build();
-                    }
-                },
-                (event, reference) -> {});
+            @Override
+            public DataPlaneContract.Reference getReference() {
+                return DataPlaneContract.Reference.newBuilder().build();
+            }
+        });
 
         verifySetStatusCodeAndTerminateResponse(statusCode, response);
     }
@@ -115,27 +112,24 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, IngressRequestHandlerImpl.MAPPER_FAILED);
 
-        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry());
+        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, reference) -> null));
 
-        handler.handle(
-                new RequestContext(request),
-                new IngressProducer() {
-                    @Override
-                    public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
-                        return producer;
-                    }
+        handler.handle(new RequestContext(request), new IngressProducer() {
+            @Override
+            public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
+                return producer;
+            }
 
-                    @Override
-                    public String getTopic() {
-                        return "1-12345";
-                    }
+            @Override
+            public String getTopic() {
+                return "1-12345";
+            }
 
-                    @Override
-                    public DataPlaneContract.Reference getReference() {
-                        return DataPlaneContract.Reference.newBuilder().build();
-                    }
-                },
-                (event, reference) -> {});
+            @Override
+            public DataPlaneContract.Reference getReference() {
+                return DataPlaneContract.Reference.newBuilder().build();
+            }
+        });
 
         verifySetStatusCodeAndTerminateResponse(IngressRequestHandlerImpl.MAPPER_FAILED, response);
     }

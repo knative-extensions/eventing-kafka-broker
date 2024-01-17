@@ -18,11 +18,12 @@ package dev.knative.eventing.kafka.broker.core.eventtype;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Future;
 
 /**
  * This interface provides an abstraction for creating {@link EventType} instances from {@link CloudEvent} instances.
  */
 @FunctionalInterface
 public interface EventTypeCreator {
-    void create(CloudEvent event, DataPlaneContract.Reference reference);
+    Future<EventType> create(CloudEvent event, DataPlaneContract.Reference reference);
 }

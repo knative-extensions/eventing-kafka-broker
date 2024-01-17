@@ -71,15 +71,19 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
     private final RequestToRecordMapper requestToRecordMapper;
     private final MeterRegistry meterRegistry;
 
+    private final EventTypeCreator eventTypeCreator;
+
     public IngressRequestHandlerImpl(
-            final RequestToRecordMapper requestToRecordMapper, final MeterRegistry meterRegistry) {
+            final RequestToRecordMapper requestToRecordMapper,
+            final MeterRegistry meterRegistry,
+            final EventTypeCreator eventTypeCreator) {
         this.requestToRecordMapper = requestToRecordMapper;
         this.meterRegistry = meterRegistry;
+        this.eventTypeCreator = eventTypeCreator;
     }
 
     @Override
-    public void handle(
-            final RequestContext requestContext, final IngressProducer producer, EventTypeCreator eventTypeCreator) {
+    public void handle(final RequestContext requestContext, final IngressProducer producer) {
 
         final Tags resourceTags = Metrics.resourceRefTags(producer.getReference());
 
@@ -166,6 +170,16 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                                                 "path",
                                                 requestContext.getRequest().path()),
                                         cause);
+                            })
+                            .compose((ignored) -> {
+                                if (producer.isEventTypeAutocreateEnabled()) {
+                                    return this.eventTypeCreator
+                                            .create(record.value(), producer.getReference())
+                                            .onFailure(cause -> logger.warn("failed to create eventtype", cause))
+                                            .onSuccess(et -> logger.debug("successfully created eventtype {}", et));
+                                } else {
+                                    return Future.succeededFuture();
+                                }
                             });
                 });
     }

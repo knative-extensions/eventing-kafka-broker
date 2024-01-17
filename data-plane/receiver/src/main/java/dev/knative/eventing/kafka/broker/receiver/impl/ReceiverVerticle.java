@@ -21,7 +21,6 @@ import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPla
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
-import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
@@ -44,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +82,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private final HttpServerOptions httpsServerOptions;
     private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
 
-    private final Supplier<EventTypeCreator> eventTypeCreatorFactory;
-
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
 
@@ -94,8 +90,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
 
-    private EventTypeCreator eventTypeCreator;
-
     private FileWatcher secretWatcher;
 
     public ReceiverVerticle(
@@ -103,7 +97,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final HttpServerOptions httpServerOptions,
             final HttpServerOptions httpsServerOptions,
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
-            final Supplier<EventTypeCreator> eventTypeCreatorFactory,
             final IngressRequestHandler ingressRequestHandler,
             final String secretVolumePath) {
 
@@ -118,7 +111,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
         this.httpsServerOptions = httpsServerOptions;
         this.ingressProducerStoreFactory = ingressProducerStoreFactory;
-        this.eventTypeCreatorFactory = eventTypeCreatorFactory;
         this.ingressRequestHandler = ingressRequestHandler;
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
@@ -132,7 +124,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     @Override
     public void start(final Promise<Void> startPromise) {
         this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
-        this.eventTypeCreator = this.eventTypeCreatorFactory.get();
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
@@ -235,7 +226,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         }
 
         // Invoke the ingress request handler
-        this.ingressRequestHandler.handle(requestContext, producer, this.eventTypeCreator);
+        this.ingressRequestHandler.handle(requestContext, producer);
     }
 
     public void updateServerConfig() {

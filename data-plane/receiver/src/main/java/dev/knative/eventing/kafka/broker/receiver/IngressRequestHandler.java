@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 
 /**
@@ -23,5 +22,5 @@ import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListen
  */
 public interface IngressRequestHandler extends IngressReconcilerListener {
 
-    void handle(RequestContext request, IngressProducer producer, EventTypeCreator eventTypeCreator);
+    void handle(RequestContext request, IngressProducer producer);
 }

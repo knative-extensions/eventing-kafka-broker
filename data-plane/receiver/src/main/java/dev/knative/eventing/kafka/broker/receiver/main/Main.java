@@ -127,7 +127,8 @@ public class Main {
                 httpsServerOptions,
                 kafkaProducerFactory,
                 eventTypeClient,
-                eventTypeLister);
+                eventTypeLister,
+                vertx);
         DeploymentOptions deploymentOptions =
                 new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
 

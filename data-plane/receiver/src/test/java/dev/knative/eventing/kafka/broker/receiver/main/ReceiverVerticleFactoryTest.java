@@ -25,12 +25,16 @@ import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(VertxExtension.class)
 public class ReceiverVerticleFactoryTest {
 
     static {
@@ -38,7 +42,7 @@ public class ReceiverVerticleFactoryTest {
     }
 
     @Test
-    public void shouldCreateMultipleReceiverVerticleInstances() {
+    public void shouldCreateMultipleReceiverVerticleInstances(Vertx vertx) {
         var mockClient = mock(KubernetesClient.class);
         final var supplier = new ReceiverVerticleFactory(
                 mock(ReceiverEnv.class),
@@ -48,7 +52,8 @@ public class ReceiverVerticleFactoryTest {
                 mock(HttpServerOptions.class),
                 mock(MockReactiveProducerFactory.class),
                 mockClient.resources(EventType.class),
-                mock(Lister.class));
+                mock(Lister.class),
+                vertx);
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
     }

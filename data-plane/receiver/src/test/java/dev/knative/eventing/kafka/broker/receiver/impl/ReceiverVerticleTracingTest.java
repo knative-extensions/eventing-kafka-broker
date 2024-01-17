@@ -131,8 +131,8 @@ public abstract class ReceiverVerticleTracingTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-                () -> (((event, reference) -> {})),
-                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
+                new IngressRequestHandlerImpl(
+                        StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry(), ((event, reference) -> null)),
                 SECRET_VOLUME_PATH);
 
         vertx.deployVerticle(verticle).toCompletionStage().toCompletableFuture().get();

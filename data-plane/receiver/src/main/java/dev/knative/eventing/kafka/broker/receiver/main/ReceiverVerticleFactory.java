@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -46,10 +47,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
 
     private final IngressRequestHandler ingressRequestHandler;
 
-    private final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
-
-    private final Lister<EventType> eventTypeLister;
-
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
     ReceiverVerticleFactory(
@@ -60,17 +57,18 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final HttpServerOptions httpsServerOptions,
             final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
-            final Lister<EventType> eventTypeLister) {
+            final Lister<EventType> eventTypeLister,
+            Vertx vertx) {
         {
             this.env = env;
             this.producerConfigs = producerConfigs;
             this.httpServerOptions = httpServerOptions;
             this.httpsServerOptions = httpsServerOptions;
-            this.ingressRequestHandler =
-                    new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
+            this.ingressRequestHandler = new IngressRequestHandlerImpl(
+                    StrictRequestToRecordMapper.getInstance(),
+                    metricsRegistry,
+                    new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx));
             this.kafkaProducerFactory = kafkaProducerFactory;
-            this.eventTypeClient = eventTypeClient;
-            this.eventTypeLister = eventTypeLister;
         }
     }
 
@@ -84,7 +82,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         AuthProvider.kubernetes(),
                         producerConfigs,
                         properties -> kafkaProducerFactory.create(v, properties)),
-                () -> new EventTypeCreatorImpl(this.eventTypeClient, this.eventTypeLister),
                 this.ingressRequestHandler,
                 secretVolumePath);
     }

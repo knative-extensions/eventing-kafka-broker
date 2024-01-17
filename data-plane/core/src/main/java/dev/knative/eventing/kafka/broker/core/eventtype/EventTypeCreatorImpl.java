@@ -23,6 +23,9 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.WorkerExecutor;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
@@ -37,11 +40,15 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
 
     private MessageDigest messageDigest;
 
+    private final WorkerExecutor executor;
+
     public EventTypeCreatorImpl(
             MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
-            Lister<EventType> eventTypeLister) {
+            Lister<EventType> eventTypeLister,
+            Vertx vertx) {
         this.eventTypeClient = eventTypeClient;
         this.eventTypeLister = eventTypeLister;
+        this.executor = vertx.createSharedWorkerExecutor("et-creator-worker", 1);
         try {
             this.messageDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ignored) {
@@ -61,47 +68,42 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
         return name;
     }
 
-    private boolean eventTypeExists(String etName, DataPlaneContract.Reference reference) {
+    private EventType eventTypeExists(String etName, DataPlaneContract.Reference reference) {
         if (this.eventTypeLister == null) {
-            return false;
+            return null;
         }
-        try {
-            var et = this.eventTypeLister.namespace(reference.getNamespace()).get(etName);
-            return et != null;
-        } catch (Exception ignored) {
-            return false;
-        }
+        return this.eventTypeLister.namespace(reference.getNamespace()).get(etName);
     }
 
     @Override
-    public void create(CloudEvent event, DataPlaneContract.Reference ownerReference) {
-        if (this.messageDigest == null) {
-            return;
-        }
+    public Future<EventType> create(CloudEvent event, DataPlaneContract.Reference ownerReference) {
+        return this.executor.executeBlocking(() -> {
+            if (this.messageDigest == null) {
+                return null;
+            }
 
-        var name = this.getName(event, ownerReference);
-        if (this.eventTypeExists(name, ownerReference)) {
-            return;
-        }
+            final var name = this.getName(event, ownerReference);
+            final var eventType = this.eventTypeExists(name, ownerReference);
+            if (eventType != null) {
+                return eventType;
+            }
 
-        var et = new EventTypeBuilder()
-                .withReference(KReference.fromDataPlaneReference(ownerReference))
-                .withOwnerReference(new OwnerReferenceBuilder()
-                        .withName(ownerReference.getName())
-                        .withKind(ownerReference.getKind())
-                        .withApiVersion(ownerReference.getGroupVersion())
-                        .withUid(ownerReference.getUuid())
-                        .build())
-                .withNamespace(ownerReference.getNamespace())
-                .withName(name)
-                .withType(event.getType())
-                .withSource(event.getSource())
-                .withSchema(event.getDataSchema())
-                .withDescription("Event Type auto-created by controller");
+            var et = new EventTypeBuilder()
+                    .withReference(KReference.fromDataPlaneReference(ownerReference))
+                    .withOwnerReference(new OwnerReferenceBuilder()
+                            .withName(ownerReference.getName())
+                            .withKind(ownerReference.getKind())
+                            .withApiVersion(ownerReference.getGroupVersion())
+                            .withUid(ownerReference.getUuid())
+                            .build())
+                    .withNamespace(ownerReference.getNamespace())
+                    .withName(name)
+                    .withType(event.getType())
+                    .withSource(event.getSource())
+                    .withSchema(event.getDataSchema())
+                    .withDescription("Event Type auto-created by controller");
 
-        try {
-            this.eventTypeClient.resource(et.build()).create();
-        } catch (Exception ignored) {
-        }
+            return this.eventTypeClient.resource(et.build()).create();
+        });
     }
 }

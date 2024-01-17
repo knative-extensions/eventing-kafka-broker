@@ -24,21 +24,25 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
 import java.net.URI;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableKubernetesMockClient(crud = true)
+@ExtendWith(VertxExtension.class)
 public class EventTypeCreatorImplTest {
     private KubernetesClient kubernetesClient;
     private KubernetesMockServer server;
 
     @Test
-    public void testCreate() {
+    public void testCreate(Vertx vertx) {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var informer = eventTypeClient.inform();
         final var eventTypeLister = new Lister<>(informer.getIndexer());
-        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister);
+        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx);
         var event = new CloudEventBuilder()
                 .withType("example.event.type")
                 .withSource(URI.create("/example/source"))
