@@ -2948,6 +2948,10 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		logger := logging.FromContext(ctx)
+		ctxFlags := feature.FromContextOrDefaults(ctx)
+		for k, v := range flags {
+			ctxFlags[k] = v
+		}
 
 		reconciler := &Reconciler{
 			Reconciler: &base.Reconciler{
@@ -2963,7 +2967,7 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 				ReceiverLabel:                base.BrokerReceiverLabel,
 			},
 			FlagsHolder: &FlagsHolder{
-				Flags: flags,
+				Flags: ctxFlags,
 			},
 			BrokerLister:              listers.GetBrokerLister(),
 			ConfigMapLister:           listers.GetConfigMapLister(),
