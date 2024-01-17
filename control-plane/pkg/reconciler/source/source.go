@@ -99,6 +99,16 @@ func GetLabels(name string) map[string]string {
 
 // Need to have an empty definition here to ensure that we can delete older sources which had a finalizer
 func (r Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID))
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get ConsumerGroup %s/%s: %w", ks.GetNamespace(), string(ks.UID), err)
+	}
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+
+	propagateConsumerGroupStatus(cg, ks)
+
 	return nil
 }
 
