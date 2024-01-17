@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.net.URI;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ public class EventTypeCreatorImplTest {
     private KubernetesMockServer server;
 
     @Test
-    public void testCreate(Vertx vertx) {
+    public void testCreate(Vertx vertx, VertxTestContext vertxTestContext) {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var informer = eventTypeClient.inform();
         final var eventTypeLister = new Lister<>(informer.getIndexer());
@@ -56,27 +57,36 @@ public class EventTypeCreatorImplTest {
                 .setGroupVersion("eventing.knative.dev/v1")
                 .setUuid("12345")
                 .build();
-        eventTypeCreator.create(event, reference);
+        eventTypeCreator
+                .create(event, reference)
+                .onFailure((exception) -> {
+                    informer.close();
+                    vertxTestContext.failNow(exception);
+                })
+                .onSuccess((et -> {
+                    KubernetesResourceList<EventType> eventTypeList =
+                            eventTypeClient.inNamespace("default").list();
 
-        informer.close();
+                    informer.close();
+                    Assertions.assertNotNull(eventTypeList);
+                    Assertions.assertEquals(1, eventTypeList.getItems().size());
+                    var eventType = eventTypeList.getItems().get(0);
+                    Assertions.assertEquals(
+                            eventType.getSpec().getReference(),
+                            new KReference("eventing.knative.dev/v1", "Broker", "my-broker", "default"));
+                    Assertions.assertEquals(eventType.getSpec().getSchema(), URI.create("/example/schema"));
+                    Assertions.assertEquals(
+                            eventType.getSpec().getDescription(), "Event Type auto-created by controller");
+                    Assertions.assertEquals(
+                            eventType.getMetadata().getOwnerReferences().get(0),
+                            new OwnerReferenceBuilder()
+                                    .withApiVersion("eventing.knative.dev/v1")
+                                    .withKind("Broker")
+                                    .withName("my-broker")
+                                    .withUid("12345")
+                                    .build());
 
-        KubernetesResourceList<EventType> eventTypeList =
-                eventTypeClient.inNamespace("default").list();
-        Assertions.assertNotNull(eventTypeList);
-        Assertions.assertEquals(1, eventTypeList.getItems().size());
-        var eventType = eventTypeList.getItems().get(0);
-        Assertions.assertEquals(
-                eventType.getSpec().getReference(),
-                new KReference("eventing.knative.dev/v1", "Broker", "my-broker", "default"));
-        Assertions.assertEquals(eventType.getSpec().getSchema(), URI.create("/example/schema"));
-        Assertions.assertEquals(eventType.getSpec().getDescription(), "Event Type auto-created by controller");
-        Assertions.assertEquals(
-                eventType.getMetadata().getOwnerReferences().get(0),
-                new OwnerReferenceBuilder()
-                        .withApiVersion("eventing.knative.dev/v1")
-                        .withKind("Broker")
-                        .withName("my-broker")
-                        .withUid("12345")
-                        .build());
+                    vertxTestContext.completeNow();
+                }));
     }
 }
