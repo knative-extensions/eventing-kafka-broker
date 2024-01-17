@@ -115,6 +115,7 @@ func TrustBundles(lister corev1listers.ConfigMapNamespaceLister) ([]string, erro
 	trustBundles := make([]string, 0, len(cms))
 	for _, cm := range cms {
 		for _, v := range cm.Data {
+			// Valid certs as the data plane fails when invalid PEM are provided
 			if ok := cp.AppendCertsFromPEM([]byte(v)); ok {
 				trustBundles = append(trustBundles, v)
 			}
