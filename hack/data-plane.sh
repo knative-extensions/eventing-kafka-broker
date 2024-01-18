@@ -63,29 +63,41 @@ fi
 function receiver_build_push() {
   header "Building receiver ..."
 
+  local receiver_sha=""
+
   if [ $USE_LOOM == "true" ]; then
     local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver-loom}"
     ./mvnw clean package jib:build -pl "${RECEIVER_LOOM_DIRECTORY}" -DskipTests || return $?
+    receiver_sha=$(cat "${RECEIVER_LOOM_DIRECTORY}/target/jib-image.digest")
   else
     local receiver="${KNATIVE_KAFKA_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
     ./mvnw clean package jib:build -pl "${RECEIVER_VERTX_DIRECTORY}" -DskipTests || return $?
+    receiver_sha=$(cat "${RECEIVER_VERTX_DIRECTORY}/target/jib-image.digest")
   fi
 
-  export KNATIVE_KAFKA_RECEIVER_IMAGE="${receiver}:${TAG}"
+  export KNATIVE_KAFKA_RECEIVER_IMAGE="${receiver}@${receiver_sha}"
+
+  echo "Receiver image ${KNATIVE_KAFKA_RECEIVER_IMAGE}"
 }
 
 function dispatcher_build_push() {
   header "Building dispatcher ..."
 
+  local dispatcher_sha=""
+
   if [ "${USE_LOOM}" == "true" ]; then
     local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher-loom}"
     ./mvnw clean package jib:build -pl "${DISPATCHER_LOOM_DIRECTORY}" -DskipTests || return $?
+    dispatcher_sha=$(cat "${DISPATCHER_LOOM_DIRECTORY}/target/jib-image.digest")
   else
     local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
     ./mvnw clean package jib:build -pl "${DISPATCHER_VERTX_DIRECTORY}" -DskipTests || return $?
+    dispatcher_sha=$(cat "${DISPATCHER_VERTX_DIRECTORY}/target/jib-image.digest")
   fi
   
-  export KNATIVE_KAFKA_DISPATCHER_IMAGE="${dispatcher}:${TAG}"
+  export KNATIVE_KAFKA_DISPATCHER_IMAGE="${dispatcher}@${dispatcher_sha}"
+
+  echo "Dispatcher image ${KNATIVE_KAFKA_DISPATCHER_IMAGE}"
 }
 
 function data_plane_build_push() {
