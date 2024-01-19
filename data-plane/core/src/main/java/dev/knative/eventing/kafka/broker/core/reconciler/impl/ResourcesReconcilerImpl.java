@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
@@ -27,10 +28,13 @@ import io.vertx.core.Future;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -50,6 +54,8 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     // egress uid -> <Egress, Resource>
     private final Map<String, Map.Entry<DataPlaneContract.Egress, DataPlaneContract.Resource>> cachedEgresses;
 
+    private final AtomicReference<Set<String>> cachedTrustBundles;
+
     ResourcesReconcilerImpl(
             IngressReconcilerListener ingressReconcilerListener, EgressReconcilerListener egressReconcilerListener) {
         if (ingressReconcilerListener == null && egressReconcilerListener == null) {
@@ -62,6 +68,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                 ingressReconcilerListener == null ? null : new ConcurrentHashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
         this.cachedEgresses =
                 egressReconcilerListener == null ? null : new ConcurrentHashMap<>(CACHED_RESOURCES_INITIAL_CAPACITY);
+        this.cachedTrustBundles = new AtomicReference<>(new HashSet<>());
     }
 
     @Override
@@ -75,6 +82,9 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
     private Future<Void> reconcileEgress(final DataPlaneContract.Contract contract) {
 
         final var generation = contract.getGeneration();
+
+        final var newTrustBundle = Set.copyOf(contract.getTrustBundlesList());
+        final var isTrustBundleEqual = trustBundlesEquals(this.cachedTrustBundles.get(), newTrustBundle);
 
         final var egresses = contract.getResourcesList().stream()
                 .filter(r -> r.getEgressesCount() > 0)
@@ -94,7 +104,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
             final var resource = entry.getValue();
 
             futures.add(this.egressReconcilerListener
-                    .onDeleteEgress(resource, egress)
+                    .onDeleteEgress(new EgressContext(resource, egress, newTrustBundle))
                     // If we succeed to delete the egress we can remove it from the cache.
                     .onSuccess(r -> this.cachedEgresses.remove(uid))
                     .onFailure(cause ->
@@ -107,7 +117,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
             final var resource = entry.getValue();
 
             futures.add(this.egressReconcilerListener
-                    .onNewEgress(resource, egress)
+                    .onNewEgress(new EgressContext(resource, egress, newTrustBundle))
                     // If we fail to create the egress we can't put it in the cache.
                     .onSuccess(
                             r -> this.cachedEgresses.put(egress.getUid(), new SimpleImmutableEntry<>(egress, resource)))
@@ -124,7 +134,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
             final var oldResource = cachedEgress.getValue();
             final var oldEgress = cachedEgress.getKey();
 
-            if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, oldEgress)) {
+            if (resourceEquals(newResource, oldResource) && egressEquals(newEgress, oldEgress) && isTrustBundleEqual) {
                 return;
             }
 
@@ -136,7 +146,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                     keyValue("contractGeneration", generation));
 
             futures.add(this.egressReconcilerListener
-                    .onUpdateEgress(newResource, newEgress)
+                    .onUpdateEgress(new EgressContext(newResource, newEgress, newTrustBundle))
                     // If we fail to update the egress we can't put it in the cache.
                     .onSuccess(r -> this.cachedEgresses.put(
                             newEgress.getUid(), new SimpleImmutableEntry<>(newEgress, newResource)))
@@ -145,7 +155,13 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
         });
 
         // We want to complete the future, once all futures are complete, so use join.
-        return CompositeFuture.join(futures).mapEmpty();
+        return CompositeFuture.join(futures)
+                .onSuccess(v -> {
+                    if (!isTrustBundleEqual) { // Update cached trust bundles on success when they differ.
+                        this.cachedTrustBundles.set(newTrustBundle);
+                    }
+                })
+                .mapEmpty();
     }
 
     private Future<Void> reconcileIngress(DataPlaneContract.Contract contract) {
@@ -209,7 +225,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
         return this.ingressReconcilerListener != null;
     }
 
-    private boolean resourceEquals(DataPlaneContract.Resource r1, DataPlaneContract.Resource r2) {
+    private static boolean resourceEquals(DataPlaneContract.Resource r1, DataPlaneContract.Resource r2) {
         if (r1 == r2) {
             return true;
         }
@@ -231,7 +247,7 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                 && Objects.equals(r1.getEgressConfig(), r2.getEgressConfig());
     }
 
-    private boolean egressEquals(DataPlaneContract.Egress e1, DataPlaneContract.Egress e2) {
+    private static boolean egressEquals(DataPlaneContract.Egress e1, DataPlaneContract.Egress e2) {
         if (e1 == e2) {
             return true;
         }
@@ -257,6 +273,10 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                 && Objects.equals(
                         e1.getEgressConfig().getDeadLetterCACerts(),
                         e2.getEgressConfig().getDeadLetterCACerts());
+    }
+
+    private static boolean trustBundlesEquals(Set<String> oldTrustBundles, Set<String> newTrustBundles) {
+        return newTrustBundles.equals(oldTrustBundles);
     }
 
     private static void logFailure(

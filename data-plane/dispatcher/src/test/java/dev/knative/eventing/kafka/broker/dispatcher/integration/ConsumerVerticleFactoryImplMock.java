@@ -15,9 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleBuilder;
@@ -101,10 +101,11 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
     }
 
     @Override
-    public AbstractVerticle get(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
-        return new ConsumerVerticleBuilder(FakeConsumerVerticleContext.get(resource, egress)
-                        .withConsumerFactory(this::createConsumer)
-                        .withProducerFactory(this::createProducer))
+    public AbstractVerticle get(final EgressContext egressContext) {
+        return new ConsumerVerticleBuilder(
+                        FakeConsumerVerticleContext.get(egressContext.resource(), egressContext.egress())
+                                .withConsumerFactory(this::createConsumer)
+                                .withProducerFactory(this::createProducer))
                 .build();
     }
 }

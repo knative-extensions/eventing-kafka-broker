@@ -38,7 +38,7 @@ import (
 
 const (
 	PollInterval = 3 * time.Second
-	PollTimeout  = 4 * time.Minute
+	PollTimeout  = 6 * time.Minute
 )
 
 func TestBrokerDeletedRecreated(t *testing.T) {

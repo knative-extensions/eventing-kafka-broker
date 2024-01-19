@@ -29,6 +29,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
@@ -39,6 +40,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.util.Collections;
 import java.util.Properties;
 import org.apache.kafka.clients.consumer.StickyAssignor;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -93,7 +95,7 @@ public class ConsumerVerticleFactoryImplTest {
                 .addEgresses(egress)
                 .build();
 
-        assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
+        assertDoesNotThrow(() -> verticleFactory.get(new EgressContext(resource, egress, Collections.emptySet())));
     }
 
     @Test
@@ -142,7 +144,7 @@ public class ConsumerVerticleFactoryImplTest {
                 .addEgresses(egress)
                 .build();
 
-        assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
+        assertDoesNotThrow(() -> verticleFactory.get(new EgressContext(resource, egress, Collections.emptySet())));
     }
 
     @Test
@@ -182,6 +184,6 @@ public class ConsumerVerticleFactoryImplTest {
                 .addEgresses(egress)
                 .build();
 
-        assertDoesNotThrow(() -> verticleFactory.get(resource, egress));
+        assertDoesNotThrow(() -> verticleFactory.get(new EgressContext(resource, egress, Collections.emptySet())));
     }
 }
