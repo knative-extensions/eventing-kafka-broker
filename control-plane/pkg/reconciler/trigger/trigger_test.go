@@ -93,6 +93,8 @@ var (
 
 const (
 	kafkaFeatureFlags = "kafka-feature-flags"
+
+	triggerConsumerGroup = "knative-trigger-test-namespace-test-trigger"
 )
 
 type EgressBuilder struct {
@@ -176,7 +178,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -198,7 +200,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -246,7 +248,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									EgressConfig:  &contract.EgressConfig{DeadLetter: ServiceURL},
 									Reference:     TriggerReference(),
@@ -269,7 +271,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						withDeadLetterSinkURI(ServiceURL),
 					),
 				},
@@ -316,7 +318,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 									EgressConfig: &contract.EgressConfig{
@@ -346,7 +348,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						withDeadLetterSinkURI(url.String()),
 					),
 				},
@@ -393,7 +395,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 									DeliveryOrder: contract.DeliveryOrder_ORDERED,
@@ -416,7 +418,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(sources.Ordered)),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
@@ -464,7 +466,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 									DeliveryOrder: contract.DeliveryOrder_UNORDERED,
@@ -487,7 +489,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(sources.Unordered)),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
@@ -535,7 +537,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 									EgressConfig: &contract.EgressConfig{
@@ -565,7 +567,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
 						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
 							URL: &apis.URL{
@@ -597,7 +599,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -623,7 +625,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 											}},
 										},
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID + "a",
+										ConsumerGroup: triggerConsumerGroup + "a",
 										Uid:           TriggerUUID + "a",
 									},
 								}.build(useNewFilters),
@@ -642,7 +644,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 											}},
 										},
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID,
+										ConsumerGroup: triggerConsumerGroup,
 										Uid:           TriggerUUID,
 										Reference:     TriggerReference(),
 									},
@@ -674,7 +676,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -700,13 +702,13 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 											}},
 										},
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID + "a",
+										ConsumerGroup: triggerConsumerGroup + "a",
 										Uid:           TriggerUUID + "a",
 									},
 								}.build(useNewFilters),
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -728,7 +730,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -776,7 +778,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
 						),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 					),
 				},
 			},
@@ -820,7 +822,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
 						),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 					),
 				},
 			},
@@ -937,12 +939,12 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID + "a",
+									ConsumerGroup: triggerConsumerGroup + "a",
 									Uid:           TriggerUUID + "a",
 								},
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -969,7 +971,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID + "a",
+									ConsumerGroup: triggerConsumerGroup + "a",
 									Uid:           TriggerUUID + "a",
 								},
 							},
@@ -1033,7 +1035,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 											}},
 										},
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID,
+										ConsumerGroup: triggerConsumerGroup,
 										Uid:           TriggerUUID,
 										Reference:     TriggerReference(),
 									},
@@ -1075,7 +1077,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -1115,7 +1117,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -1171,7 +1173,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1241,7 +1243,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 								EgressBuilder{
 									&contract.Egress{
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID,
+										ConsumerGroup: triggerConsumerGroup,
 										Uid:           TriggerUUID,
 										Reference:     TriggerReference(),
 										Filter: &contract.Filter{Attributes: map[string]string{
@@ -1310,7 +1312,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1385,7 +1387,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -1425,7 +1427,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1544,7 +1546,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1643,7 +1645,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 								EgressBuilder{
 									&contract.Egress{
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID,
+										ConsumerGroup: triggerConsumerGroup,
 										Uid:           TriggerUUID,
 										Reference:     TriggerReference(),
 										Filter: &contract.Filter{Attributes: map[string]string{
@@ -1689,7 +1691,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -1717,7 +1719,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1797,7 +1799,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 								EgressBuilder{
 									&contract.Egress{
 										Destination:   ServiceURL,
-										ConsumerGroup: TriggerUUID,
+										ConsumerGroup: triggerConsumerGroup,
 										Uid:           TriggerUUID,
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source2",
@@ -1841,7 +1843,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1910,7 +1912,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -1989,7 +1991,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 								}.build(useNewFilters),
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -2021,7 +2023,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2085,7 +2087,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -2179,12 +2181,12 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID + "a",
+									ConsumerGroup: triggerConsumerGroup + "a",
 									Uid:           TriggerUUID + "a",
 								},
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 							},
@@ -2210,7 +2212,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID + "a",
+									ConsumerGroup: triggerConsumerGroup + "a",
 									Uid:           TriggerUUID + "a",
 								},
 							},
@@ -2301,7 +2303,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2334,7 +2336,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2409,7 +2411,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2467,7 +2469,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2521,7 +2523,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 								},
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 							},
@@ -2547,7 +2549,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2633,7 +2635,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2679,7 +2681,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 								},
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2699,7 +2701,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2746,7 +2748,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2807,7 +2809,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 								},
 								{
@@ -2893,7 +2895,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 								{
 									Destination:        ServiceURL,
 									DestinationCACerts: string(eventingtlstesting.CA),
-									ConsumerGroup:      TriggerUUID,
+									ConsumerGroup:      triggerConsumerGroup,
 									Uid:                TriggerUUID,
 									Reference:          TriggerReference(),
 									EgressConfig: &contract.EgressConfig{
@@ -2924,7 +2926,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
 						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
 							URL: &apis.URL{
