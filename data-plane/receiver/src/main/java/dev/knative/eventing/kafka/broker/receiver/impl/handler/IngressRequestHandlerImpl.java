@@ -171,14 +171,21 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                                                 requestContext.getRequest().path()),
                                         cause);
                             })
-                            .compose((ignored) -> {
+                            .compose((recordMetadata) -> {
                                 if (producer.isEventTypeAutocreateEnabled()) {
                                     return this.eventTypeCreator
                                             .create(record.value(), producer.getReference())
-                                            .onFailure(cause -> logger.warn("failed to create eventtype", cause))
-                                            .onSuccess(et -> logger.debug("successfully created eventtype {}", et));
+                                            .compose(
+                                                    et -> {
+                                                        logger.debug("successfully created eventtype {}", et);
+                                                        return Future.succeededFuture(recordMetadata);
+                                                    },
+                                                    cause -> {
+                                                        logger.warn("failed to create eventtype", cause);
+                                                        return Future.succeededFuture(recordMetadata);
+                                                    });
                                 } else {
-                                    return Future.succeededFuture();
+                                    return Future.succeededFuture(recordMetadata);
                                 }
                             });
                 });
