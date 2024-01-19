@@ -1,6 +1,6 @@
 module knative.dev/eventing-kafka-broker
 
-go 1.19
+go 1.21
 
 require (
 	github.com/IBM/sarama v1.41.2
