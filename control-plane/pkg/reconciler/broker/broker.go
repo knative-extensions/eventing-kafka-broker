@@ -19,6 +19,8 @@ package broker
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
 	"strings"
 	"time"
 
@@ -31,10 +33,8 @@ import (
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/eventing/pkg/auth"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -262,15 +262,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
-	if feature.FromContext(ctx).IsOIDCAuthentication() {
-		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
-		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
-		broker.Status.Address.Audience = &audience
-	} else {
-		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
-		broker.Status.Address.Audience = nil
-	}
-
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &addressableStatus,
 		ResourceKey: types.NamespacedName{
@@ -287,6 +278,18 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	broker.Status.Address = addressableStatus.Address
 	broker.Status.Addresses = addressableStatus.Addresses
+
+	if feature.FromContext(ctx).IsOIDCAuthentication() && broker.Status.Address != nil {
+		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
+		broker.Status.Address.Audience = &audience
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
+		if broker.Status.Address != nil {
+			broker.Status.Address.Audience = nil
+		}
+	}
+
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
