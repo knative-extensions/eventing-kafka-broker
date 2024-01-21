@@ -55,7 +55,12 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 	return func(t *testing.T, row *TableRow) (pkgcontroller.Reconciler, ActionRecorderList, EventList) {
 
 		listers := newListers(row.Objects)
-		ctx := context.Background()
+		var ctx context.Context
+		if row.Ctx != nil {
+			ctx = row.Ctx
+		} else {
+			ctx = context.Background()
+		}
 
 		ctx, eventingClient := fakeeventingclient.With(ctx, listers.GetEventingObjects()...)
 		ctx, eventingKafkaBrokerClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
