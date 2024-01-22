@@ -1462,6 +1462,7 @@ knative.dev/eventing/test/rekt/features/channel
 knative.dev/eventing/test/rekt/features/featureflags
 knative.dev/eventing/test/rekt/features/knconf
 knative.dev/eventing/test/rekt/features/new_trigger_filters
+knative.dev/eventing/test/rekt/features/source
 knative.dev/eventing/test/rekt/features/trigger
 knative.dev/eventing/test/rekt/resources/account_role
 knative.dev/eventing/test/rekt/resources/addressable
@@ -1520,6 +1521,8 @@ knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset
 knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/configmap
 knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake
+knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered
+knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/namespace
 knative.dev/pkg/client/injection/kube/informers/core/v1/node
 knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake
@@ -1532,6 +1535,8 @@ knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount
 knative.dev/pkg/client/injection/kube/informers/factory
 knative.dev/pkg/client/injection/kube/informers/factory/fake
+knative.dev/pkg/client/injection/kube/informers/factory/filtered
+knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake
 knative.dev/pkg/client/injection/kube/informers/rbac/v1/clusterrolebinding
 knative.dev/pkg/codegen/cmd/injection-gen
 knative.dev/pkg/codegen/cmd/injection-gen/args

@@ -244,6 +244,11 @@ func (in *ConsumerGroupStatus) DeepCopyInto(out *ConsumerGroupStatus) {
 		*out = new(apis.URL)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.SubscriberCACerts != nil {
+		in, out := &in.SubscriberCACerts, &out.SubscriberCACerts
+		*out = new(string)
+		**out = **in
+	}
 	in.DeliveryStatus.DeepCopyInto(&out.DeliveryStatus)
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
@@ -362,6 +367,11 @@ func (in *ConsumerStatus) DeepCopyInto(out *ConsumerStatus) {
 		in, out := &in.SubscriberURI, &out.SubscriberURI
 		*out = new(apis.URL)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.SubscriberCACerts != nil {
+		in, out := &in.SubscriberCACerts, &out.SubscriberCACerts
+		*out = new(string)
+		**out = **in
 	}
 	in.DeliveryStatus.DeepCopyInto(&out.DeliveryStatus)
 	return
