@@ -107,10 +107,10 @@ LOCAL_DEVELOPMENT=true SKIP_INITIALIZE=true ./test/e2e-tests.sh
 You can run a single rekt test instead of the full test suite with:
 
 ```shell
-SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run <test_name> -parallel=12 -timeout=30m <test_repo_name>
+SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run <test_name> -parallel=12 -timeout=30m <test_directory_name>
 ```
 
-Note: you will have to replace the <test_name> with the name of your test.
+Note: you will have to replace the <test_name>  <test_directory_name> with the name of your test.
 
 For example:
 
