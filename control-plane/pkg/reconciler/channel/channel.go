@@ -603,6 +603,9 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		Uid:           string(subscriber.UID),
 		ReplyStrategy: &contract.Egress_DiscardReply{},
 	}
+	if subscriber.SubscriberCACerts != nil && *subscriber.SubscriberCACerts != "" {
+		egress.DestinationCACerts = *subscriber.SubscriberCACerts
+	}
 
 	if subscriptionName != "" {
 		egress.Reference = &contract.Reference{
@@ -615,6 +618,9 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	if subscriber.ReplyURI != nil {
 		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
 			ReplyUrl: subscriber.ReplyURI.String(),
+		}
+		if subscriber.ReplyCACerts != nil && *subscriber.ReplyCACerts != "" {
+			egress.ReplyUrlCACerts = *subscriber.ReplyCACerts
 		}
 	}
 
