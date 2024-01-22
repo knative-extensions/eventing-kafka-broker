@@ -23,7 +23,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
  * {@link RecordDispatcherMutatorChain} chains {@link RecordDispatcher}s and applies mutations using a provided
- * {@link CloudEventMutator} before passing the {@link KafkaConsumerRecord} to the next {@link RecordDispatcher}.
+ * {@link CloudEventMutator} before passing the {@link ConsumerRecord} to the next {@link RecordDispatcher}.
  */
 public class RecordDispatcherMutatorChain implements RecordDispatcher {
 

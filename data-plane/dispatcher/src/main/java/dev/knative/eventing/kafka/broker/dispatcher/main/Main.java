@@ -31,6 +31,7 @@ import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.NullCloudEventInterceptor;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -81,7 +82,9 @@ public class Main {
         Properties consumerConfig = Configurations.readPropertiesSync(env.getConsumerConfigFilePath());
         consumerConfig.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KeyDeserializer.class.getName());
         consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
-        consumerConfig.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, InvalidCloudEventInterceptor.class.getName());
+        consumerConfig.put(
+                ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+                NullCloudEventInterceptor.class.getName() + "," + InvalidCloudEventInterceptor.class.getName());
 
         // Read WebClient config
         JsonObject webClientConfig = Configurations.readPropertiesAsJsonSync(env.getWebClientConfigFilePath());
