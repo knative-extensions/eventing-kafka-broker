@@ -107,7 +107,7 @@ LOCAL_DEVELOPMENT=true SKIP_INITIALIZE=true ./test/e2e-tests.sh
 You can run a single rekt test instead of the full test suite with:
 
 ```shell
-SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run <test_name> -parallel=12 -timeout=30m ./test/rekt
+SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run <test_name> -parallel=12 -timeout=30m <test_repo_name>
 ```
 
 Note: you will have to replace the <test_name> with the name of your test.
@@ -115,7 +115,7 @@ Note: you will have to replace the <test_name> with the name of your test.
 For example:
 
 ```shell
-SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run TestEventTransformationForTrigger -parallel=12 -timeout=30m ./test/rekt
+SYSTEM_NAMESPACE=knative-eventing go test -v -tags=e2e -count=1 -run TestEventTransformationForTrigger -parallel=12 -timeout=30m ./test/e2e_new
 ```
 
 When you are running kafka broker related tests, you may need to specify the broker class
