@@ -247,8 +247,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			return err
 		}
 
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
 	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
@@ -257,11 +257,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpsAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
@@ -360,7 +360,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(ingressHost, broker)
+	address := receiver.HTTPAddress(ingressHost, nil, broker)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,

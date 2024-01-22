@@ -87,7 +87,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	logger := logging.FromContext(ctx)
 
-	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	var globalResync func(obj interface{})
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
 	featureStore.WatchConfigs(watcher)
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
@@ -136,7 +141,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 
-	globalResync := func(_ interface{}) {
+	globalResync = func(_ interface{}) {
 		impl.GlobalResync(channelInformer.Informer())
 	}
 
