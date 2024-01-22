@@ -29,6 +29,8 @@ import io.vertx.core.WorkerExecutor;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EventTypeCreatorImpl implements EventTypeCreator {
 
@@ -41,6 +43,8 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
     private MessageDigest messageDigest;
 
     private final WorkerExecutor executor;
+
+    private static final Logger logger = LoggerFactory.getLogger(EventTypeCreatorImpl.class);
 
     public EventTypeCreatorImpl(
             MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
@@ -70,6 +74,7 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
 
     private EventType eventTypeExists(String etName, DataPlaneContract.Reference reference) {
         if (this.eventTypeLister == null) {
+            logger.debug("no eventtype lister, creating eventtype and might run into failure");
             return null;
         }
         return this.eventTypeLister.namespace(reference.getNamespace()).get(etName);

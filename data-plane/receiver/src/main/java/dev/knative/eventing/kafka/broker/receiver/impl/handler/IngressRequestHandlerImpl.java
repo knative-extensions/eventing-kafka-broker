@@ -136,11 +136,6 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                                         .setStatusCode(RECORD_PRODUCED)
                                         .end();
 
-                                if (producer.isEventTypeAutocreateEnabled()) {
-                                    logger.info("EventType Autocreate is enabled, going to create eventtype");
-                                    eventTypeCreator.create(record.value(), producer.getReference());
-                                }
-
                                 final var tags = RECORD_PRODUCED_COMMON_TAGS
                                         .and(resourceTags)
                                         .and(eventTypeTag);

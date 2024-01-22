@@ -111,7 +111,7 @@ public class Main {
             eventTypeInformer = eventTypeClient.inform();
         } catch (Exception informerException) {
             logger.warn(
-                    "the data-plane does not have sufficient permissions to list/watch eventtypes. This will lead to unnecessary CREATE requests if eventtype-auto-create is enabled: {}",
+                    "the data-plane does not have sufficient permissions to list/watch eventtypes. This will lead to unnecessary CREATE requests if eventtype-auto-create is enabled",
                     informerException);
         }
         if (eventTypeInformer != null) {
