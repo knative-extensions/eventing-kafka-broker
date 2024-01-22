@@ -140,10 +140,20 @@ public class EventTypeSpec implements KubernetesResource {
     }
 
     public String toString() {
-        return "EventType{broker: " + this.getBroker() + ", reference: "
-                + this.getReference().toString() + ", description: " + this.getDescription() + ", schema: "
-                + this.getSchema().toString() + ", schemaData: " + this.getSchemaData() + ", type: " + this.getType()
-                + ", source: " + this.getSource().toString() + "}";
+        String s = "EventType{broker: " + this.getBroker();
+        if (this.getReference() != null) {
+            s += ", reference: " + this.getReference().toString();
+        }
+        if (this.getSchema() != null) {
+            s += ", schema: " + this.getSchema().toString();
+        }
+        if (this.getSource() != null) {
+            s += ", source:" + this.getSource().toString();
+        }
+        s += ", description: " + this.getDescription() + ", schemaData: " + this.getSchemaData() + ", type: "
+                + this.getType() + "}";
+
+        return s;
     }
 
     @Override

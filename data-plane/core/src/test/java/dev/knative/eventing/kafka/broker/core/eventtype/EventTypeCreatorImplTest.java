@@ -31,6 +31,8 @@ import java.net.URI;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @EnableKubernetesMockClient(crud = true)
 @ExtendWith(VertxExtension.class)
@@ -38,10 +40,12 @@ public class EventTypeCreatorImplTest {
     private KubernetesClient kubernetesClient;
     private KubernetesMockServer server;
 
+    private static final Logger logger = LoggerFactory.getLogger(EventTypeCreatorImplTest.class);
+
     @Test
     public void testCreate(Vertx vertx, VertxTestContext vertxTestContext) {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
-        final var informer = eventTypeClient.inform();
+        final var informer = kubernetesClient.informers().sharedIndexInformerFor(EventType.class, 100L);
         final var eventTypeLister = new Lister<>(informer.getIndexer());
         var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx);
         var event = new CloudEventBuilder()
@@ -88,5 +92,100 @@ public class EventTypeCreatorImplTest {
 
                     vertxTestContext.completeNow();
                 }));
+    }
+
+    @Test
+    public void testCreatesOnlyOnce(Vertx vertx, VertxTestContext vertxTestContext) {
+        final var eventTypeClient = kubernetesClient.resources(EventType.class);
+        final var informer = kubernetesClient.informers().sharedIndexInformerFor(EventType.class, 100L);
+        informer.run();
+        final var eventTypeLister = new Lister<>(informer.getIndexer());
+        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx);
+        var event = new CloudEventBuilder()
+                .withType("example.event.type")
+                .withSource(URI.create("/example/source"))
+                .withDataSchema(URI.create("/example/schema"))
+                .withId("54321")
+                .build();
+        var reference = DataPlaneContract.Reference.newBuilder()
+                .setNamespace("default")
+                .setName("my-broker")
+                .setKind("Broker")
+                .setGroupVersion("eventing.knative.dev/v1")
+                .setUuid("12345")
+                .build();
+        eventTypeCreator
+                .create(event, reference)
+                .onFailure((exception) -> {
+                    informer.close();
+                    vertxTestContext.failNow(exception);
+                })
+                .onSuccess((et -> {
+                    KubernetesResourceList<EventType> eventTypeList =
+                            eventTypeClient.inNamespace("default").list();
+
+                    Assertions.assertNotNull(eventTypeList);
+                    Assertions.assertEquals(1, eventTypeList.getItems().size());
+                    var eventType = eventTypeList.getItems().get(0);
+                    Assertions.assertEquals(
+                            eventType.getSpec().getReference(),
+                            new KReference("eventing.knative.dev/v1", "Broker", "my-broker", "default"));
+                    Assertions.assertEquals(eventType.getSpec().getSchema(), URI.create("/example/schema"));
+                    Assertions.assertEquals(
+                            eventType.getSpec().getDescription(), "Event Type auto-created by controller");
+                    Assertions.assertEquals(
+                            eventType.getMetadata().getOwnerReferences().get(0),
+                            new OwnerReferenceBuilder()
+                                    .withApiVersion("eventing.knative.dev/v1")
+                                    .withKind("Broker")
+                                    .withName("my-broker")
+                                    .withUid("12345")
+                                    .build());
+                }))
+                .compose((ignored) -> {
+                    try {
+                        // make sure that the informer has time to resync, the webhook doens't seem to run in the tests
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        vertxTestContext.failNow(e);
+                    }
+                    return eventTypeCreator
+                            .create(event, reference)
+                            .onFailure((exception) -> {
+                                logger.warn("failure occured, closing informer", exception);
+                                informer.close();
+                                vertxTestContext.failNow(exception);
+                            })
+                            .onSuccess((et -> {
+                                KubernetesResourceList<EventType> eventTypeList =
+                                        eventTypeClient.inNamespace("default").list();
+
+                                informer.close();
+
+                                Assertions.assertNotNull(eventTypeList);
+                                Assertions.assertEquals(
+                                        1, eventTypeList.getItems().size());
+                                var eventType = eventTypeList.getItems().get(0);
+                                Assertions.assertEquals(
+                                        eventType.getSpec().getReference(),
+                                        new KReference("eventing.knative.dev/v1", "Broker", "my-broker", "default"));
+                                Assertions.assertEquals(eventType.getSpec().getSchema(), URI.create("/example/schema"));
+                                Assertions.assertEquals(
+                                        eventType.getSpec().getDescription(), "Event Type auto-created by controller");
+                                Assertions.assertEquals(
+                                        eventType
+                                                .getMetadata()
+                                                .getOwnerReferences()
+                                                .get(0),
+                                        new OwnerReferenceBuilder()
+                                                .withApiVersion("eventing.knative.dev/v1")
+                                                .withKind("Broker")
+                                                .withName("my-broker")
+                                                .withUid("12345")
+                                                .build());
+
+                                vertxTestContext.completeNow();
+                            }));
+                });
     }
 }

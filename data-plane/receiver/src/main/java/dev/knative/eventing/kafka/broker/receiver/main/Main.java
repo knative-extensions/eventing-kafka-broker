@@ -31,6 +31,7 @@ import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
+import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
@@ -46,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -104,11 +106,17 @@ public class Main {
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
         final var kubernetesClient = new KubernetesClientBuilder().build();
+        final SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         SharedIndexInformer<EventType> eventTypeInformer = null;
         Lister<EventType> eventTypeLister = null;
         try {
-            eventTypeInformer = eventTypeClient.inform();
+            eventTypeInformer = sharedInformerFactory.sharedIndexInformerFor(
+                    EventType.class, 30 * 1000L); // refresh every 30 seconds
+            sharedInformerFactory.startAllRegisteredInformers().get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | TimeoutException interruptedException) {
+            logger.warn(
+                    "failed to start informers, this will lead to unnecessary POST requests for eventtype autocreate");
         } catch (Exception informerException) {
             logger.warn(
                     "the data-plane does not have sufficient permissions to list/watch eventtypes. This will lead to unnecessary CREATE requests if eventtype-auto-create is enabled",
