@@ -146,7 +146,7 @@ func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
 	f.Setup("install eventshub receiver", eventshub.Install(sinkName, eventshub.StartReceiver))
 
 	kafkaSourceOpts := []manifest.CfgFn{
-		kafkasource.WithSink(service.AsKReference(sinkName), ""),
+		kafkasource.WithSink(service.AsDestinationRef(sinkName)),
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
 	}
