@@ -213,11 +213,14 @@ public class ConsumerVerticleBuilder {
     }
 
     private WebClientOptions createWebClientOptionsFromCACerts(final String caCerts) {
-        if (caCerts != null && !caCerts.isEmpty()) {
-            return new WebClientOptions(consumerVerticleContext.getWebClientOptions())
-                    .setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(caCerts)));
+        final var pemTrustOptions = new PemTrustOptions();
+        for (String trustBundle : consumerVerticleContext.getTrustBundles()) {
+            pemTrustOptions.addCertValue(Buffer.buffer(trustBundle));
         }
-        return consumerVerticleContext.getWebClientOptions();
+        if (caCerts != null && !caCerts.isEmpty()) {
+            pemTrustOptions.addCertValue(Buffer.buffer(caCerts));
+        }
+        return new WebClientOptions(consumerVerticleContext.getWebClientOptions()).setTrustOptions(pemTrustOptions);
     }
 
     private ResponseHandler createResponseHandler(final Vertx vertx) {

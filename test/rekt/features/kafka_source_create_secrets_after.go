@@ -17,7 +17,6 @@
 package features
 
 import (
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
@@ -43,7 +42,7 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 	f.Setup("install a service", service.Install(sink,
 		service.WithSelectors(map[string]string{"app": "rekt"})))
 	f.Setup("install a KafkaSource", kafkasource.Install(name,
-		kafkasource.WithSink(&duckv1.KReference{Kind: "Service", Name: sink, APIVersion: "v1"}, ""),
+		kafkasource.WithSink(service.AsDestinationRef(sink)),
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),
 		kafkasource.WithTopics([]string{topicName}),
 		kafkasource.WithSASLEnabled(),

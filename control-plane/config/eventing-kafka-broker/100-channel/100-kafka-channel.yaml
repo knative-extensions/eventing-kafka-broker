@@ -84,6 +84,8 @@ spec:
                         uri:
                           description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
                           type: string
+                        CACerts:
+                          type: string
                     retry:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
@@ -128,6 +130,8 @@ spec:
                               uri:
                                 description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
                                 type: string
+                              CACerts:
+                                type: string
                           retry:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                             type: integer
@@ -140,8 +144,14 @@ spec:
                       replyUri:
                         description: ReplyURI is the endpoint for the reply
                         type: string
+                      replyCACerts:
+                        description: replyCACerts is the CA certs to trust for the reply.
+                        type: string
                       subscriberUri:
                         description: SubscriberURI is the endpoint for the subscriber
+                        type: string
+                      subscriberCACerts:
+                        description: SubscriberCACerts is the CA certs to trust for the subscriber.
                         type: string
                       uid:
                         description: UID is used to understand the origin of the subscriber.
@@ -226,6 +236,8 @@ spec:
                       type: string
                 deadLetterSinkUri:
                   description: DeadLetterSinkURI is the resolved URI of the dead letter ref if one is specified in the Spec.Delivery.
+                  type: string
+                deadLetterSinkCACerts:
                   type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.

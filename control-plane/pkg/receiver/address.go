@@ -53,11 +53,11 @@ func ChannelHTTPAddress(host string) duckv1.Addressable {
 	return httpAddress
 }
 
-func HTTPSAddress(host string, object metav1.Object, caCerts string) duckv1.Addressable {
+func HTTPSAddress(host string, object metav1.Object, caCerts *string) duckv1.Addressable {
 	httpsAddress := duckv1.Addressable{
 		Name:    pointer.String("https"),
 		URL:     apis.HTTPS(host),
-		CACerts: pointer.String(caCerts),
+		CACerts: caCerts,
 	}
 	httpsAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
 	return httpsAddress
