@@ -70,7 +70,6 @@ public class TokenVerifier {
         }
 
         String token = authHeader.substring("Bearer ".length());
-        logger.debug("Extracted token \"{}\" from request auth header \"{}\"", token, authHeader);
 
         return verify(token, expectedAudience);
     }
