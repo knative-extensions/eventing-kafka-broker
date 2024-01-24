@@ -35,15 +35,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
-	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
