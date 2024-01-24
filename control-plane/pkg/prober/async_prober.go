@@ -18,13 +18,11 @@ package prober
 
 import (
 	"context"
-	"net/http"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
-	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/logging"
 )
 
@@ -41,7 +39,6 @@ type asyncProber struct {
 	cache     Cache
 	IPsLister IPsLister
 	port      string
-	clientMu  sync.Mutex
 }
 
 // NewAsync creates an async Prober.
@@ -49,7 +46,8 @@ type asyncProber struct {
 // It reports status changes using the provided EnqueueFunc.
 func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPsLister, enqueue EnqueueFunc) prober {
 	logger := logging.FromContext(ctx).Desugar().
-		With(zap.String("scope", "prober"))
+		With(zap.String("scope", "prober")).
+		With(zap.String("port", port))
 
 	if len(port) > 0 && port[0] != ':' {
 		port = ":" + port
@@ -61,16 +59,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		cache:     NewLocalExpiringCache(ctx, cacheExpiryTime),
 		IPsLister: IPsLister,
 		port:      port,
-		clientMu:  sync.Mutex{},
 	}
-}
-
-func NewAsyncWithTLS(ctx context.Context, port string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (prober, error) {
-	newClient, err := makeHttpClientWithTLS(caCerts)
-	if err != nil {
-		return nil, err
-	}
-	return NewAsync(ctx, newClient, port, IPsLister, enqueue), nil
 }
 
 func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, expected Status) Status {
@@ -144,8 +133,6 @@ func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, 
 		go func() {
 			defer wg.Done()
 			// Probe the pod.
-			a.clientMu.Lock()
-			defer a.clientMu.Unlock()
 			status := probe(ctx, a.client, logger, address)
 			logger.Debug("Probe status", zap.Stringer("status", status))
 			// Update the status in the cache.
@@ -163,33 +150,4 @@ func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, 
 
 func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
 	a.enqueue(arg.(types.NamespacedName))
-}
-
-func (a *asyncProber) rotateRootCaCerts(caCerts *string) error {
-	newClient, err := makeHttpClientWithTLS(caCerts)
-	if err != nil {
-		return err
-	}
-
-	a.clientMu.Lock()
-	defer a.clientMu.Unlock()
-	a.client.(*http.Client).CloseIdleConnections()
-	a.client = newClient
-	return nil
-}
-
-func makeHttpClientWithTLS(caCerts *string) (*http.Client, error) {
-	var err error
-
-	tlsClient := eventingtls.ClientConfig{CACerts: caCerts}
-
-	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
-	httpTransport.TLSClientConfig, err = eventingtls.GetTLSClientConfig(tlsClient)
-	if err != nil {
-		return nil, err
-	}
-
-	return &http.Client{
-		Transport: httpTransport,
-	}, nil
 }

@@ -31,6 +31,7 @@ import (
 // TestBrokerWithConfig tests a brokers values for ReplicationFactor and number
 // of partitions if set in the broker configmap.
 func TestBrokerWithConfig(t *testing.T) {
+	t.Skip("Skipping due to https://github.com/knative-extensions/eventing-kafka-broker/issues/3592")
 
 	t.Parallel()
 

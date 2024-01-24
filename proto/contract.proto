@@ -352,4 +352,7 @@ message Contract {
   uint64 generation = 1;
 
   repeated Resource resources = 2;
+
+  // PEM encoded CA trust bundles for HTTP client.
+  repeated string trustBundles = 3;
 }

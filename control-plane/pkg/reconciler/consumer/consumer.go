@@ -25,6 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -45,14 +46,15 @@ import (
 )
 
 type Reconciler struct {
-	SerDe               contract.FormatSerDe
-	Resolver            *resolver.URIResolver
-	Tracker             tracker.Interface
-	ConsumerGroupLister kafkainternalslisters.ConsumerGroupLister
-	SecretLister        corelisters.SecretLister
-	PodLister           corelisters.PodLister
-	KubeClient          kubernetes.Interface
-	KafkaFeatureFlags   *config.KafkaFeatureFlags
+	SerDe                      contract.FormatSerDe
+	Resolver                   *resolver.URIResolver
+	Tracker                    tracker.Interface
+	ConsumerGroupLister        kafkainternalslisters.ConsumerGroupLister
+	SecretLister               corelisters.SecretLister
+	PodLister                  corelisters.PodLister
+	KubeClient                 kubernetes.Interface
+	KafkaFeatureFlags          *config.KafkaFeatureFlags
+	TrustBundleConfigMapLister corelisters.ConfigMapNamespaceLister
 }
 
 var (
@@ -139,6 +141,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
 	}
 	c.Status.SubscriberURI = destinationAddr.URL
+	c.Status.SubscriberCACerts = destinationAddr.CACerts
 
 	egressConfig := &contract.EgressConfig{}
 	if c.Spec.Delivery != nil {
@@ -149,6 +152,9 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	}
 	if egressConfig != nil {
 		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
+		if egressConfig.DeadLetterCACerts != "" {
+			c.Status.DeliveryStatus.DeadLetterSinkCACerts = pointer.String(egressConfig.DeadLetterCACerts)
+		}
 	}
 
 	filter, filters := reconcileFilters(ctx, c)
@@ -389,6 +395,10 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 		return false, fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}
 
+	if err := r.setTrustBundles(ct); err != nil {
+		return false, fmt.Errorf("failed to set trust bundles: %w", err)
+	}
+
 	if changed := mutatorFunc(logger, ct, c); changed == coreconfig.ResourceChanged {
 		logger.Debug("Contract changed", zap.Int("changed", changed))
 
@@ -447,4 +457,13 @@ func IsPodNotRunning(p *corev1.Pod) bool {
 
 func FalseAnyStatus(*corev1.Pod) bool {
 	return false
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+	tb, err := coreconfig.TrustBundles(r.TrustBundleConfigMapLister)
+	if err != nil {
+		return fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	ct.TrustBundles = tb
+	return nil
 }

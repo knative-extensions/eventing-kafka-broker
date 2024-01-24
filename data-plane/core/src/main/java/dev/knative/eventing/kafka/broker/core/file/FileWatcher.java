@@ -26,6 +26,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,8 @@ public class FileWatcher implements AutoCloseable {
     private Thread watcherThread;
     private WatchService watcher;
 
+    private final CountDownLatch waitRunning;
+
     /**
      * All args constructor.
      *
@@ -61,6 +64,7 @@ public class FileWatcher implements AutoCloseable {
 
         this.triggerFunction = triggerFunction;
         this.toWatch = file.getAbsoluteFile();
+        this.waitRunning = new CountDownLatch(1);
     }
 
     public Thread getWatcherThread() {
@@ -75,7 +79,7 @@ public class FileWatcher implements AutoCloseable {
      * @throws IOException           if an error happened while starting to watch
      * @throws IllegalStateException if the watcher is already running
      */
-    public void start() throws IOException {
+    public CountDownLatch start() throws IOException {
         synchronized (this) {
             if (this.watcherThread != null) {
                 throw new IllegalStateException("Watcher thread is already up and running");
@@ -90,6 +94,8 @@ public class FileWatcher implements AutoCloseable {
         }
 
         this.watcherThread.start();
+
+        return this.waitRunning;
     }
 
     @Override
@@ -112,6 +118,8 @@ public class FileWatcher implements AutoCloseable {
             return;
         }
         logger.info("Started watching {}", toWatch);
+
+        this.waitRunning.countDown();
 
         triggerFunction.run();
 

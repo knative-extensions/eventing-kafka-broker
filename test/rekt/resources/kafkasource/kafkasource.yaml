@@ -102,14 +102,18 @@ spec:
       {{ $key }}: "{{ $value }}"
       {{ end }}
   {{ end }}
-  {{ if .sink }}
+  {{if .sink }}
   sink:
     {{ if .sink.ref }}
     ref:
       kind: {{ .sink.ref.kind }}
-      namespace: {{ .namespace }}
+      namespace: {{ .sink.ref.namespace }}
       name: {{ .sink.ref.name }}
       apiVersion: {{ .sink.ref.apiVersion }}
+    {{ end }}
+    {{ if .sink.CACerts }}
+    CACerts: |-
+      {{ .sink.CACerts }}
     {{ end }}
     {{ if .sink.uri }}
     uri: {{ .sink.uri }}

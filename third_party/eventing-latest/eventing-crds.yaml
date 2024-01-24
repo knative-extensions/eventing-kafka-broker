@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -248,6 +248,9 @@ spec:
                 sinkCACerts:
                   description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                   type: string
+                sinkAudience:
+                  description: Audience is the OIDC audience of the sink. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. If the target is an Addressable and specifies an Audience, the target's Audience takes precedence.
+                  type: string
                 namespaces:
                   description: Namespaces show the namespaces currently watched by the ApiServerSource
                   type: array
@@ -298,7 +301,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -501,7 +504,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -834,7 +837,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1004,7 +1007,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1170,7 +1173,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1459,7 +1462,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -1607,6 +1610,9 @@ spec:
                 sinkCACerts:
                   description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
                   type: string
+                sinkAudience:
+                  description: sinkAudience is the OIDC audience of the sink.
+                  type: string
       additionalPrinterColumns:
         - name: Sink
           type: string
@@ -1672,7 +1678,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2039,7 +2045,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -2249,7 +2255,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2503,7 +2509,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20231217-5d7e104e5"
+    app.kubernetes.io/version: "20240116-598e866a3"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev

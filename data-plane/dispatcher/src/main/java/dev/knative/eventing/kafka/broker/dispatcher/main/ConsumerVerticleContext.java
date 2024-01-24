@@ -21,6 +21,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
@@ -30,9 +31,11 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.ext.web.client.WebClientOptions;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
@@ -46,6 +49,7 @@ public class ConsumerVerticleContext {
 
     private DataPlaneContract.Egress egress;
     private DataPlaneContract.EgressConfig egressConfig;
+    private Set<String> trustBundles = Collections.emptySet();
 
     private AuthProvider authProvider;
     private MeterRegistry metricsRegistry;
@@ -74,16 +78,19 @@ public class ConsumerVerticleContext {
         return this;
     }
 
-    public ConsumerVerticleContext withResource(
-            final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
-        Objects.requireNonNull(resource);
+    public ConsumerVerticleContext withResource(final EgressContext egressContext) {
+        Objects.requireNonNull(egressContext.resource());
         Objects.requireNonNull(consumerConfigs);
         Objects.requireNonNull(producerConfigs);
+
+        final var resource = egressContext.resource();
+        final var egress = egressContext.egress();
 
         // Copy resource and remove egresses to avoid keeping references to all egresses.
         this.resource =
                 DataPlaneContract.Resource.newBuilder(resource).clearEgresses().build();
         withEgress(egress);
+        this.trustBundles = egressContext.trustBundles();
 
         consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
         producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
@@ -174,6 +181,10 @@ public class ConsumerVerticleContext {
             }
         }
         return this.maxPollRecords;
+    }
+
+    public Set<String> getTrustBundles() {
+        return this.trustBundles;
     }
 
     public DataPlaneContract.EgressConfig getEgressConfig() {

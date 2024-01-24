@@ -15,17 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import io.vertx.core.Future;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
     private final List<String> newEgresses;
+    private final List<Set<String>> newTrustBundles;
     private final List<String> updatedEgresses;
+    private final List<Set<String>> updatedTrustBundles;
     private final List<String> deletedEgresses;
     private final Future<Void> onNewEgressFuture;
     private final Future<Void> onUpdateEgressFuture;
@@ -43,29 +46,32 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
         this.newEgresses = new ArrayList<>();
         this.updatedEgresses = new ArrayList<>();
         this.deletedEgresses = new ArrayList<>();
+        this.newTrustBundles = new ArrayList<>();
+        this.updatedTrustBundles = new ArrayList<>();
     }
 
     @Override
-    public Future<Void> onNewEgress(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
-        Objects.requireNonNull(resource);
-        Objects.requireNonNull(egress);
-        this.newEgresses.add(egress.getUid());
+    public Future<Void> onNewEgress(final EgressContext egressContext) {
+        Objects.requireNonNull(egressContext.resource());
+        Objects.requireNonNull(egressContext.egress());
+        this.newEgresses.add(egressContext.egress().getUid());
+        this.newTrustBundles.add(egressContext.trustBundles());
         return this.onNewEgressFuture;
     }
 
     @Override
-    public Future<Void> onUpdateEgress(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
-        Objects.requireNonNull(resource);
-        Objects.requireNonNull(egress);
-        this.updatedEgresses.add(egress.getUid());
+    public Future<Void> onUpdateEgress(final EgressContext egressContext) {
+        Objects.requireNonNull(egressContext.resource());
+        Objects.requireNonNull(egressContext.egress());
+        this.updatedEgresses.add(egressContext.egress().getUid());
         return this.onUpdateEgressFuture;
     }
 
     @Override
-    public Future<Void> onDeleteEgress(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress) {
-        Objects.requireNonNull(resource);
-        Objects.requireNonNull(egress);
-        this.deletedEgresses.add(egress.getUid());
+    public Future<Void> onDeleteEgress(final EgressContext egressContext) {
+        Objects.requireNonNull(egressContext.resource());
+        Objects.requireNonNull(egressContext.egress());
+        this.deletedEgresses.add(egressContext.egress().getUid());
         return this.onDeleteDeleteFuture;
     }
 
@@ -79,5 +85,13 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
 
     public List<String> getDeletedEgresses() {
         return deletedEgresses;
+    }
+
+    public List<Set<String>> getNewTrustBundles() {
+        return newTrustBundles;
+    }
+
+    public List<Set<String>> getUpdatedTrustBundles() {
+        return updatedTrustBundles;
     }
 }

@@ -51,11 +51,13 @@ func TestNewTriggerFilters(t *testing.T) {
 func InstallKafkaBroker(f *feature.Feature) string {
 	brokerName := feature.MakeRandomK8sName("kafka-broker")
 
-	f.Setup("install one partition configuration", single_partition_config.Install)
+	install, cmName := single_partition_config.MakeInstall()
+
+	f.Setup("install one partition configuration", install)
 	f.Setup("install kafka broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(kafka.BrokerClass),
-		broker.WithConfig(single_partition_config.ConfigMapName),
+		broker.WithConfig(cmName),
 	))
 	f.Setup("kafka broker is ready", broker.IsReady(brokerName))
 	f.Setup("kafka broker is addressable", broker.IsAddressable(brokerName))

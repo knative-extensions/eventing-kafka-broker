@@ -23,6 +23,7 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 
 public class CloudEventOverridesMutatorTest {
@@ -47,14 +48,16 @@ public class CloudEventOverridesMutatorTest {
 
         final var expected = CloudEventBuilder.from(given);
         extensions.forEach(expected::withExtension);
+        expected.withExtension("knativekafkaoffset", 1L);
+        expected.withExtension("knativekafkapartition", 1);
 
-        final var got = mutator.apply(given);
+        final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
 
         assertThat(got).isEqualTo(expected.build());
     }
 
     @Test
-    public void shouldNotMutateRecordWhenNoOverrides() {
+    public void shouldAddKafkaExtensionsWhenNoOverrides() {
         final var ceOverrides = DataPlaneContract.CloudEventOverrides.newBuilder()
                 .putAllExtensions(Map.of())
                 .build();
@@ -68,8 +71,13 @@ public class CloudEventOverridesMutatorTest {
                 .withType("foo")
                 .build();
 
-        final var got = mutator.apply(given);
+        final var expected = CloudEventBuilder.from(given)
+                .withExtension("knativekafkaoffset", 1L)
+                .withExtension("knativekafkapartition", 1)
+                .build();
 
-        assertThat(got).isSameAs(given);
+        final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
+
+        assertThat(got).isEqualTo(expected);
     }
 }
