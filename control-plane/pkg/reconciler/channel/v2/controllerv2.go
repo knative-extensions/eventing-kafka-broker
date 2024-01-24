@@ -38,8 +38,6 @@ import (
 	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	"knative.dev/pkg/network"
 
 	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
