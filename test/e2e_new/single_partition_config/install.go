@@ -24,15 +24,19 @@ import (
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
-const ConfigMapName = "single-partition-kafka-broker-config"
+const configMapName = "single-partition-kafka-broker-config"
 
 //go:embed *.yaml
 var yamls embed.FS
 
-func Install(ctx context.Context, t feature.T) {
-	if _, err := manifest.InstallYamlFS(ctx, yamls, map[string]interface{}{
-		"name": ConfigMapName,
-	}); err != nil {
-		t.Fatal(err)
-	}
+func MakeInstall() (feature.StepFn, string) {
+	cmName := feature.MakeRandomK8sName(configMapName)
+
+	return func(ctx context.Context, t feature.T) {
+		if _, err := manifest.InstallYamlFS(ctx, yamls, map[string]interface{}{
+			"name": cmName,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}, cmName
 }

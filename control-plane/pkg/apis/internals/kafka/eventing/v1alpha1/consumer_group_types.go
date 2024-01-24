@@ -115,6 +115,11 @@ type ConsumerGroupStatus struct {
 	// +optional
 	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
 
+	// SubscriberCACerts are Certification Authority (CA) certificates in PEM format
+	// according to https://www.rfc-editor.org/rfc/rfc7468.
+	// +optional
+	SubscriberCACerts *string `json:"subscriberCACerts,omitempty"`
+
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.
 	eventingduckv1.DeliveryStatus `json:",inline"`

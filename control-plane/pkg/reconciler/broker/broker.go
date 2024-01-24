@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -166,6 +167,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
+
+	if err := r.setTrustBundles(ct); err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
 
 	// Get resource configuration.
 	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig)
@@ -689,14 +694,23 @@ func finalizerSecret(object metav1.Object) string {
 	return fmt.Sprintf("%s/%s", "kafka.eventing", object.GetUID())
 }
 
-func (r *Reconciler) getCaCerts() (string, error) {
+func (r *Reconciler) getCaCerts() (*string, error) {
 	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(brokerIngressTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
+		return nil, fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, brokerIngressTLSSecretName, caCertsSecretKey)
+		return nil, nil
 	}
-	return string(caCerts), nil
+	return pointer.String(string(caCerts)), nil
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
+	if err != nil {
+		return fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	ct.TrustBundles = tb
+	return nil
 }

@@ -21,6 +21,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -304,16 +305,30 @@ func WithSASLType(name, key string) manifest.CfgFn {
 }
 
 // WithSink adds the sink related config to a KafkaSource spec.
-func WithSink(ref *duckv1.KReference, uri string) manifest.CfgFn {
+func WithSink(d *duckv1.Destination) manifest.CfgFn {
 	return func(cfg map[string]interface{}) {
 		if _, set := cfg["sink"]; !set {
 			cfg["sink"] = map[string]interface{}{}
 		}
 		sink := cfg["sink"].(map[string]interface{})
 
-		if uri != "" {
-			sink["uri"] = uri
+		ref := d.Ref
+		uri := d.URI
+
+		if d.CACerts != nil {
+			// This is a multi-line string and should be indented accordingly.
+			// Replace "new line" with "new line + spaces".
+			sink["CACerts"] = strings.ReplaceAll(*d.CACerts, "\n", "\n      ")
 		}
+
+		if uri != nil {
+			sink["uri"] = uri.String()
+		}
+
+		if d.Audience != nil {
+			sink["audience"] = *d.Audience
+		}
+
 		if ref != nil {
 			if _, set := sink["ref"]; !set {
 				sink["ref"] = map[string]interface{}{}
@@ -321,7 +336,7 @@ func WithSink(ref *duckv1.KReference, uri string) manifest.CfgFn {
 			sref := sink["ref"].(map[string]interface{})
 			sref["apiVersion"] = ref.APIVersion
 			sref["kind"] = ref.Kind
-			// skip namespace
+			sref["namespace"] = ref.Namespace
 			sref["name"] = ref.Name
 		}
 	}

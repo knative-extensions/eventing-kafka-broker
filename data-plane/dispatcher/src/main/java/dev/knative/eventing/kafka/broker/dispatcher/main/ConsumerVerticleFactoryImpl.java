@@ -15,9 +15,9 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.ConsumerVerticle;
@@ -81,9 +81,9 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
      * {@inheritDoc}
      */
     @Override
-    public ConsumerVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
-        Objects.requireNonNull(resource, "provide resource");
-        Objects.requireNonNull(egress, "provide egress");
+    public ConsumerVerticle get(final EgressContext egressContext) {
+        Objects.requireNonNull(egressContext.resource(), "provide resource");
+        Objects.requireNonNull(egressContext.egress(), "provide egress");
 
         return new ConsumerVerticleBuilder(new ConsumerVerticleContext()
                         .withConsumerConfigs(consumerConfigs)
@@ -91,7 +91,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                         .withWebClientOptions(webClientOptions)
                         .withAuthProvider(authProvider)
                         .withMeterRegistry(metricsRegistry)
-                        .withResource(resource, egress)
+                        .withResource(egressContext)
                         .withConsumerFactory(reactiveConsumerFactory)
                         .withProducerFactory(reactiveProducerFactory))
                 .build();

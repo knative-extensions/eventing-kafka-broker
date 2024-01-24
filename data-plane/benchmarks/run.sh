@@ -24,7 +24,7 @@ run_java_filter_benchmarks_for_class() {
   echo "Running benchmarks for ${CLASS}"
 
   java -Dlogback.configurationFile=${SCRIPT_DIR}/resources/config-logging.xml \
-    -jar "${SCRIPT_DIR}/target/benchmarks.jar" $CLASS 2>&1 | tee "${SCRIPT_DIR}/output/${CLASS}.${TIME}.out.txt"
+    -jar "${SCRIPT_DIR}/target/benchmarks.jar" -prof gc $CLASS 2>&1 | tee "${SCRIPT_DIR}/output/${CLASS}.${TIME}.out.txt"
 
   echo "Successfully ran benchmarks for ${CLASS}!\n\nThe results can be found at ${SCRIPT_DIR}/output/${CLASS}.${TIME}.out.txt"
 }

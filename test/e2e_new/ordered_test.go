@@ -73,11 +73,13 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	f.Setup("install one partition configuration", single_partition_config.Install)
+	install, cmName := single_partition_config.MakeInstall()
+
+	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(single_partition_config.ConfigMapName),
+		broker.WithConfig(cmName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))

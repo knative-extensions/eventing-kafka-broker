@@ -18,12 +18,16 @@ package sink
 
 import (
 	"context"
+	"fmt"
+	"net"
+	"net/http"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/eventingtls"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -77,21 +81,32 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
 	featureStore.WatchConfigs(watcher)
 
-	features := feature.FromContext(ctx)
-	caCerts, err := reconciler.getCaCerts()
-	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
-		logger.Warn("failed to get CA certs when at least one address uses TLS", zap.Error(err))
-	}
 	impl := sinkreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
 		return controller.Options{
 			ConfigStore: featureStore}
 	})
+
 	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: configs.SystemNamespace, Name: configs.IngressName})
 	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
-	reconciler.Prober, err = prober.NewComposite(ctx, configs.IngressPodPort, configs.IngressPodTlsPort, IPsLister, impl.EnqueueKey, &caCerts)
+
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialTLSContext = func(ctx context.Context, net, addr string) (net.Conn, error) {
+		clientConfig := eventingtls.NewDefaultClientConfig()
+		clientConfig.TrustBundleConfigMapLister = reconciler.ConfigMapLister.ConfigMaps(reconciler.SystemNamespace)
+		clientConfig.CACerts, _ = reconciler.getCaCerts()
+
+		tlsConfig, err := eventingtls.GetTLSClientConfig(clientConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get TLS client config: %w", err)
+		}
+		return network.DialTLSWithBackOff(ctx, net, addr, tlsConfig)
+	}
+
+	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, configs.IngressPodPort, configs.IngressPodTlsPort, IPsLister, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
+
 	sinkInformer := sinkinformer.Get(ctx)
 
 	sinkInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
@@ -113,16 +128,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	})
 
 	reconciler.Tracker = impl.Tracker
-
-	rotateCACerts := func(obj interface{}) {
-		newCerts, err := reconciler.getCaCerts()
-		if err != nil && (features.IsPermissiveTransportEncryption() || features.IsStrictTransportEncryption()) {
-			// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
-			logger.Warn("Failed to get new CA certs while rotating CA certs when at least one address uses TLS", zap.Error(err))
-		}
-		reconciler.Prober.RotateRootCaCerts(&newCerts)
-		globalResync(obj)
-	}
 
 	ensureTypeMeta := controller.EnsureTypeMeta(
 		reconciler.Tracker.OnChanged,
@@ -146,11 +151,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,
-	})
-
-	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithName(sinkIngressTLSSecretName),
-		Handler:    controller.HandleAll(rotateCACerts),
 	})
 
 	return impl

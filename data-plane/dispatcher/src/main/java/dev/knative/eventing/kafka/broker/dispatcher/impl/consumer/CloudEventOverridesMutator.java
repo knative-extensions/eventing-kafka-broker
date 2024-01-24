@@ -19,6 +19,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventMutator;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
  * CloudEventOverridesMutator is a {@link CloudEventMutator} that applies a given set of
@@ -33,16 +34,19 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
     }
 
     @Override
-    public CloudEvent apply(CloudEvent cloudEvent) {
-        if (cloudEventOverrides.getExtensionsMap().isEmpty()) {
-            return cloudEvent;
-        }
-        final var builder = CloudEventBuilder.from(cloudEvent);
+    public CloudEvent apply(ConsumerRecord<Object, CloudEvent> record) {
+        final var builder = CloudEventBuilder.from(record.value());
+        applyKafkaMetadata(builder, record.partition(), record.offset());
         applyCloudEventOverrides(builder);
         return builder.build();
     }
 
     private void applyCloudEventOverrides(CloudEventBuilder builder) {
         cloudEventOverrides.getExtensionsMap().forEach(builder::withExtension);
+    }
+
+    private void applyKafkaMetadata(CloudEventBuilder builder, Number partition, Number offset) {
+        builder.withExtension("knativekafkapartition", partition);
+        builder.withExtension("knativekafkaoffset", offset);
     }
 }

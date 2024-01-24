@@ -38,9 +38,7 @@ public class FileWatcherTest {
 
     @AfterEach
     public void tearDown() throws Exception {
-        if (fileWatcher != null && fileWatcher.getWatcherThread() != null) {
-            fileWatcher.close();
-        }
+        fileWatcher.close();
         Files.deleteIfExists(tempFile.toPath());
     }
 
@@ -52,7 +50,7 @@ public class FileWatcherTest {
         fileWatcher = new FileWatcher(tempFile, () -> {
             counter.incrementAndGet();
         });
-        fileWatcher.start();
+        fileWatcher.start().await();
 
         // Modify the file
         try (FileWriter writer = new FileWriter(tempFile)) {
@@ -72,7 +70,7 @@ public class FileWatcherTest {
         fileWatcher = new FileWatcher(tempFile, () -> {
             counter.incrementAndGet();
         });
-        fileWatcher.start();
+        fileWatcher.start().await();
 
         // Await until the trigger function is called once: 1 is for the initial file
         // read

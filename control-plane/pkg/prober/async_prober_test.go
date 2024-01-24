@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	"knative.dev/eventing/pkg/eventingtls"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	"knative.dev/pkg/network"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
@@ -196,18 +196,20 @@ func TestAsyncProber(t *testing.T) {
 				}
 				return ips, nil
 			}
-			var prober prober
-			var err error
-			if tc.useTLS {
-				prober, err = NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
-					wantRequeueCountMin.Dec()
-				}, pointer.String(string(CA1)))
-				require.NoError(t, err)
-			} else {
-				prober = NewAsync(ctx, s.Client(), u.Port(), IPsLister, func(key types.NamespacedName) {
-					wantRequeueCountMin.Dec()
-				})
+
+			clientConfig := eventingtls.NewDefaultClientConfig()
+			clientConfig.CACerts = pointer.String(string(CA1))
+
+			tlsConfig, err := eventingtls.GetTLSClientConfig(clientConfig)
+			if err != nil {
+				t.Fatal(fmt.Errorf("failed to get TLS client config: %w", err))
 			}
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			transport.TLSClientConfig = tlsConfig
+
+			prober := NewAsync(ctx, &http.Client{Transport: transport}, u.Port(), IPsLister, func(key types.NamespacedName) {
+				wantRequeueCountMin.Dec()
+			})
 
 			probeFunc := func() bool {
 				status := prober.probe(ctx, tc.addressable, tc.wantStatus)
@@ -219,99 +221,6 @@ func TestAsyncProber(t *testing.T) {
 			require.Eventuallyf(t, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
 		})
 	}
-}
-
-func TestAsyncProberRotateCACerts(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
-	ctx, cancel := context.WithCancel(ctx)
-	defer func() {
-		time.Sleep(time.Second)
-		cancel()
-	}()
-	wantRequestCountMin := atomic.NewInt64(int64(2))
-	wantRequeueCountMin := atomic.NewInt64(int64(2))
-	wantStatus := StatusReady
-	h := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-		wantRequestCountMin.Dec()
-		require.Equal(t, network.ProbeHeaderValue, r.Header.Get(network.ProbeHeaderName))
-		writer.WriteHeader(http.StatusOK)
-	})
-	s := http.Server{
-		Handler: h,
-		TLSConfig: &tls.Config{
-			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-				cert, err := tls.X509KeyPair(Crt1, Key1)
-				return &cert, err
-			},
-		},
-	}
-	l, err := net.Listen("tcp", ":0")
-	require.NoError(t, err)
-	defer l.Close()
-	port := l.Addr().(*net.TCPAddr).Port
-	l = tls.NewListener(l, s.TLSConfig)
-	go func() {
-		s.Serve(l)
-	}()
-	defer s.Close()
-	addrString := fmt.Sprintf("https://127.0.0.1:%d", port)
-	u, err := url.Parse(addrString)
-	require.NoError(t, err)
-
-	addressable := proberAddressable{
-		Address:     &url.URL{Scheme: "https", Path: "/b1/b1", Host: addrString},
-		ResourceKey: types.NamespacedName{Namespace: "b1", Name: "b1"},
-	}
-
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "ns",
-			Name:      "p1",
-			Labels:    map[string]string{"app": "p"},
-		},
-		Status: corev1.PodStatus{PodIP: "127.0.0.1"},
-	}
-	podinformer.Get(ctx).Informer().GetStore().Add(pod)
-	labelSelector := labels.SelectorFromSet(map[string]string{"app": "p"})
-	var IPsLister IPsLister = func(addressable proberAddressable) ([]string, error) {
-		pods, err := podinformer.Get(ctx).Lister().List(labelSelector)
-		if err != nil {
-			return nil, err
-		}
-		ips := make([]string, 0, len(pods))
-		for _, p := range pods {
-			ips = append(ips, p.Status.PodIP)
-		}
-		return ips, nil
-	}
-
-	cacheExpiryTime = time.Second * 5
-	prober, err := NewAsyncWithTLS(ctx, u.Port(), IPsLister, func(key types.NamespacedName) {
-		wantRequeueCountMin.Dec()
-	}, pointer.String(string(CA1)))
-	require.NoError(t, err)
-
-	probeFunc := func() bool {
-		status := prober.probe(ctx, addressable, wantStatus)
-		return status == wantStatus
-	}
-
-	t.Run("one pod - TLS certs before rotation", func(tt *testing.T) {
-		require.Eventuallyf(tt, probeFunc, 5*time.Second, 250*time.Millisecond, "")
-		require.Eventuallyf(tt, func() bool { return wantRequestCountMin.Load() == 1 }, 5*time.Second, 250*time.Millisecond, "got %d, want 1", wantRequestCountMin.Load())
-		require.Eventuallyf(tt, func() bool { return wantRequeueCountMin.Load() == 1 }, 5*time.Second, 250*time.Millisecond, "got %d, want 1", wantRequeueCountMin.Load())
-	})
-	t.Run("one pod - TLS certs after rotation", func(tt *testing.T) {
-		prober.rotateRootCaCerts(pointer.String(string(CA2)))
-		s.TLSConfig.GetCertificate = func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-			cert, err := tls.X509KeyPair(Crt2, Key2)
-			return &cert, err
-		}
-		time.Sleep(time.Second * 10)
-		require.Eventuallyf(tt, probeFunc, 5*time.Second, 250*time.Millisecond, "")
-		require.Eventuallyf(tt, func() bool { return wantRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequestCountMin.Load())
-		require.Eventuallyf(tt, func() bool { return wantRequeueCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantRequeueCountMin.Load())
-	})
 }
 
 // Adapted from https://github.com/knative/eventing/blob/57d78e060db6e0d2f3046eeedd27137cfa4fe0bc/pkg/eventingtls/eventingtlstesting/eventingtlstesting.go#L84

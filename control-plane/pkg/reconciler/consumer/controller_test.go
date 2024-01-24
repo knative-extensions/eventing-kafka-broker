@@ -17,12 +17,15 @@
 package consumer
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"knative.dev/eventing/pkg/eventingtls"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
@@ -34,16 +37,18 @@ import (
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer/fake"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
 )
 
 func TestNewController(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 
 	dynamicScheme := runtime.NewScheme()
 	_ = fakekubeclientset.AddToScheme(dynamicScheme)
@@ -86,4 +91,9 @@ func TestFormatSerDeFromString(t *testing.T) {
 		})
 	}
 
+}
+
+func SetUpInformerSelector(ctx context.Context) context.Context {
+	ctx = filteredFactory.WithSelectors(ctx, eventingtls.TrustBundleLabelSelector)
+	return ctx
 }
