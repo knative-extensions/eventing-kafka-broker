@@ -67,7 +67,7 @@ func (cg *ConsumerGroup) GetKey() types.NamespacedName {
 // GetVReplicas implements scheduler.VPod interface.
 func (cg *ConsumerGroup) GetVReplicas() int32 {
 	if cg.Spec.Replicas == nil {
-		return 0
+		return 1
 	}
 
 	return *cg.Spec.Replicas
