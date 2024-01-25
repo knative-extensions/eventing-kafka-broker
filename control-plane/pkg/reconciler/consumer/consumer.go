@@ -118,7 +118,7 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 	if c.Spec.VReplicas != nil {
 		egress.VReplicas = *c.Spec.VReplicas
 	} else {
-		egress.VReplicas = 0
+		egress.VReplicas = 1
 	}
 
 	resource := &contract.Resource{
