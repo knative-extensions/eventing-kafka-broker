@@ -20,8 +20,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"knative.dev/eventing/test/rekt/features/featureflags"
 	"strings"
+
+	"knative.dev/eventing/test/rekt/features/featureflags"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/test"
