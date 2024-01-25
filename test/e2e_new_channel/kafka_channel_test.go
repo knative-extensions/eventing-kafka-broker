@@ -20,6 +20,8 @@
 package e2e_new_channel
 
 import (
+	"knative.dev/eventing/test/rekt/features/channel"
+	"knative.dev/eventing/test/rekt/features/oidc"
 	"testing"
 	"time"
 
@@ -31,6 +33,7 @@ import (
 	"knative.dev/reconciler-test/pkg/state"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkachannel"
+	kafkachannelresource "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
 )
 
 const (
@@ -68,4 +71,24 @@ func TestKafkaChannelReadiness(t *testing.T) {
 	for _, f := range testFeatures {
 		env.Test(ctx, t, f)
 	}
+}
+
+func TestKafkaChannelOIDC(t *testing.T) {
+	// Run Test In Parallel With Others
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(3*time.Second, 120*time.Second),
+		environment.Managed(t),
+	)
+
+	name := feature.MakeRandomK8sName("kafkaChannel")
+	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
+
+	env.Test(ctx, t, oidc.AddressableHasAudiencePopulated(kafkachannelresource.GVR(), kafkachannelresource.GVK().Kind, name, env.Namespace()))
+	// when the KafkaChannel supports all the OIDC features, we can do `TestKafkaChannelOIDC = rekt.TestChannelImplSupportsOIDC` too
 }
