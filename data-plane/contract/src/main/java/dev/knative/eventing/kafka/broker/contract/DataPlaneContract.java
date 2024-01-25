@@ -11019,6 +11019,25 @@ public final class DataPlaneContract {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder
                 getFeatureFlagsOrBuilder();
 
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The oidcServiceAccountName.
+         */
+        java.lang.String getOidcServiceAccountName();
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The bytes for oidcServiceAccountName.
+         */
+        com.google.protobuf.ByteString getOidcServiceAccountNameBytes();
+
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase
                 getReplyStrategyCase();
     }
@@ -11046,6 +11065,7 @@ public final class DataPlaneContract {
             deliveryOrder_ = 0;
             keyType_ = 0;
             dialectedFilter_ = java.util.Collections.emptyList();
+            oidcServiceAccountName_ = "";
         }
 
         @java.lang.Override
@@ -11256,6 +11276,12 @@ public final class DataPlaneContract {
                             java.lang.String s = input.readStringRequireUtf8();
 
                             replyUrlAudience_ = s;
+                            break;
+                        }
+                        case 154: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            oidcServiceAccountName_ = s;
                             break;
                         }
                         default: {
@@ -12104,6 +12130,48 @@ public final class DataPlaneContract {
             return getFeatureFlags();
         }
 
+        public static final int OIDCSERVICEACCOUNTNAME_FIELD_NUMBER = 19;
+        private volatile java.lang.Object oidcServiceAccountName_;
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The oidcServiceAccountName.
+         */
+        @java.lang.Override
+        public java.lang.String getOidcServiceAccountName() {
+            java.lang.Object ref = oidcServiceAccountName_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                oidcServiceAccountName_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The bytes for oidcServiceAccountName.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getOidcServiceAccountNameBytes() {
+            java.lang.Object ref = oidcServiceAccountName_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                oidcServiceAccountName_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -12176,6 +12244,9 @@ public final class DataPlaneContract {
             if (!getReplyUrlAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 18, replyUrlAudience_);
             }
+            if (!getOidcServiceAccountNameBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 19, oidcServiceAccountName_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -12243,6 +12314,9 @@ public final class DataPlaneContract {
             if (!getReplyUrlAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(18, replyUrlAudience_);
             }
+            if (!getOidcServiceAccountNameBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(19, oidcServiceAccountName_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -12286,6 +12360,7 @@ public final class DataPlaneContract {
             if (hasFeatureFlags()) {
                 if (!getFeatureFlags().equals(other.getFeatureFlags())) return false;
             }
+            if (!getOidcServiceAccountName().equals(other.getOidcServiceAccountName())) return false;
             if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
             switch (replyStrategyCase_) {
                 case 3:
@@ -12351,6 +12426,8 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + FEATUREFLAGS_FIELD_NUMBER;
                 hash = (53 * hash) + getFeatureFlags().hashCode();
             }
+            hash = (37 * hash) + OIDCSERVICEACCOUNTNAME_FIELD_NUMBER;
+            hash = (53 * hash) + getOidcServiceAccountName().hashCode();
             switch (replyStrategyCase_) {
                 case 3:
                     hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -12552,6 +12629,8 @@ public final class DataPlaneContract {
                     featureFlags_ = null;
                     featureFlagsBuilder_ = null;
                 }
+                oidcServiceAccountName_ = "";
+
                 replyStrategyCase_ = 0;
                 replyStrategy_ = null;
                 return this;
@@ -12637,6 +12716,7 @@ public final class DataPlaneContract {
                 } else {
                     result.featureFlags_ = featureFlagsBuilder_.build();
                 }
+                result.oidcServiceAccountName_ = oidcServiceAccountName_;
                 result.replyStrategyCase_ = replyStrategyCase_;
                 onBuilt();
                 return result;
@@ -12761,6 +12841,10 @@ public final class DataPlaneContract {
                 }
                 if (other.hasFeatureFlags()) {
                     mergeFeatureFlags(other.getFeatureFlags());
+                }
+                if (!other.getOidcServiceAccountName().isEmpty()) {
+                    oidcServiceAccountName_ = other.oidcServiceAccountName_;
+                    onChanged();
                 }
                 switch (other.getReplyStrategyCase()) {
                     case REPLYURL: {
@@ -15233,6 +15317,97 @@ public final class DataPlaneContract {
                     featureFlags_ = null;
                 }
                 return featureFlagsBuilder_;
+            }
+
+            private java.lang.Object oidcServiceAccountName_ = "";
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @return The oidcServiceAccountName.
+             */
+            public java.lang.String getOidcServiceAccountName() {
+                java.lang.Object ref = oidcServiceAccountName_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    oidcServiceAccountName_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @return The bytes for oidcServiceAccountName.
+             */
+            public com.google.protobuf.ByteString getOidcServiceAccountNameBytes() {
+                java.lang.Object ref = oidcServiceAccountName_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    oidcServiceAccountName_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @param value The oidcServiceAccountName to set.
+             * @return This builder for chaining.
+             */
+            public Builder setOidcServiceAccountName(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                oidcServiceAccountName_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearOidcServiceAccountName() {
+
+                oidcServiceAccountName_ = getDefaultInstance().getOidcServiceAccountName();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @param value The bytes for oidcServiceAccountName to set.
+             * @return This builder for chaining.
+             */
+            public Builder setOidcServiceAccountNameBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                oidcServiceAccountName_ = value;
+                onChanged();
+                return this;
             }
 
             @java.lang.Override
@@ -22827,25 +23002,6 @@ public final class DataPlaneContract {
          */
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder();
 
-        /**
-         * <pre>
-         * Name of the service account to use for OIDC authentication.
-         * </pre>
-         *
-         * <code>string OIDCServiceAccountName = 12;</code>
-         * @return The oIDCServiceAccountName.
-         */
-        java.lang.String getOIDCServiceAccountName();
-        /**
-         * <pre>
-         * Name of the service account to use for OIDC authentication.
-         * </pre>
-         *
-         * <code>string OIDCServiceAccountName = 12;</code>
-         * @return The bytes for oIDCServiceAccountName.
-         */
-        com.google.protobuf.ByteString getOIDCServiceAccountNameBytes();
-
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.AuthCase getAuthCase();
     }
     /**
@@ -22866,7 +23022,6 @@ public final class DataPlaneContract {
             topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             bootstrapServers_ = "";
             egresses_ = java.util.Collections.emptyList();
-            oIDCServiceAccountName_ = "";
         }
 
         @java.lang.Override
@@ -23055,12 +23210,6 @@ public final class DataPlaneContract {
                                 reference_ = subBuilder.buildPartial();
                             }
 
-                            break;
-                        }
-                        case 98: {
-                            java.lang.String s = input.readStringRequireUtf8();
-
-                            oIDCServiceAccountName_ = s;
                             break;
                         }
                         default: {
@@ -23735,48 +23884,6 @@ public final class DataPlaneContract {
             return getReference();
         }
 
-        public static final int OIDCSERVICEACCOUNTNAME_FIELD_NUMBER = 12;
-        private volatile java.lang.Object oIDCServiceAccountName_;
-        /**
-         * <pre>
-         * Name of the service account to use for OIDC authentication.
-         * </pre>
-         *
-         * <code>string OIDCServiceAccountName = 12;</code>
-         * @return The oIDCServiceAccountName.
-         */
-        @java.lang.Override
-        public java.lang.String getOIDCServiceAccountName() {
-            java.lang.Object ref = oIDCServiceAccountName_;
-            if (ref instanceof java.lang.String) {
-                return (java.lang.String) ref;
-            } else {
-                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-                java.lang.String s = bs.toStringUtf8();
-                oIDCServiceAccountName_ = s;
-                return s;
-            }
-        }
-        /**
-         * <pre>
-         * Name of the service account to use for OIDC authentication.
-         * </pre>
-         *
-         * <code>string OIDCServiceAccountName = 12;</code>
-         * @return The bytes for oIDCServiceAccountName.
-         */
-        @java.lang.Override
-        public com.google.protobuf.ByteString getOIDCServiceAccountNameBytes() {
-            java.lang.Object ref = oIDCServiceAccountName_;
-            if (ref instanceof java.lang.String) {
-                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-                oIDCServiceAccountName_ = b;
-                return b;
-            } else {
-                return (com.google.protobuf.ByteString) ref;
-            }
-        }
-
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -23824,9 +23931,6 @@ public final class DataPlaneContract {
             }
             if (reference_ != null) {
                 output.writeMessage(11, getReference());
-            }
-            if (!getOIDCServiceAccountNameBytes().isEmpty()) {
-                com.google.protobuf.GeneratedMessageV3.writeString(output, 12, oIDCServiceAccountName_);
             }
             unknownFields.writeTo(output);
         }
@@ -23878,9 +23982,6 @@ public final class DataPlaneContract {
             if (reference_ != null) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(11, getReference());
             }
-            if (!getOIDCServiceAccountNameBytes().isEmpty()) {
-                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, oIDCServiceAccountName_);
-            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -23917,7 +24018,6 @@ public final class DataPlaneContract {
             if (hasReference()) {
                 if (!getReference().equals(other.getReference())) return false;
             }
-            if (!getOIDCServiceAccountName().equals(other.getOIDCServiceAccountName())) return false;
             if (!getAuthCase().equals(other.getAuthCase())) return false;
             switch (authCase_) {
                 case 7:
@@ -23971,8 +24071,6 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + REFERENCE_FIELD_NUMBER;
                 hash = (53 * hash) + getReference().hashCode();
             }
-            hash = (37 * hash) + OIDCSERVICEACCOUNTNAME_FIELD_NUMBER;
-            hash = (53 * hash) + getOIDCServiceAccountName().hashCode();
             switch (authCase_) {
                 case 7:
                     hash = (37 * hash) + ABSENTAUTH_FIELD_NUMBER;
@@ -24160,8 +24258,6 @@ public final class DataPlaneContract {
                     reference_ = null;
                     referenceBuilder_ = null;
                 }
-                oIDCServiceAccountName_ = "";
-
                 authCase_ = 0;
                 auth_ = null;
                 return this;
@@ -24248,7 +24344,6 @@ public final class DataPlaneContract {
                 } else {
                     result.reference_ = referenceBuilder_.build();
                 }
-                result.oIDCServiceAccountName_ = oIDCServiceAccountName_;
                 result.authCase_ = authCase_;
                 onBuilt();
                 return result;
@@ -24354,10 +24449,6 @@ public final class DataPlaneContract {
                 }
                 if (other.hasReference()) {
                     mergeReference(other.getReference());
-                }
-                if (!other.getOIDCServiceAccountName().isEmpty()) {
-                    oIDCServiceAccountName_ = other.oIDCServiceAccountName_;
-                    onChanged();
                 }
                 switch (other.getAuthCase()) {
                     case ABSENTAUTH: {
@@ -26624,97 +26715,6 @@ public final class DataPlaneContract {
                 return referenceBuilder_;
             }
 
-            private java.lang.Object oIDCServiceAccountName_ = "";
-            /**
-             * <pre>
-             * Name of the service account to use for OIDC authentication.
-             * </pre>
-             *
-             * <code>string OIDCServiceAccountName = 12;</code>
-             * @return The oIDCServiceAccountName.
-             */
-            public java.lang.String getOIDCServiceAccountName() {
-                java.lang.Object ref = oIDCServiceAccountName_;
-                if (!(ref instanceof java.lang.String)) {
-                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-                    java.lang.String s = bs.toStringUtf8();
-                    oIDCServiceAccountName_ = s;
-                    return s;
-                } else {
-                    return (java.lang.String) ref;
-                }
-            }
-            /**
-             * <pre>
-             * Name of the service account to use for OIDC authentication.
-             * </pre>
-             *
-             * <code>string OIDCServiceAccountName = 12;</code>
-             * @return The bytes for oIDCServiceAccountName.
-             */
-            public com.google.protobuf.ByteString getOIDCServiceAccountNameBytes() {
-                java.lang.Object ref = oIDCServiceAccountName_;
-                if (ref instanceof String) {
-                    com.google.protobuf.ByteString b =
-                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-                    oIDCServiceAccountName_ = b;
-                    return b;
-                } else {
-                    return (com.google.protobuf.ByteString) ref;
-                }
-            }
-            /**
-             * <pre>
-             * Name of the service account to use for OIDC authentication.
-             * </pre>
-             *
-             * <code>string OIDCServiceAccountName = 12;</code>
-             * @param value The oIDCServiceAccountName to set.
-             * @return This builder for chaining.
-             */
-            public Builder setOIDCServiceAccountName(java.lang.String value) {
-                if (value == null) {
-                    throw new NullPointerException();
-                }
-
-                oIDCServiceAccountName_ = value;
-                onChanged();
-                return this;
-            }
-            /**
-             * <pre>
-             * Name of the service account to use for OIDC authentication.
-             * </pre>
-             *
-             * <code>string OIDCServiceAccountName = 12;</code>
-             * @return This builder for chaining.
-             */
-            public Builder clearOIDCServiceAccountName() {
-
-                oIDCServiceAccountName_ = getDefaultInstance().getOIDCServiceAccountName();
-                onChanged();
-                return this;
-            }
-            /**
-             * <pre>
-             * Name of the service account to use for OIDC authentication.
-             * </pre>
-             *
-             * <code>string OIDCServiceAccountName = 12;</code>
-             * @param value The bytes for oIDCServiceAccountName to set.
-             * @return This builder for chaining.
-             */
-            public Builder setOIDCServiceAccountNameBytes(com.google.protobuf.ByteString value) {
-                if (value == null) {
-                    throw new NullPointerException();
-                }
-                checkByteStringIsUtf8(value);
-
-                oIDCServiceAccountName_ = value;
-                onChanged();
-                return this;
-            }
-
             @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
@@ -28054,7 +28054,7 @@ public final class DataPlaneContract {
                     + "eadLetterCACerts\030\006 \001(\t\022\032\n\022deadLetterAudi"
                     + "ence\030\007 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPoli"
                     + "cy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay"
-                    + "\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\242\004\n\006Egress\022\025\n\rco"
+                    + "\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\302\004\n\006Egress\022\025\n\rco"
                     + "nsumerGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\032"
                     + "\n\022destinationCACerts\030\017 \001(\t\022\033\n\023destinatio"
                     + "nAudience\030\021 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022&\n\024r"
@@ -28067,35 +28067,35 @@ public final class DataPlaneContract {
                     + "ype\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n"
                     + ".Reference\022)\n\017dialectedFilter\030\014 \003(\0132\020.Di"
                     + "alectedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014feat"
-                    + "ureFlags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rr"
-                    + "eplyStrategy\"U\n\022EgressFeatureFlags\022\031\n\021en"
-                    + "ableRateLimiter\030\001 \001(\010\022$\n\034enableOrderedEx"
-                    + "ecutorMetrics\030\002 \001(\010\"~\n\007Ingress\022!\n\013conten"
-                    + "tMode\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022"
-                    + "\014\n\004host\030\003 \001(\t\022\"\n\032enableAutoCreateEventTy"
-                    + "pes\030\004 \001(\010\022\020\n\010audience\030\005 \001(\t\"o\n\tReference"
-                    + "\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004nam"
-                    + "e\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024"
-                    + "\n\014groupVersion\030\006 \001(\t\"`\n\017SecretReference\022"
-                    + "\035\n\treference\030\001 \001(\0132\n.Reference\022.\n\022keyFie"
-                    + "ldReferences\030\002 \003(\0132\022.KeyFieldReference\"C"
-                    + "\n\021KeyFieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033"
-                    + "\n\005field\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecr"
-                    + "etReference\022\033\n\010protocol\030\001 \001(\0162\t.Protocol"
-                    + "\022$\n\nreferences\030\002 \003(\0132\020.SecretReference\"\202"
-                    + "\001\n\023CloudEventOverrides\0228\n\nextensions\030\001 \003"
-                    + "(\0132$.CloudEventOverrides.ExtensionsEntry"
-                    + "\0321\n\017ExtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu"
-                    + "e\030\002 \001(\t:\0028\001\"\210\003\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n"
-                    + "\006topics\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022"
-                    + "\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egressConf"
-                    + "ig\030\005 \001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003("
-                    + "\0132\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000"
-                    + "\022 \n\nauthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017mu"
-                    + "ltiAuthSecret\030\t \001(\0132\025.MultiSecretReferen"
-                    + "ceH\000\0221\n\023cloudEventOverrides\030\n \001(\0132\024.Clou"
-                    + "dEventOverrides\022\035\n\treference\030\013 \001(\0132\n.Ref"
-                    + "erence\022\036\n\026OIDCServiceAccountName\030\014 \001(\tB\006"
+                    + "ureFlags\030\016 \001(\0132\023.EgressFeatureFlags\022\036\n\026o"
+                    + "idcServiceAccountName\030\023 \001(\tB\017\n\rreplyStra"
+                    + "tegy\"U\n\022EgressFeatureFlags\022\031\n\021enableRate"
+                    + "Limiter\030\001 \001(\010\022$\n\034enableOrderedExecutorMe"
+                    + "trics\030\002 \001(\010\"~\n\007Ingress\022!\n\013contentMode\030\001 "
+                    + "\001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030"
+                    + "\003 \001(\t\022\"\n\032enableAutoCreateEventTypes\030\004 \001("
+                    + "\010\022\020\n\010audience\030\005 \001(\t\"o\n\tReference\022\014\n\004uuid"
+                    + "\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022"
+                    + "\017\n\007version\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n\014groupV"
+                    + "ersion\030\006 \001(\t\"`\n\017SecretReference\022\035\n\trefer"
+                    + "ence\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRefere"
+                    + "nces\030\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFie"
+                    + "ldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030"
+                    + "\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRefere"
+                    + "nce\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nrefe"
+                    + "rences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Cloud"
+                    + "EventOverrides\0228\n\nextensions\030\001 \003(\0132$.Clo"
+                    + "udEventOverrides.ExtensionsEntry\0321\n\017Exte"
+                    + "nsionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:"
+                    + "\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030"
+                    + "\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingre"
+                    + "ss\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\013"
+                    + "2\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egre"
+                    + "ss\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauth"
+                    + "Secret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthS"
+                    + "ecret\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023"
+                    + "cloudEventOverrides\030\n \001(\0132\024.CloudEventOv"
+                    + "errides\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006"
                     + "\n\004Auth\"R\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034"
                     + "\n\tresources\030\002 \003(\0132\t.Resource\022\024\n\014trustBun"
                     + "dles\030\003 \003(\t*,\n\rBackoffPolicy\022\017\n\013Exponenti"
@@ -28224,6 +28224,7 @@ public final class DataPlaneContract {
                     "DialectedFilter",
                     "VReplicas",
                     "FeatureFlags",
+                    "OidcServiceAccountName",
                     "ReplyStrategy",
                 });
         internal_static_EgressFeatureFlags_descriptor =
@@ -28292,7 +28293,6 @@ public final class DataPlaneContract {
                     "MultiAuthSecret",
                     "CloudEventOverrides",
                     "Reference",
-                    "OIDCServiceAccountName",
                     "Auth",
                 });
         internal_static_Contract_descriptor = getDescriptor().getMessageTypes().get(20);

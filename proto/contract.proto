@@ -173,6 +173,9 @@ message Egress {
 
   // Egress feature flags.
   EgressFeatureFlags featureFlags = 14;
+
+  // Name of the service account to use for OIDC authentication.
+  string oidcServiceAccountName = 19;
 }
 
 message EgressFeatureFlags {
@@ -355,9 +358,6 @@ message Resource {
   // - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
   // - tagging metrics
   Reference reference = 11;
-
-  // Name of the service account to use for OIDC authentication.
-  string OIDCServiceAccountName = 12;
 }
 
 message Contract {
