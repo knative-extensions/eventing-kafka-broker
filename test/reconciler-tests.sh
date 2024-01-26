@@ -3,6 +3,9 @@
 source $(dirname "$0")/e2e-common.sh
 export BROKER_TEMPLATES=./templates/kafka-broker
 
+export KUBE_API_QPS=20
+export KUBE_API_BURST=40
+
 if ! ${SKIP_INITIALIZE}; then
   initialize "$@" --num-nodes=4
   save_release_artifacts || fail_test "Failed to save release artifacts"
