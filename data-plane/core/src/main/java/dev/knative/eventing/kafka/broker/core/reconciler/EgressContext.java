@@ -16,7 +16,31 @@
 package dev.knative.eventing.kafka.broker.core.reconciler;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 import java.util.Set;
 
-public record EgressContext(
-        DataPlaneContract.Resource resource, DataPlaneContract.Egress egress, Set<String> trustBundles) {}
+public final class EgressContext {
+  private final DataPlaneContract.Resource resource;
+
+  private final DataPlaneContract.Egress egress;
+
+  private final Set<String> trustBundles;
+
+  EgressContext(DataPlaneContract.Resource resource, DataPlaneContract.Egress egress, Set<String> trustBundles) {
+    this.resource = resource;
+    this.egress = egress;
+    this.trustBundles = trustBundles;
+  }
+
+  public DataPlaneContract.Resource resource() {
+    return resource;
+  }
+
+  public DataPlaneContract.Egress egress() {
+    return egress;
+  }
+
+  public Set<String> trustBundles() {
+    return trustBundles;
+  }
+}
