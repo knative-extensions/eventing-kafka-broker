@@ -25,4 +25,8 @@ data:
   kreference-group: "disabled"
   delivery-retryafter: "disabled"
   delivery-timeout: "enabled"
+  kreference-mapping: "disabled"
   new-trigger-filters: "enabled"
+  transport-encryption: "disabled"
+  eventtype-auto-create: "disabled"
+  authentication-oidc: "disabled"
