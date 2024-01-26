@@ -20,10 +20,13 @@
 package e2e_new
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/system"
+	"knative.dev/pkg/test/logstream/v2"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -61,7 +64,26 @@ func TestKafkaSourceDeletedFromContractConfigMaps(t *testing.T) {
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
 	)
-	t.Cleanup(env.Finish)
+
+	var canceler logstream.Canceler
+
+	t.Cleanup(func() {
+		env.Finish()
+		canceler()
+	})
+
+	env.Test(ctx, t, feature.StepFn(func(ctx context.Context, t feature.T) {
+		ls := logstream.New(ctx, kubeclient.Get(ctx),
+			logstream.WithNamespaces(knative.KnativeNamespaceFromContext(ctx)),
+			logstream.WithPodPrefixes("kafka-controller"),
+		)
+		c, err := ls.StartStream("kafka-controller", t.Logf)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		canceler = c
+	}).AsFeature())
 
 	env.Test(ctx, t, features.SetupKafkaSources("permanent-kafka-source-", 21))
 	env.Test(ctx, t, features.SetupAndCleanupKafkaSources("x-kafka-source-", 42))
