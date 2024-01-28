@@ -9251,6 +9251,25 @@ public final class DataPlaneContract {
 
         /**
          * <pre>
+         * Dead Letter Audience is the OIDC audience of the dead letter
+         * </pre>
+         *
+         * <code>string deadLetterAudience = 7;</code>
+         * @return The deadLetterAudience.
+         */
+        java.lang.String getDeadLetterAudience();
+        /**
+         * <pre>
+         * Dead Letter Audience is the OIDC audience of the dead letter
+         * </pre>
+         *
+         * <code>string deadLetterAudience = 7;</code>
+         * @return The bytes for deadLetterAudience.
+         */
+        com.google.protobuf.ByteString getDeadLetterAudienceBytes();
+
+        /**
+         * <pre>
          * retry is the minimum number of retries the sender should attempt when
          * sending an event before moving it to the dead letter sink.
          * Setting retry to 0 means don't retry.
@@ -9316,6 +9335,7 @@ public final class DataPlaneContract {
         private EgressConfig() {
             deadLetter_ = "";
             deadLetterCACerts_ = "";
+            deadLetterAudience_ = "";
             backoffPolicy_ = 0;
         }
 
@@ -9375,6 +9395,12 @@ public final class DataPlaneContract {
                             java.lang.String s = input.readStringRequireUtf8();
 
                             deadLetterCACerts_ = s;
+                            break;
+                        }
+                        case 58: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            deadLetterAudience_ = s;
                             break;
                         }
                         default: {
@@ -9486,6 +9512,48 @@ public final class DataPlaneContract {
             if (ref instanceof java.lang.String) {
                 com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
                 deadLetterCACerts_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
+        public static final int DEADLETTERAUDIENCE_FIELD_NUMBER = 7;
+        private volatile java.lang.Object deadLetterAudience_;
+        /**
+         * <pre>
+         * Dead Letter Audience is the OIDC audience of the dead letter
+         * </pre>
+         *
+         * <code>string deadLetterAudience = 7;</code>
+         * @return The deadLetterAudience.
+         */
+        @java.lang.Override
+        public java.lang.String getDeadLetterAudience() {
+            java.lang.Object ref = deadLetterAudience_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                deadLetterAudience_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * Dead Letter Audience is the OIDC audience of the dead letter
+         * </pre>
+         *
+         * <code>string deadLetterAudience = 7;</code>
+         * @return The bytes for deadLetterAudience.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getDeadLetterAudienceBytes() {
+            java.lang.Object ref = deadLetterAudience_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                deadLetterAudience_ = b;
                 return b;
             } else {
                 return (com.google.protobuf.ByteString) ref;
@@ -9605,6 +9673,9 @@ public final class DataPlaneContract {
             if (!getDeadLetterCACertsBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 6, deadLetterCACerts_);
             }
+            if (!getDeadLetterAudienceBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 7, deadLetterAudience_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -9634,6 +9705,9 @@ public final class DataPlaneContract {
             if (!getDeadLetterCACertsBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, deadLetterCACerts_);
             }
+            if (!getDeadLetterAudienceBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, deadLetterAudience_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -9652,6 +9726,7 @@ public final class DataPlaneContract {
 
             if (!getDeadLetter().equals(other.getDeadLetter())) return false;
             if (!getDeadLetterCACerts().equals(other.getDeadLetterCACerts())) return false;
+            if (!getDeadLetterAudience().equals(other.getDeadLetterAudience())) return false;
             if (getRetry() != other.getRetry()) return false;
             if (backoffPolicy_ != other.backoffPolicy_) return false;
             if (getBackoffDelay() != other.getBackoffDelay()) return false;
@@ -9671,6 +9746,8 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getDeadLetter().hashCode();
             hash = (37 * hash) + DEADLETTERCACERTS_FIELD_NUMBER;
             hash = (53 * hash) + getDeadLetterCACerts().hashCode();
+            hash = (37 * hash) + DEADLETTERAUDIENCE_FIELD_NUMBER;
+            hash = (53 * hash) + getDeadLetterAudience().hashCode();
             hash = (37 * hash) + RETRY_FIELD_NUMBER;
             hash = (53 * hash) + getRetry();
             hash = (37 * hash) + BACKOFFPOLICY_FIELD_NUMBER;
@@ -9818,6 +9895,8 @@ public final class DataPlaneContract {
 
                 deadLetterCACerts_ = "";
 
+                deadLetterAudience_ = "";
+
                 retry_ = 0;
 
                 backoffPolicy_ = 0;
@@ -9856,6 +9935,7 @@ public final class DataPlaneContract {
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig(this);
                 result.deadLetter_ = deadLetter_;
                 result.deadLetterCACerts_ = deadLetterCACerts_;
+                result.deadLetterAudience_ = deadLetterAudience_;
                 result.retry_ = retry_;
                 result.backoffPolicy_ = backoffPolicy_;
                 result.backoffDelay_ = backoffDelay_;
@@ -9916,6 +9996,10 @@ public final class DataPlaneContract {
                 }
                 if (!other.getDeadLetterCACerts().isEmpty()) {
                     deadLetterCACerts_ = other.deadLetterCACerts_;
+                    onChanged();
+                }
+                if (!other.getDeadLetterAudience().isEmpty()) {
+                    deadLetterAudience_ = other.deadLetterAudience_;
                     onChanged();
                 }
                 if (other.getRetry() != 0) {
@@ -10138,6 +10222,97 @@ public final class DataPlaneContract {
                 checkByteStringIsUtf8(value);
 
                 deadLetterCACerts_ = value;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object deadLetterAudience_ = "";
+            /**
+             * <pre>
+             * Dead Letter Audience is the OIDC audience of the dead letter
+             * </pre>
+             *
+             * <code>string deadLetterAudience = 7;</code>
+             * @return The deadLetterAudience.
+             */
+            public java.lang.String getDeadLetterAudience() {
+                java.lang.Object ref = deadLetterAudience_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    deadLetterAudience_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * Dead Letter Audience is the OIDC audience of the dead letter
+             * </pre>
+             *
+             * <code>string deadLetterAudience = 7;</code>
+             * @return The bytes for deadLetterAudience.
+             */
+            public com.google.protobuf.ByteString getDeadLetterAudienceBytes() {
+                java.lang.Object ref = deadLetterAudience_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    deadLetterAudience_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * Dead Letter Audience is the OIDC audience of the dead letter
+             * </pre>
+             *
+             * <code>string deadLetterAudience = 7;</code>
+             * @param value The deadLetterAudience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setDeadLetterAudience(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                deadLetterAudience_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Dead Letter Audience is the OIDC audience of the dead letter
+             * </pre>
+             *
+             * <code>string deadLetterAudience = 7;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearDeadLetterAudience() {
+
+                deadLetterAudience_ = getDefaultInstance().getDeadLetterAudience();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Dead Letter Audience is the OIDC audience of the dead letter
+             * </pre>
+             *
+             * <code>string deadLetterAudience = 7;</code>
+             * @param value The bytes for deadLetterAudience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setDeadLetterAudienceBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                deadLetterAudience_ = value;
                 onChanged();
                 return this;
             }
@@ -10471,6 +10646,25 @@ public final class DataPlaneContract {
 
         /**
          * <pre>
+         * OIDC audience of the destination
+         * </pre>
+         *
+         * <code>string destinationAudience = 17;</code>
+         * @return The destinationAudience.
+         */
+        java.lang.String getDestinationAudience();
+        /**
+         * <pre>
+         * OIDC audience of the destination
+         * </pre>
+         *
+         * <code>string destinationAudience = 17;</code>
+         * @return The bytes for destinationAudience.
+         */
+        com.google.protobuf.ByteString getDestinationAudienceBytes();
+
+        /**
+         * <pre>
          * Send the response to an url
          * </pre>
          *
@@ -10569,6 +10763,25 @@ public final class DataPlaneContract {
          * @return The bytes for replyUrlCACerts.
          */
         com.google.protobuf.ByteString getReplyUrlCACertsBytes();
+
+        /**
+         * <pre>
+         * OIDC audience of the replyUrl
+         * </pre>
+         *
+         * <code>string replyUrlAudience = 18;</code>
+         * @return The replyUrlAudience.
+         */
+        java.lang.String getReplyUrlAudience();
+        /**
+         * <pre>
+         * OIDC audience of the replyUrl
+         * </pre>
+         *
+         * <code>string replyUrlAudience = 18;</code>
+         * @return The bytes for replyUrlAudience.
+         */
+        com.google.protobuf.ByteString getReplyUrlAudienceBytes();
 
         /**
          * <pre>
@@ -10806,6 +11019,25 @@ public final class DataPlaneContract {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder
                 getFeatureFlagsOrBuilder();
 
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The oidcServiceAccountName.
+         */
+        java.lang.String getOidcServiceAccountName();
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The bytes for oidcServiceAccountName.
+         */
+        com.google.protobuf.ByteString getOidcServiceAccountNameBytes();
+
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase
                 getReplyStrategyCase();
     }
@@ -10826,11 +11058,14 @@ public final class DataPlaneContract {
             consumerGroup_ = "";
             destination_ = "";
             destinationCACerts_ = "";
+            destinationAudience_ = "";
             replyUrlCACerts_ = "";
+            replyUrlAudience_ = "";
             uid_ = "";
             deliveryOrder_ = 0;
             keyType_ = 0;
             dialectedFilter_ = java.util.Collections.emptyList();
+            oidcServiceAccountName_ = "";
         }
 
         @java.lang.Override
@@ -11029,6 +11264,24 @@ public final class DataPlaneContract {
                             java.lang.String s = input.readStringRequireUtf8();
 
                             replyUrlCACerts_ = s;
+                            break;
+                        }
+                        case 138: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            destinationAudience_ = s;
+                            break;
+                        }
+                        case 146: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            replyUrlAudience_ = s;
+                            break;
+                        }
+                        case 154: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            oidcServiceAccountName_ = s;
                             break;
                         }
                         default: {
@@ -11240,6 +11493,48 @@ public final class DataPlaneContract {
             }
         }
 
+        public static final int DESTINATIONAUDIENCE_FIELD_NUMBER = 17;
+        private volatile java.lang.Object destinationAudience_;
+        /**
+         * <pre>
+         * OIDC audience of the destination
+         * </pre>
+         *
+         * <code>string destinationAudience = 17;</code>
+         * @return The destinationAudience.
+         */
+        @java.lang.Override
+        public java.lang.String getDestinationAudience() {
+            java.lang.Object ref = destinationAudience_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                destinationAudience_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * OIDC audience of the destination
+         * </pre>
+         *
+         * <code>string destinationAudience = 17;</code>
+         * @return The bytes for destinationAudience.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getDestinationAudienceBytes() {
+            java.lang.Object ref = destinationAudience_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                destinationAudience_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
         public static final int REPLYURL_FIELD_NUMBER = 3;
         /**
          * <pre>
@@ -11423,6 +11718,48 @@ public final class DataPlaneContract {
             if (ref instanceof java.lang.String) {
                 com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
                 replyUrlCACerts_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
+        public static final int REPLYURLAUDIENCE_FIELD_NUMBER = 18;
+        private volatile java.lang.Object replyUrlAudience_;
+        /**
+         * <pre>
+         * OIDC audience of the replyUrl
+         * </pre>
+         *
+         * <code>string replyUrlAudience = 18;</code>
+         * @return The replyUrlAudience.
+         */
+        @java.lang.Override
+        public java.lang.String getReplyUrlAudience() {
+            java.lang.Object ref = replyUrlAudience_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                replyUrlAudience_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * OIDC audience of the replyUrl
+         * </pre>
+         *
+         * <code>string replyUrlAudience = 18;</code>
+         * @return The bytes for replyUrlAudience.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getReplyUrlAudienceBytes() {
+            java.lang.Object ref = replyUrlAudience_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                replyUrlAudience_ = b;
                 return b;
             } else {
                 return (com.google.protobuf.ByteString) ref;
@@ -11793,6 +12130,48 @@ public final class DataPlaneContract {
             return getFeatureFlags();
         }
 
+        public static final int OIDCSERVICEACCOUNTNAME_FIELD_NUMBER = 19;
+        private volatile java.lang.Object oidcServiceAccountName_;
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The oidcServiceAccountName.
+         */
+        @java.lang.Override
+        public java.lang.String getOidcServiceAccountName() {
+            java.lang.Object ref = oidcServiceAccountName_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                oidcServiceAccountName_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * Name of the service account to use for OIDC authentication.
+         * </pre>
+         *
+         * <code>string oidcServiceAccountName = 19;</code>
+         * @return The bytes for oidcServiceAccountName.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getOidcServiceAccountNameBytes() {
+            java.lang.Object ref = oidcServiceAccountName_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                oidcServiceAccountName_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -11859,6 +12238,15 @@ public final class DataPlaneContract {
             if (!getReplyUrlCACertsBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 16, replyUrlCACerts_);
             }
+            if (!getDestinationAudienceBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 17, destinationAudience_);
+            }
+            if (!getReplyUrlAudienceBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 18, replyUrlAudience_);
+            }
+            if (!getOidcServiceAccountNameBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 19, oidcServiceAccountName_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -11920,6 +12308,15 @@ public final class DataPlaneContract {
             if (!getReplyUrlCACertsBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, replyUrlCACerts_);
             }
+            if (!getDestinationAudienceBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(17, destinationAudience_);
+            }
+            if (!getReplyUrlAudienceBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(18, replyUrlAudience_);
+            }
+            if (!getOidcServiceAccountNameBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(19, oidcServiceAccountName_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -11939,7 +12336,9 @@ public final class DataPlaneContract {
             if (!getConsumerGroup().equals(other.getConsumerGroup())) return false;
             if (!getDestination().equals(other.getDestination())) return false;
             if (!getDestinationCACerts().equals(other.getDestinationCACerts())) return false;
+            if (!getDestinationAudience().equals(other.getDestinationAudience())) return false;
             if (!getReplyUrlCACerts().equals(other.getReplyUrlCACerts())) return false;
+            if (!getReplyUrlAudience().equals(other.getReplyUrlAudience())) return false;
             if (hasFilter() != other.hasFilter()) return false;
             if (hasFilter()) {
                 if (!getFilter().equals(other.getFilter())) return false;
@@ -11961,6 +12360,7 @@ public final class DataPlaneContract {
             if (hasFeatureFlags()) {
                 if (!getFeatureFlags().equals(other.getFeatureFlags())) return false;
             }
+            if (!getOidcServiceAccountName().equals(other.getOidcServiceAccountName())) return false;
             if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
             switch (replyStrategyCase_) {
                 case 3:
@@ -11992,8 +12392,12 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getDestination().hashCode();
             hash = (37 * hash) + DESTINATIONCACERTS_FIELD_NUMBER;
             hash = (53 * hash) + getDestinationCACerts().hashCode();
+            hash = (37 * hash) + DESTINATIONAUDIENCE_FIELD_NUMBER;
+            hash = (53 * hash) + getDestinationAudience().hashCode();
             hash = (37 * hash) + REPLYURLCACERTS_FIELD_NUMBER;
             hash = (53 * hash) + getReplyUrlCACerts().hashCode();
+            hash = (37 * hash) + REPLYURLAUDIENCE_FIELD_NUMBER;
+            hash = (53 * hash) + getReplyUrlAudience().hashCode();
             if (hasFilter()) {
                 hash = (37 * hash) + FILTER_FIELD_NUMBER;
                 hash = (53 * hash) + getFilter().hashCode();
@@ -12022,6 +12426,8 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + FEATUREFLAGS_FIELD_NUMBER;
                 hash = (53 * hash) + getFeatureFlags().hashCode();
             }
+            hash = (37 * hash) + OIDCSERVICEACCOUNTNAME_FIELD_NUMBER;
+            hash = (53 * hash) + getOidcServiceAccountName().hashCode();
             switch (replyStrategyCase_) {
                 case 3:
                     hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -12179,7 +12585,11 @@ public final class DataPlaneContract {
 
                 destinationCACerts_ = "";
 
+                destinationAudience_ = "";
+
                 replyUrlCACerts_ = "";
+
+                replyUrlAudience_ = "";
 
                 if (filterBuilder_ == null) {
                     filter_ = null;
@@ -12219,6 +12629,8 @@ public final class DataPlaneContract {
                     featureFlags_ = null;
                     featureFlagsBuilder_ = null;
                 }
+                oidcServiceAccountName_ = "";
+
                 replyStrategyCase_ = 0;
                 replyStrategy_ = null;
                 return this;
@@ -12251,6 +12663,7 @@ public final class DataPlaneContract {
                 result.consumerGroup_ = consumerGroup_;
                 result.destination_ = destination_;
                 result.destinationCACerts_ = destinationCACerts_;
+                result.destinationAudience_ = destinationAudience_;
                 if (replyStrategyCase_ == 3) {
                     result.replyStrategy_ = replyStrategy_;
                 }
@@ -12269,6 +12682,7 @@ public final class DataPlaneContract {
                     }
                 }
                 result.replyUrlCACerts_ = replyUrlCACerts_;
+                result.replyUrlAudience_ = replyUrlAudience_;
                 if (filterBuilder_ == null) {
                     result.filter_ = filter_;
                 } else {
@@ -12302,6 +12716,7 @@ public final class DataPlaneContract {
                 } else {
                     result.featureFlags_ = featureFlagsBuilder_.build();
                 }
+                result.oidcServiceAccountName_ = oidcServiceAccountName_;
                 result.replyStrategyCase_ = replyStrategyCase_;
                 onBuilt();
                 return result;
@@ -12364,8 +12779,16 @@ public final class DataPlaneContract {
                     destinationCACerts_ = other.destinationCACerts_;
                     onChanged();
                 }
+                if (!other.getDestinationAudience().isEmpty()) {
+                    destinationAudience_ = other.destinationAudience_;
+                    onChanged();
+                }
                 if (!other.getReplyUrlCACerts().isEmpty()) {
                     replyUrlCACerts_ = other.replyUrlCACerts_;
+                    onChanged();
+                }
+                if (!other.getReplyUrlAudience().isEmpty()) {
+                    replyUrlAudience_ = other.replyUrlAudience_;
                     onChanged();
                 }
                 if (other.hasFilter()) {
@@ -12418,6 +12841,10 @@ public final class DataPlaneContract {
                 }
                 if (other.hasFeatureFlags()) {
                     mergeFeatureFlags(other.getFeatureFlags());
+                }
+                if (!other.getOidcServiceAccountName().isEmpty()) {
+                    oidcServiceAccountName_ = other.oidcServiceAccountName_;
+                    onChanged();
                 }
                 switch (other.getReplyStrategyCase()) {
                     case REPLYURL: {
@@ -12753,6 +13180,97 @@ public final class DataPlaneContract {
                 checkByteStringIsUtf8(value);
 
                 destinationCACerts_ = value;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object destinationAudience_ = "";
+            /**
+             * <pre>
+             * OIDC audience of the destination
+             * </pre>
+             *
+             * <code>string destinationAudience = 17;</code>
+             * @return The destinationAudience.
+             */
+            public java.lang.String getDestinationAudience() {
+                java.lang.Object ref = destinationAudience_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    destinationAudience_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * OIDC audience of the destination
+             * </pre>
+             *
+             * <code>string destinationAudience = 17;</code>
+             * @return The bytes for destinationAudience.
+             */
+            public com.google.protobuf.ByteString getDestinationAudienceBytes() {
+                java.lang.Object ref = destinationAudience_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    destinationAudience_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * OIDC audience of the destination
+             * </pre>
+             *
+             * <code>string destinationAudience = 17;</code>
+             * @param value The destinationAudience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setDestinationAudience(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                destinationAudience_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * OIDC audience of the destination
+             * </pre>
+             *
+             * <code>string destinationAudience = 17;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearDestinationAudience() {
+
+                destinationAudience_ = getDefaultInstance().getDestinationAudience();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * OIDC audience of the destination
+             * </pre>
+             *
+             * <code>string destinationAudience = 17;</code>
+             * @param value The bytes for destinationAudience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setDestinationAudienceBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                destinationAudience_ = value;
                 onChanged();
                 return this;
             }
@@ -13347,6 +13865,97 @@ public final class DataPlaneContract {
                 checkByteStringIsUtf8(value);
 
                 replyUrlCACerts_ = value;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object replyUrlAudience_ = "";
+            /**
+             * <pre>
+             * OIDC audience of the replyUrl
+             * </pre>
+             *
+             * <code>string replyUrlAudience = 18;</code>
+             * @return The replyUrlAudience.
+             */
+            public java.lang.String getReplyUrlAudience() {
+                java.lang.Object ref = replyUrlAudience_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    replyUrlAudience_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * OIDC audience of the replyUrl
+             * </pre>
+             *
+             * <code>string replyUrlAudience = 18;</code>
+             * @return The bytes for replyUrlAudience.
+             */
+            public com.google.protobuf.ByteString getReplyUrlAudienceBytes() {
+                java.lang.Object ref = replyUrlAudience_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    replyUrlAudience_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * OIDC audience of the replyUrl
+             * </pre>
+             *
+             * <code>string replyUrlAudience = 18;</code>
+             * @param value The replyUrlAudience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setReplyUrlAudience(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                replyUrlAudience_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * OIDC audience of the replyUrl
+             * </pre>
+             *
+             * <code>string replyUrlAudience = 18;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearReplyUrlAudience() {
+
+                replyUrlAudience_ = getDefaultInstance().getReplyUrlAudience();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * OIDC audience of the replyUrl
+             * </pre>
+             *
+             * <code>string replyUrlAudience = 18;</code>
+             * @param value The bytes for replyUrlAudience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setReplyUrlAudienceBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                replyUrlAudience_ = value;
                 onChanged();
                 return this;
             }
@@ -14710,6 +15319,97 @@ public final class DataPlaneContract {
                 return featureFlagsBuilder_;
             }
 
+            private java.lang.Object oidcServiceAccountName_ = "";
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @return The oidcServiceAccountName.
+             */
+            public java.lang.String getOidcServiceAccountName() {
+                java.lang.Object ref = oidcServiceAccountName_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    oidcServiceAccountName_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @return The bytes for oidcServiceAccountName.
+             */
+            public com.google.protobuf.ByteString getOidcServiceAccountNameBytes() {
+                java.lang.Object ref = oidcServiceAccountName_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    oidcServiceAccountName_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @param value The oidcServiceAccountName to set.
+             * @return This builder for chaining.
+             */
+            public Builder setOidcServiceAccountName(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                oidcServiceAccountName_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearOidcServiceAccountName() {
+
+                oidcServiceAccountName_ = getDefaultInstance().getOidcServiceAccountName();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Name of the service account to use for OIDC authentication.
+             * </pre>
+             *
+             * <code>string oidcServiceAccountName = 19;</code>
+             * @param value The bytes for oidcServiceAccountName to set.
+             * @return This builder for chaining.
+             */
+            public Builder setOidcServiceAccountNameBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                oidcServiceAccountName_ = value;
+                onChanged();
+                return this;
+            }
+
             @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
@@ -15437,6 +16137,25 @@ public final class DataPlaneContract {
          * @return The enableAutoCreateEventTypes.
          */
         boolean getEnableAutoCreateEventTypes();
+
+        /**
+         * <pre>
+         * OIDC audience of this ingress
+         * </pre>
+         *
+         * <code>string audience = 5;</code>
+         * @return The audience.
+         */
+        java.lang.String getAudience();
+        /**
+         * <pre>
+         * OIDC audience of this ingress
+         * </pre>
+         *
+         * <code>string audience = 5;</code>
+         * @return The bytes for audience.
+         */
+        com.google.protobuf.ByteString getAudienceBytes();
     }
     /**
      * <pre>
@@ -15465,6 +16184,7 @@ public final class DataPlaneContract {
             contentMode_ = 0;
             path_ = "";
             host_ = "";
+            audience_ = "";
         }
 
         @java.lang.Override
@@ -15515,6 +16235,12 @@ public final class DataPlaneContract {
                         }
                         case 32: {
                             enableAutoCreateEventTypes_ = input.readBool();
+                            break;
+                        }
+                        case 42: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            audience_ = s;
                             break;
                         }
                         default: {
@@ -15679,6 +16405,48 @@ public final class DataPlaneContract {
             return enableAutoCreateEventTypes_;
         }
 
+        public static final int AUDIENCE_FIELD_NUMBER = 5;
+        private volatile java.lang.Object audience_;
+        /**
+         * <pre>
+         * OIDC audience of this ingress
+         * </pre>
+         *
+         * <code>string audience = 5;</code>
+         * @return The audience.
+         */
+        @java.lang.Override
+        public java.lang.String getAudience() {
+            java.lang.Object ref = audience_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                audience_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * OIDC audience of this ingress
+         * </pre>
+         *
+         * <code>string audience = 5;</code>
+         * @return The bytes for audience.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getAudienceBytes() {
+            java.lang.Object ref = audience_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                audience_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -15706,6 +16474,9 @@ public final class DataPlaneContract {
             if (enableAutoCreateEventTypes_ != false) {
                 output.writeBool(4, enableAutoCreateEventTypes_);
             }
+            if (!getAudienceBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 5, audience_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -15728,6 +16499,9 @@ public final class DataPlaneContract {
             if (enableAutoCreateEventTypes_ != false) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(4, enableAutoCreateEventTypes_);
             }
+            if (!getAudienceBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, audience_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -15748,6 +16522,7 @@ public final class DataPlaneContract {
             if (!getPath().equals(other.getPath())) return false;
             if (!getHost().equals(other.getHost())) return false;
             if (getEnableAutoCreateEventTypes() != other.getEnableAutoCreateEventTypes()) return false;
+            if (!getAudience().equals(other.getAudience())) return false;
             if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
@@ -15767,6 +16542,8 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getHost().hashCode();
             hash = (37 * hash) + ENABLEAUTOCREATEEVENTTYPES_FIELD_NUMBER;
             hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEnableAutoCreateEventTypes());
+            hash = (37 * hash) + AUDIENCE_FIELD_NUMBER;
+            hash = (53 * hash) + getAudience().hashCode();
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
@@ -15918,6 +16695,8 @@ public final class DataPlaneContract {
 
                 enableAutoCreateEventTypes_ = false;
 
+                audience_ = "";
+
                 return this;
             }
 
@@ -15948,6 +16727,7 @@ public final class DataPlaneContract {
                 result.path_ = path_;
                 result.host_ = host_;
                 result.enableAutoCreateEventTypes_ = enableAutoCreateEventTypes_;
+                result.audience_ = audience_;
                 onBuilt();
                 return result;
             }
@@ -16010,6 +16790,10 @@ public final class DataPlaneContract {
                 }
                 if (other.getEnableAutoCreateEventTypes() != false) {
                     setEnableAutoCreateEventTypes(other.getEnableAutoCreateEventTypes());
+                }
+                if (!other.getAudience().isEmpty()) {
+                    audience_ = other.audience_;
+                    onChanged();
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -16341,6 +17125,97 @@ public final class DataPlaneContract {
             public Builder clearEnableAutoCreateEventTypes() {
 
                 enableAutoCreateEventTypes_ = false;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object audience_ = "";
+            /**
+             * <pre>
+             * OIDC audience of this ingress
+             * </pre>
+             *
+             * <code>string audience = 5;</code>
+             * @return The audience.
+             */
+            public java.lang.String getAudience() {
+                java.lang.Object ref = audience_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    audience_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * OIDC audience of this ingress
+             * </pre>
+             *
+             * <code>string audience = 5;</code>
+             * @return The bytes for audience.
+             */
+            public com.google.protobuf.ByteString getAudienceBytes() {
+                java.lang.Object ref = audience_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    audience_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * OIDC audience of this ingress
+             * </pre>
+             *
+             * <code>string audience = 5;</code>
+             * @param value The audience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setAudience(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                audience_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * OIDC audience of this ingress
+             * </pre>
+             *
+             * <code>string audience = 5;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearAudience() {
+
+                audience_ = getDefaultInstance().getAudience();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * OIDC audience of this ingress
+             * </pre>
+             *
+             * <code>string audience = 5;</code>
+             * @param value The bytes for audience to set.
+             * @return This builder for chaining.
+             */
+            public Builder setAudienceBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                audience_ = value;
                 onChanged();
                 return this;
             }
@@ -27174,64 +28049,67 @@ public final class DataPlaneContract {
                     + "not\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQL"
                     + "H\000B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003"
                     + "(\0132\027.Filter.AttributesEntry\0321\n\017Attribute"
-                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\232"
+                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\266"
                     + "\001\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021d"
-                    + "eadLetterCACerts\030\006 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n"
-                    + "\rbackoffPolicy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014"
-                    + "backoffDelay\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\353\003\n\006"
-                    + "Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destina"
-                    + "tion\030\002 \001(\t\022\032\n\022destinationCACerts\030\017 \001(\t\022\022"
-                    + "\n\010replyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTop"
-                    + "ic\030\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\013"
-                    + "2\006.EmptyH\000\022\027\n\017replyUrlCACerts\030\020 \001(\t\022\027\n\006f"
-                    + "ilter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egr"
-                    + "essConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdelive"
-                    + "ryOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType"
-                    + "\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Re"
-                    + "ference\022)\n\017dialectedFilter\030\014 \003(\0132\020.Diale"
-                    + "ctedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014feature"
-                    + "Flags\030\016 \001(\0132\023.EgressFeatureFlagsB\017\n\rrepl"
-                    + "yStrategy\"U\n\022EgressFeatureFlags\022\031\n\021enabl"
-                    + "eRateLimiter\030\001 \001(\010\022$\n\034enableOrderedExecu"
-                    + "torMetrics\030\002 \001(\010\"l\n\007Ingress\022!\n\013contentMo"
-                    + "de\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004"
-                    + "host\030\003 \001(\t\022\"\n\032enableAutoCreateEventTypes"
-                    + "\030\004 \001(\010\"o\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnam"
-                    + "espace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 "
-                    + "\001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n\014groupVersion\030\006 \001(\t\""
-                    + "`\n\017SecretReference\022\035\n\treference\030\001 \001(\0132\n."
-                    + "Reference\022.\n\022keyFieldReferences\030\002 \003(\0132\022."
-                    + "KeyFieldReference\"C\n\021KeyFieldReference\022\021"
-                    + "\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.Secre"
-                    + "tField\"Y\n\024MultiSecretReference\022\033\n\010protoc"
-                    + "ol\030\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132"
-                    + "\020.SecretReference\"\202\001\n\023CloudEventOverride"
-                    + "s\0228\n\nextensions\030\001 \003(\0132$.CloudEventOverri"
-                    + "des.ExtensionsEntry\0321\n\017ExtensionsEntry\022\013"
-                    + "\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resou"
-                    + "rce\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020boot"
-                    + "strapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.In"
-                    + "gress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConf"
-                    + "ig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentA"
-                    + "uth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132"
-                    + "\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025"
-                    + ".MultiSecretReferenceH\000\0221\n\023cloudEventOve"
-                    + "rrides\030\n \001(\0132\024.CloudEventOverrides\022\035\n\tre"
-                    + "ference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"R\n\010Con"
-                    + "tract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002"
-                    + " \003(\0132\t.Resource\022\024\n\014trustBundles\030\003 \003(\t*,\n"
-                    + "\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linea"
-                    + "r\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007O"
-                    + "RDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integ"
-                    + "er\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013Conte"
-                    + "ntMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013Se"
-                    + "cretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020"
-                    + "\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022"
-                    + "\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000"
-                    + "\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SS"
-                    + "L\020\003B[\n*dev.knative.eventing.kafka.broker"
-                    + ".contractB\021DataPlaneContractZ\032control-pl"
-                    + "ane/pkg/contractb\006proto3"
+                    + "eadLetterCACerts\030\006 \001(\t\022\032\n\022deadLetterAudi"
+                    + "ence\030\007 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPoli"
+                    + "cy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay"
+                    + "\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\302\004\n\006Egress\022\025\n\rco"
+                    + "nsumerGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\032"
+                    + "\n\022destinationCACerts\030\017 \001(\t\022\033\n\023destinatio"
+                    + "nAudience\030\021 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022&\n\024r"
+                    + "eplyToOriginalTopic\030\004 \001(\0132\006.EmptyH\000\022\036\n\014d"
+                    + "iscardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\017replyUrlC"
+                    + "ACerts\030\020 \001(\t\022\030\n\020replyUrlAudience\030\022 \001(\t\022\027"
+                    + "\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014"
+                    + "egressConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdel"
+                    + "iveryOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyT"
+                    + "ype\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n"
+                    + ".Reference\022)\n\017dialectedFilter\030\014 \003(\0132\020.Di"
+                    + "alectedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014feat"
+                    + "ureFlags\030\016 \001(\0132\023.EgressFeatureFlags\022\036\n\026o"
+                    + "idcServiceAccountName\030\023 \001(\tB\017\n\rreplyStra"
+                    + "tegy\"U\n\022EgressFeatureFlags\022\031\n\021enableRate"
+                    + "Limiter\030\001 \001(\010\022$\n\034enableOrderedExecutorMe"
+                    + "trics\030\002 \001(\010\"~\n\007Ingress\022!\n\013contentMode\030\001 "
+                    + "\001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030"
+                    + "\003 \001(\t\022\"\n\032enableAutoCreateEventTypes\030\004 \001("
+                    + "\010\022\020\n\010audience\030\005 \001(\t\"o\n\tReference\022\014\n\004uuid"
+                    + "\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022"
+                    + "\017\n\007version\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n\014groupV"
+                    + "ersion\030\006 \001(\t\"`\n\017SecretReference\022\035\n\trefer"
+                    + "ence\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRefere"
+                    + "nces\030\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFie"
+                    + "ldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030"
+                    + "\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRefere"
+                    + "nce\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nrefe"
+                    + "rences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Cloud"
+                    + "EventOverrides\0228\n\nextensions\030\001 \003(\0132$.Clo"
+                    + "udEventOverrides.ExtensionsEntry\0321\n\017Exte"
+                    + "nsionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:"
+                    + "\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030"
+                    + "\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingre"
+                    + "ss\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\013"
+                    + "2\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egre"
+                    + "ss\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauth"
+                    + "Secret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthS"
+                    + "ecret\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023"
+                    + "cloudEventOverrides\030\n \001(\0132\024.CloudEventOv"
+                    + "errides\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006"
+                    + "\n\004Auth\"R\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034"
+                    + "\n\tresources\030\002 \003(\0132\t.Resource\022\024\n\014trustBun"
+                    + "dles\030\003 \003(\t*,\n\rBackoffPolicy\022\017\n\013Exponenti"
+                    + "al\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNO"
+                    + "RDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006Stri"
+                    + "ng\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArr"
+                    + "ay\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUC"
+                    + "TURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANISM"
+                    + "\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY"
+                    + "\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r"
+                    + "\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL"
+                    + "\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing"
+                    + ".kafka.broker.contractB\021DataPlaneContrac"
+                    + "tZ\032control-plane/pkg/contractb\006proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
@@ -27317,7 +28195,13 @@ public final class DataPlaneContract {
                 getDescriptor().getMessageTypes().get(10);
         internal_static_EgressConfig_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_EgressConfig_descriptor, new java.lang.String[] {
-                    "DeadLetter", "DeadLetterCACerts", "Retry", "BackoffPolicy", "BackoffDelay", "Timeout",
+                    "DeadLetter",
+                    "DeadLetterCACerts",
+                    "DeadLetterAudience",
+                    "Retry",
+                    "BackoffPolicy",
+                    "BackoffDelay",
+                    "Timeout",
                 });
         internal_static_Egress_descriptor = getDescriptor().getMessageTypes().get(11);
         internal_static_Egress_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
@@ -27325,10 +28209,12 @@ public final class DataPlaneContract {
                     "ConsumerGroup",
                     "Destination",
                     "DestinationCACerts",
+                    "DestinationAudience",
                     "ReplyUrl",
                     "ReplyToOriginalTopic",
                     "DiscardReply",
                     "ReplyUrlCACerts",
+                    "ReplyUrlAudience",
                     "Filter",
                     "Uid",
                     "EgressConfig",
@@ -27338,6 +28224,7 @@ public final class DataPlaneContract {
                     "DialectedFilter",
                     "VReplicas",
                     "FeatureFlags",
+                    "OidcServiceAccountName",
                     "ReplyStrategy",
                 });
         internal_static_EgressFeatureFlags_descriptor =
@@ -27350,7 +28237,7 @@ public final class DataPlaneContract {
         internal_static_Ingress_descriptor = getDescriptor().getMessageTypes().get(13);
         internal_static_Ingress_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Ingress_descriptor, new java.lang.String[] {
-                    "ContentMode", "Path", "Host", "EnableAutoCreateEventTypes",
+                    "ContentMode", "Path", "Host", "EnableAutoCreateEventTypes", "Audience",
                 });
         internal_static_Reference_descriptor = getDescriptor().getMessageTypes().get(14);
         internal_static_Reference_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
