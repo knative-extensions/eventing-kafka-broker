@@ -105,7 +105,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
+									ConsumerGroup: triggerConsumerGroup,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
@@ -127,7 +127,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(TriggerUUID),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),

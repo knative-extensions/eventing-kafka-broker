@@ -18,7 +18,13 @@ package broker
 
 import (
 	"context"
+	"fmt"
+	"net"
+	"net/http"
 	"time"
+
+	"knative.dev/eventing/pkg/eventingtls"
+	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
@@ -115,7 +121,19 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	reconciler.IPsLister = prober.NewIPListerWithMapping()
 
-	reconciler.Prober, err = prober.NewCompositeNoTLS(ctx, env.IngressPodPort, reconciler.IPsLister.List, impl.EnqueueKey)
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialTLSContext = func(ctx context.Context, net, addr string) (net.Conn, error) {
+		clientConfig := eventingtls.NewDefaultClientConfig()
+		clientConfig.TrustBundleConfigMapLister = configmapInformer.Lister().ConfigMaps(reconciler.SystemNamespace)
+
+		tlsConfig, err := eventingtls.GetTLSClientConfig(clientConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get TLS client config: %w", err)
+		}
+		return network.DialTLSWithBackOff(ctx, net, addr, tlsConfig)
+	}
+
+	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, env.IngressPodPort, env.IngressPodTlsPort, reconciler.IPsLister.List, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}

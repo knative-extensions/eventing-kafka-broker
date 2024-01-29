@@ -18,11 +18,6 @@ package prober
 
 import (
 	"context"
-	"net/http"
-)
-
-var (
-	emptyCaCerts = ""
 )
 
 type compositeProber struct {
@@ -33,21 +28,15 @@ type compositeProber struct {
 // NewComposite creates a composite prober.
 //
 // It reports status changes using the provided EnqueueFunc.
-func NewComposite(ctx context.Context, httpPort string, httpsPort string, IPsLister IPsLister, enqueue EnqueueFunc, caCerts *string) (NewProber, error) {
-	httpProber := NewAsync(ctx, http.DefaultClient, httpPort, IPsLister, enqueue)
-	httpsProber, err := NewAsyncWithTLS(ctx, httpsPort, IPsLister, enqueue, caCerts)
-	if err != nil {
-		return nil, err
-	}
+func NewComposite(ctx context.Context, client httpClient, httpPort string, httpsPort string, IPsLister IPsLister, enqueue EnqueueFunc) (NewProber, error) {
+
+	httpProber := NewAsync(ctx, client, httpPort, IPsLister, enqueue)
+	httpsProber := NewAsync(ctx, client, httpsPort, IPsLister, enqueue)
+
 	return &compositeProber{
 		httpProber:  httpProber,
 		httpsProber: httpsProber,
 	}, nil
-}
-
-// NewCompositeNoTLS creates a composite prober which will fail if it attempts to probe an https address
-func NewCompositeNoTLS(ctx context.Context, httpPort string, IPsLister IPsLister, enqueue EnqueueFunc) (NewProber, error) {
-	return NewComposite(ctx, httpPort, "443", IPsLister, enqueue, &emptyCaCerts)
 }
 
 func (c *compositeProber) Probe(ctx context.Context, addressable ProberAddressable, expected Status) Status {
@@ -67,10 +56,4 @@ func (c *compositeProber) Probe(ctx context.Context, addressable ProberAddressab
 		}
 	}
 	return expected
-}
-
-func (c *compositeProber) RotateRootCaCerts(caCerts *string) error {
-	// we don't need to rotate the certs on the http prober as it isn't using them
-	err := c.httpsProber.rotateRootCaCerts(caCerts)
-	return err
 }

@@ -26,6 +26,7 @@ import (
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"knative.dev/eventing/test/rekt/resources/channel_impl"
 
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/pkg/test/zipkin"
@@ -41,6 +42,9 @@ var global environment.GlobalEnvironment
 // TestMain is the first entry point for `go test`.
 func TestMain(m *testing.M) {
 	global = environment.NewStandardGlobalEnvironment()
+
+	channel_impl.EnvCfg.ChannelGK = "KafkaChannel.messaging.knative.dev"
+	channel_impl.EnvCfg.ChannelV = "v1beta1"
 
 	// Run the tests.
 	os.Exit(func() int {

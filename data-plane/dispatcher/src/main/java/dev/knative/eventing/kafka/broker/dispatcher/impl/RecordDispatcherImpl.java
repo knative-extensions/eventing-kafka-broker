@@ -54,9 +54,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class implements the core algorithm of the Dispatcher (see {@link
- * RecordDispatcherImpl#dispatch(KafkaConsumerRecord)}).
+ * RecordDispatcherImpl#dispatch(ConsumerRecord)}).
  *
- * @see RecordDispatcherImpl#dispatch(KafkaConsumerRecord)
+ * @see RecordDispatcherImpl#dispatch(ConsumerRecord)
  */
 public class RecordDispatcherImpl implements RecordDispatcher {
 

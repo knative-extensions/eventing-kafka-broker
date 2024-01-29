@@ -20,12 +20,14 @@ import (
 	"context"
 	"log"
 
-	"knative.dev/pkg/injection"
-	"knative.dev/pkg/signals"
-
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/injection"
 	"knative.dev/pkg/injection/sharedmain"
+	"knative.dev/pkg/signals"
+
+	"knative.dev/eventing/pkg/eventingtls"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -58,7 +60,12 @@ func main() {
 		log.Fatal("cannot process environment variables with prefix SINK", err)
 	}
 
-	sharedmain.MainNamed(signals.NewContext(), component,
+	ctx := signals.NewContext()
+	ctx = filteredFactory.WithSelectors(ctx,
+		eventingtls.TrustBundleLabelSelector,
+	)
+
+	sharedmain.MainNamed(ctx, component,
 
 		// Broker controller
 		injection.NamedControllerConstructor{

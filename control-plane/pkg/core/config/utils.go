@@ -18,12 +18,15 @@ package config
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"math"
 
 	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	duck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -100,6 +103,25 @@ func EgressConfigFromDelivery(
 	}
 
 	return egressConfig, nil
+}
+
+func TrustBundles(lister corev1listers.ConfigMapNamespaceLister) ([]string, error) {
+	cms, err := lister.List(eventingtls.TrustBundleSelector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list trust bundles ConfigMaps: %w", err)
+	}
+
+	cp := x509.NewCertPool()
+	trustBundles := make([]string, 0, len(cms))
+	for _, cm := range cms {
+		for _, v := range cm.Data {
+			// Valid certs as the data plane fails when invalid PEM are provided
+			if ok := cp.AppendCertsFromPEM([]byte(v)); ok {
+				trustBundles = append(trustBundles, v)
+			}
+		}
+	}
+	return trustBundles, nil
 }
 
 // BackoffPolicyFromString returns the BackoffPolicy from the given string.

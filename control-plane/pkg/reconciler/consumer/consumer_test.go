@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
@@ -56,6 +57,10 @@ var (
 	defaultContractFeatureFlags = &contract.EgressFeatureFlags{
 		EnableRateLimiter:            false,
 		EnableOrderedExecutorMetrics: false,
+	}
+
+	DefaultEnv = &config.Env{
+		SystemNamespace: "knative-eventing",
 	}
 )
 
@@ -832,6 +837,7 @@ func TestReconcileKind(t *testing.T) {
 						c.MarkReconcileContractSucceeded()
 						c.MarkBindSucceeded()
 						c.Status.SubscriberURI, _ = apis.ParseURL(ServiceHTTPSURL)
+						c.Status.SubscriberCACerts = pointer.String(string(eventingtlstesting.CA))
 						return c
 					}(),
 				},
@@ -839,17 +845,18 @@ func TestReconcileKind(t *testing.T) {
 		},
 	}
 
-	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
+	table.Test(t, NewFactory(DefaultEnv, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := &Reconciler{
-			SerDe:               contract.FormatSerDe{Format: contract.Json},
-			Resolver:            resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
-			Tracker:             &FakeTracker{},
-			ConsumerGroupLister: listers.GetConsumerGroupLister(),
-			SecretLister:        listers.GetSecretLister(),
-			PodLister:           listers.GetPodLister(),
-			KubeClient:          kubeclient.Get(ctx),
-			KafkaFeatureFlags:   configapis.DefaultFeaturesConfig(),
+			SerDe:                      contract.FormatSerDe{Format: contract.Json},
+			Resolver:                   resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
+			Tracker:                    &FakeTracker{},
+			ConsumerGroupLister:        listers.GetConsumerGroupLister(),
+			SecretLister:               listers.GetSecretLister(),
+			PodLister:                  listers.GetPodLister(),
+			KubeClient:                 kubeclient.Get(ctx),
+			KafkaFeatureFlags:          configapis.DefaultFeaturesConfig(),
+			TrustBundleConfigMapLister: listers.GetConfigMapLister().ConfigMaps(env.SystemNamespace),
 		}
 
 		return creconciler.NewReconciler(

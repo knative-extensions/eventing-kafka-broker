@@ -19,6 +19,7 @@ package prober
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"sync"
@@ -44,8 +45,6 @@ type EnqueueFunc func(key types.NamespacedName)
 type prober interface {
 	// Probe probes the provided Addressable resource and returns its Status.
 	probe(ctx context.Context, addressable proberAddressable, expected Status) Status
-	// RotateRootCaCerts rotates the CA certs used to make http requests
-	rotateRootCaCerts(caCerts *string) error
 }
 
 // ProberAddressable contains addressable resource data for the new prober
@@ -60,8 +59,6 @@ type ProberAddressable struct {
 type NewProber interface {
 	// Probe probes the provided NewAddressable resource and returns its Status
 	Probe(ctx context.Context, addressable ProberAddressable, expected Status) Status
-	// RotateRootCaCerts rotates the CA certs used to make http requests
-	RotateRootCaCerts(caCerts *string) error
 }
 
 // Func type is an adapter to allow the use of
@@ -75,19 +72,10 @@ func (p Func) probe(ctx context.Context, addressable proberAddressable, expected
 	return p(ctx, addressable, expected)
 }
 
-// RotateRootCaCerts is an empty implementation to complete the Prober interface for Func.
-func (p Func) rotateRootCaCerts(caCerts *string) error {
-	return nil
-}
-
 type NewFunc func(ctx context.Context, addressable ProberAddressable, expected Status) Status
 
 func (p NewFunc) Probe(ctx context.Context, addressable ProberAddressable, expected Status) Status {
 	return p(ctx, addressable, expected)
-}
-
-func (p NewFunc) RotateRootCaCerts(caCerts *string) error {
-	return nil
 }
 
 // httpClient interface is an interface for an HTTP client.
@@ -117,11 +105,14 @@ func probe(ctx context.Context, client httpClient, logger *zap.Logger, address s
 		logger.Error("Failed probe", zap.Error(err))
 		return StatusUnknownErr
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		logger.Info("Resource not ready", zap.Int("statusCode", response.StatusCode))
 		return StatusNotReady
 	}
+
+	_, _ = io.Copy(io.Discard, response.Body)
 
 	return StatusReady
 }
