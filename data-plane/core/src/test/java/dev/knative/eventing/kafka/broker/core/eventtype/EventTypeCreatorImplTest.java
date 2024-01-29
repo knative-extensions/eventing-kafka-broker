@@ -145,7 +145,7 @@ public class EventTypeCreatorImplTest {
                 .compose((ignored) -> {
                     try {
                         // make sure that the informer has time to resync, the webhook doens't seem to run in the tests
-                        Thread.sleep(200);
+                        Thread.sleep(2000);
                     } catch (InterruptedException e) {
                         vertxTestContext.failNow(e);
                     }
