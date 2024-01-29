@@ -19,16 +19,16 @@ package channel
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
-	"strconv"
-	"time"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/apis/feature"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/network"

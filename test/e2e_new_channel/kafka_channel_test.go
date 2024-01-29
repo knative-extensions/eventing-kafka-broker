@@ -20,10 +20,11 @@
 package e2e_new_channel
 
 import (
-	"knative.dev/eventing/test/rekt/features/channel"
-	"knative.dev/eventing/test/rekt/features/oidc"
 	"testing"
 	"time"
+
+	"knative.dev/eventing/test/rekt/features/channel"
+	"knative.dev/eventing/test/rekt/features/oidc"
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
