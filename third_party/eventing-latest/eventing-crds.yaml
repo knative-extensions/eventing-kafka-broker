@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -301,7 +301,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -504,7 +504,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -837,7 +837,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1007,7 +1007,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1015,13 +1015,13 @@ spec:
     - &version
       name: v1beta2
       served: true
-      storage: false
+      storage: true
       subresources:
         status: {}
       schema:
         openAPIV3Schema:
           type: object
-          description: 'EventType represents a type of event that can be consumed from a Broker.'
+          description: 'EventType represents a type of event that can be consumed from a resource.'
           properties:
             spec:
               description: 'Spec defines the desired state of the EventType.'
@@ -1030,7 +1030,7 @@ spec:
                 broker:
                   type: string
                 reference:
-                  description: Reference Broker. For example
+                  description: Reference a resource. For example, Broker.
                   type: object
                   properties:
                     apiVersion:
@@ -1127,7 +1127,7 @@ spec:
     - !!merge <<: *version
       name: v1beta1
       served: true
-      storage: true
+      storage: false
       # This indicates the v1beta1 version of the custom resource is deprecated.
       # API requests to this version receive a warning header in the server response.
       deprecated: true
@@ -1173,7 +1173,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -1462,7 +1462,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -1678,7 +1678,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2045,7 +2045,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -2255,7 +2255,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2509,7 +2509,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240116-598e866a3"
+    app.kubernetes.io/version: "20240127-0340aa524"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
