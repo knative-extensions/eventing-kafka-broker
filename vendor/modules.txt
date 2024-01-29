@@ -1459,6 +1459,7 @@ knative.dev/eventing/test/rekt/features/channel
 knative.dev/eventing/test/rekt/features/featureflags
 knative.dev/eventing/test/rekt/features/knconf
 knative.dev/eventing/test/rekt/features/new_trigger_filters
+knative.dev/eventing/test/rekt/features/oidc
 knative.dev/eventing/test/rekt/features/source
 knative.dev/eventing/test/rekt/features/trigger
 knative.dev/eventing/test/rekt/resources/account_role
