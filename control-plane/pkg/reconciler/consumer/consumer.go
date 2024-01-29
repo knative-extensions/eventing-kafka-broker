@@ -180,6 +180,9 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	if destinationAddr.CACerts != nil {
 		egress.DestinationCACerts = *destinationAddr.CACerts
 	}
+	if destinationAddr.Audience != nil {
+		egress.DestinationAudience = *destinationAddr.Audience
+	}
 
 	if c.Spec.Configs.KeyType != nil {
 		egress.KeyType = coreconfig.KeyTypeFromString(*c.Spec.Configs.KeyType)
@@ -293,6 +296,9 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 		}
 		if destination.CACerts != nil {
 			egress.ReplyUrlCACerts = *destination.CACerts
+		}
+		if destination.Audience != nil {
+			egress.ReplyUrlAudience = *destination.Audience
 		}
 		return nil
 	}

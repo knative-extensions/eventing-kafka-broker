@@ -703,6 +703,10 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		}
 	}
 
+	if channel.Status.Address != nil && channel.Status.Address.Audience != nil {
+		resource.Ingress.Audience = *channel.Status.Address.Audience
+	}
+
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err

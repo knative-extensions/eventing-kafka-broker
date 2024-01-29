@@ -77,6 +77,9 @@ func EgressConfigFromDelivery(
 		if deadLetterSinkAddr.CACerts != nil {
 			egressConfig.DeadLetterCACerts = *deadLetterSinkAddr.CACerts
 		}
+		if deadLetterSinkAddr.Audience != nil {
+			egressConfig.DeadLetterAudience = *deadLetterSinkAddr.Audience
+		}
 	}
 
 	if delivery.Retry != nil {
