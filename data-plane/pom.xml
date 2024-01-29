@@ -470,6 +470,10 @@
                   <architecture>s390x</architecture>
                   <os>linux</os>
                 </platform>
+                <platform>
+                  <architecture>ppc64le</architecture>
+                  <os>linux</os>
+                </platform>
               </platforms>
             </from>
           </configuration>
