@@ -28,5 +28,4 @@ data:
   kreference-group: "disabled"
   kreference-mapping: "disabled"
   new-trigger-filters: "enabled"
-  strict-subscriber: "disabled"
   transport-encryption: "Strict"

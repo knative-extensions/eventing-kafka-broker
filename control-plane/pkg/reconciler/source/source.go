@@ -245,7 +245,10 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, ks *sources.Kaf
 			)
 		}
 	}
-	ks.Status.MarkSink(cg.Status.SubscriberURI)
+	ks.Status.MarkSink(&duckv1.Addressable{
+		URL:     cg.Status.SubscriberURI,
+		CACerts: cg.Status.SubscriberCACerts,
+	})
 	ks.Status.Placeable = cg.Status.Placeable
 	if cg.Status.Replicas != nil {
 		ks.Status.Consumers = *cg.Status.Replicas

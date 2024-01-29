@@ -497,8 +497,14 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 			if c.Status.SubscriberURI != nil {
 				cg.Status.SubscriberURI = c.Status.SubscriberURI
 			}
+			if c.Status.SubscriberCACerts != nil {
+				cg.Status.SubscriberCACerts = c.Status.SubscriberCACerts
+			}
 			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
 				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
+			}
+			if c.Status.DeliveryStatus.DeadLetterSinkCACerts != nil {
+				cg.Status.DeliveryStatus.DeadLetterSinkCACerts = c.Status.DeadLetterSinkCACerts
 			}
 		} else if condition == nil { // Propagate only a single false condition
 			cond := c.GetConditionSet().Manage(c.GetStatus()).GetTopLevelCondition()
@@ -512,11 +518,12 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 	recordReadyReplicasMetric(ctx, cg)
 
 	if cg.Spec.Replicas != nil && *cg.Spec.Replicas == 0 {
-		subscriber, err := r.Resolver.URIFromDestinationV1(ctx, cg.Spec.Template.Spec.Subscriber, cg)
+		subscriber, err := r.Resolver.AddressableFromDestinationV1(ctx, cg.Spec.Template.Spec.Subscriber, cg)
 		if err != nil {
 			return condition, fmt.Errorf("failed to resolve subscribed URI: %w", err)
 		}
-		cg.Status.SubscriberURI = subscriber
+		cg.Status.SubscriberURI = subscriber.URL
+		cg.Status.SubscriberCACerts = subscriber.CACerts
 	}
 
 	return condition, nil

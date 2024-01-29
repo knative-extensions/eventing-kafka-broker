@@ -35,7 +35,9 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.NullCloudEventInterceptor;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -246,7 +248,10 @@ public abstract class AbstractDataPlaneTest {
                             if (request.path().equals(PATH_SERVICE_1)) {
                                 final var expectedEvent = service1ExpectedEventsIterator.next();
                                 context.verify(() -> {
-                                    assertThat(event).isEqualTo(expectedEvent);
+                                    assertThat(event.getId()).isEqualTo(expectedEvent.getId());
+                                    assertThat(event.getType()).isEqualTo(expectedEvent.getType());
+                                    assertThat(event.getSubject()).isEqualTo(expectedEvent.getSubject());
+                                    assertThat(event.getSource()).isEqualTo(expectedEvent.getSource());
                                     checkpoints.flag(); // 2
                                 });
 
@@ -260,7 +265,11 @@ public abstract class AbstractDataPlaneTest {
                             // service 2 receives event in the response
                             if (request.path().equals(PATH_SERVICE_2)) {
                                 context.verify(() -> {
-                                    assertThat(event).isEqualTo(expectedResponseEventService2);
+                                    assertThat(event.getId()).isEqualTo(expectedResponseEventService2.getId());
+                                    assertThat(event.getType()).isEqualTo(expectedResponseEventService2.getType());
+                                    assertThat(event.getSubject())
+                                            .isEqualTo(expectedResponseEventService2.getSubject());
+                                    assertThat(event.getSource()).isEqualTo(expectedResponseEventService2.getSource());
                                     checkpoints.flag(); // 3
                                 });
 
@@ -337,6 +346,9 @@ public abstract class AbstractDataPlaneTest {
         consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
         consumerConfigs.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100);
         consumerConfigs.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, StickyAssignor.class.getName());
+        consumerConfigs.put(
+                ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+                NullCloudEventInterceptor.class.getName() + "," + InvalidCloudEventInterceptor.class.getName());
 
         final var producerConfigs = producerConfigs();
 

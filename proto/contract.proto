@@ -78,6 +78,9 @@ message EgressConfig {
   // Dead Letter CA Cert is the CA Cert used for HTTPS communication through dead letter
   string deadLetterCACerts = 6;
 
+  // Dead Letter Audience is the OIDC audience of the dead letter
+  string deadLetterAudience = 7;
+
   // retry is the minimum number of retries the sender should attempt when
   // sending an event before moving it to the dead letter sink.
   //
@@ -117,6 +120,9 @@ message Egress {
   // destination CA Cert is the CA Cert used for HTTPS communication through destination
   string destinationCACerts = 15;
 
+  // OIDC audience of the destination
+  string destinationAudience = 17;
+
   oneof replyStrategy {
     // Send the response to an url
     string replyUrl = 3;
@@ -130,6 +136,9 @@ message Egress {
 
   // replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
   string replyUrlCACerts = 16;
+
+  // OIDC audience of the replyUrl
+  string replyUrlAudience = 18;
 
   // A filter for performing exact match against Cloud Events attributes
   Filter filter = 5;
@@ -164,6 +173,9 @@ message Egress {
 
   // Egress feature flags.
   EgressFeatureFlags featureFlags = 14;
+
+  // Name of the service account to use for OIDC authentication.
+  string oidcServiceAccountName = 19;
 }
 
 message EgressFeatureFlags {
@@ -200,6 +212,8 @@ message Ingress {
   // whether to autocreate event types
   bool enableAutoCreateEventTypes = 4;
 
+  // OIDC audience of this ingress
+  string audience = 5;
 }
 
 // Kubernetes resource reference.

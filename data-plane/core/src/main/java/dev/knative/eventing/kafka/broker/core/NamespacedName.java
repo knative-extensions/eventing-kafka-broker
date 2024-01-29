@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher;
-
-import io.cloudevents.CloudEvent;
-import java.util.function.Function;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+package dev.knative.eventing.kafka.broker.core;
 
 /**
- * A CloudEventMutator returns a new {@link CloudEvent} created by mutating the CloudEvent in a
- * given {@link ConsumerRecord}.
+ * NamespacedName comprises a resource name, with a namespace,
+ * rendered as "<namespace>/<name>".
+ * @param namespace
+ * @param name
  */
-@FunctionalInterface
-public interface CloudEventMutator extends Function<ConsumerRecord<Object, CloudEvent>, CloudEvent> {}
+public record NamespacedName(String namespace, String name) {
+    @Override
+    public String toString() {
+        return namespace + "/" + name;
+    }
+}

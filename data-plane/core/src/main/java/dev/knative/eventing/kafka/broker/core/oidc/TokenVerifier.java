@@ -61,7 +61,7 @@ public class TokenVerifier {
 
     public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader.isEmpty()) {
+        if (authHeader == null || authHeader.isEmpty()) {
             return Future.failedFuture("Request didn't contain Authorization header"); // change to exception
         }
 
@@ -70,7 +70,6 @@ public class TokenVerifier {
         }
 
         String token = authHeader.substring("Bearer ".length());
-        logger.debug("Extracted token \"{}\" from request auth header \"{}\"", token, authHeader);
 
         return verify(token, expectedAudience);
     }
