@@ -36,7 +36,7 @@ func TestGetClient(t *testing.T) {
 
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
-	clients := &clientPool{
+	clients := &ClientPool{
 		Cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{}, nil
@@ -46,7 +46,7 @@ func TestGetClient(t *testing.T) {
 		},
 	}
 
-	client1, returnClient1, err := clients.get(ctx, []string{"localhost:9092"}, nil)
+	client1, returnClient1, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
 
 	assert.NoError(t, err)
 
@@ -54,7 +54,7 @@ func TestGetClient(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	client2, returnClient2, err := clients.get(ctx, []string{"localhost:9092"}, nil)
+	client2, returnClient2, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
 
 	assert.NoError(t, err)
 
@@ -62,7 +62,7 @@ func TestGetClient(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	client3, returnClient3, err := clients.get(ctx, []string{"localhost:9092"}, nil)
+	client3, returnClient3, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
 
 	controller, err = client3.Controller()
@@ -83,7 +83,7 @@ func TestGetClusterAdmin(t *testing.T) {
 
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
-	clients := &clientPool{
+	clients := &ClientPool{
 		Cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{}, nil
@@ -93,7 +93,7 @@ func TestGetClusterAdmin(t *testing.T) {
 		},
 	}
 
-	client1, returnClient1, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	client1, returnClient1, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 
 	assert.NoError(t, err)
 
@@ -101,7 +101,7 @@ func TestGetClusterAdmin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	client2, returnClient2, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	client2, returnClient2, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 
 	assert.NoError(t, err)
 
@@ -109,7 +109,7 @@ func TestGetClusterAdmin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	client3, returnClient3, err := clients.getClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	client3, returnClient3, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
 
 	topics, err = client3.ListTopics()

@@ -27,7 +27,6 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -114,6 +113,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		//KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName), //To be added with channel/v2 reconciler version only
 	}
 
+	clientPool := clientpool.Get(ctx)
+	clientPool.RegisterSecretInformer(ctx)
+
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
 		ConsumerLister:                     consumer.Get(ctx).Lister(),
@@ -123,10 +125,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		PodLister:                          podinformer.Get(ctx).Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
-		GetkafkaClient:                     clientpool.GetClient,
+		GetkafkaClient:                     clientPool.GetClient,
 		InitOffsetsFunc:                    offset.InitOffsets,
 		SystemNamespace:                    system.Namespace(),
-		GetKafkaClusterAdmin:               clientpool.GetClusterAdmin,
+		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
@@ -156,18 +158,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 			},
 		}
 	})
-
-	handleSecretUpdate := func(obj interface{}) {
-		if secret, ok := obj.(*corev1.Secret); ok {
-			err := clientpool.UpdateConnectionsWithSecret(secret)
-			if err != nil {
-				logger.Warn("failed to update the kafka client connections after secret change", err)
-			}
-
-		}
-	}
-
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(handleSecretUpdate))
 
 	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	r.EnqueueKey = func(key string) {

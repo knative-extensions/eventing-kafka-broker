@@ -30,21 +30,25 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 )
 
-var (
-	clients *clientPool
-)
+type KafkaClientKey struct{}
 
-func init() {
-	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](context.Background(), time.Minute*30)
+var ctxKey = KafkaClientKey{}
 
-	clients = &clientPool{
+func WithKafkaClientPool(ctx context.Context) context.Context {
+	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
+
+	clients := &ClientPool{
 		Cache:                     cache,
 		newSaramaClient:           sarama.NewClient,
 		newClusterAdminFromClient: sarama.NewClusterAdminFromClient,
 	}
+
+	return context.WithValue(ctx, ctxKey, clients)
 }
 
 // A comparable struct that includes the info we need to uniquely identify a kafka cluster admin
@@ -59,11 +63,12 @@ type client struct {
 	sarama.Client
 }
 
-type clientPool struct {
+type ClientPool struct {
 	lock sync.RWMutex
 	prober.Cache[clientKey, *client, struct{}]
 	newSaramaClient           kafka.NewClientFunc // use this to mock the function for tests
 	newClusterAdminFromClient kafka.NewClusterAdminFromClientFunc
+	registeredInformer        bool // use this to track whether the secret informer has been registered yet
 }
 
 type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error)
@@ -72,7 +77,7 @@ type ReturnClientFunc func(error)
 
 func NilReturnClientFunc(error) {}
 
-func (cp *clientPool) get(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
+func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
 	key := makeClusterAdminKey(bootstrapServers, secret)
 
@@ -167,7 +172,7 @@ func (key clientKey) getBootstrapServers() []string {
 	return strings.Split(key.bootstrapServers, ",")
 }
 
-func (cp *clientPool) makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
+func (cp *ClientPool) makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
 	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return nil, err
@@ -181,7 +186,7 @@ func (cp *clientPool) makeSaramaClient(bootstrapServers []string, secret *corev1
 	return saramaClient, nil
 }
 
-func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
+func (cp *ClientPool) UpdateConnectionsWithSecret(secret *corev1.Secret) error {
 	for _, key := range cp.Keys() {
 		if key.matchesSecret(secret) {
 			newClient, err := cp.makeSaramaClient(key.getBootstrapServers(), secret)
@@ -205,8 +210,8 @@ func (cp *clientPool) updateConnectionsWithSecret(secret *corev1.Secret) error {
 	return nil
 }
 
-func (cp *clientPool) getClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error) {
-	c, returnFunc, err := cp.get(ctx, bootstrapServers, secret)
+func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error) {
+	c, returnFunc, err := cp.GetClient(ctx, bootstrapServers, secret)
 	if err != nil {
 		return nil, NilReturnClientFunc, err
 	}
@@ -216,19 +221,26 @@ func (cp *clientPool) getClusterAdmin(ctx context.Context, bootstrapServers []st
 		return nil, NilReturnClientFunc, err
 	}
 	return ca, returnFunc, nil
-
 }
 
-func UpdateConnectionsWithSecret(secret *corev1.Secret) error {
-	return clients.updateConnectionsWithSecret(secret)
+func (cp *ClientPool) RegisterSecretInformer(ctx context.Context) {
+	cp.lock.Lock()
+	defer cp.lock.Unlock()
+
+	if cp.registeredInformer {
+		return
+	}
+
+	secretInfomer := secretinformer.Get(ctx)
+	secretInfomer.Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
+		if secret, ok := obj.(*corev1.Secret); ok {
+			cp.UpdateConnectionsWithSecret(secret)
+		}
+	}))
+
+	cp.registeredInformer = true
 }
 
-// GetClusterAdmin returns a sarama.ClusterAdmin along with a ReturnClientFunc. The ReturnClientFunc MUST be called by the caller.
-func GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error) {
-	return clients.getClusterAdmin(ctx, bootstrapServers, secret)
-}
-
-// GetClient returns a sarama.Client along with a ReturnClientFunc. The ReturnClientFunc MUST be called by the caller.
-func GetClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
-	return clients.get(ctx, bootstrapServers, secret)
+func Get(ctx context.Context) *ClientPool {
+	return ctx.Value(ctxKey).(*ClientPool)
 }

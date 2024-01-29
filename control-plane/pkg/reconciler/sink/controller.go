@@ -54,6 +54,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	configmapInformer := configmapinformer.Get(ctx)
 
+	clientPool := clientpool.Get(ctx)
+	clientPool.RegisterSecretInformer(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -66,7 +69,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
 		ConfigMapLister:      configmapInformer.Lister(),
-		GetKafkaClusterAdmin: clientpool.GetClusterAdmin,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		Env:                  configs,
 	}
 
@@ -134,20 +137,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		corev1.SchemeGroupVersion.WithKind("Secret"),
 	)
 
-	handleSecretUpdate := func(obj interface{}) {
-		if secret, ok := obj.(*corev1.Secret); ok {
-			err := clientpool.UpdateConnectionsWithSecret(secret)
-			if err != nil {
-				logger.Warn("failed to update the kafka client connections after secret change", err)
-			}
-		}
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		ensureTypeMeta(obj)
-	}
-
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(handleSecretUpdate))
+	}))
 
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,

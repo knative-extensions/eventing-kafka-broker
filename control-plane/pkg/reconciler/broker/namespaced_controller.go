@@ -86,6 +86,9 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		logger.Fatal("unable to create Manifestival client-go client", zap.Error(err))
 	}
 
+	clientPool := clientpool.Get(ctx)
+	clientPool.RegisterSecretInformer(ctx)
+
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -99,7 +102,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			DispatcherLabel:              base.BrokerDispatcherLabel,
 			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
-		GetKafkaClusterAdmin:               clientpool.GetClusterAdmin,
+		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		NamespaceLister:                    namespaceinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapInformer.Lister(),
 		ServiceAccountLister:               serviceaccountinformer.Get(ctx).Lister(),

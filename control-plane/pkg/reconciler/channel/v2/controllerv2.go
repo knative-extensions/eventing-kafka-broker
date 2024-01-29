@@ -64,6 +64,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
 
+	clientPool := clientpool.Get(ctx)
+	clientPool.RegisterSecretInformer(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -74,7 +77,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
 		},
-		GetKafkaClusterAdmin: clientpool.GetClusterAdmin,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		Env:                  configs,
 		ConfigMapLister:      configmapInformer.Lister(),
 		ServiceLister:        serviceinformer.Get(ctx).Lister(),
@@ -125,17 +128,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler.Tracker = impl.Tracker
 
-	handleSecretUpdate := func(obj interface{}) {
-		if secret, ok := obj.(*corev1.Secret); ok {
-			err := clientpool.UpdateConnectionsWithSecret(secret)
-			if err != nil {
-				logger.Warn("failed to update the kafka client connections after secret change", err)
-			}
-		}
-		reconciler.Tracker.OnChanged(obj)
-	}
-
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(handleSecretUpdate))
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects

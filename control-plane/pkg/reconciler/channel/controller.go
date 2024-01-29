@@ -63,6 +63,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 
+	clientPool := clientpool.Get(ctx)
+	clientPool.RegisterSecretInformer(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -76,8 +79,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
 		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
-		GetKafkaClient:       clientpool.GetClient,
-		GetKafkaClusterAdmin: clientpool.GetClusterAdmin,
+		GetKafkaClient:       clientPool.GetClient,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		InitOffsetsFunc:      offset.InitOffsets,
 		Env:                  configs,
 		ConfigMapLister:      configmapInformer.Lister(),
@@ -155,18 +158,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler.Tracker = impl.Tracker
 
-	handleSecretUpdate := func(obj interface{}) {
-		if secret, ok := obj.(*corev1.Secret); ok {
-			err := clientpool.UpdateConnectionsWithSecret(secret)
-			if err != nil {
-				logger.Warn("failed to update the kafka client connections after secret change", err)
-			}
-
-		}
-		reconciler.Tracker.OnChanged(obj)
-	}
-
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(handleSecretUpdate))
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects

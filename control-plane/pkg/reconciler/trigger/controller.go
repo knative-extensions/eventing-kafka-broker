@@ -65,6 +65,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
 
+	clientPool := clientpool.Get(ctx)
+	clientPool.RegisterSecretInformer(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -88,8 +91,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		BrokerClass:               kafka.BrokerClass,
 		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 		KafkaFeatureFlags:         apisconfig.DefaultFeaturesConfig(),
-		GetKafkaClient:            clientpool.GetClient,
-		GetKafkaClusterAdmin:      clientpool.GetClusterAdmin,
+		GetKafkaClient:            clientPool.GetClient,
+		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
 		InitOffsetsFunc:           offset.InitOffsets,
 	}
 
