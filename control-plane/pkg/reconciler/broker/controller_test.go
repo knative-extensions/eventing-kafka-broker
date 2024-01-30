@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
@@ -74,6 +75,8 @@ func TestNewController(t *testing.T) {
 			},
 		},
 	)
+
+	ctx = clientpool.WithKafkaClientPool(ctx)
 	dynamicScheme := runtime.NewScheme()
 	_ = fakekubeclientset.AddToScheme(dynamicScheme)
 
