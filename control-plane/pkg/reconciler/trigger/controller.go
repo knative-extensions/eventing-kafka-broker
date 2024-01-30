@@ -124,6 +124,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		impl.GlobalResync(triggerInformer.Informer())
 	}
 
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
+	featureStore.WatchConfigs(watcher)
+
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
