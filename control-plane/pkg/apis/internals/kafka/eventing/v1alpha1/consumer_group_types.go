@@ -66,6 +66,10 @@ func (cg *ConsumerGroup) GetKey() types.NamespacedName {
 
 // GetVReplicas implements scheduler.VPod interface.
 func (cg *ConsumerGroup) GetVReplicas() int32 {
+	if cg.Spec.Replicas == nil {
+		return 1
+	}
+
 	return *cg.Spec.Replicas
 }
 
@@ -114,6 +118,11 @@ type ConsumerGroupStatus struct {
 	// SubscriberURI is the resolved URI of the receiver for this Trigger.
 	// +optional
 	SubscriberURI *apis.URL `json:"subscriberUri,omitempty"`
+
+	// SubscriberCACerts are Certification Authority (CA) certificates in PEM format
+	// according to https://www.rfc-editor.org/rfc/rfc7468.
+	// +optional
+	SubscriberCACerts *string `json:"subscriberCACerts,omitempty"`
 
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.

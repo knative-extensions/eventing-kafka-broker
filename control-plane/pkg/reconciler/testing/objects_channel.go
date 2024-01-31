@@ -52,6 +52,7 @@ const (
 	ChannelUUID             = "c1234567-8901-2345-6789-123456789101"
 	ChannelBootstrapServers = "kafka-1:9092,kafka-2:9093"
 	ChannelServiceName      = "kc-kn-channel"
+	ChannelAudience         = "messaging.knative.dev/kafkachannel/" + ChannelNamespace + "/" + ChannelName
 
 	Subscription1Name     = "sub-1"
 	Subscription2Name     = "sub-2"

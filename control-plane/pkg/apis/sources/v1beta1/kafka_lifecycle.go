@@ -22,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"knative.dev/eventing/pkg/apis/duck"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
@@ -86,9 +87,10 @@ func (s *KafkaSourceStatus) InitializeConditions() {
 }
 
 // MarkSink sets the condition that the source has a sink configured.
-func (s *KafkaSourceStatus) MarkSink(uri *apis.URL) {
-	s.SinkURI = uri
-	if !uri.IsEmpty() {
+func (s *KafkaSourceStatus) MarkSink(addr *duckv1.Addressable) {
+	if addr.URL != nil && !addr.URL.IsEmpty() {
+		s.SinkURI = addr.URL
+		s.SinkCACerts = addr.CACerts
 		KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionSinkProvided)
 	} else {
 		KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")

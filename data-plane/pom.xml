@@ -58,7 +58,7 @@
     <awaitility.version>4.2.0</awaitility.version>
     <junit.jupiter.version>5.10.1</junit.jupiter.version>
     <mokito.junit.jupiter.version>5.8.0</mokito.junit.jupiter.version>
-    <fabric8.kubernetes.version>6.7.2</fabric8.kubernetes.version>
+    <fabric8.kubernetes.version>6.10.0</fabric8.kubernetes.version>
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.4.0</jib.version>
@@ -207,6 +207,11 @@
             <artifactId>kubernetes-httpclient-okhttp</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.fabric8</groupId>
+        <artifactId>kubernetes-client-api</artifactId>
+        <version>${fabric8.kubernetes.version}</version>
       </dependency>
       <dependency>
         <groupId>io.fabric8</groupId>
@@ -463,6 +468,10 @@
                 </platform>
                 <platform>
                   <architecture>s390x</architecture>
+                  <os>linux</os>
+                </platform>
+                <platform>
+                  <architecture>ppc64le</architecture>
                   <os>linux</os>
                 </platform>
               </platforms>

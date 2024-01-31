@@ -24,6 +24,10 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/utils/pointer"
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"github.com/IBM/sarama"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -34,13 +38,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
 
-	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
+
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/apis"
@@ -48,6 +52,8 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
+
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
@@ -275,18 +281,27 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
+	featureFlags := feature.FromContext(ctx)
+	var audience *string
+	if featureFlags.IsOIDCAuthentication() {
+		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
+		audience = nil
+	}
+
 	var addressableStatus duckv1.AddressStatus
 	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
 	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
-	transportEncryptionFlags := feature.FromContext(ctx)
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	if featureFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
 		}
 
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channelService, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -294,7 +309,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		//   - http address with path-based routing
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
 		addressableStatus.Address = &httpAddress
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	} else if featureFlags.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
 		// - status.addresses:
@@ -304,11 +319,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channelService, caCerts)
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 		addressableStatus.Address = &httpsAddress
 	} else {
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
@@ -418,7 +433,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(r.IngressHost, channel)
+	address := receiver.HTTPAddress(r.IngressHost, nil, channel)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
@@ -576,7 +591,7 @@ func (r *Reconciler) reconcileSubscribers(ctx context.Context, channel *messagin
 	return allReady, globalErr
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string, secret *corev1.Secret) (*internalscg.ConsumerGroup, error) {
+func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messagingv1beta1.KafkaChannel, s *v1.SubscriberSpec, topicName string, bootstrapServers []string, secret *corev1.Secret) (*internalscg.ConsumerGroup, error) {
 
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
@@ -741,7 +756,7 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, chann
 	}, nil
 }
 
-func (r Reconciler) finalizeConsumerGroup(ctx context.Context, cg *internalscg.ConsumerGroup) error {
+func (r *Reconciler) finalizeConsumerGroup(ctx context.Context, cg *internalscg.ConsumerGroup) error {
 	dOpts := metav1.DeleteOptions{
 		Preconditions: &metav1.Preconditions{UID: &cg.UID},
 	}
@@ -767,14 +782,14 @@ func (r *Reconciler) getSubscriptionAnnotations(channel *messagingv1beta1.KafkaC
 	return nil, apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
 }
 
-func (r *Reconciler) getCaCerts() (string, error) {
+func (r *Reconciler) getCaCerts() (*string, error) {
 	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(kafkaChannelTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
+		return nil, fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), kafkaChannelTLSSecretName, caCertsSecretKey)
+		return nil, nil
 	}
-	return string(caCerts), nil
+	return pointer.String(string(caCerts)), nil
 }

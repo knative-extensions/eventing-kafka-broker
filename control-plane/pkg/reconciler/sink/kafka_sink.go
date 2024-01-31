@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -36,6 +37,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -44,7 +47,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 const (
@@ -172,6 +174,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ct = &contract.Contract{}
 	}
 
+	if err := r.setTrustBundles(ct); err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+
 	logger.Debug(
 		"Got contract data from config map",
 		zap.Any("contract", ct),
@@ -249,8 +255,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			return err
 		}
 
-		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -267,14 +273,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		if err != nil {
 			return err
 		}
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
 
 		addressableStatus.Address = &httpsAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
 		// Disabled mode:
 		// Unchange
-		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
 
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
@@ -351,7 +357,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(r.IngressHost, ks)
+	address := receiver.HTTPAddress(r.IngressHost, nil, ks)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
@@ -420,14 +426,23 @@ func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
 	}
 }
 
-func (r *Reconciler) getCaCerts() (string, error) {
+func (r *Reconciler) getCaCerts() (*string, error) {
 	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(sinkIngressTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, sinkIngressTLSSecretName, err)
+		return nil, fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, sinkIngressTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, sinkIngressTLSSecretName, caCertsSecretKey)
+		return nil, nil
 	}
-	return string(caCerts), nil
+	return pointer.String(string(caCerts)), nil
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
+	if err != nil {
+		return fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	ct.TrustBundles = tb
+	return nil
 }

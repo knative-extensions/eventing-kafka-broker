@@ -22,6 +22,10 @@ import (
 	"strconv"
 	"time"
 
+	"k8s.io/utils/pointer"
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -232,6 +236,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
+	if err := r.setTrustBundles(ct); err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
 	if err != nil {
@@ -308,18 +316,27 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
+	featureFlags := feature.FromContext(ctx)
+	var audience *string
+	if featureFlags.IsOIDCAuthentication() {
+		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
+		audience = nil
+	}
+
 	var addressableStatus duckv1.AddressStatus
 	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
 	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
-	transportEncryptionFlags := feature.FromContext(ctx)
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	if featureFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
 		}
 
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channel, caCerts)
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -327,7 +344,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		//   - http address with path-based routing
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
 		addressableStatus.Address = &httpAddress
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	} else if featureFlags.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
 		// - status.addresses:
@@ -337,11 +354,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channel, caCerts)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 		addressableStatus.Address = &httpsAddress
 	} else {
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
@@ -428,7 +445,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(r.IngressHost, channel)
+	address := receiver.HTTPAddress(r.IngressHost, nil, channel)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
@@ -598,6 +615,9 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		Uid:           string(subscriber.UID),
 		ReplyStrategy: &contract.Egress_DiscardReply{},
 	}
+	if subscriber.SubscriberCACerts != nil && *subscriber.SubscriberCACerts != "" {
+		egress.DestinationCACerts = *subscriber.SubscriberCACerts
+	}
 
 	if subscriptionName != "" {
 		egress.Reference = &contract.Reference{
@@ -610,6 +630,9 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	if subscriber.ReplyURI != nil {
 		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
 			ReplyUrl: subscriber.ReplyURI.String(),
+		}
+		if subscriber.ReplyCACerts != nil && *subscriber.ReplyCACerts != "" {
+			egress.ReplyUrlCACerts = *subscriber.ReplyCACerts
 		}
 	}
 
@@ -746,16 +769,16 @@ func (r *Reconciler) getSubscriptionName(channel *messagingv1beta1.KafkaChannel,
 	return "", apierrors.NewNotFound(messaging.SchemeGroupVersion.WithResource("subscriptions").GroupResource(), string(subscriber.UID))
 }
 
-func (r *Reconciler) getCaCerts() (string, error) {
+func (r *Reconciler) getCaCerts() (*string, error) {
 	secret, err := r.SecretLister.Secrets(system.Namespace()).Get(kafkaChannelTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
+		return nil, fmt.Errorf("failed to get CA certs from %s/%s: %w", system.Namespace(), kafkaChannelTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", system.Namespace(), kafkaChannelTLSSecretName, caCertsSecretKey)
+		return nil, nil
 	}
-	return string(caCerts), nil
+	return pointer.String(string(caCerts)), nil
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription
@@ -769,5 +792,14 @@ func findSubscriptionStatus(kc *messagingv1beta1.KafkaChannel, subUID types.UID)
 			return &subStatus
 		}
 	}
+	return nil
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
+	if err != nil {
+		return fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	ct.TrustBundles = tb
 	return nil
 }

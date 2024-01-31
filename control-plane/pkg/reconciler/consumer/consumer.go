@@ -25,6 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -44,14 +45,15 @@ import (
 )
 
 type Reconciler struct {
-	SerDe               contract.FormatSerDe
-	Resolver            *resolver.URIResolver
-	Tracker             tracker.Interface
-	ConsumerGroupLister kafkainternalslisters.ConsumerGroupLister
-	SecretLister        corelisters.SecretLister
-	PodLister           corelisters.PodLister
-	KubeClient          kubernetes.Interface
-	KafkaFeatureFlags   *config.KafkaFeatureFlags
+	SerDe                      contract.FormatSerDe
+	Resolver                   *resolver.URIResolver
+	Tracker                    tracker.Interface
+	ConsumerGroupLister        kafkainternalslisters.ConsumerGroupLister
+	SecretLister               corelisters.SecretLister
+	PodLister                  corelisters.PodLister
+	KubeClient                 kubernetes.Interface
+	KafkaFeatureFlags          *config.KafkaFeatureFlags
+	TrustBundleConfigMapLister corelisters.ConfigMapNamespaceLister
 }
 
 var (
@@ -113,7 +115,11 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 	}
 
 	egress.Reference = userFacingResourceRef
-	egress.VReplicas = *c.Spec.VReplicas
+	if c.Spec.VReplicas != nil {
+		egress.VReplicas = *c.Spec.VReplicas
+	} else {
+		egress.VReplicas = 1
+	}
 
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),
@@ -138,6 +144,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		return nil, fmt.Errorf("failed to resolve subscriber: %w", err)
 	}
 	c.Status.SubscriberURI = destinationAddr.URL
+	c.Status.SubscriberCACerts = destinationAddr.CACerts
 
 	egressConfig := &contract.EgressConfig{}
 	if c.Spec.Delivery != nil {
@@ -148,6 +155,9 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	}
 	if egressConfig != nil {
 		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
+		if egressConfig.DeadLetterCACerts != "" {
+			c.Status.DeliveryStatus.DeadLetterSinkCACerts = pointer.String(egressConfig.DeadLetterCACerts)
+		}
 	}
 
 	egress := &contract.Egress{
@@ -326,6 +336,12 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 //
 // The actual mutation is done by calling the provided contractMutatorFunc.
 func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc, shouldWait PodStatusWaitFunc) (bool, error) {
+	if c.Spec.PodBind == nil {
+		// No PodBind so Pod will not be found, return no error since the Consumer
+		// will get re-queued when the pod is added.
+		return false, nil
+	}
+
 	// Get the data plane pod when the Consumer should be scheduled.
 	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
 	if apierrors.IsNotFound(err) {
@@ -361,6 +377,10 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 	ct, err := b.GetDataPlaneConfigMapData(logger, cm)
 	if err != nil {
 		return false, fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
+	}
+
+	if err := r.setTrustBundles(ct); err != nil {
+		return false, fmt.Errorf("failed to set trust bundles: %w", err)
 	}
 
 	if changed := mutatorFunc(logger, ct, c); changed == coreconfig.ResourceChanged {
@@ -421,4 +441,13 @@ func IsPodNotRunning(p *corev1.Pod) bool {
 
 func FalseAnyStatus(*corev1.Pod) bool {
 	return false
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+	tb, err := coreconfig.TrustBundles(r.TrustBundleConfigMapLister)
+	if err != nil {
+		return fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	ct.TrustBundles = tb
+	return nil
 }

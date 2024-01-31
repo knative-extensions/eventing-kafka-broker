@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -168,6 +169,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
+	if err := r.setTrustBundles(ct); err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+
 	// Get resource configuration.
 	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
@@ -242,8 +247,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			return err
 		}
 
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
 	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
@@ -252,11 +257,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpsAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
@@ -355,7 +360,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(ingressHost, broker)
+	address := receiver.HTTPAddress(ingressHost, nil, broker)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
@@ -698,14 +703,23 @@ func finalizerSecret(object metav1.Object) string {
 	return fmt.Sprintf("%s/%s", "kafka.eventing", object.GetUID())
 }
 
-func (r *Reconciler) getCaCerts() (string, error) {
+func (r *Reconciler) getCaCerts() (*string, error) {
 	secret, err := r.SecretLister.Secrets(r.SystemNamespace).Get(brokerIngressTLSSecretName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
+		return nil, fmt.Errorf("failed to get CA certs from %s/%s: %w", r.SystemNamespace, brokerIngressTLSSecretName, err)
 	}
 	caCerts, ok := secret.Data[caCertsSecretKey]
 	if !ok {
-		return "", fmt.Errorf("failed to get CA certs from %s/%s: missing %s key", r.SystemNamespace, brokerIngressTLSSecretName, caCertsSecretKey)
+		return nil, nil
 	}
-	return string(caCerts), nil
+	return pointer.String(string(caCerts)), nil
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
+	if err != nil {
+		return fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	ct.TrustBundles = tb
+	return nil
 }

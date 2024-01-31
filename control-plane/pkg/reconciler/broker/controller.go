@@ -19,6 +19,10 @@ package broker
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
+	"net/http"
+	"strings"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
@@ -27,10 +31,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/eventingtls"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
@@ -106,15 +112,20 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
 	IPsLister := prober.IPsListerFromService(types.NamespacedName{Namespace: reconciler.DataPlaneNamespace, Name: env.IngressName})
 
-	features := feature.FromContext(ctx)
-	caCerts, err := reconciler.getCaCerts()
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialTLSContext = func(ctx context.Context, net, addr string) (net.Conn, error) {
+		clientConfig := eventingtls.NewDefaultClientConfig()
+		clientConfig.TrustBundleConfigMapLister = reconciler.ConfigMapLister.ConfigMaps(reconciler.SystemNamespace)
+		clientConfig.CACerts, _ = reconciler.getCaCerts()
 
-	if err != nil && (features.IsStrictTransportEncryption() || features.IsPermissiveTransportEncryption()) {
-		// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
-		logger.Warn("Failed to get CA certs when at least one address uses TLS", zap.Error(err))
+		tlsConfig, err := eventingtls.GetTLSClientConfig(clientConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get TLS client config: %w", err)
+		}
+		return network.DialTLSWithBackOff(ctx, net, addr, tlsConfig)
 	}
 
-	reconciler.Prober, err = prober.NewComposite(ctx, env.IngressPodPort, env.IngressPodTlsPort, IPsLister, impl.EnqueueKey, &caCerts)
+	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, env.IngressPodPort, env.IngressPodTlsPort, IPsLister, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}
@@ -136,16 +147,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		impl.GlobalResync(brokerInformer.Informer())
 	}
 
-	rotateCACerts := func(obj interface{}) {
-		newCerts, err := reconciler.getCaCerts()
-		if err != nil && (features.IsPermissiveTransportEncryption() || features.IsStrictTransportEncryption()) {
-			// We only need to warn here as the broker won't reconcile properly without the proper certs because the prober won't succeed
-			logger.Warn("Failed to get new CA certs while rotating CA certs when at least one address uses TLS", zap.Error(err))
-		}
-		reconciler.Prober.RotateRootCaCerts(&newCerts)
-		globalResync(obj)
-	}
-
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
@@ -161,10 +162,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	reconciler.Tracker = impl.Tracker
 
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
-	secretinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithName(brokerIngressTLSSecretName),
-		Handler:    controller.HandleAll(rotateCACerts),
-	})
+
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
@@ -174,6 +172,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))
+	parts := strings.Split(eventingtls.TrustBundleLabelSelector, "=")
+	configmapinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.FilterWithLabel(parts[0], parts[1]),
+		Handler:    controller.HandleAll(globalResync),
+	})
 
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),

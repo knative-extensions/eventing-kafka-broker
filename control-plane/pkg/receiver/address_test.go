@@ -21,9 +21,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
+
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 )
 
 func TestAddress(t *testing.T) {
@@ -50,9 +52,11 @@ func TestHTTPSAddress(t *testing.T) {
 			Name:      "ks",
 		},
 	}
-	httpsAddress := HTTPSAddress(host, ks, string(eventingtlstesting.CA))
+	aud := "my-audience"
+	httpsAddress := HTTPSAddress(host, &aud, ks, pointer.String(string(eventingtlstesting.CA)))
 
 	require.Equal(t, httpsAddress.URL.Host, host)
+	require.Equal(t, httpsAddress.Audience, &aud)
 	require.Equal(t, httpsAddress.URL.Scheme, "https")
 	require.Contains(t, httpsAddress.URL.Path, ks.GetNamespace())
 	require.Contains(t, httpsAddress.URL.Path, ks.GetName())
@@ -67,9 +71,11 @@ func TestHTTPAddress(t *testing.T) {
 			Name:      "ks",
 		},
 	}
-	httpAddress := HTTPAddress(host, ks)
+	aud := "my-audience"
+	httpAddress := HTTPAddress(host, &aud, ks)
 
 	require.Equal(t, host, httpAddress.URL.Host)
+	require.Equal(t, httpAddress.Audience, &aud)
 	require.Equal(t, httpAddress.URL.Scheme, "http")
 	require.Contains(t, httpAddress.URL.Path, ks.GetNamespace())
 	require.Contains(t, httpAddress.URL.Path, ks.GetName())

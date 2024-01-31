@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventMutator;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -37,19 +38,8 @@ public class RecordDispatcherMutatorChain implements RecordDispatcher {
 
     @Override
     public Future<Void> dispatch(ConsumerRecord<Object, CloudEvent> record) {
-        final var newRecord = new ConsumerRecord<>(
-                record.topic(),
-                record.partition(),
-                record.offset(),
-                record.timestamp(),
-                record.timestampType(),
-                record.serializedKeySize(),
-                record.serializedValueSize(),
-                record.key(),
-                cloudEventMutator.apply(record.value()),
-                record.headers(),
-                record.leaderEpoch());
-        return next.dispatch(newRecord);
+        return next.dispatch(
+                KafkaConsumerRecordUtils.copyRecordAssigningValue(record, cloudEventMutator.apply(record)));
     }
 
     @Override

@@ -22,6 +22,7 @@ package e2e_new
 import (
 	"testing"
 
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing/test/rekt/features/broker"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -41,4 +42,18 @@ func TestEventTransformationForTrigger(t *testing.T) {
 	)
 
 	env.TestSet(ctx, t, broker.BrokerWorkFlowWithTransformation())
+}
+
+func TestKnativeKafkaCloudEventExtensionsAdded(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.TestSet(ctx, t, features.KnativeKafkaCEExtensionsAdded())
 }
