@@ -2005,6 +2005,91 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 		},
+		{
+			Name: "Reconciled normal - OIDC enabled",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewService(),
+				NewPerChannelService(DefaultEnv),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				ChannelDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				NewConfigMapWithTextData(system.Namespace(), DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication: feature.Enabled,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Path: receiver.Path(ChannelNamespace, ChannelName),
+								Host: receiver.Host(ChannelNamespace, ChannelName),
+							},
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+				ChannelDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
+						StatusTopicReadyWithName(ChannelTopic()),
+						StatusDataPlaneAvailable,
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      ChannelAddress(),
+								Audience: pointer.String(ChannelAudience),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      ChannelAddress(),
+							Audience: pointer.String(ChannelAudience),
+						}),
+						WithChannelAddessable(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
 	}
 
 	useTable(t, table, env)

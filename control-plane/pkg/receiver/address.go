@@ -35,29 +35,32 @@ func Address(host string, object metav1.Object) *url.URL {
 }
 
 // HTTPAddress returns the addressable
-func HTTPAddress(host string, object metav1.Object) duckv1.Addressable {
+func HTTPAddress(host string, audience *string, object metav1.Object) duckv1.Addressable {
 	httpAddress := duckv1.Addressable{
-		Name: pointer.String("http"),
-		URL:  apis.HTTP(host),
+		Name:     pointer.String("http"),
+		URL:      apis.HTTP(host),
+		Audience: audience,
 	}
 	httpAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
 	return httpAddress
 }
 
 // HTTPAddress returns the addressable
-func ChannelHTTPAddress(host string) duckv1.Addressable {
+func ChannelHTTPAddress(host string, audience *string) duckv1.Addressable {
 	httpAddress := duckv1.Addressable{
-		Name: pointer.String("http"),
-		URL:  apis.HTTP(host),
+		Name:     pointer.String("http"),
+		URL:      apis.HTTP(host),
+		Audience: audience,
 	}
 	return httpAddress
 }
 
-func HTTPSAddress(host string, object metav1.Object, caCerts *string) duckv1.Addressable {
+func HTTPSAddress(host string, audience *string, object metav1.Object, caCerts *string) duckv1.Addressable {
 	httpsAddress := duckv1.Addressable{
-		Name:    pointer.String("https"),
-		URL:     apis.HTTPS(host),
-		CACerts: caCerts,
+		Name:     pointer.String("https"),
+		URL:      apis.HTTPS(host),
+		CACerts:  caCerts,
+		Audience: audience,
 	}
 	httpsAddress.URL.Path = fmt.Sprintf("/%s/%s", object.GetNamespace(), object.GetName())
 	return httpsAddress

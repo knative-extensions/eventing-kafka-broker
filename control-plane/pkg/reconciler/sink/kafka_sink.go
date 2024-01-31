@@ -255,8 +255,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			return err
 		}
 
-		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -273,14 +273,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		if err != nil {
 			return err
 		}
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, ks, caCerts)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
 
 		addressableStatus.Address = &httpsAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
 		// Disabled mode:
 		// Unchange
-		httpAddress := receiver.HTTPAddress(r.IngressHost, ks)
+		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
 
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
@@ -357,7 +357,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(r.IngressHost, ks)
+	address := receiver.HTTPAddress(r.IngressHost, nil, ks)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,

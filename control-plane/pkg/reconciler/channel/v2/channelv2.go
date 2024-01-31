@@ -24,6 +24,10 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/utils/pointer"
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"github.com/IBM/sarama"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -34,7 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
@@ -278,18 +281,27 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return err
 	}
 
+	featureFlags := feature.FromContext(ctx)
+	var audience *string
+	if featureFlags.IsOIDCAuthentication() {
+		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
+		audience = nil
+	}
+
 	var addressableStatus duckv1.AddressStatus
 	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
 	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
-	transportEncryptionFlags := feature.FromContext(ctx)
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	if featureFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
 		}
 
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channelService, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -297,7 +309,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		//   - http address with path-based routing
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
 		addressableStatus.Address = &httpAddress
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	} else if featureFlags.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
 		// - status.addresses:
@@ -307,11 +319,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, channelService, caCerts)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channelService, caCerts)
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 		addressableStatus.Address = &httpsAddress
 	} else {
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost)
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
@@ -421,7 +433,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(r.IngressHost, channel)
+	address := receiver.HTTPAddress(r.IngressHost, nil, channel)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
