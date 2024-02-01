@@ -19,9 +19,10 @@ package source
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/auth"
-	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"

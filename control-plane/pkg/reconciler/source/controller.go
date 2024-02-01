@@ -18,6 +18,7 @@ package source
 
 import (
 	"context"
+
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/logging"
 
