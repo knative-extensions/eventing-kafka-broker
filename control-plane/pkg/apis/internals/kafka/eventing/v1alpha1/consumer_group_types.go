@@ -104,6 +104,10 @@ type ConsumerGroupSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 	// +optional
 	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
+
+	// OIDCServiceAccountName is the name of service account used for this components
+	// OIDC authentication.
+	OIDCServiceAccountName *string `json:"oidcServiceAccountName,omitempty"`
 }
 
 type ConsumerGroupStatus struct {

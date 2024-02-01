@@ -103,6 +103,10 @@ type ConsumerSpec struct {
 
 	// PodBind represents a reference to the pod in which the consumer should be placed.
 	PodBind *PodBind `json:"podBind"`
+
+	// OIDCServiceAccountName is the name of the generated service account
+	// used for this components OIDC authentication.
+	OIDCServiceAccountName *string `json:"oidcServiceAccountName,omitempty"`
 }
 
 type ReplyStrategy struct {

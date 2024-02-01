@@ -192,6 +192,10 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		egress.KeyType = coreconfig.KeyTypeFromString(*c.Spec.Configs.KeyType)
 	}
 
+	if c.Spec.OIDCServiceAccountName != nil {
+		egress.OidcServiceAccountName = *c.Spec.OIDCServiceAccountName
+	}
+
 	if err := r.reconcileReplyStrategy(ctx, c, egress); err != nil {
 		return nil, fmt.Errorf("failed to reconcile reply strategy: %w", err)
 	}
