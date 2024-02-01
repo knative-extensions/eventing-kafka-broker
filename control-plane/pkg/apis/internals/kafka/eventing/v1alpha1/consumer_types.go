@@ -208,6 +208,10 @@ type ConsumerStatus struct {
 	// +optional
 	SubscriberCACerts *string `json:"subscriberCACerts,omitempty"`
 
+	// SubscriberAudience is the OIDC audience for the resolved URI
+	// +optional
+	SubscriberAudience *string `json:"subscriberAudience,omitempty"`
+
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.
 	eventingduck.DeliveryStatus `json:",inline"`

@@ -145,6 +145,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	}
 	c.Status.SubscriberURI = destinationAddr.URL
 	c.Status.SubscriberCACerts = destinationAddr.CACerts
+	c.Status.SubscriberAudience = destinationAddr.Audience
 
 	egressConfig := &contract.EgressConfig{}
 	if c.Spec.Delivery != nil {
@@ -157,6 +158,9 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
 		if egressConfig.DeadLetterCACerts != "" {
 			c.Status.DeliveryStatus.DeadLetterSinkCACerts = pointer.String(egressConfig.DeadLetterCACerts)
+		}
+		if egressConfig.DeadLetterAudience != "" {
+			c.Status.DeliveryStatus.DeadLetterSinkAudience = pointer.String(egressConfig.DeadLetterAudience)
 		}
 	}
 
