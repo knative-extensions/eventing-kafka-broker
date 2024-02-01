@@ -57,6 +57,7 @@ elif [[ "${action}" == "build-from-source" ]]; then
 	source "${ROOT_DIR}"/test/e2e-common.sh && build_components_from_source
 elif [[ "${action}" == "deploy-control-plane" ]]; then
 	source "${ROOT_DIR}"/test/e2e-common.sh && build_control_plane_from_source
+	source "${ROOT_DIR}"/test/e2e-common.sh && install_control_plane_from_source
 elif [[ "${action}" == "build-for-source-from-source" ]]; then
 	source "${ROOT_DIR}"/test/e2e-common.sh && build_source_components_from_source
 elif [[ "${action}" == "teardown" ]]; then
