@@ -19,6 +19,8 @@ package source
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -52,6 +54,8 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
+
+	fakekubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 )
 
 const (
@@ -148,6 +152,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -202,6 +207,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -256,6 +262,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -315,6 +322,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -370,6 +378,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -506,6 +515,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						SourceNetSaslTls(true),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -626,6 +636,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						SourceNetSaslTls(false),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -688,6 +699,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -743,6 +755,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
 						WithAutoscalingAnnotationsSource(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -832,6 +845,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -897,6 +911,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroup(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -963,6 +978,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
 						WithAutoscalingAnnotationsSource(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1027,6 +1043,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1080,6 +1097,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
 						WithAutoscalingAnnotationsSource(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1131,6 +1149,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1183,6 +1202,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupFailed("failed", "failed"),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1237,6 +1257,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						StatusSourceConsumerGroupReplicas(1),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1325,6 +1346,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						StatusSourceConsumerGroupReplicas(1),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1385,6 +1407,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceSinkResolved(""),
 						StatusSourceConsumerGroupReplicas(1),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1439,6 +1462,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1493,6 +1517,66 @@ func TestReconcileKind(t *testing.T) {
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
 						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Reconciled normal - with OIDC enabled",
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication: feature.Enabled,
+			}),
+			Objects: []runtime.Object{
+				NewSource(),
+			},
+			Key: testKey,
+			WantCreates: []runtime.Object{
+				makeKafkaSourceOIDCServiceAccount(),
+				NewConsumerGroup(
+					WithConsumerGroupFinalizer(),
+					WithConsumerGroupName(SourceUUID),
+					WithConsumerGroupNamespace(SourceNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewSource())),
+					WithConsumerGroupMetaLabels(OwnerAsSourceLabel),
+					WithConsumerGroupLabels(ConsumerSourceLabel),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+						),
+						ConsumerAuth(NewConsumerSpecAuth()),
+						ConsumerDelivery(
+							NewConsumerSpecDelivery(
+								sources.Ordered,
+								NewConsumerTimeout("PT600S"),
+								NewConsumerRetry(10),
+								NewConsumerBackoffDelay("PT0.3S"),
+								NewConsumerBackoffPolicy(eventingduck.BackoffPolicyExponential),
+								ConsumerInitialOffset(sources.OffsetLatest),
+							),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerReply(ConsumerNoReply()),
+					)),
+					ConsumerGroupReplicas(1),
+				),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						StatusSourceConsumerGroupUnknown(),
+						StatusSourceSinkResolved(""),
+						StatusSourceSelector(),
+						StatusSourceOIDCIdentityCreatedSucceeded(),
+						StatusSourceOIDCIdentity(makeKafkaSourceOIDCServiceAccount().Name),
 					),
 				},
 			},
@@ -1523,10 +1607,12 @@ func TestReconcileKind(t *testing.T) {
 		}
 
 		reconciler := &Reconciler{
-			ConsumerGroupLister: listers.GetConsumerGroupLister(),
-			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
-			KedaClient:          kedaclient.Get(ctx),
-			KafkaFeatureFlags:   configapis.DefaultFeaturesConfig(),
+			ConsumerGroupLister:  listers.GetConsumerGroupLister(),
+			InternalsClient:      fakeconsumergroupinformer.Get(ctx),
+			KedaClient:           kedaclient.Get(ctx),
+			KafkaFeatureFlags:    configapis.DefaultFeaturesConfig(),
+			ServiceAccountLister: listers.GetServiceAccountLister(),
+			KubeClient:           fakekubeclient.Get(ctx),
 		}
 
 		reconciler.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
@@ -1633,4 +1719,12 @@ func patchFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":["` + finalizerName + `"],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func makeKafkaSourceOIDCServiceAccount() *corev1.ServiceAccount {
+	return auth.GetOIDCServiceAccountForResource(sources.SchemeGroupVersion.WithKind("KafkaSource"), metav1.ObjectMeta{
+		Name:      SourceName,
+		Namespace: SourceNamespace,
+		UID:       SourceUUID,
+	})
 }

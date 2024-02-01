@@ -17,6 +17,7 @@
 package source
 
 import (
+	"knative.dev/eventing/pkg/apis/feature"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -40,6 +41,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
 )
 
 func TestNewController(t *testing.T) {
@@ -68,6 +70,10 @@ func TestNewController(t *testing.T) {
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "config-kafka-features",
+		},
+	}, &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: feature.FlagsConfigName,
 		},
 	}))
 	if controller == nil {

@@ -46,6 +46,9 @@ const (
 	// KafkaConditionInitialOffsetsCommitted is True when the KafkaSource has committed the
 	// initial offset of all claims
 	KafkaConditionInitialOffsetsCommitted apis.ConditionType = "InitialOffsetsCommitted"
+
+	// KafkaConditionOIDCIdentityCreated has status True when the KafkaSource has created an OIDC identity.
+	KafkaConditionOIDCIdentityCreated apis.ConditionType = "OIDCIdentityCreated"
 )
 
 var (
@@ -54,6 +57,7 @@ var (
 		KafkaConditionDeployed,
 		KafkaConditionConnectionEstablished,
 		KafkaConditionInitialOffsetsCommitted,
+		KafkaConditionOIDCIdentityCreated,
 	)
 
 	kafkaCondSetLock = sync.RWMutex{}
@@ -158,6 +162,22 @@ func (s *KafkaSourceStatus) MarkInitialOffsetCommitted() {
 
 func (s *KafkaSourceStatus) MarkInitialOffsetNotCommitted(reason, messageFormat string, messageA ...interface{}) {
 	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionInitialOffsetsCommitted, reason, messageFormat, messageA...)
+}
+
+func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedSucceeded() {
+	KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionOIDCIdentityCreated)
+}
+
+func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedSucceededWithReason(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(s).MarkTrueWithReason(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
+}
+
+func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedFailed(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
+}
+
+func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedUnknown(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
 }
 
 func (s *KafkaSourceStatus) UpdateConsumerGroupStatus(status string) {
