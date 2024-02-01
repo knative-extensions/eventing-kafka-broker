@@ -21,11 +21,11 @@ metadata:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
 data:
-  authentication.oidc: "disabled"
+  kreference-group: "disabled"
   delivery-retryafter: "disabled"
   delivery-timeout: "enabled"
-  eventtype-auto-create: "disabled"
-  kreference-group: "disabled"
   kreference-mapping: "disabled"
   new-trigger-filters: "enabled"
   transport-encryption: "Strict"
+  eventtype-auto-create: "disabled"
+  authentication-oidc: "disabled"
