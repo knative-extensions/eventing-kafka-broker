@@ -86,6 +86,9 @@ spec:
                           type: string
                         CACerts:
                           type: string
+                        audience:
+                          description: Audience is the OIDC audience for the deadLetterSink.
+                          type: string
                     retry:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
@@ -131,6 +134,9 @@ spec:
                                 description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
                                 type: string
                               CACerts:
+                                type: string
+                              audience:
+                                description: Audience is the OIDC audience for the deadLetterSink.
                                 type: string
                           retry:
                             description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
