@@ -44,6 +44,7 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -64,6 +65,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
+	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
 	clientPool := clientpool.Get(ctx)
 	clientPool.RegisterSecretInformer(ctx)
@@ -84,16 +86,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:              brokerInformer.Lister(),
-		ConfigMapLister:           configmapInformer.Lister(),
-		EventingClient:            eventingclient.Get(ctx),
-		Env:                       configs,
-		BrokerClass:               kafka.BrokerClass,
-		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
-		KafkaFeatureFlags:         apisconfig.DefaultFeaturesConfig(),
-		GetKafkaClient:            clientPool.GetClient,
-		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
-		InitOffsetsFunc:           offset.InitOffsets,
+		BrokerLister:               brokerInformer.Lister(),
+		ConfigMapLister:            configmapInformer.Lister(),
+		EventingClient:             eventingclient.Get(ctx),
+		Env:                        configs,
+		BrokerClass:                kafka.BrokerClass,
+		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
+		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
+		GetKafkaClient:             clientPool.GetClient,
+		GetKafkaClusterAdmin:       clientPool.GetClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
+		ServiceAccountLister:       serviceaccountInformer.Lister(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -124,6 +127,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		impl.GlobalResync(triggerInformer.Informer())
 	}
 
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
+	featureStore.WatchConfigs(watcher)
+
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
@@ -134,6 +144,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
+
+	// Reconciler Trigger when the OIDC service account changes
+	serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterController(&eventing.Trigger{}),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	return impl
 }
