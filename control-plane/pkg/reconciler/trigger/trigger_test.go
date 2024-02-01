@@ -26,6 +26,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
@@ -46,6 +47,7 @@ import (
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
@@ -195,6 +197,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -266,6 +269,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -343,6 +347,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withDelivery,
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -413,6 +418,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -484,6 +490,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -562,6 +569,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withDelivery,
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -725,6 +733,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -774,6 +783,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerFailed(
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
@@ -818,6 +828,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerFailed(
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
@@ -843,6 +854,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -867,6 +879,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerFailed("wrong", ""),
 					),
 				},
@@ -892,6 +905,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -922,6 +936,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -987,6 +1002,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -1072,6 +1088,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							useNewFilters,
 						),
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -1382,6 +1399,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							useNewFilters,
 						),
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -1686,6 +1704,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							useNewFilters,
 						),
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -2082,6 +2101,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyReady(),
@@ -2108,6 +2128,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2116,6 +2137,161 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
 				patchFinalizers(),
+			},
+		},
+		{
+			Name: "OIDC: creates OIDC service account",
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication: feature.Enabled,
+			}),
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				newTrigger(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: triggerConsumerGroup,
+									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceeded(),
+						reconcilertesting.WithTriggerOIDCServiceAccountName(makeTriggerOIDCServiceAccount().Name),
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyReady(),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+					),
+				},
+			},
+			WantCreates: []runtime.Object{
+				makeTriggerOIDCServiceAccount(),
+			},
+		},
+		{
+			Name: "OIDC: Trigger not ready on invalid OIDC service account",
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication: feature.Enabled,
+			}),
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				newTrigger(),
+				makeTriggerOIDCServiceAccountWithoutOwnerRef(),
+				NewService(),
+				NewConfigMapFromContract(&contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+						},
+					},
+				}, env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+			},
+			WantErr: true,
+			Key:     testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(corev1.EventTypeWarning, "InternalError", fmt.Sprintf("service account %s not owned by Trigger %s", makeTriggerOIDCServiceAccountWithoutOwnerRef().Name, TriggerName)),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:     BrokerUUID,
+							Topics:  []string{BrokerTopic()},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Egresses: []*contract.Egress{
+								{
+									Destination:   ServiceURL,
+									ConsumerGroup: triggerConsumerGroup,
+									Uid:           TriggerUUID,
+									Reference:     TriggerReference(),
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: newTrigger(
+						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedFailed("Unable to resolve service account for OIDC authentication", fmt.Sprintf("service account %s not owned by Trigger %s", makeTriggerOIDCServiceAccountWithoutOwnerRef().Name, TriggerName)),
+						reconcilertesting.WithTriggerOIDCServiceAccountName(makeTriggerOIDCServiceAccountWithoutOwnerRef().Name),
+						reconcilertesting.WithTriggerSubscribed(),
+						withSubscriberURI,
+						reconcilertesting.WithTriggerDependencyUnknown("", ""),
+						reconcilertesting.WithTriggerBrokerReady(),
+						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
+						reconcilertesting.WithTriggerSubscribedUnknown("", ""),
+					),
+				},
 			},
 		},
 	}
@@ -2228,6 +2404,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2258,6 +2435,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2282,6 +2460,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2448,6 +2627,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2614,6 +2794,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2846,6 +3027,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -2928,6 +3110,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
 							URL: &apis.URL{
 								Scheme: "http",
@@ -2985,6 +3168,7 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 			},
 			BrokerLister:              listers.GetBrokerLister(),
 			ConfigMapLister:           listers.GetConfigMapLister(),
+			ServiceAccountLister:      listers.GetServiceAccountLister(),
 			EventingClient:            eventingclient.Get(ctx),
 			Resolver:                  nil,
 			Env:                       env,
@@ -3054,6 +3238,24 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 	)
 }
 
+func makeTriggerOIDCServiceAccount() *corev1.ServiceAccount {
+	return auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+		Name:      TriggerName,
+		Namespace: TriggerNamespace,
+		UID:       TriggerUUID,
+	})
+}
+
+func makeTriggerOIDCServiceAccountWithoutOwnerRef() *corev1.ServiceAccount {
+	sa := auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+		Name:      TriggerName,
+		Namespace: TriggerNamespace,
+		UID:       TriggerUUID,
+	})
+	sa.OwnerReferences = nil
+
+	return sa
+}
 func newTriggerWithCert(options ...reconcilertesting.TriggerOption) runtime.Object {
 	return reconcilertesting.NewTrigger(
 		TriggerName,

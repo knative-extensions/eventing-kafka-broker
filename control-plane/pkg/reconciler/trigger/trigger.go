@@ -33,8 +33,10 @@ import (
 
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
@@ -61,10 +63,11 @@ type Reconciler struct {
 	*base.Reconciler
 	*FlagsHolder
 
-	BrokerLister    eventinglisters.BrokerLister
-	ConfigMapLister corelisters.ConfigMapLister
-	EventingClient  eventingclientset.Interface
-	Resolver        *resolver.URIResolver
+	BrokerLister         eventinglisters.BrokerLister
+	ConfigMapLister      corelisters.ConfigMapLister
+	ServiceAccountLister corelisters.ServiceAccountLister
+	EventingClient       eventingclientset.Interface
+	Resolver             *resolver.URIResolver
 
 	Env *config.Env
 
@@ -87,7 +90,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	trigger.Status.MarkOIDCIdentityCreatedNotSupported()
+
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.reconcileKind(ctx, trigger)
 	})
@@ -95,7 +98,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
-
+	errOIDC := auth.SetupOIDCServiceAccount(ctx, r.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(as *duckv1.AuthStatus) {
+		trigger.Status.Auth = as
+	})
 	statusConditionManager := statusConditionManager{
 		Trigger:  trigger,
 		Configs:  r.Env,
@@ -214,6 +219,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	logger.Debug("Contract config map updated")
+	if errOIDC != nil {
+		return errOIDC
+	}
 
 	return statusConditionManager.reconciled()
 }

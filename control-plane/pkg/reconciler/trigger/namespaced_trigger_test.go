@@ -129,6 +129,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -163,11 +164,12 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 			FlagsHolder: &FlagsHolder{
 				Flags: nil,
 			},
-			BrokerLister:    listers.GetBrokerLister(),
-			ConfigMapLister: listers.GetConfigMapLister(),
-			EventingClient:  eventingclient.Get(ctx),
-			Resolver:        nil,
-			Env:             env,
+			BrokerLister:         listers.GetBrokerLister(),
+			ConfigMapLister:      listers.GetConfigMapLister(),
+			ServiceAccountLister: listers.GetServiceAccountLister(),
+			EventingClient:       eventingclient.Get(ctx),
+			Resolver:             nil,
+			Env:                  env,
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},

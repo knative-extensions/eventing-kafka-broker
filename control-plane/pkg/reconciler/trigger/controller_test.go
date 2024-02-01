@@ -27,6 +27,7 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
