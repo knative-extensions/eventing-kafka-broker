@@ -95,6 +95,7 @@ func (s *KafkaSourceStatus) MarkSink(addr *duckv1.Addressable) {
 	if addr.URL != nil && !addr.URL.IsEmpty() {
 		s.SinkURI = addr.URL
 		s.SinkCACerts = addr.CACerts
+		s.SinkAudience = addr.Audience
 		KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionSinkProvided)
 	} else {
 		KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")

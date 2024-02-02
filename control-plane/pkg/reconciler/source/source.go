@@ -201,6 +201,10 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		expectedCg.Spec.Template.Spec.Configs.KeyType = &kt
 	}
 
+	if ks.Status.Auth != nil {
+		expectedCg.Spec.Template.Spec.OIDCServiceAccountName = ks.Status.Auth.ServiceAccountName
+	}
+
 	// TODO: make keda annotation values configurable and maybe unexposed
 	expectedCg.Annotations = keda.SetAutoscalingAnnotations(ks.Annotations)
 
@@ -260,8 +264,9 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, ks *sources.Kaf
 		}
 	}
 	ks.Status.MarkSink(&duckv1.Addressable{
-		URL:     cg.Status.SubscriberURI,
-		CACerts: cg.Status.SubscriberCACerts,
+		URL:      cg.Status.SubscriberURI,
+		CACerts:  cg.Status.SubscriberCACerts,
+		Audience: cg.Status.SubscriberAudience,
 	})
 	ks.Status.Placeable = cg.Status.Placeable
 	if cg.Status.Replicas != nil {

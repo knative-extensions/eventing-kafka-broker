@@ -1566,6 +1566,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerReply(ConsumerNoReply()),
+						ConsumerOIDCServiceAccountName(makeKafkaSourceOIDCServiceAccount().Name),
 					)),
 					ConsumerGroupReplicas(1),
 				),

@@ -618,6 +618,12 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	if subscriber.SubscriberCACerts != nil && *subscriber.SubscriberCACerts != "" {
 		egress.DestinationCACerts = *subscriber.SubscriberCACerts
 	}
+	if subscriber.SubscriberAudience != nil && *subscriber.SubscriberAudience != "" {
+		egress.DestinationAudience = *subscriber.SubscriberAudience
+	}
+	if subscriber.Auth != nil && subscriber.Auth.ServiceAccountName != nil {
+		egress.OidcServiceAccountName = *subscriber.Auth.ServiceAccountName
+	}
 
 	if subscriptionName != "" {
 		egress.Reference = &contract.Reference{
@@ -633,6 +639,9 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 		}
 		if subscriber.ReplyCACerts != nil && *subscriber.ReplyCACerts != "" {
 			egress.ReplyUrlCACerts = *subscriber.ReplyCACerts
+		}
+		if subscriber.ReplyAudience != nil && *subscriber.ReplyAudience != "" {
+			egress.ReplyUrlAudience = *subscriber.ReplyAudience
 		}
 	}
 
@@ -711,6 +720,10 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		resource.Auth = &contract.Resource_MultiAuthSecret{
 			MultiAuthSecret: auth.MultiSecretReference,
 		}
+	}
+
+	if channel.Status.Address != nil && channel.Status.Address.Audience != nil {
+		resource.Ingress.Audience = *channel.Status.Address.Audience
 	}
 
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
