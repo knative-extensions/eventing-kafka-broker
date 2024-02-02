@@ -148,6 +148,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupReplicas(2),
 							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
@@ -234,6 +235,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
 						)
@@ -340,6 +342,7 @@ func TestReconcileKind(t *testing.T) {
 								}),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
@@ -448,6 +451,7 @@ func TestReconcileKind(t *testing.T) {
 								}),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
 						)
@@ -572,6 +576,7 @@ func TestReconcileKind(t *testing.T) {
 								}),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupStatusReplicas(1),
 							ConsumerForTrigger(),
 						)
@@ -758,6 +763,7 @@ func TestReconcileKind(t *testing.T) {
 								}),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
@@ -974,6 +980,7 @@ func TestReconcileKind(t *testing.T) {
 							)),
 							ConsumerGroupReplicas(2),
 							ConsumerGroupStatusReplicas(1),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerForTrigger(),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
@@ -1063,6 +1070,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerGroupReplicas(1),
 							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 						)
 						cg.Status.Placements = []eventingduckv1alpha1.Placement{
 							{PodName: "p1", VReplicas: 1},
@@ -1144,6 +1152,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerGroupIdConfig("my.group.id"),
 								),
 							)),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupReplicas(2),
 							ConsumerGroupStatusReplicas(0),
 							ConsumerForTrigger(),
@@ -1230,6 +1239,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerGroupIdConfig("my.group.id"),
 								),
 							)),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupReplicas(2),
 							ConsumerGroupStatusReplicas(1),
 							ConsumerForTrigger(),
@@ -1358,6 +1368,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerInitialOffset(sources.OffsetLatest),
 								)),
 							)),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupReplicas(3),
 							ConsumerForTrigger(),
 						)
@@ -1468,6 +1479,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerGroupIdConfig("my.group.id"),
 								),
 							)),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupReplicas(3),
 							ConsumerForTrigger(),
 						)
@@ -1577,6 +1589,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerGroupIdConfig("my.group.id"),
 								),
 							)),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupReplicas(2),
 							ConsumerForTrigger(),
 						)
@@ -1640,6 +1653,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerForTrigger(),
 						)
 						cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
@@ -1776,6 +1790,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 								),
 							)),
 							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
 							ConsumerGroupStatusReplicas(1),
 							ConsumerForTrigger(),
 						)
