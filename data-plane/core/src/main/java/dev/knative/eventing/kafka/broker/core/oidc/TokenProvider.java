@@ -20,33 +20,40 @@ import com.google.common.cache.CacheBuilder;
 import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import io.fabric8.kubernetes.api.model.authentication.TokenRequest;
 import io.fabric8.kubernetes.api.model.authentication.TokenRequestBuilder;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 
 import java.util.concurrent.TimeUnit;
 
 public class TokenProvider {
 
+    private static final long TOKEN_EXPIRATION_SECONDS = 3600L; // 1 hour
+    private static final long EXPIRATION_BUFFER_TIME_SECONDS = 300L; // 5 minutes
+    private static final long CACHE_EXPIRATION_TIME =
+            TOKEN_EXPIRATION_SECONDS - EXPIRATION_BUFFER_TIME_SECONDS; // Cache tokens for 55 minutes
+
     private final KubernetesClient kubernetesClient;
     private final Cache<String, String> tokenCache;
 
-    public TokenProvider(KubernetesClient kubernetesClient) {
-        this.kubernetesClient = kubernetesClient;
+    public TokenProvider() {
+        Config clientConfig = new ConfigBuilder().build();
+        kubernetesClient =
+                new KubernetesClientBuilder().withConfig(clientConfig).build();
 
         this.tokenCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.HOURS) // 1 hour expiration after write
+                .expireAfterWrite(CACHE_EXPIRATION_TIME, TimeUnit.SECONDS)
                 .maximumSize(1000)
                 .build();
     }
 
     public String getToken(NamespacedName serviceAccount, String audience) {
-        String cacheKey = serviceAccount.namespace() + "/" + serviceAccount.name() + "/" + audience;
+        String cacheKey = generateCacheKey(serviceAccount, audience);
         String token = tokenCache.getIfPresent(cacheKey);
 
         if (token == null) {
-            // If the token is not in the cache, request a new one
             token = requestToken(serviceAccount, audience);
-
-            // If token is successfully retrieved, cache it
             if (token != null) {
                 tokenCache.put(cacheKey, token);
             }
@@ -59,7 +66,7 @@ public class TokenProvider {
         TokenRequest tokenRequest = new TokenRequestBuilder()
                 .withNewSpec()
                 .withAudiences(audience)
-                .withExpirationSeconds(3600L) // 1 hour
+                .withExpirationSeconds(TOKEN_EXPIRATION_SECONDS)
                 .endSpec()
                 .build();
 
@@ -74,5 +81,9 @@ public class TokenProvider {
         } else {
             return null;
         }
+    }
+
+    private String generateCacheKey(NamespacedName serviceAccount, String audience) {
+        return serviceAccount.namespace() + "/" + serviceAccount.name() + "/" + audience;
     }
 }
