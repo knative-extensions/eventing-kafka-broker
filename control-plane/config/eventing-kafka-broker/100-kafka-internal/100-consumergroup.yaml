@@ -34,7 +34,7 @@ spec:
           # statusReplicasPath defines the JSONPath inside a custom resource that corresponds to Scale.Status.Replicas.
           statusReplicasPath: .status.replicas
           # labelSelectorPath defines the JSONPath inside a custom resource that corresponds to Scale.Status.Selector
-          labelSelectorPath: .spec.selector
+          labelSelectorPath: .status.selector
       schema:
         openAPIV3Schema:
           type: object
