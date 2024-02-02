@@ -19,6 +19,9 @@ package source
 import (
 	"context"
 
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/pkg/logging"
+
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -34,29 +37,51 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
 )
 
 func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 
 	kafkaInformer := kafkainformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
+	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
 	sources.RegisterAlternateKafkaConditionSet(conditionSet)
 
+	var globalResync func()
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync()
+		}
+	})
+	featureStore.WatchConfigs(watcher)
+
 	r := &Reconciler{
-		ConsumerGroupLister: consumerGroupInformer.Lister(),
-		InternalsClient:     consumergroupclient.Get(ctx),
-		KedaClient:          kedaclient.Get(ctx),
-		KafkaFeatureFlags:   config.DefaultFeaturesConfig(),
+		KubeClient:           kubeclient.Get(ctx),
+		ConsumerGroupLister:  consumerGroupInformer.Lister(),
+		InternalsClient:      consumergroupclient.Get(ctx),
+		KedaClient:           kedaclient.Get(ctx),
+		KafkaFeatureFlags:    config.DefaultFeaturesConfig(),
+		ServiceAccountLister: serviceaccountInformer.Lister(),
 	}
 
-	impl := kafkasource.NewImpl(ctx, r)
+	impl := kafkasource.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		return controller.Options{
+			ConfigStore: featureStore,
+		}
+	})
+
+	globalResync = func() {
+		impl.GlobalResync(kafkaInformer.Informer())
+	}
 
 	kafkaInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
-		impl.GlobalResync(kafkaInformer.Informer())
+		globalResync()
 	})
 	configStore.WatchConfigs(watcher)
 
@@ -65,5 +90,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		FilterFunc: consumergroup.Filter("kafkasource"),
 		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkasource", impl.EnqueueKey)),
 	})
+
+	// Reconcile KafkaSource when the OIDC service account changes
+	serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterController(&sources.KafkaSource{}),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
+
 	return impl
 }

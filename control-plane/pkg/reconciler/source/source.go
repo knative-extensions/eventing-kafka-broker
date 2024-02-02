@@ -21,6 +21,11 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/client-go/kubernetes"
+	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
+
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,10 +62,12 @@ var (
 )
 
 type Reconciler struct {
-	ConsumerGroupLister internalslst.ConsumerGroupLister
-	InternalsClient     internalsclient.Interface
-	KedaClient          kedaclientset.Interface
-	KafkaFeatureFlags   *config.KafkaFeatureFlags
+	KubeClient           kubernetes.Interface
+	ConsumerGroupLister  internalslst.ConsumerGroupLister
+	InternalsClient      internalsclient.Interface
+	KedaClient           kedaclientset.Interface
+	KafkaFeatureFlags    *config.KafkaFeatureFlags
+	ServiceAccountLister corelisters.ServiceAccountLister
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -70,6 +77,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return fmt.Errorf("getting labels as selector: %v", err)
 	}
 	ks.Status.Selector = selector.String()
+
+	err = auth.SetupOIDCServiceAccount(ctx, feature.FromContext(ctx), r.ServiceAccountLister, r.KubeClient, sources.SchemeGroupVersion.WithKind("KafkaSource"), ks.ObjectMeta, &ks.Status, func(as *duckv1.AuthStatus) {
+		ks.Status.Auth = as
+	})
+	if err != nil {
+		return fmt.Errorf("could not setup OIDC service account for KafkaSource %s/%s: %w", ks.Name, ks.Namespace, err)
+	}
 
 	cg, err := r.reconcileConsumerGroup(ctx, ks)
 	if err != nil {
