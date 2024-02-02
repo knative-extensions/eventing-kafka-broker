@@ -211,6 +211,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			},
 		}
 	}
+
+	if ks.Status.Address != nil && ks.Status.Address.Audience != nil {
+		sinkConfig.Ingress.Audience = *ks.Status.Address.Audience
+	}
+
 	statusConditionManager.ConfigResolved()
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)

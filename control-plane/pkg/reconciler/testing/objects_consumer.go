@@ -200,6 +200,12 @@ func ConsumerTopics(topics ...string) ConsumerSpecOption {
 	}
 }
 
+func ConsumerOIDCServiceAccountName(sa string) ConsumerSpecOption {
+	return func(c *kafkainternals.ConsumerSpec) {
+		c.OIDCServiceAccountName = &sa
+	}
+}
+
 func ConsumerPlacement(pb kafkainternals.PodBind) ConsumerSpecOption {
 	return func(c *kafkainternals.ConsumerSpec) {
 		c.PodBind = &pb

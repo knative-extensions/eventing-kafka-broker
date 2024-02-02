@@ -641,6 +641,10 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		}
 	}
 
+	if broker.Status.Address != nil && broker.Status.Address.Audience != nil {
+		resource.Ingress.Audience = *broker.Status.Address.Audience
+	}
+
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err

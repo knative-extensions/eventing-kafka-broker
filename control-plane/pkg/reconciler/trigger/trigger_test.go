@@ -2182,10 +2182,11 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
-									Destination:   ServiceURL,
-									ConsumerGroup: triggerConsumerGroup,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
+									Destination:            ServiceURL,
+									ConsumerGroup:          triggerConsumerGroup,
+									Uid:                    TriggerUUID,
+									Reference:              TriggerReference(),
+									OidcServiceAccountName: makeTriggerOIDCServiceAccount().Name,
 								},
 							},
 						},
@@ -2262,10 +2263,11 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
-									Destination:   ServiceURL,
-									ConsumerGroup: triggerConsumerGroup,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
+									Destination:            ServiceURL,
+									ConsumerGroup:          triggerConsumerGroup,
+									Uid:                    TriggerUUID,
+									Reference:              TriggerReference(),
+									OidcServiceAccountName: makeTriggerOIDCServiceAccount().Name,
 								},
 							},
 						},
