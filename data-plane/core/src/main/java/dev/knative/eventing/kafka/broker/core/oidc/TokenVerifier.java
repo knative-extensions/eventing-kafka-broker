@@ -71,6 +71,7 @@ public class TokenVerifier {
 
         String token = authHeader.substring("Bearer ".length());
 
-        return verify(token, expectedAudience);
+        request.pause();
+        return verify(token, expectedAudience).onSuccess(v -> request.resume());
     }
 }
