@@ -22,7 +22,6 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -33,13 +32,11 @@ import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.jose4j.jwt.JwtClaims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,8 +77,7 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
     }
 
     @Override
-    public void handle(
-            final RequestContext requestContext, final IngressProducer producer, final TokenVerifier tokenVerifier) {
+    public void handle(final RequestContext requestContext, final IngressProducer producer) {
 
         final Tags resourceTags = Metrics.resourceRefTags(producer.getReference());
 
@@ -105,182 +101,66 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                             cause);
                 })
                 .compose(record -> {
-                    Future<JwtClaims> f;
-                    if (!producer.getAudience().isEmpty()) {
-                        f = tokenVerifier
-                                .verify(requestContext.getRequest(), producer.getAudience())
-                                .onFailure(e -> {
-                                    logger.debug("Could not verify JWT: " + e.getMessage());
-                                    requestContext
-                                            .getRequest()
-                                            .response()
-                                            .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
-                                            .end();
-                                });
-                    } else {
-                        f = Future.succeededFuture();
+                    // Conversion to record succeeded, let's push it to Kafka
+                    if (logger.isDebugEnabled()) {
+                        final var span = Span.fromContextOrNull(Context.current());
+                        if (span != null) {
+                            logger.debug(
+                                    "Received event {} {}",
+                                    keyValue("event", record.value()),
+                                    keyValue(
+                                            TracingConfig.TRACE_ID_KEY,
+                                            span.getSpanContext().getTraceId()));
+                        } else {
+                            logger.debug("Received event {}", keyValue("event", record.value()));
+                        }
                     }
 
-                    return f.compose(jwtClaims -> {
-                        logger.debug("Request contained a valid JWT. Continuing...");
+                    // Decorate the span with event specific attributed
+                    TracingSpan.decorateCurrentWithEvent(record.value());
 
-                        // Conversion to record succeeded, let's push it to Kafka
-                        if (logger.isDebugEnabled()) {
-                            final var span = Span.fromContextOrNull(Context.current());
-                            if (span != null) {
-                                logger.debug(
-                                        "Received event {} {}",
-                                        keyValue("event", record.value()),
+                    final var eventTypeTag =
+                            Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
+
+                    return publishRecord(producer, record)
+                            .onSuccess(m -> {
+                                requestContext
+                                        .getRequest()
+                                        .response()
+                                        .setStatusCode(RECORD_PRODUCED)
+                                        .end();
+
+                                final var tags = RECORD_PRODUCED_COMMON_TAGS
+                                        .and(resourceTags)
+                                        .and(eventTypeTag);
+                                Metrics.eventDispatchLatency(tags)
+                                        .register(meterRegistry)
+                                        .record(requestContext.performLatency());
+                                Metrics.eventCount(tags).register(meterRegistry).increment();
+                            })
+                            .onFailure(cause -> {
+                                requestContext
+                                        .getRequest()
+                                        .response()
+                                        .setStatusCode(FAILED_TO_PRODUCE)
+                                        .end();
+
+                                final var tags = FAILED_TO_PRODUCE_COMMON_TAGS
+                                        .and(resourceTags)
+                                        .and(eventTypeTag);
+                                Metrics.eventDispatchLatency(tags)
+                                        .register(meterRegistry)
+                                        .record(requestContext.performLatency());
+                                Metrics.eventCount(tags).register(meterRegistry).increment();
+
+                                logger.warn(
+                                        "Failed to produce record {}",
                                         keyValue(
-                                                TracingConfig.TRACE_ID_KEY,
-                                                span.getSpanContext().getTraceId()));
-                            } else {
-                                logger.debug("Received event {}", keyValue("event", record.value()));
-                            }
-                        }
-
-                        // Decorate the span with event specific attributed
-                        TracingSpan.decorateCurrentWithEvent(record.value());
-
-                        final var eventTypeTag =
-                                Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
-
-                        return publishRecord(producer, record)
-                                .onSuccess(m -> {
-                                    requestContext
-                                            .getRequest()
-                                            .response()
-                                            .setStatusCode(RECORD_PRODUCED)
-                                            .end();
-
-                                    final var tags = RECORD_PRODUCED_COMMON_TAGS
-                                            .and(resourceTags)
-                                            .and(eventTypeTag);
-                                    Metrics.eventDispatchLatency(tags)
-                                            .register(meterRegistry)
-                                            .record(requestContext.performLatency());
-                                    Metrics.eventCount(tags)
-                                            .register(meterRegistry)
-                                            .increment();
-                                })
-                                .onFailure(cause -> {
-                                    requestContext
-                                            .getRequest()
-                                            .response()
-                                            .setStatusCode(FAILED_TO_PRODUCE)
-                                            .end();
-
-                                    final var tags = FAILED_TO_PRODUCE_COMMON_TAGS
-                                            .and(resourceTags)
-                                            .and(eventTypeTag);
-                                    Metrics.eventDispatchLatency(tags)
-                                            .register(meterRegistry)
-                                            .record(requestContext.performLatency());
-                                    Metrics.eventCount(tags)
-                                            .register(meterRegistry)
-                                            .increment();
-
-                                    logger.warn(
-                                            "Failed to produce record {}",
-                                            keyValue(
-                                                    "path",
-                                                    requestContext.getRequest().path()),
-                                            cause);
-                                });
-                    });
+                                                "path",
+                                                requestContext.getRequest().path()),
+                                        cause);
+                            });
                 });
-
-        /*      //todo: only verify audience, if audience set (--> oidc enabled)
-        tokenVerifier.verify(requestContext.getRequest(), producer.getAudience())
-          .onFailure(e -> {
-            logger.debug("Could not verify JWT: " + e.getMessage());
-            requestContext
-              .getRequest()
-              .response()
-              .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
-              .end();
-          }).onSuccess(jwtClaims -> {
-            logger.debug("Valid JWT provided. Continuing...");
-
-            requestToRecordMapper.requestToRecord(requestContext.getRequest(), producer.getTopic())
-              .onFailure(cause -> {
-                // Conversion to record failed
-                requestContext
-                  .getRequest()
-                  .response()
-                  .setStatusCode(MAPPER_FAILED)
-                  .end();
-
-                final var tags = MAPPER_FAILED_COMMON_TAGS.and(resourceTags);
-                Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
-                Metrics.eventCount(tags).register(meterRegistry).increment();
-
-                logger.warn(
-                  "Failed to convert request to record {}",
-                  keyValue("path", requestContext.getRequest().path()),
-                  cause);
-              }).compose(record -> {
-                // Conversion to record succeeded, let's push it to Kafka
-                if (logger.isDebugEnabled()) {
-                  final var span = Span.fromContextOrNull(Context.current());
-                  if (span != null) {
-                    logger.debug(
-                      "Received event {} {}",
-                      keyValue("event", record.value()),
-                      keyValue(
-                        TracingConfig.TRACE_ID_KEY,
-                        span.getSpanContext().getTraceId()));
-                  } else {
-                    logger.debug("Received event {}", keyValue("event", record.value()));
-                  }
-                }
-
-                // Decorate the span with event specific attributed
-                TracingSpan.decorateCurrentWithEvent(record.value());
-
-                final var eventTypeTag =
-                  Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
-
-                return publishRecord(producer, record)
-                  .onSuccess(m -> {
-                    requestContext
-                      .getRequest()
-                      .response()
-                      .setStatusCode(RECORD_PRODUCED)
-                      .end();
-
-                    final var tags = RECORD_PRODUCED_COMMON_TAGS
-                      .and(resourceTags)
-                      .and(eventTypeTag);
-                    Metrics.eventDispatchLatency(tags)
-                      .register(meterRegistry)
-                      .record(requestContext.performLatency());
-                    Metrics.eventCount(tags).register(meterRegistry).increment();
-                  })
-                  .onFailure(cause -> {
-                    requestContext
-                      .getRequest()
-                      .response()
-                      .setStatusCode(FAILED_TO_PRODUCE)
-                      .end();
-
-                    final var tags = FAILED_TO_PRODUCE_COMMON_TAGS
-                      .and(resourceTags)
-                      .and(eventTypeTag);
-                    Metrics.eventDispatchLatency(tags)
-                      .register(meterRegistry)
-                      .record(requestContext.performLatency());
-                    Metrics.eventCount(tags).register(meterRegistry).increment();
-
-                    logger.warn(
-                      "Failed to produce record {}",
-                      keyValue(
-                        "path",
-                        requestContext.getRequest().path()),
-                      cause);
-                  });
-              });
-          });*/
     }
 
     private static Future<RecordMetadata> publishRecord(

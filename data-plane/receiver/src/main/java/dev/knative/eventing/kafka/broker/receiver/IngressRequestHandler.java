@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver;
 
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 
 /**
@@ -23,5 +22,5 @@ import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListen
  */
 public interface IngressRequestHandler extends IngressReconcilerListener {
 
-    void handle(RequestContext request, IngressProducer producer, TokenVerifier tokenVerifier);
+    void handle(RequestContext request, IngressProducer producer);
 }

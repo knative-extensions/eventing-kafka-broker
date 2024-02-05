@@ -105,8 +105,7 @@ public class IngressRequestHandlerImplTest {
                     public String getAudience() {
                         return "";
                     }
-                },
-                null);
+                });
 
         verifySetStatusCodeAndTerminateResponse(statusCode, response);
     }
@@ -144,8 +143,7 @@ public class IngressRequestHandlerImplTest {
                     public String getAudience() {
                         return "";
                     }
-                },
-                null);
+                });
 
         verifySetStatusCodeAndTerminateResponse(IngressRequestHandlerImpl.MAPPER_FAILED, response);
     }
