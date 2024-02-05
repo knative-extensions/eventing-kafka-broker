@@ -31,7 +31,7 @@ public class TokenProvider {
 
     private static final long TOKEN_EXPIRATION_SECONDS = 3600L; // 1 hour
     private static final long EXPIRATION_BUFFER_TIME_SECONDS = 300L; // 5 minutes
-    private static final long CACHE_EXPIRATION_TIME =
+    private static final long CACHE_EXPIRATION_TIME_SECONDS =
             TOKEN_EXPIRATION_SECONDS - EXPIRATION_BUFFER_TIME_SECONDS; // Cache tokens for 55 minutes
 
     private final KubernetesClient kubernetesClient;
