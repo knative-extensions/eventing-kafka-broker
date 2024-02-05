@@ -99,10 +99,11 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
 	}
 
-	topicDetail.ConfigEntries = make(map[string]*string)
-
 	for k, v := range cm.Data {
 		if s := strings.TrimPrefix(k, DefaultTopicConfigPrefix); s != k {
+			if topicDetail.ConfigEntries == nil {
+				topicDetail.ConfigEntries = make(map[string]*string)
+			}
 			topicDetail.ConfigEntries[s] = pointer.String(v)
 		}
 	}
