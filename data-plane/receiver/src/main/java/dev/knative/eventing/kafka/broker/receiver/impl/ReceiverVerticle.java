@@ -22,6 +22,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -88,7 +90,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
-
+    private TokenVerifier tokenVerifier;
     private FileWatcher secretWatcher;
 
     public ReceiverVerticle(
@@ -143,9 +145,19 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             }
         }
 
+        Promise oidcPromise = Promise.promise();
+        OIDCDiscoveryConfig.build(vertx)
+                .onSuccess(oidcDiscoveryConfig -> {
+                    this.tokenVerifier = new TokenVerifier(vertx, oidcDiscoveryConfig);
+                    logger.debug("OIDC TokenVerifier configured");
+                    oidcPromise.complete();
+                })
+                .onFailure(oidcPromise::fail);
+
         final var handler = new ProbeHandler(
                 env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
 
+        Promise httpServerPromise = Promise.promise();
         if (this.httpsServer != null) {
             CompositeFuture.all(
                             this.httpServer
@@ -157,15 +169,19 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                                     .exceptionHandler(startPromise::tryFail)
                                     .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
                     .<Void>mapEmpty()
-                    .onComplete(startPromise);
+                    .onComplete(httpServerPromise);
         } else {
             this.httpServer
                     .requestHandler(handler)
                     .exceptionHandler(startPromise::tryFail)
                     .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
                     .<Void>mapEmpty()
-                    .onComplete(startPromise);
+                    .onComplete(httpServerPromise);
         }
+
+        Future.all(oidcPromise.future(), httpServerPromise.future())
+                .<Void>mapEmpty()
+                .onComplete(startPromise);
 
         setupSecretWatcher();
     }
@@ -225,7 +241,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         }
 
         // Invoke the ingress request handler
-        this.ingressRequestHandler.handle(requestContext, producer);
+        this.ingressRequestHandler.handle(requestContext, producer, this.tokenVerifier);
     }
 
     public void updateServerConfig() {
