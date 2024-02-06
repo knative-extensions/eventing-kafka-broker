@@ -864,7 +864,7 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context) error {
 		// delete scaled object
 		scaledObjects, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace.Namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to list available scaled objects: %w", err)
+			return fmt.Errorf("failed to list available Keda scaled objects: %w", err)
 		}
 
 		for _, scaledObject := range scaledObjects.Items {
@@ -881,7 +881,7 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context) error {
 		// delete trigger authentication
 		triggerAuths, err := r.KedaClient.KedaV1alpha1().TriggerAuthentications(namespace.Namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to list available Keda trigger authentication objects: %w", err)
 		}
 
 		for _, triggerAuth := range triggerAuths.Items {
