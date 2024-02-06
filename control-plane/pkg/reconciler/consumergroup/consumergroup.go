@@ -195,6 +195,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consu
 	} else {
 		// If KEDA is not installed or autoscaler feature disabled, do nothing
 		cg.MarkAutoscalerDisabled()
+		if err := r.deleteKedaObjects(ctx); err != nil {
+			return err
+		}
 	}
 
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
@@ -844,4 +847,52 @@ func metricTagsOf(ctx context.Context, cg *kafkainternals.ConsumerGroup) (contex
 
 func keyOf(cg metav1.Object) string {
 	return types.NamespacedName{Namespace: cg.GetNamespace(), Name: cg.GetName()}.String()
+}
+
+// deleteKedaObjects is responsible for deleting Keda (Kubernetes-based Event Driven Autoscaling) objects, "scaled
+// objects" and "trigger authentications" from all available namespaces.
+//
+// When Keda creates a scaled object, it also generates a Horizontal Pod Autoscaler. This resource will also be removed
+// when the scaled object is deleted.
+func (r *Reconciler) deleteKedaObjects(ctx context.Context) error {
+
+	ns, err := r.KubeClient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list available namespaces: %w", err)
+	}
+	for _, namespace := range ns.Items {
+		// delete scaled object
+		scaledObjects, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace.Namespace).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to list available scaled objects: %w", err)
+		}
+
+		for _, scaledObject := range scaledObjects.Items {
+			err = r.KedaClient.KedaV1alpha1().ScaledObjects(scaledObject.Namespace).Delete(ctx, scaledObject.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to delete Keda scaled object: %w", err)
+			}
+			logging.FromContext(ctx).Debugw("Keda scaled object deleted",
+				"name", scaledObject.Name,
+				"namespace", scaledObject.Namespace)
+
+		}
+
+		// delete trigger authentication
+		triggerAuths, err := r.KedaClient.KedaV1alpha1().TriggerAuthentications(namespace.Namespace).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+
+		for _, triggerAuth := range triggerAuths.Items {
+			err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(triggerAuth.Namespace).Delete(ctx, triggerAuth.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to delete Keda trigger authentication: %w", err)
+			}
+			logging.FromContext(ctx).Debugw("Keda trigger authentication deleted",
+				"name", triggerAuth.Name,
+				"namespace", triggerAuth.Namespace)
+		}
+	}
+	return nil
 }
