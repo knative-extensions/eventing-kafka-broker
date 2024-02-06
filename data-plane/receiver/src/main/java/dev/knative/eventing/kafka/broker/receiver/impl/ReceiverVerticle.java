@@ -230,9 +230,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         }
 
         this.authenticationHandler.handle(request, producer, req -> {
-          // Invoke the ingress request handler
-          final var requestContext = new RequestContext(req);
-          this.ingressRequestHandler.handle(requestContext, producer);
+            // Invoke the ingress request handler
+            final var requestContext = new RequestContext(req);
+            this.ingressRequestHandler.handle(requestContext, producer);
         });
     }
 

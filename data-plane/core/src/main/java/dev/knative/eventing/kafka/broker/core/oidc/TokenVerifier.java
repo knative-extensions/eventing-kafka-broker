@@ -21,5 +21,6 @@ import org.jose4j.jwt.JwtClaims;
 
 public interface TokenVerifier {
     Future<JwtClaims> verify(String token, String expectedAudience);
+
     Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience);
 }

@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -22,8 +24,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * Handler checking that the provided request contained a valid JWT.
@@ -37,23 +37,25 @@ public class AuthenticationHandler {
         this.tokenVerifier = tokenVerifier;
     }
 
-    public void handle(final HttpServerRequest request, final IngressProducer ingressInfo, final Handler<HttpServerRequest> next) {
+    public void handle(
+            final HttpServerRequest request, final IngressProducer ingressInfo, final Handler<HttpServerRequest> next) {
         if (ingressInfo.getAudience().isEmpty()) {
-          logger.debug("No audience for ingress set. Continue without authentication check...");
-          next.handle(request);
-          return;
+            logger.debug("No audience for ingress set. Continue without authentication check...");
+            next.handle(request);
+            return;
         }
 
-        tokenVerifier.verify(request, ingressInfo.getAudience())
-          .onFailure(e -> {
-            logger.debug("Failed to verify authentication of request: {}", keyValue("error", e.getMessage()));
-            request
-              .response()
-              .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
-              .end();
-          }).onSuccess(jwtClaims -> {
-            logger.debug("Request contained valid JWT. Continuing...");
-            next.handle(request);
-          });
+        tokenVerifier
+                .verify(request, ingressInfo.getAudience())
+                .onFailure(e -> {
+                    logger.debug("Failed to verify authentication of request: {}", keyValue("error", e.getMessage()));
+                    request.response()
+                            .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
+                            .end();
+                })
+                .onSuccess(jwtClaims -> {
+                    logger.debug("Request contained valid JWT. Continuing...");
+                    next.handle(request);
+                });
     }
 }

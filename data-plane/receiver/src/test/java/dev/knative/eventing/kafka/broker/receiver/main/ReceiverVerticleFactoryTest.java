@@ -21,7 +21,6 @@ import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.http.HttpServerOptions;

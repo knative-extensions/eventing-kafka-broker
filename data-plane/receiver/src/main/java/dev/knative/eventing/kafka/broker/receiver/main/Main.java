@@ -23,8 +23,6 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
@@ -64,7 +62,7 @@ public class Main {
      * @param args command line arguments.
      */
     public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory)
-      throws IOException, ExecutionException, InterruptedException {
+            throws IOException, ExecutionException, InterruptedException {
         ReceiverEnv env = new ReceiverEnv(System::getenv);
 
         OpenTelemetrySdk openTelemetry =
@@ -102,7 +100,10 @@ public class Main {
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
         // Setup OIDC discovery config
-        OIDCDiscoveryConfig oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx).toCompletionStage().toCompletableFuture().get();
+        OIDCDiscoveryConfig oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get();
 
         // Configure the verticle to deploy and the deployment options
         final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(

@@ -16,128 +16,123 @@
 
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
-import dev.knative.eventing.kafka.broker.receiver.RequestContext;
-import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import org.jose4j.jwt.JwtClaims;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
-
 public class AuthenticationHandlerTest {
-  @Test
-  public void shouldReturnUnauthorizedWhenJWTValidationFails() {
-    final HttpServerRequest request = mock(HttpServerRequest.class);
-    final var response = mockResponse(request, HttpResponseStatus.UNAUTHORIZED.code());
+    @Test
+    public void shouldReturnUnauthorizedWhenJWTValidationFails() {
+        final HttpServerRequest request = mock(HttpServerRequest.class);
+        final var response = mockResponse(request, HttpResponseStatus.UNAUTHORIZED.code());
 
-    TokenVerifier tokenVerifier = new TokenVerifier() {
-      @Override
-      public Future<JwtClaims> verify(String token, String expectedAudience) {
-        return Future.failedFuture("JWT validation failed");
-      }
+        TokenVerifier tokenVerifier = new TokenVerifier() {
+            @Override
+            public Future<JwtClaims> verify(String token, String expectedAudience) {
+                return Future.failedFuture("JWT validation failed");
+            }
 
-      @Override
-      public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
-        return Future.failedFuture("JWT validation failed");
-      }
-    };
+            @Override
+            public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
+                return Future.failedFuture("JWT validation failed");
+            }
+        };
 
-    final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
+        final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
 
-    authHandler.handle(
-      request,
-      new IngressProducer() {
-        @Override
-        public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
-          return null;
-        }
+        authHandler.handle(
+                request,
+                new IngressProducer() {
+                    @Override
+                    public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
+                        return null;
+                    }
 
-        @Override
-        public String getTopic() {
-          return null;
-        }
+                    @Override
+                    public String getTopic() {
+                        return null;
+                    }
 
-        @Override
-        public DataPlaneContract.Reference getReference() {
-          return null;
-        }
+                    @Override
+                    public DataPlaneContract.Reference getReference() {
+                        return null;
+                    }
 
-        @Override
-        public String getAudience() {
-          return "some-required-audience";
-        }
-      },
-      mock(Handler.class));
+                    @Override
+                    public String getAudience() {
+                        return "some-required-audience";
+                    }
+                },
+                mock(Handler.class));
 
-    verify(response, times(1)).setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
-    verify(response, times(1)).end();
-  }
+        verify(response, times(1)).setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
+        verify(response, times(1)).end();
+    }
 
-  @Test
-  public void shouldContinueWithRequestWhenJWTSucceedsFails() {
-    final HttpServerRequest request = mock(HttpServerRequest.class);
-    final var next = mock(Handler.class);//mockHandler(request);
+    @Test
+    public void shouldContinueWithRequestWhenJWTSucceedsFails() {
+        final HttpServerRequest request = mock(HttpServerRequest.class);
+        final var next = mock(Handler.class); // mockHandler(request);
 
-    TokenVerifier tokenVerifier = new TokenVerifier() {
-      @Override
-      public Future<JwtClaims> verify(String token, String expectedAudience) {
-        return Future.succeededFuture(new JwtClaims());
-      }
+        TokenVerifier tokenVerifier = new TokenVerifier() {
+            @Override
+            public Future<JwtClaims> verify(String token, String expectedAudience) {
+                return Future.succeededFuture(new JwtClaims());
+            }
 
-      @Override
-      public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
-        return Future.succeededFuture(new JwtClaims());
-      }
-    };
+            @Override
+            public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
+                return Future.succeededFuture(new JwtClaims());
+            }
+        };
 
-    final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
+        final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
 
-    authHandler.handle(
-      request,
-      new IngressProducer() {
-        @Override
-        public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
-          return null;
-        }
+        authHandler.handle(
+                request,
+                new IngressProducer() {
+                    @Override
+                    public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
+                        return null;
+                    }
 
-        @Override
-        public String getTopic() {
-          return null;
-        }
+                    @Override
+                    public String getTopic() {
+                        return null;
+                    }
 
-        @Override
-        public DataPlaneContract.Reference getReference() {
-          return null;
-        }
+                    @Override
+                    public DataPlaneContract.Reference getReference() {
+                        return null;
+                    }
 
-        @Override
-        public String getAudience() {
-          return "some-required-audience";
-        }
-      },
-      next);
+                    @Override
+                    public String getAudience() {
+                        return "some-required-audience";
+                    }
+                },
+                next);
 
-    verify(next, times(1)).handle(request);
-  }
+        verify(next, times(1)).handle(request);
+    }
 
-  private static HttpServerResponse mockResponse(final HttpServerRequest request, final int statusCode) {
-    final var response = mock(HttpServerResponse.class);
-    when(response.setStatusCode(statusCode)).thenReturn(response);
-    when(request.response()).thenReturn(response);
+    private static HttpServerResponse mockResponse(final HttpServerRequest request, final int statusCode) {
+        final var response = mock(HttpServerResponse.class);
+        when(response.setStatusCode(statusCode)).thenReturn(response);
+        when(request.response()).thenReturn(response);
 
-    return response;
-  }
+        return response;
+    }
 }
