@@ -22,6 +22,9 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
@@ -39,6 +42,7 @@ import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -60,7 +64,7 @@ public class Main {
      * @param args command line arguments.
      */
     public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory)
-            throws IOException {
+      throws IOException, ExecutionException, InterruptedException {
         ReceiverEnv env = new ReceiverEnv(System::getenv);
 
         OpenTelemetrySdk openTelemetry =
@@ -97,6 +101,10 @@ public class Main {
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
+        // Setup TokenVerifier
+        OIDCDiscoveryConfig oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx).toCompletionStage().toCompletableFuture().get();
+        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
+
         // Configure the verticle to deploy and the deployment options
         final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
                 env,
@@ -104,7 +112,8 @@ public class Main {
                 Metrics.getRegistry(),
                 httpServerOptions,
                 httpsServerOptions,
-                kafkaProducerFactory);
+                kafkaProducerFactory,
+                tokenVerifier);
         DeploymentOptions deploymentOptions =
                 new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
 

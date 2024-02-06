@@ -87,12 +87,12 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
+    private final AuthenticationHandler authenticationHandler;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
-    private AuthenticationHandler authenticationHandler;
     private FileWatcher secretWatcher;
 
     public ReceiverVerticle(
@@ -101,7 +101,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final HttpServerOptions httpsServerOptions,
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
-            final String secretVolumePath) {
+            final String secretVolumePath,
+            final TokenVerifier tokenVerifier) {
 
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
@@ -118,6 +119,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
+        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -147,20 +149,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             }
         }
 
-        Promise oidcPromise = Promise.promise();
-        OIDCDiscoveryConfig.build(vertx)
-                .onSuccess(oidcDiscoveryConfig -> {
-                    TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
-                    this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
-                    logger.debug("Authenticationhandler configured");
-                    oidcPromise.complete();
-                })
-                .onFailure(oidcPromise::fail);
-
         final var handler = new ProbeHandler(
                 env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
 
-        Promise httpServerPromise = Promise.promise();
         if (this.httpsServer != null) {
             CompositeFuture.all(
                             this.httpServer
@@ -172,19 +163,15 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                                     .exceptionHandler(startPromise::tryFail)
                                     .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
                     .<Void>mapEmpty()
-                    .onComplete(httpServerPromise);
+                    .onComplete(startPromise);
         } else {
             this.httpServer
                     .requestHandler(handler)
                     .exceptionHandler(startPromise::tryFail)
                     .listen(this.httpServerOptions.getPort(), this.httpServerOptions.getHost())
                     .<Void>mapEmpty()
-                    .onComplete(httpServerPromise);
+                    .onComplete(startPromise);
         }
-
-        Future.all(oidcPromise.future(), httpServerPromise.future())
-                .<Void>mapEmpty()
-                .onComplete(startPromise);
 
         setupSecretWatcher();
     }
