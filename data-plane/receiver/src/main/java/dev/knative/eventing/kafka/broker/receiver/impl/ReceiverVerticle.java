@@ -24,6 +24,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -149,7 +150,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         Promise oidcPromise = Promise.promise();
         OIDCDiscoveryConfig.build(vertx)
                 .onSuccess(oidcDiscoveryConfig -> {
-                    TokenVerifier tokenVerifier = new TokenVerifier(vertx, oidcDiscoveryConfig);
+                    TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
                     this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
                     logger.debug("Authenticationhandler configured");
                     oidcPromise.complete();
