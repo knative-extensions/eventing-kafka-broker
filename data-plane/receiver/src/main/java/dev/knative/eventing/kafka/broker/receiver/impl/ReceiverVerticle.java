@@ -87,8 +87,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
-    private final AuthenticationHandler authenticationHandler;
+    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
 
+    private AuthenticationHandler authenticationHandler;
     private HttpServer httpServer;
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
@@ -119,9 +120,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
-
-        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
-        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
+        this.oidcDiscoveryConfig = oidcDiscoveryConfig;
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -134,6 +133,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
+
+        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
+        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
