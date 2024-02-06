@@ -144,7 +144,7 @@ type ConsumerGroupStatus struct {
 
 	// Selector is the string serialized label selector needed for the scale subresource.
 	// Defaults to ""
-	Selector string `json:"selector"`
+	Selector string `json:"selector,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
