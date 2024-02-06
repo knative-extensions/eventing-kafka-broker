@@ -101,9 +101,8 @@ public class Main {
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-        // Setup TokenVerifier
+        // Setup OIDC discovery config
         OIDCDiscoveryConfig oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx).toCompletionStage().toCompletableFuture().get();
-        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
 
         // Configure the verticle to deploy and the deployment options
         final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
@@ -113,7 +112,7 @@ public class Main {
                 httpServerOptions,
                 httpsServerOptions,
                 kafkaProducerFactory,
-                tokenVerifier);
+                oidcDiscoveryConfig);
         DeploymentOptions deploymentOptions =
                 new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
 

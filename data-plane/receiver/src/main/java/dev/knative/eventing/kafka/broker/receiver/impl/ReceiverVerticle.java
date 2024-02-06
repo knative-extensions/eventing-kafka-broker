@@ -102,7 +102,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
             final String secretVolumePath,
-            final TokenVerifier tokenVerifier) {
+            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
 
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
@@ -119,6 +119,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
+
+        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
         this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
     }
 

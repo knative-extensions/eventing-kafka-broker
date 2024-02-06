@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -44,7 +45,7 @@ public class ReceiverVerticleFactoryTest {
                 mock(HttpServerOptions.class),
                 mock(HttpServerOptions.class),
                 mock(MockReactiveProducerFactory.class),
-                mock(TokenVerifier.class));
+                mock(OIDCDiscoveryConfig.class));
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
     }
