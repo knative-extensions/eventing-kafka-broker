@@ -92,5 +92,5 @@ func TestKafkaChannelOIDC(t *testing.T) {
 	name := feature.MakeRandomK8sName("kafkaChannel")
 	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
 
-	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkachannelresource.GVR(), kafkachannelresource.GVK().Kind, name, env.Namespace()))
+	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkachannelresource.GVR(), "KafkaChannel", name, env.Namespace()))
 }
