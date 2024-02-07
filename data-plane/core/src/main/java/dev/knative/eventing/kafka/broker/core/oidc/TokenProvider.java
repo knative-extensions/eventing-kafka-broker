@@ -24,6 +24,8 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import java.util.concurrent.TimeUnit;
 
 public class TokenProvider {
@@ -38,7 +40,10 @@ public class TokenProvider {
     private final KubernetesClient kubernetesClient;
     private final Cache<String, String> tokenCache;
 
-    public TokenProvider() {
+    private final Vertx vertx;
+
+    public TokenProvider(Vertx vertx) {
+        this.vertx = vertx;
         Config clientConfig = new ConfigBuilder().build();
         kubernetesClient =
                 new KubernetesClientBuilder().withConfig(clientConfig).build();
@@ -49,39 +54,45 @@ public class TokenProvider {
                 .build();
     }
 
-    public String getToken(NamespacedName serviceAccount, String audience) {
+    public Future<String> getToken(NamespacedName serviceAccount, String audience) {
         String cacheKey = generateCacheKey(serviceAccount, audience);
         String token = tokenCache.getIfPresent(cacheKey);
 
-        if (token == null) {
-            token = requestToken(serviceAccount, audience);
-            if (token != null) {
-                tokenCache.put(cacheKey, token);
-            }
+        if (token != null) {
+            return Future.succeededFuture(token);
+        } else {
+            return requestToken(serviceAccount, audience).onSuccess(t -> {
+                if (t != null) {
+                    tokenCache.put(cacheKey, t);
+                }
+            });
         }
-
-        return token;
     }
 
-    private String requestToken(NamespacedName serviceAccount, String audience) {
-        TokenRequest tokenRequest = new TokenRequestBuilder()
-                .withNewSpec()
-                .withAudiences(audience)
-                .withExpirationSeconds(TOKEN_EXPIRATION_SECONDS)
-                .endSpec()
-                .build();
+    private Future<String> requestToken(NamespacedName serviceAccount, String audience) {
+        return this.vertx.executeBlocking(
+                promise -> {
+                    TokenRequest tokenRequest = new TokenRequestBuilder()
+                            .withNewSpec()
+                            .withAudiences(audience)
+                            .withExpirationSeconds(TOKEN_EXPIRATION_SECONDS)
+                            .endSpec()
+                            .build();
 
-        tokenRequest = kubernetesClient
-                .serviceAccounts()
-                .inNamespace(serviceAccount.namespace())
-                .withName(serviceAccount.name())
-                .tokenRequest(tokenRequest);
+                    tokenRequest = kubernetesClient
+                            .serviceAccounts()
+                            .inNamespace(serviceAccount.namespace())
+                            .withName(serviceAccount.name())
+                            .tokenRequest(tokenRequest);
 
-        if (tokenRequest != null && tokenRequest.getStatus() != null) {
-            return tokenRequest.getStatus().getToken();
-        } else {
-            return null;
-        }
+                    if (tokenRequest != null && tokenRequest.getStatus() != null) {
+                        promise.complete(tokenRequest.getStatus().getToken());
+                    } else {
+                        promise.fail("could not request token for " + serviceAccount.name() + "/"
+                                + serviceAccount.namespace());
+                    }
+                },
+                false);
     }
 
     private String generateCacheKey(NamespacedName serviceAccount, String audience) {
