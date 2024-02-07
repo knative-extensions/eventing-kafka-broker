@@ -82,7 +82,7 @@ public class AuthenticationHandlerTest {
     }
 
     @Test
-    public void shouldContinueWithRequestWhenJWTSucceedsFails() {
+    public void shouldContinueWithRequestWhenJWTSucceeds() {
         final HttpServerRequest request = mock(HttpServerRequest.class);
         final var next = mock(Handler.class); // mockHandler(request);
 

@@ -62,11 +62,11 @@ public class TokenVerifierImpl implements TokenVerifier {
     public Future<JwtClaims> verify(final HttpServerRequest request, String expectedAudience) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || authHeader.isEmpty()) {
-            return Future.failedFuture("Request didn't contain Authorization header"); // change to exception
+            return Future.failedFuture("Request didn't contain Authorization header");
         }
 
         if (!authHeader.startsWith("Bearer ") && authHeader.length() <= "Bearer ".length()) {
-            return Future.failedFuture("Authorization header didn't contain Bearer token"); // change to exception
+            return Future.failedFuture("Authorization header didn't contain Bearer token");
         }
 
         String token = authHeader.substring("Bearer ".length());
