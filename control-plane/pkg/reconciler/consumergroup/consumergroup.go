@@ -854,45 +854,46 @@ func keyOf(cg metav1.Object) string {
 //
 // When Keda creates a scaled object, it also generates a Horizontal Pod Autoscaler. This resource will also be removed
 // when the scaled object is deleted.
-func (r *Reconciler) deleteKedaObjects(ctx context.Context) error {
+func (r *Reconciler) deleteKedaObjects(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 
-	ns, err := r.KubeClient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to list available namespaces: %w", err)
+	// check if scaled object exist, if not ignore
+	scaledObjectName := keda.GenerateScaledObjectName(cg)
+	_, err := r.KedaClient.KedaV1alpha1().ScaledObjects(cg.Namespace).Get(ctx, scaledObjectName, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get Keda scaled object: %w", err)
 	}
-	for _, namespace := range ns.Items {
-		// delete scaled object
-		scaledObjects, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace.Namespace).List(ctx, metav1.ListOptions{})
+	if !apierrors.IsNotFound(err) {
+		err = r.KedaClient.KedaV1alpha1().ScaledObjects(cg.Namespace).Delete(ctx, scaledObjectName, metav1.DeleteOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to list available Keda scaled objects: %w", err)
+			return fmt.Errorf("failed to delete Keda scaled object: %w", err)
 		}
+		logging.FromContext(ctx).Debugw("Keda scaled object deleted",
+			"name", scaledObjectName,
+			"namespace", cg.Namespace)
+	}
 
-		for _, scaledObject := range scaledObjects.Items {
-			err = r.KedaClient.KedaV1alpha1().ScaledObjects(scaledObject.Namespace).Delete(ctx, scaledObject.Name, metav1.DeleteOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to delete Keda scaled object: %w", err)
-			}
-			logging.FromContext(ctx).Debugw("Keda scaled object deleted",
-				"name", scaledObject.Name,
-				"namespace", scaledObject.Namespace)
+	// check if trigger authentication exist , if not ignore
+	var triggerAuthName string
+	if len(cg.ObjectMeta.OwnerReferences) > 0 && cg.ObjectMeta.OwnerReferences[0].UID != "" {
+		triggerAuthName = string(cg.ObjectMeta.OwnerReferences[0].UID)
+	}
+	// skip deleting trigger authentication if object reference doesn't exist
+	if triggerAuthName == "" {
+		return nil
+	}
 
-		}
-
-		// delete trigger authentication
-		triggerAuths, err := r.KedaClient.KedaV1alpha1().TriggerAuthentications(namespace.Namespace).List(ctx, metav1.ListOptions{})
+	_, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(cg.Namespace).Get(ctx, triggerAuthName, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get Keda trigger authenticatoin")
+	}
+	if !apierrors.IsNotFound(err) {
+		err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(cg.Namespace).Delete(ctx, triggerAuthName, metav1.DeleteOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to list available Keda trigger authentication objects: %w", err)
+			return fmt.Errorf("failed to delete Keda trigger authentication: %w", err)
 		}
-
-		for _, triggerAuth := range triggerAuths.Items {
-			err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(triggerAuth.Namespace).Delete(ctx, triggerAuth.Name, metav1.DeleteOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to delete Keda trigger authentication: %w", err)
-			}
-			logging.FromContext(ctx).Debugw("Keda trigger authentication deleted",
-				"name", triggerAuth.Name,
-				"namespace", triggerAuth.Namespace)
-		}
+		logging.FromContext(ctx).Debugw("Keda trigger authentication deleted",
+			"name", triggerAuthName,
+			"namespace", cg.Namespace)
 	}
 	return nil
 }
