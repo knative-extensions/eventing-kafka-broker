@@ -33,7 +33,7 @@ function usage() {
 	echo "   teardown-chaos                                          Remove chaosduck"
 	echo "   profiler                                                Run profiling tests"
 	echo "   generate                                                Run code generators"
-	echo "   deploy-control-plane                                    Build and deploy control plane tests"
+	echo "   deploy-control-plane                                    Build and deploy control plane"
 	echo "   build-from-source                                       Build artifacts from source"
 	echo "   build-for-source-from-source                            Build artifacts from source for source bundle only"
 	echo "   benchmark-filter <bencmark_class_name>                  Run the filter benchmarks for <benchmark_class_name>"
