@@ -121,7 +121,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	})
 
 	globalResync := func(_ interface{}) {
-		impl.GlobalResync(triggerInformer.Informer())
+		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName), triggerInformer.Informer())
 	}
 
 	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
