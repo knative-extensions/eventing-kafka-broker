@@ -118,7 +118,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	})
 
 	globalResync := func(_ interface{}) {
-		impl.GlobalResync(triggerInformer.Informer())
+		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName), triggerInformer.Informer())
 	}
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
