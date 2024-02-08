@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -69,7 +70,13 @@ public class WebClientCloudEventSenderTest {
         doNothing().when(webClient).close();
 
         final var consumerRecordSender = new WebClientCloudEventSender(
-                vertx, webClient, "http://localhost:12345", FakeConsumerVerticleContext.get(), Tags.empty());
+                vertx,
+                webClient,
+                "http://localhost:12345",
+                "",
+                new NamespacedName("", ""),
+                FakeConsumerVerticleContext.get(),
+                Tags.empty());
 
         consumerRecordSender
                 .close()
@@ -115,6 +122,8 @@ public class WebClientCloudEventSenderTest {
                 vertx,
                 WebClient.create(vertx),
                 "http://localhost:" + port,
+                "",
+                new NamespacedName("", ""),
                 FakeConsumerVerticleContext.get(
                         FakeConsumerVerticleContext.get().getResource(),
                         DataPlaneContract.Egress.newBuilder(
@@ -174,6 +183,8 @@ public class WebClientCloudEventSenderTest {
                 vertx,
                 WebClient.create(vertx),
                 "http://localhost:" + port,
+                "",
+                new NamespacedName("", ""),
                 FakeConsumerVerticleContext.get(
                         FakeConsumerVerticleContext.get().getResource(),
                         DataPlaneContract.Egress.newBuilder(
@@ -236,6 +247,8 @@ public class WebClientCloudEventSenderTest {
                 vertx,
                 WebClient.create(vertx),
                 "http://localhost:" + port,
+                "",
+                new NamespacedName("", ""),
                 FakeConsumerVerticleContext.get(
                         FakeConsumerVerticleContext.get().getResource(),
                         DataPlaneContract.Egress.newBuilder(
@@ -292,6 +305,8 @@ public class WebClientCloudEventSenderTest {
                 vertx,
                 WebClient.create(vertx),
                 "http://localhost:" + port,
+                "",
+                new NamespacedName("", ""),
                 FakeConsumerVerticleContext.get(
                         FakeConsumerVerticleContext.get().getResource(),
                         DataPlaneContract.Egress.newBuilder(
@@ -357,6 +372,8 @@ public class WebClientCloudEventSenderTest {
                 vertx,
                 WebClient.create(vertx),
                 "http://localhost:" + port,
+                "",
+                new NamespacedName("", ""),
                 FakeConsumerVerticleContext.get(
                         FakeConsumerVerticleContext.get().getResource(),
                         DataPlaneContract.Egress.newBuilder(

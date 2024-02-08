@@ -75,6 +75,21 @@ func TestKafkaChannelReadiness(t *testing.T) {
 	}
 }
 
+func TestKafkaChannelDispatcherAuthenticatesWithOIDC(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	env.Test(ctx, t, channel.DispatcherAuthenticatesRequestsWithOIDC())
+}
+
 func TestKafkaChannelOIDC(t *testing.T) {
 	// Run Test In Parallel With Others
 	t.Parallel()
