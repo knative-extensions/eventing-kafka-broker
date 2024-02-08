@@ -2301,8 +2301,9 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 						WithBrokerAddresses([]duckv1.Addressable{
 							{
-								Name: pointer.String("http"),
-								URL:  brokerAddress,
+								Name:     pointer.String("http"),
+								URL:      brokerAddress,
+								Audience: &brokerAudience,
 							},
 						}),
 						WithBrokerAddress(duckv1.Addressable{
