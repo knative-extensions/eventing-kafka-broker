@@ -50,4 +50,9 @@ public interface IngressProducer {
      * @return the resource associated with this producer.
      */
     DataPlaneContract.Reference getReference();
+
+    /**
+     * @return the OIDC audience for the ingress.
+     */
+    String getAudience();
 }

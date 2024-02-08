@@ -28,6 +28,7 @@ import (
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
@@ -83,13 +84,13 @@ func TestKafkaChannelOIDC(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
-		environment.WithPollTimings(3*time.Second, 120*time.Second),
+		environment.WithPollTimings(2*time.Second, 12*time.Minute),
 		environment.Managed(t),
+		eventshub.WithTLS(t),
 	)
 
 	name := feature.MakeRandomK8sName("kafkaChannel")
 	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
 
-	env.Test(ctx, t, oidc.AddressableHasAudiencePopulated(kafkachannelresource.GVR(), kafkachannelresource.GVK().Kind, name, env.Namespace()))
-	// when the KafkaChannel supports all the OIDC features, we can do `TestKafkaChannelOIDC = rekt.TestChannelImplSupportsOIDC` too
+	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkachannelresource.GVR(), "KafkaChannel", name, env.Namespace()))
 }

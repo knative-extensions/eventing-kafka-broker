@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -39,6 +40,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final String secretVolumePath = "/etc/receiver-tls-secret";
 
     private final IngressRequestHandler ingressRequestHandler;
+    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
 
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
@@ -48,16 +50,16 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final MeterRegistry metricsRegistry,
             final HttpServerOptions httpServerOptions,
             final HttpServerOptions httpsServerOptions,
-            final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory) {
-        {
-            this.env = env;
-            this.producerConfigs = producerConfigs;
-            this.httpServerOptions = httpServerOptions;
-            this.httpsServerOptions = httpsServerOptions;
-            this.ingressRequestHandler =
-                    new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
-            this.kafkaProducerFactory = kafkaProducerFactory;
-        }
+            final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
+            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
+        this.env = env;
+        this.producerConfigs = producerConfigs;
+        this.httpServerOptions = httpServerOptions;
+        this.httpsServerOptions = httpsServerOptions;
+        this.ingressRequestHandler =
+                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
+        this.kafkaProducerFactory = kafkaProducerFactory;
+        this.oidcDiscoveryConfig = oidcDiscoveryConfig;
     }
 
     @Override
@@ -71,6 +73,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         producerConfigs,
                         properties -> kafkaProducerFactory.create(v, properties)),
                 this.ingressRequestHandler,
-                secretVolumePath);
+                secretVolumePath,
+                oidcDiscoveryConfig);
     }
 }
