@@ -19,10 +19,11 @@ package broker
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing/pkg/auth"
-	"knative.dev/pkg/logging"
 	"strings"
 	"time"
+
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"

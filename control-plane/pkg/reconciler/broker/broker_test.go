@@ -19,10 +19,11 @@ package broker_test // different package name due to import cycles. (broker -> t
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing/pkg/auth"
 	"net/url"
 	"testing"
 	"text/template"
+
+	"knative.dev/eventing/pkg/auth"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
