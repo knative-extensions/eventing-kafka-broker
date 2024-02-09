@@ -27,6 +27,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
@@ -437,6 +438,27 @@ func TestTopicConfigFromConfigMap(t *testing.T) {
 				TopicDetail: sarama.TopicDetail{
 					NumPartitions:     5,
 					ReplicationFactor: 8,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+		},
+		{
+			name: "All valid, config options provided",
+			data: map[string]string{
+				"default.topic.partitions":               "5",
+				"default.topic.replication.factor":       "8",
+				"bootstrap.servers":                      "server1:9092, server2:9092",
+				"default.topic.config.retention.ms":      "3600",
+				"default.topic.config.max.message.bytes": "68000",
+			},
+			want: TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     5,
+					ReplicationFactor: 8,
+					ConfigEntries: map[string]*string{
+						"retention.ms":      pointer.String("3600"),
+						"max.message.bytes": pointer.String("68000"),
+					},
 				},
 				BootstrapServers: []string{"server1:9092", "server2:9092"},
 			},

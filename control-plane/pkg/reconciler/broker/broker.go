@@ -22,6 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -250,8 +253,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			return err
 		}
 
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
 	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
@@ -260,15 +263,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(ingressHost, broker, caCerts)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpsAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
-		httpAddress := receiver.HTTPAddress(ingressHost, broker)
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
-
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &addressableStatus,
 		ResourceKey: types.NamespacedName{
@@ -285,6 +287,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	broker.Status.Address = addressableStatus.Address
 	broker.Status.Addresses = addressableStatus.Addresses
+
+	if feature.FromContext(ctx).IsOIDCAuthentication() && broker.Status.Address != nil {
+		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
+		broker.Status.Address.Audience = &audience
+
+		for i := range broker.Status.Addresses {
+			broker.Status.Addresses[i].Audience = &audience
+		}
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
+		if broker.Status.Address != nil {
+			broker.Status.Address.Audience = nil
+		}
+
+		for i := range broker.Status.Addresses {
+			broker.Status.Addresses[i].Audience = nil
+		}
+	}
+
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
@@ -363,7 +385,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.HTTPAddress(ingressHost, broker)
+	address := receiver.HTTPAddress(ingressHost, nil, broker)
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &duckv1.AddressStatus{
 			Address:   &address,
@@ -646,6 +668,10 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 				Version:   secret.ResourceVersion,
 			},
 		}
+	}
+
+	if broker.Status.Address != nil && broker.Status.Address.Audience != nil {
+		resource.Ingress.Audience = *broker.Status.Address.Audience
 	}
 
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.DefaultBackoffDelayMs)

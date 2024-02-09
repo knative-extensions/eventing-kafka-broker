@@ -392,7 +392,8 @@ public abstract class AbstractDataPlaneTest {
                         AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveProducerFactory()
                                 .create(v, properties)),
                 new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry()),
-                SECRET_VOLUME_PATH);
+                SECRET_VOLUME_PATH,
+                null);
 
         final CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

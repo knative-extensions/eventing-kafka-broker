@@ -22,11 +22,15 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthenticationHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -83,12 +87,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
+    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
 
+    private AuthenticationHandler authenticationHandler;
     private HttpServer httpServer;
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
-
     private FileWatcher secretWatcher;
 
     public ReceiverVerticle(
@@ -97,7 +102,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final HttpServerOptions httpsServerOptions,
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
-            final String secretVolumePath) {
+            final String secretVolumePath,
+            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
 
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
@@ -114,6 +120,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
+        this.oidcDiscoveryConfig = oidcDiscoveryConfig;
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -126,6 +133,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
+
+        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
+        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
@@ -200,10 +210,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     }
 
     @Override
-    public void handle(HttpServerRequest request) {
-
-        final var requestContext = new RequestContext(request);
-
+    public void handle(final HttpServerRequest request) {
         // Look up for the ingress producer
         IngressProducer producer = this.ingressProducerStore.resolve(request.host(), request.path());
         if (producer == null) {
@@ -224,8 +231,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             return;
         }
 
-        // Invoke the ingress request handler
-        this.ingressRequestHandler.handle(requestContext, producer);
+        this.authenticationHandler.handle(request, producer, req -> {
+            // Invoke the ingress request handler
+            final var requestContext = new RequestContext(req);
+            this.ingressRequestHandler.handle(requestContext, producer);
+        });
     }
 
     public void updateServerConfig() {

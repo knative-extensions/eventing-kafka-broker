@@ -54,6 +54,12 @@ kubectl apply -Rf "$(dirname "$0")/config-transport-encryption"
 
 go_test_e2e -timeout=1h ./test/e2e_new -run TLS || fail_test
 
+echo "Running E2E Reconciler Tests with OIDC authentication enabled"
+
+kubectl apply -Rf "$(dirname "$0")/config-oidc-authentication"
+
+go_test_e2e -timeout=1h ./test/e2e_new -run OIDC || fail_test
+
 if ! ${LOCAL_DEVELOPMENT}; then
   go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed"
 fi

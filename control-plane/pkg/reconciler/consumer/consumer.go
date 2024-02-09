@@ -116,7 +116,11 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 	}
 
 	egress.Reference = userFacingResourceRef
-	egress.VReplicas = *c.Spec.VReplicas
+	if c.Spec.VReplicas != nil {
+		egress.VReplicas = *c.Spec.VReplicas
+	} else {
+		egress.VReplicas = 1
+	}
 
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),
@@ -142,6 +146,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	}
 	c.Status.SubscriberURI = destinationAddr.URL
 	c.Status.SubscriberCACerts = destinationAddr.CACerts
+	c.Status.SubscriberAudience = destinationAddr.Audience
 
 	egressConfig := &contract.EgressConfig{}
 	if c.Spec.Delivery != nil {
@@ -154,6 +159,9 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
 		if egressConfig.DeadLetterCACerts != "" {
 			c.Status.DeliveryStatus.DeadLetterSinkCACerts = pointer.String(egressConfig.DeadLetterCACerts)
+		}
+		if egressConfig.DeadLetterAudience != "" {
+			c.Status.DeliveryStatus.DeadLetterSinkAudience = pointer.String(egressConfig.DeadLetterAudience)
 		}
 	}
 
@@ -180,9 +188,16 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 	if destinationAddr.CACerts != nil {
 		egress.DestinationCACerts = *destinationAddr.CACerts
 	}
+	if destinationAddr.Audience != nil {
+		egress.DestinationAudience = *destinationAddr.Audience
+	}
 
 	if c.Spec.Configs.KeyType != nil {
 		egress.KeyType = coreconfig.KeyTypeFromString(*c.Spec.Configs.KeyType)
+	}
+
+	if c.Spec.OIDCServiceAccountName != nil {
+		egress.OidcServiceAccountName = *c.Spec.OIDCServiceAccountName
 	}
 
 	if err := r.reconcileReplyStrategy(ctx, c, egress); err != nil {
@@ -306,6 +321,9 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 		if destination.CACerts != nil {
 			egress.ReplyUrlCACerts = *destination.CACerts
 		}
+		if destination.Audience != nil {
+			egress.ReplyUrlAudience = *destination.Audience
+		}
 		return nil
 	}
 	if c.Spec.Reply.TopicReply != nil && c.Spec.Reply.TopicReply.Enabled {
@@ -358,6 +376,12 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 //
 // The actual mutation is done by calling the provided contractMutatorFunc.
 func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc, shouldWait PodStatusWaitFunc) (bool, error) {
+	if c.Spec.PodBind == nil {
+		// No PodBind so Pod will not be found, return no error since the Consumer
+		// will get re-queued when the pod is added.
+		return false, nil
+	}
+
 	// Get the data plane pod when the Consumer should be scheduled.
 	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
 	if apierrors.IsNotFound(err) {

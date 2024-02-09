@@ -101,8 +101,9 @@ function knative_eventing() {
     kubectl apply -f "${EVENTING_CONFIG}/eventing-core.yaml"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-tls-networking.yaml"
   else
-    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE}"
+    echo ">> Install Knative Eventing from ${KNATIVE_EVENTING_RELEASE} and ${KNATIVE_EVENTING_RELEASE_TLS}"
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
+    kubectl apply -f "${KNATIVE_EVENTING_RELEASE_TLS}"
   fi
 
   ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'

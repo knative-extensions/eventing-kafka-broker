@@ -66,6 +66,10 @@ func (cg *ConsumerGroup) GetKey() types.NamespacedName {
 
 // GetVReplicas implements scheduler.VPod interface.
 func (cg *ConsumerGroup) GetVReplicas() int32 {
+	if cg.Spec.Replicas == nil {
+		return 1
+	}
+
 	return *cg.Spec.Replicas
 }
 
@@ -100,6 +104,10 @@ type ConsumerGroupSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 	// +optional
 	Selector map[string]string `json:"selector,omitempty" protobuf:"bytes,2,rep,name=selector"`
+
+	// OIDCServiceAccountName is the name of service account used for this components
+	// OIDC authentication.
+	OIDCServiceAccountName *string `json:"oidcServiceAccountName,omitempty"`
 }
 
 type ConsumerGroupStatus struct {
@@ -119,6 +127,10 @@ type ConsumerGroupStatus struct {
 	// according to https://www.rfc-editor.org/rfc/rfc7468.
 	// +optional
 	SubscriberCACerts *string `json:"subscriberCACerts,omitempty"`
+
+	// SubscriberAudience is the OIDC audience for the resolved URI
+	// +optional
+	SubscriberAudience *string `json:"subscriberAudience,omitempty"`
 
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.

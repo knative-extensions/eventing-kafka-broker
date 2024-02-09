@@ -98,6 +98,11 @@ public class IngressRequestHandlerImplTest {
             public DataPlaneContract.Reference getReference() {
                 return DataPlaneContract.Reference.newBuilder().build();
             }
+
+            @Override
+            public String getAudience() {
+                return "";
+            }
         });
 
         verifySetStatusCodeAndTerminateResponse(statusCode, response);
@@ -128,6 +133,11 @@ public class IngressRequestHandlerImplTest {
             @Override
             public DataPlaneContract.Reference getReference() {
                 return DataPlaneContract.Reference.newBuilder().build();
+            }
+
+            @Override
+            public String getAudience() {
+                return "";
             }
         });
 

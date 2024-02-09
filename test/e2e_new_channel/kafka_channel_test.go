@@ -23,14 +23,19 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/eventing/test/rekt/features/channel"
+	"knative.dev/eventing/test/rekt/features/oidc"
+
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/state"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkachannel"
+	kafkachannelresource "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
 )
 
 const (
@@ -68,4 +73,39 @@ func TestKafkaChannelReadiness(t *testing.T) {
 	for _, f := range testFeatures {
 		env.Test(ctx, t, f)
 	}
+}
+
+func TestKafkaChannelDispatcherAuthenticatesWithOIDC(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	env.Test(ctx, t, channel.DispatcherAuthenticatesRequestsWithOIDC())
+}
+
+func TestKafkaChannelOIDC(t *testing.T) {
+	// Run Test In Parallel With Others
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(2*time.Second, 12*time.Minute),
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	name := feature.MakeRandomK8sName("kafkaChannel")
+	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
+
+	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkachannelresource.GVR(), "KafkaChannel", name, env.Namespace()))
 }

@@ -23,6 +23,8 @@ import (
 	"testing"
 	"text/template"
 
+	"knative.dev/eventing/pkg/auth"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -106,6 +108,10 @@ var (
 	linear                    = eventingduck.BackoffPolicyLinear
 	exponential               = eventingduck.BackoffPolicyExponential
 	customBrokerTopicTemplate = customTemplate()
+	brokerAudience            = auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), metav1.ObjectMeta{
+		Name:      BrokerName,
+		Namespace: BrokerNamespace,
+	})
 )
 
 var DefaultEnv = &config.Env{
@@ -121,7 +127,6 @@ var DefaultEnv = &config.Env{
 
 func TestBrokerReconciler(t *testing.T) {
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
-
 	t.Parallel()
 
 	for _, f := range Formats {
@@ -2220,6 +2225,105 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					},
 				}),
 			},
+		},
+		{
+			Name: "Should provision audience if authentication enabled",
+			Objects: []runtime.Object{
+				NewBroker(
+					WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+						BrokerAuthConfig("secret-1"),
+					))),
+				),
+				NewSSLSecret(ConfigMapNamespace, "secret-1"),
+				BrokerConfig(bootstrapServers, 20, 5, BrokerAuthConfig("secret-1")),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				SecretFinalizerUpdate("secret-1", SecretFinalizerName),
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+							Auth: &contract.Resource_AuthSecret{
+								AuthSecret: &contract.Reference{
+									Uuid:      SecretUUID,
+									Namespace: ConfigMapNamespace,
+									Name:      "secret-1",
+									Version:   SecretResourceVersion,
+								},
+							},
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						WithBrokerConfig(KReference(BrokerConfig(bootstrapServers, 20, 5,
+							BrokerAuthConfig("secret-1"),
+						))),
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusBrokerTopicReady,
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
+						BrokerConfigMapSecretAnnotation("secret-1"),
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      brokerAddress,
+								Audience: &brokerAudience,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      brokerAddress,
+							Audience: &brokerAudience,
+						}),
+						WithBrokerAddessable(),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				ExpectedTopicDetail: sarama.TopicDetail{
+					NumPartitions:     20,
+					ReplicationFactor: 5,
+				},
+			},
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication: feature.Enabled,
+			}),
 		},
 	}
 

@@ -31,3 +31,8 @@ source "$(dirname "$0")/../test/e2e-common.sh"
 knative_setup || exit $?
 
 test_setup || exit $?
+
+if [[ ! -e $(dirname "$0")/../tmp ]]; then
+    mkdir $(dirname "$0")/../tmp
+fi
+echo "${UNINSTALL_LIST[@]}" > $(dirname "$0")/../tmp/uninstall_list.txt
