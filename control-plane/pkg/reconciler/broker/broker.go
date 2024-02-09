@@ -22,6 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -265,7 +268,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}
-
 	proberAddressable := prober.ProberAddressable{
 		AddressStatus: &addressableStatus,
 		ResourceKey: types.NamespacedName{
@@ -282,6 +284,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	broker.Status.Address = addressableStatus.Address
 	broker.Status.Addresses = addressableStatus.Addresses
+
+	if feature.FromContext(ctx).IsOIDCAuthentication() && broker.Status.Address != nil {
+		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
+		broker.Status.Address.Audience = &audience
+
+		for i := range broker.Status.Addresses {
+			broker.Status.Addresses[i].Audience = &audience
+		}
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
+		if broker.Status.Address != nil {
+			broker.Status.Address.Audience = nil
+		}
+
+		for i := range broker.Status.Addresses {
+			broker.Status.Addresses[i].Audience = nil
+		}
+	}
+
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
