@@ -124,6 +124,10 @@ type ConsumerGroupStatus struct {
 	// same Template, but individual replicas also have a consistent identity.
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
+
+	// Selector is the string serialized label selector needed for the scale subresource.
+	// Defaults to ""
+	Selector string `json:"selector,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
