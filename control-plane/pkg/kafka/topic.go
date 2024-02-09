@@ -24,6 +24,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/configmap"
 )
 
@@ -31,6 +32,7 @@ const (
 	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
 	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
 	BootstrapServersConfigMapKey              = "bootstrap.servers"
+	DefaultTopicConfigPrefix                  = "default.topic.config."
 
 	GroupIDConfigMapKey = "group.id"
 
@@ -95,6 +97,15 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)
+	}
+
+	for k, v := range cm.Data {
+		if s := strings.TrimPrefix(k, DefaultTopicConfigPrefix); s != k {
+			if topicDetail.ConfigEntries == nil {
+				topicDetail.ConfigEntries = make(map[string]*string)
+			}
+			topicDetail.ConfigEntries[s] = pointer.String(v)
+		}
 	}
 
 	topicDetail.ReplicationFactor = int16(replicationFactor)
