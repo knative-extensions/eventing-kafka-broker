@@ -140,6 +140,13 @@ rules:
       - update
       - create
       - delete
+  # To grant NamespacedBroker permissions to create OIDC tokens
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
 
   # Scheduler permissions
   - apiGroups:

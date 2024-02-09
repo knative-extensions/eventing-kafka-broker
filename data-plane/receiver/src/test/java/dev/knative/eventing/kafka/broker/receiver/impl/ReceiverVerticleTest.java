@@ -150,7 +150,8 @@ public class ReceiverVerticleTest {
                 v -> store,
                 new IngressRequestHandlerImpl(
                         StrictRequestToRecordMapper.getInstance(), registry, ((event, reference) -> null)),
-                SECRET_VOLUME_PATH);
+                SECRET_VOLUME_PATH,
+                null);
         vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
 
         // Connect to the logger in ReceiverVerticle

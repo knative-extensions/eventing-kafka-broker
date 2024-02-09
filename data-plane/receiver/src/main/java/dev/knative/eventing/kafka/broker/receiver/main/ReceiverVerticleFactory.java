@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.main;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -46,6 +47,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final String secretVolumePath = "/etc/receiver-tls-secret";
 
     private final IngressRequestHandler ingressRequestHandler;
+    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
 
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
@@ -58,7 +60,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
             final Lister<EventType> eventTypeLister,
-            Vertx vertx) {
+            Vertx vertx,
+            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
         {
             this.env = env;
             this.producerConfigs = producerConfigs;
@@ -69,6 +72,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                     metricsRegistry,
                     new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx));
             this.kafkaProducerFactory = kafkaProducerFactory;
+            this.oidcDiscoveryConfig = oidcDiscoveryConfig;
         }
     }
 
@@ -83,6 +87,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         producerConfigs,
                         properties -> kafkaProducerFactory.create(v, properties)),
                 this.ingressRequestHandler,
-                secretVolumePath);
+                secretVolumePath,
+                oidcDiscoveryConfig);
     }
 }

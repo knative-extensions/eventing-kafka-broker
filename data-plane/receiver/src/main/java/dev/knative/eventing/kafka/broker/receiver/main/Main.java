@@ -23,6 +23,7 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -68,7 +70,7 @@ public class Main {
      * @param args command line arguments.
      */
     public static void start(final String[] args, final ReactiveProducerFactory kafkaProducerFactory)
-            throws IOException {
+            throws IOException, ExecutionException, InterruptedException {
         ReceiverEnv env = new ReceiverEnv(System::getenv);
 
         OpenTelemetrySdk openTelemetry =
@@ -105,6 +107,12 @@ public class Main {
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
+        // Setup OIDC discovery config
+        OIDCDiscoveryConfig oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get();
+
         final var kubernetesClient = new KubernetesClientBuilder().build();
         final SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
@@ -136,7 +144,8 @@ public class Main {
                 kafkaProducerFactory,
                 eventTypeClient,
                 eventTypeLister,
-                vertx);
+                vertx,
+                oidcDiscoveryConfig);
         DeploymentOptions deploymentOptions =
                 new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
 

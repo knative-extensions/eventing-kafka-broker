@@ -57,4 +57,9 @@ public interface IngressProducer {
     default boolean isEventTypeAutocreateEnabled() {
         return false;
     }
+
+    /**
+     * @return the OIDC audience for the ingress.
+     */
+    String getAudience();
 }

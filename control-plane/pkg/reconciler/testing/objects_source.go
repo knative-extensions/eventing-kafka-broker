@@ -17,6 +17,8 @@
 package testing
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -24,6 +26,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -249,6 +252,29 @@ func StatusSourceSinkNotResolved(err string) KRShapedOption {
 			"FailedToResolveSink",
 			err,
 		)
+	}
+}
+
+func StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.MarkOIDCIdentityCreatedSucceededWithReason(fmt.Sprintf("%s feature disabled", feature.OIDCAuthentication), "")
+	}
+}
+
+func StatusSourceOIDCIdentityCreatedSucceeded() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.MarkOIDCIdentityCreatedSucceeded()
+	}
+}
+
+func StatusSourceOIDCIdentity(saName string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.Auth = &duckv1.AuthStatus{
+			ServiceAccountName: &saName,
+		}
 	}
 }
 

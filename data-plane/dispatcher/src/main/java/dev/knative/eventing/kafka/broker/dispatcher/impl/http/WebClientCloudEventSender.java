@@ -18,7 +18,9 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.oidc.TokenProvider;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
@@ -31,6 +33,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import java.net.URI;
@@ -49,6 +52,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
     private final WebClient client;
     private final String target;
+    private final String targetOIDCAudience;
+    private final NamespacedName oidcServiceAccount;
     private final ConsumerVerticleContext consumerVerticleContext;
 
     private final Promise<Void> closePromise = Promise.promise();
@@ -57,6 +62,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicInteger inFlightRequests = new AtomicInteger(0);
+    private final TokenProvider tokenProvider;
 
     /**
      * All args constructor.
@@ -70,6 +76,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
             final Vertx vertx,
             final WebClient client,
             final String target,
+            final String targetOIDCAudience,
+            final NamespacedName oidcServiceAccount,
             final ConsumerVerticleContext consumerVerticleContext,
             final Tags additionalTags) {
         Objects.requireNonNull(vertx);
@@ -85,8 +93,11 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         this.vertx = vertx;
         this.client = client;
         this.target = target;
+        this.targetOIDCAudience = targetOIDCAudience;
+        this.oidcServiceAccount = oidcServiceAccount;
         this.consumerVerticleContext = consumerVerticleContext;
         this.retryPolicyFunc = computeRetryPolicy(consumerVerticleContext.getEgressConfig());
+        this.tokenProvider = new TokenProvider(vertx);
 
         Metrics.eventDispatchInFlightCount(
                         additionalTags.and(consumerVerticleContext.getTags()), this.inFlightRequests::get)
@@ -113,6 +124,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
             try {
                 TracingSpan.decorateCurrentWithEvent(event);
                 requestEmitted();
+                // here we send the event
                 send(event, promise).onComplete(v -> requestCompleted());
             } catch (CloudEventRWException e) {
                 logger.error(
@@ -175,21 +187,39 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     }
 
     private Future<?> send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
-        return VertxMessageFactory.createWriter(client.postAbs(target)
-                        .timeout(
-                                this.consumerVerticleContext.getEgressConfig().getTimeout() <= 0
-                                        ? DEFAULT_TIMEOUT_MS
-                                        : this.consumerVerticleContext
-                                                .getEgressConfig()
-                                                .getTimeout())
-                        .putHeader("Prefer", "reply")
-                        .putHeader(
-                                "Kn-Namespace",
-                                this.consumerVerticleContext
-                                        .getEgress()
-                                        .getReference()
-                                        .getNamespace()))
-                .writeBinary(event)
+        Future<String> requestToken;
+        if (this.targetOIDCAudience.isEmpty()) {
+            requestToken = Future.succeededFuture(null);
+        } else {
+            requestToken = this.tokenProvider.getToken(this.oidcServiceAccount, this.targetOIDCAudience);
+        }
+
+        return requestToken
+                .compose(token -> {
+                    HttpRequest<Buffer> req = client.postAbs(target)
+                            .timeout(
+                                    this.consumerVerticleContext
+                                                            .getEgressConfig()
+                                                            .getTimeout()
+                                                    <= 0
+                                            ? DEFAULT_TIMEOUT_MS
+                                            : this.consumerVerticleContext
+                                                    .getEgressConfig()
+                                                    .getTimeout())
+                            .putHeader("Prefer", "reply")
+                            .putHeader(
+                                    "Kn-Namespace",
+                                    this.consumerVerticleContext
+                                            .getEgress()
+                                            .getReference()
+                                            .getNamespace());
+
+                    if (token != null && !token.isEmpty()) {
+                        req.putHeader("Authorization", "Bearer " + token);
+                    }
+
+                    return VertxMessageFactory.createWriter(req).writeBinary(event);
+                })
                 .onFailure(ex -> {
                     logError(event, ex);
                     breaker.tryFail(ex);

@@ -37,10 +37,11 @@ type NamespacedReconciler struct {
 	*base.Reconciler
 	*FlagsHolder
 
-	BrokerLister    eventinglisters.BrokerLister
-	ConfigMapLister corelisters.ConfigMapLister
-	EventingClient  eventingclientset.Interface
-	Resolver        *resolver.URIResolver
+	BrokerLister         eventinglisters.BrokerLister
+	ConfigMapLister      corelisters.ConfigMapLister
+	ServiceAccountLister corelisters.ServiceAccountLister
+	EventingClient       eventingclientset.Interface
+	Resolver             *resolver.URIResolver
 
 	Env *config.Env
 
@@ -81,11 +82,12 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		FlagsHolder: &FlagsHolder{
 			Flags: r.Flags,
 		},
-		BrokerLister:    r.BrokerLister,
-		ConfigMapLister: r.ConfigMapLister,
-		EventingClient:  r.EventingClient,
-		Resolver:        r.Resolver,
-		Env:             r.Env,
+		BrokerLister:         r.BrokerLister,
+		ConfigMapLister:      r.ConfigMapLister,
+		ServiceAccountLister: r.ServiceAccountLister,
+		EventingClient:       r.EventingClient,
+		Resolver:             r.Resolver,
+		Env:                  r.Env,
 		// override
 		BrokerClass:                kafka.NamespacedBrokerClass,
 		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,

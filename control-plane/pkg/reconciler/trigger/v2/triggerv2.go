@@ -229,6 +229,10 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing
 		}
 	}
 
+	if trigger.Status.Auth != nil {
+		expectedCg.Spec.OIDCServiceAccountName = trigger.Status.Auth.ServiceAccountName
+	}
+
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(groupId) //Get by consumer group name
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err

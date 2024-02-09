@@ -103,6 +103,10 @@ type ConsumerSpec struct {
 
 	// PodBind represents a reference to the pod in which the consumer should be placed.
 	PodBind *PodBind `json:"podBind"`
+
+	// OIDCServiceAccountName is the name of the generated service account
+	// used for this components OIDC authentication.
+	OIDCServiceAccountName *string `json:"oidcServiceAccountName,omitempty"`
 }
 
 type ReplyStrategy struct {
@@ -207,6 +211,10 @@ type ConsumerStatus struct {
 	// according to https://www.rfc-editor.org/rfc/rfc7468.
 	// +optional
 	SubscriberCACerts *string `json:"subscriberCACerts,omitempty"`
+
+	// SubscriberAudience is the OIDC audience for the resolved URI
+	// +optional
+	SubscriberAudience *string `json:"subscriberAudience,omitempty"`
 
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.

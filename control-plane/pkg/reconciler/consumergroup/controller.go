@@ -76,6 +76,10 @@ const (
 	KafkaChannelScheduler = "kafkachannel"
 )
 
+var (
+	statefulSetScaleCacheRefreshPeriod = time.Minute * 5
+)
+
 type envConfig struct {
 	SchedulerRefreshPeriod     int64  `envconfig:"AUTOSCALER_REFRESH_PERIOD" required:"true"`
 	PodCapacity                int32  `envconfig:"POD_CAPACITY" required:"true"`
@@ -267,6 +271,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 	ss, _ := statefulsetscheduler.New(ctx, &statefulsetscheduler.Config{
 		StatefulSetNamespace: system.Namespace(),
 		StatefulSetName:      c.StatefulSetName,
+		ScaleCacheConfig:     scheduler.ScaleCacheConfig{RefreshPeriod: statefulSetScaleCacheRefreshPeriod},
 		PodCapacity:          c.Capacity,
 		RefreshPeriod:        c.RefreshPeriod,
 		SchedulerPolicy:      scheduler.MAXFILLUP,

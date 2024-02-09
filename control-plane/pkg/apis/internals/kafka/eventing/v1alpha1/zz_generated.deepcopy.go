@@ -221,6 +221,11 @@ func (in *ConsumerGroupSpec) DeepCopyInto(out *ConsumerGroupSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.OIDCServiceAccountName != nil {
+		in, out := &in.OIDCServiceAccountName, &out.OIDCServiceAccountName
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -246,6 +251,11 @@ func (in *ConsumerGroupStatus) DeepCopyInto(out *ConsumerGroupStatus) {
 	}
 	if in.SubscriberCACerts != nil {
 		in, out := &in.SubscriberCACerts, &out.SubscriberCACerts
+		*out = new(string)
+		**out = **in
+	}
+	if in.SubscriberAudience != nil {
+		in, out := &in.SubscriberAudience, &out.SubscriberAudience
 		*out = new(string)
 		**out = **in
 	}
@@ -346,6 +356,11 @@ func (in *ConsumerSpec) DeepCopyInto(out *ConsumerSpec) {
 		*out = new(PodBind)
 		**out = **in
 	}
+	if in.OIDCServiceAccountName != nil {
+		in, out := &in.OIDCServiceAccountName, &out.OIDCServiceAccountName
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -370,6 +385,11 @@ func (in *ConsumerStatus) DeepCopyInto(out *ConsumerStatus) {
 	}
 	if in.SubscriberCACerts != nil {
 		in, out := &in.SubscriberCACerts, &out.SubscriberCACerts
+		*out = new(string)
+		**out = **in
+	}
+	if in.SubscriberAudience != nil {
+		in, out := &in.SubscriberAudience, &out.SubscriberAudience
 		*out = new(string)
 		**out = **in
 	}

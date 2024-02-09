@@ -178,6 +178,8 @@ type Reconciler struct {
 func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 	recordExpectedReplicasMetric(ctx, cg)
 
+	r.reconcileStatusSelector(cg)
+
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
@@ -257,6 +259,10 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 	r.InitOffsetLatestInitialOffsetCache.Expire(keyOf(cg))
 
 	return nil
+}
+
+func (r *Reconciler) reconcileStatusSelector(cg *kafkainternals.ConsumerGroup) {
+	cg.Status.Selector = labels.SelectorFromValidatedSet(cg.Spec.Selector).String()
 }
 
 func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
@@ -500,11 +506,17 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 			if c.Status.SubscriberCACerts != nil {
 				cg.Status.SubscriberCACerts = c.Status.SubscriberCACerts
 			}
+			if c.Status.SubscriberAudience != nil {
+				cg.Status.SubscriberAudience = c.Status.SubscriberAudience
+			}
 			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
 				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
 			}
 			if c.Status.DeliveryStatus.DeadLetterSinkCACerts != nil {
 				cg.Status.DeliveryStatus.DeadLetterSinkCACerts = c.Status.DeadLetterSinkCACerts
+			}
+			if c.Status.DeliveryStatus.DeadLetterSinkAudience != nil {
+				cg.Status.DeliveryStatus.DeadLetterSinkAudience = c.Status.DeadLetterSinkAudience
 			}
 		} else if condition == nil { // Propagate only a single false condition
 			cond := c.GetConditionSet().Manage(c.GetStatus()).GetTopLevelCondition()
@@ -524,6 +536,7 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 		}
 		cg.Status.SubscriberURI = subscriber.URL
 		cg.Status.SubscriberCACerts = subscriber.CACerts
+		cg.Status.SubscriberAudience = subscriber.Audience
 	}
 
 	return condition, nil

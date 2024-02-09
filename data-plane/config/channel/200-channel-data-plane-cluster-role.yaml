@@ -29,6 +29,12 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
   # needed for eventtype autocreate
   - apiGroups:
       - "eventing.knative.dev"

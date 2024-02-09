@@ -271,6 +271,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         private final String host;
         private final Properties producerProperties;
         private final DataPlaneContract.Reference reference;
+        private final String audience;
 
         private final boolean eventTypeAutocreateEnabled;
 
@@ -284,6 +285,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             this.producer = producer;
             this.topic = resource.getTopics(0);
             this.reference = resource.getReference();
+            this.audience = resource.getIngress().getAudience();
             this.path = path;
             this.host = host;
             this.producerProperties = producerProperties;
@@ -298,6 +300,11 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         @Override
         public String getTopic() {
             return topic;
+        }
+
+        @Override
+        public String getAudience() {
+            return audience;
         }
 
         @Override
