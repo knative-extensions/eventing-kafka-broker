@@ -23,6 +23,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -186,6 +187,12 @@ func ConsumerGroupReplicas(replicas int32) ConsumerGroupOption {
 func ConsumerGroupStatusReplicas(replicas int32) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
 		cg.Status.Replicas = pointer.Int32(replicas)
+	}
+}
+
+func ConsumerGroupStatusSelector(label map[string]string) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Status.Selector = labels.SelectorFromSet(label).String()
 	}
 }
 
