@@ -25,11 +25,16 @@ import (
 
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
+	"knative.dev/eventing/test/rekt/features/broker"
+	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
+	"knative.dev/eventing/test/rekt/features/oidc"
+	brokerresources "knative.dev/eventing/test/rekt/resources/broker"
 )
 
 const (
@@ -228,4 +233,38 @@ func TestNamespacedBrokerNamespaceDeletion(t *testing.T) {
 	env.Test(ctx, t, features.SetupNamespace(namespace))
 	env.Test(ctx, t, features.SetupNamespacedBroker(name))
 	env.Test(ctx, t, features.CleanupNamespace(namespace))
+}
+
+func TestBrokerSupportsOIDC(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(4*time.Second, 12*time.Minute),
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	name := feature.MakeRandomK8sName("broker")
+	env.Prerequisite(ctx, t, broker.GoesReady(name, brokerresources.WithEnvConfig()...))
+
+	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(brokerresources.GVR(), "Broker", name, env.Namespace()))
+}
+
+func TestBrokerSendsEventsWithOIDCSupport(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	env.TestSet(ctx, t, brokereventingfeatures.BrokerSendEventWithOIDC())
 }
