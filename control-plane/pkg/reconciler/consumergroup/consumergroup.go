@@ -863,6 +863,10 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context, cg *kafkainternals.C
 		return fmt.Errorf("failed to get Keda scaled object: %w", err)
 	}
 
+	if scaledObject == nil {
+		return nil
+	}
+
 	// if there is a trigger authentication tight to the consumer group, delete it
 	if metav1.IsControlledBy(scaledObject, cg) {
 		triggerAuthName := string(cg.ObjectMeta.OwnerReferences[0].UID)
