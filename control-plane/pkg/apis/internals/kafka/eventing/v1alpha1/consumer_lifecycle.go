@@ -59,6 +59,10 @@ func (c *Consumer) MarkBindInProgress() {
 	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionBind, "BindInProgress", "")
 }
 
+func (c *Consumer) MarkBindInProgressWithMessage(messageFormat string, messageA ...interface{}) {
+	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionBind, "BindInProgress", messageFormat, messageA...)
+}
+
 func (c *Consumer) MarkBindSucceeded() {
 	c.GetConditionSet().Manage(c.GetStatus()).MarkTrue(ConsumerConditionBind)
 }
