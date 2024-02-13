@@ -26,6 +26,7 @@ import (
 	"knative.dev/eventing/test/experimental/features/eventtype_autocreate"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
@@ -33,7 +34,10 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
-	"knative.dev/eventing/test/rekt/resources/broker"
+	"knative.dev/eventing/test/rekt/features/broker"
+	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
+	"knative.dev/eventing/test/rekt/features/oidc"
+	brokerresources "knative.dev/eventing/test/rekt/resources/broker"
 )
 
 const (
@@ -257,13 +261,47 @@ func InstallBroker(brokerName string) *feature.Feature {
 	f := feature.NewFeature()
 
 	f.Setup("install one partition configuration", install)
-	f.Setup("install kafka broker", broker.Install(
+	f.Setup("install kafka broker", brokerresources.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
-		broker.WithConfig(cmName),
+		brokerresources.WithBrokerClass(kafka.BrokerClass),
+		brokerresources.WithConfig(cmName),
 	))
-	f.Requirement("kafka broker is ready", broker.IsReady(brokerName))
-	f.Requirement("kafka broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("kafka broker is ready", brokerresources.IsReady(brokerName))
+	f.Requirement("kafka broker is addressable", brokerresources.IsAddressable(brokerName))
 
 	return f
+}
+
+func TestBrokerSupportsOIDC(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(4*time.Second, 12*time.Minute),
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	name := feature.MakeRandomK8sName("broker")
+	env.Prerequisite(ctx, t, broker.GoesReady(name, brokerresources.WithEnvConfig()...))
+
+	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(brokerresources.GVR(), "Broker", name, env.Namespace()))
+}
+
+func TestBrokerSendsEventsWithOIDCSupport(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	env.TestSet(ctx, t, brokereventingfeatures.BrokerSendEventWithOIDC())
 }

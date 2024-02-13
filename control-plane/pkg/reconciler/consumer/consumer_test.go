@@ -552,6 +552,69 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
+			Name: "Pod pending",
+			Objects: []runtime.Object{
+				NewService(),
+				NewConsumerGroup(ConsumerGroupOwnerRef(SourceAsOwnerReference())),
+				NewDispatcherPod("p1", PodPending(), func(pod *corev1.Pod) {
+					pod.Status.Conditions = append(pod.Status.Conditions, corev1.PodCondition{
+						Type:   corev1.PodScheduled,
+						Status: corev1.ConditionTrue,
+					})
+				}),
+				NewConsumer(1,
+					ConsumerUID(ConsumerUUID),
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics...),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIdConfig(SourceConsumerGroup),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+					)),
+					ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						c := NewConsumer(1,
+							ConsumerUID(ConsumerUUID),
+							ConsumerSpec(NewConsumerSpec(
+								ConsumerTopics(SourceTopics...),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(SourceBootstrapServers),
+									ConsumerGroupIdConfig(SourceConsumerGroup),
+								),
+								ConsumerSubscriber(NewSourceSinkReference()),
+								ConsumerVReplicas(1),
+								ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+							)),
+							ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+						)
+						c.GetConditionSet().Manage(c.GetStatus()).InitializeConditions()
+						c.MarkReconcileContractSucceeded()
+						c.MarkBindInProgressWithMessage("Pod \"p1\" is in phase \"Pending\" with conditions [PodScheduled=True]")
+						c.Status.SubscriberURI, _ = apis.ParseURL(ServiceURL)
+						return c
+					}(),
+				},
+			},
+		},
+		{
 			Name: "Finalized normal",
 			Objects: []runtime.Object{
 				NewService(),
