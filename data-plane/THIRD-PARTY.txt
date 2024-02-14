@@ -225,7 +225,7 @@ Lists of 230 third-party dependencies.
      (Apache-2.0) Scala Library (org.scala-lang:scala-library:2.12.15 - https://www.scala-lang.org/)
      (Apache-2.0) scala-collection-compat (org.scala-lang.modules:scala-collection-compat_2.12:2.6.0 - http://www.scala-lang.org/)
      (Apache-2.0) scala-java8-compat (org.scala-lang.modules:scala-java8-compat_2.12:1.0.2 - http://www.scala-lang.org/)
-     (MIT License) SLF4J API Module (org.slf4j:slf4j-api:2.0.9 - http://www.slf4j.org)
+     (MIT License) SLF4J API Module (org.slf4j:slf4j-api:2.0.12 - http://www.slf4j.org)
      (Apache License, Version 2.0) SnakeYAML Engine (org.snakeyaml:snakeyaml-engine:2.7 - https://bitbucket.org/snakeyaml/snakeyaml-engine)
      (Apache License 2.0) wildfly-common (org.wildfly.common:wildfly-common:1.5.4.Final-format-001 - http://www.jboss.org/wildfly-common)
      (Apache-2.0) snappy-java (org.xerial.snappy:snappy-java:1.1.10.5 - https://github.com/xerial/snappy-java)
