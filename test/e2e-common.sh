@@ -29,9 +29,8 @@ source "${repo_root_dir}"/hack/artifacts-env.sh
 # If gcloud is not available make it a no-op, not an error.
 which gcloud &>/dev/null || gcloud() { echo "[ignore-gcloud $*]" 1>&2; }
 
-# Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
+# Use GNU tools on macOS. Requires the 'grep' Homebrew formulae.
 if [ "$(uname)" == "Darwin" ]; then
-  sed=gsed
   grep=ggrep
 fi
 
