@@ -87,7 +87,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	}
 
 	clientPool := clientpool.Get(ctx)
-	clientPool.RegisterSecretInformer(ctx)
 
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{

@@ -51,7 +51,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
@@ -1677,13 +1676,13 @@ func TestReconcileKind(t *testing.T) {
 			KubeClient:      kubeclient.Get(ctx),
 			KedaClient:      kedaclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
-			GetkafkaClient: func(_ context.Context, addrs []string, _ *corev1.Secret) (sarama.Client, clientpool.ReturnClientFunc, error) {
-				return &kafkatesting.MockKafkaClient{}, clientpool.NilReturnClientFunc, nil
+			GetKafkaClient: func(_ context.Context, addrs []string, _ *corev1.Secret) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, clientpool.ReturnClientFunc, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T: t,
-				}, clientpool.NilReturnClientFunc, nil
+				}, nil
 			},
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
@@ -1820,13 +1819,13 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			KubeClient:      kubeclient.Get(ctx),
 			KedaClient:      kedaclient.Get(ctx),
 			NameGenerator:   &CounterGenerator{},
-			GetkafkaClient: func(_ context.Context, addrs []string, _ *corev1.Secret) (sarama.Client, clientpool.ReturnClientFunc, error) {
-				return &kafkatesting.MockKafkaClient{}, clientpool.NilReturnClientFunc, nil
+			GetKafkaClient: func(_ context.Context, addrs []string, _ *corev1.Secret) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, clientpool.ReturnClientFunc, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T: t,
-				}, clientpool.NilReturnClientFunc, nil
+				}, nil
 			},
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
@@ -2227,14 +2226,14 @@ func TestFinalizeKind(t *testing.T) {
 			SecretLister:    listers.GetSecretLister(),
 			ConfigMapLister: listers.GetConfigMapLister(),
 			PodLister:       listers.GetPodLister(),
-			GetkafkaClient: func(_ context.Context, addrs []string, _ *corev1.Secret) (sarama.Client, clientpool.ReturnClientFunc, error) {
-				return &kafkatesting.MockKafkaClient{}, clientpool.NilReturnClientFunc, nil
+			GetKafkaClient: func(_ context.Context, addrs []string, _ *corev1.Secret) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, clientpool.ReturnClientFunc, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T:                          t,
 					ErrorOnDeleteConsumerGroup: ErrorAssertOrNil(errorOnDeleteKafkaCG),
-				}, clientpool.NilReturnClientFunc, nil
+				}, nil
 			},
 			KafkaFeatureFlags:                  configapis.DefaultFeaturesConfig(),
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),

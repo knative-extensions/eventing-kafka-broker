@@ -18,9 +18,9 @@ package clientpool
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -30,8 +30,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 )
 
@@ -43,7 +41,7 @@ func WithKafkaClientPool(ctx context.Context) context.Context {
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
 	clients := &ClientPool{
-		Cache:                     cache,
+		cache:                     cache,
 		newSaramaClient:           sarama.NewClient,
 		newClusterAdminFromClient: sarama.NewClusterAdminFromClient,
 	}
@@ -58,90 +56,83 @@ type clientKey struct {
 	bootstrapServers string
 }
 
-type client struct {
-	lock sync.RWMutex
-	sarama.Client
-}
-
 type ClientPool struct {
-	lock sync.RWMutex
-	prober.Cache[clientKey, *client, struct{}]
+	cache                     prober.Cache[clientKey, *client, struct{}]
 	newSaramaClient           kafka.NewClientFunc // use this to mock the function for tests
 	newClusterAdminFromClient kafka.NewClusterAdminFromClientFunc
-	registeredInformer        bool // use this to track whether the secret informer has been registered yet
 }
 
-type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error)
-type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error)
-type ReturnClientFunc func(error)
+type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error)
+type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error)
 
-func NilReturnClientFunc(error) {}
-
-func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, ReturnClientFunc, error) {
+func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
 	key := makeClusterAdminKey(bootstrapServers, secret)
 
-	logger := logging.FromContext(ctx)
+	logger := logging.FromContext(ctx).With(zap.String("component", "clientpool")).With(zap.Any("key", key))
 
 	logger.Debug("about to get connection from clientpool", zap.Any("key", key))
 
-	cp.lock.RLock()
-
 	// if a corresponding connection already exists, lets use it
-	if val, ok := cp.Get(key); ok {
+	if val, ok := cp.cache.Get(key); ok && val.hasCorrectSecretVersion(secret) {
 		logger.Debug("successfully got a client from the clientpool")
-		cp.lock.RUnlock()
-
-		val.lock.RLock()
-		return val, func(err error) {
-			val.lock.RUnlock()
-			if err != nil && strings.Contains(err.Error(), "broken pipe") {
-				cp.Expire(key)
-			}
-		}, nil
+		val.incrementCallers()
+		return val, nil
 	}
 	logger.Debug("failed to get an existing client, going to create one")
-	cp.lock.RUnlock()
-
-	cp.lock.Lock()
-	defer cp.lock.Unlock()
-
-	// another connection may have been created before we get here, let's not upsert without checking as upsert closes existing connections and opens a new one
-	// if a corresponding connection already exists, lets use it
-	if val, ok := cp.Get(key); ok {
-		logger.Debug("successfully got a client from the clientpool")
-
-		val.lock.RLock()
-		return val, func(err error) {
-			val.lock.RUnlock()
-			if err != nil && strings.Contains(err.Error(), "broken pipe") {
-				cp.Expire(key)
-			}
-		}, nil
-	}
 
 	saramaClient, err := cp.makeSaramaClient(bootstrapServers, secret)
 	if err != nil {
-		return nil, NilReturnClientFunc, err
+		return nil, err
 	}
 
 	val := &client{
-		Client: saramaClient,
+		client: saramaClient,
+		isFatalError: func(err error) bool {
+			return err != nil && strings.Contains(err.Error(), "broken pipe")
+		},
+		onFatalError: func(err error) {
+			cp.cache.Expire(key)
+		},
+		secret: secret,
 	}
 
-	cp.UpsertStatus(key, val, struct{}{}, func(_ clientKey, value *client, _ struct{}) {
-		value.lock.Lock()
-		defer value.lock.Unlock()
-		value.Close()
+	cp.cache.UpsertStatus(key, val, struct{}{}, func(_ clientKey, value *client, _ struct{}) {
+		// async: avoid blocking UpsertStatus if the key is present
+		go func() {
+			logger.Debugw("Closing client, waiting for callers to finish operations")
+
+			// wait for all callers to finish
+			value.callersWg.Wait()
+
+			logger.Debug("Closing client")
+
+			if err := value.client.Close(); !errors.Is(err, sarama.ErrClosedClient) {
+				logger.Errorw("Failed to close client", zap.Error(err))
+			}
+		}()
 	})
 
-	val.lock.RLock()
-	return val, func(err error) {
-		val.lock.RUnlock()
-		if err != nil && strings.Contains(err.Error(), "broken pipe") {
-			cp.Expire(key)
-		}
-	}, nil
+	val.incrementCallers()
+	return val, nil
+}
+
+func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error) {
+	c, err := cp.GetClient(ctx, bootstrapServers, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	ca, err := cp.newClusterAdminFromClient(c)
+	if err != nil {
+		c.Close()
+		return nil, err
+	}
+	return ca, nil
+}
+
+func Get(ctx context.Context) *ClientPool {
+	return ctx.Value(ctxKey).(*ClientPool)
 }
 
 func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clientKey {
@@ -161,17 +152,6 @@ func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clien
 	return key
 }
 
-func (key clientKey) matchesSecret(secret *corev1.Secret) bool {
-	if secret == nil {
-		return key.secretName == "" && key.secretNamespace == ""
-	}
-	return key.secretName == secret.GetName() && key.secretNamespace == secret.GetNamespace()
-}
-
-func (key clientKey) getBootstrapServers() []string {
-	return strings.Split(key.bootstrapServers, ",")
-}
-
 func (cp *ClientPool) makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
 	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
@@ -184,63 +164,4 @@ func (cp *ClientPool) makeSaramaClient(bootstrapServers []string, secret *corev1
 	}
 
 	return saramaClient, nil
-}
-
-func (cp *ClientPool) UpdateConnectionsWithSecret(secret *corev1.Secret) error {
-	for _, key := range cp.Keys() {
-		if key.matchesSecret(secret) {
-			newClient, err := cp.makeSaramaClient(key.getBootstrapServers(), secret)
-			if err != nil {
-				cp.Expire(key)
-			} else {
-				val := &client{
-					Client: newClient,
-				}
-				cp.UpsertStatus(key, val, struct{}{}, func(_ clientKey, value *client, _ struct{}) {
-					value.lock.Lock()
-					defer value.lock.Unlock()
-					value.Close()
-				})
-			}
-
-		}
-
-	}
-
-	return nil
-}
-
-func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, ReturnClientFunc, error) {
-	c, returnFunc, err := cp.GetClient(ctx, bootstrapServers, secret)
-	if err != nil {
-		return nil, NilReturnClientFunc, err
-	}
-	ca, err := cp.newClusterAdminFromClient(c)
-	if err != nil {
-		returnFunc(err)
-		return nil, NilReturnClientFunc, err
-	}
-	return ca, returnFunc, nil
-}
-
-func (cp *ClientPool) RegisterSecretInformer(ctx context.Context) {
-	cp.lock.Lock()
-	defer cp.lock.Unlock()
-
-	if cp.registeredInformer {
-		return
-	}
-
-	secretInfomer := secretinformer.Get(ctx)
-	secretInfomer.Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
-		if secret, ok := obj.(*corev1.Secret); ok {
-			cp.UpdateConnectionsWithSecret(secret)
-		}
-	}))
-
-	cp.registeredInformer = true
-}
-
-func Get(ctx context.Context) *ClientPool {
-	return ctx.Value(ctxKey).(*ClientPool)
 }

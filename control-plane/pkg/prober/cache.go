@@ -124,13 +124,10 @@ func (c *localExpiringCache[K, V, A]) Get(key K) (V, bool) {
 }
 
 func (c *localExpiringCache[K, V, A]) UpsertStatus(key K, val V, arg A, onExpired ExpirationFunc[K, V, A]) {
+	c.Expire(key)
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
-	if v, ok := c.targets[key]; ok {
-		delete(c.targets, key)
-		c.entries.Remove(v)
-	}
 
 	value := &value[K, V, A]{value: val, lastUpsert: time.Now(), key: key, arg: arg, onExpired: onExpired}
 	element := c.entries.PushBack(value)
@@ -162,6 +159,10 @@ func (c *localExpiringCache[K, V, A]) Expire(key K) {
 	}
 	c.entries.Remove(element)
 	delete(c.targets, key)
+
+	v := element.Value.(*value[K, V, A])
+
+	v.onExpired(v.key, v.value, v.arg)
 }
 
 func (c *localExpiringCache[K, V, A]) removeExpiredEntries(now time.Time) {

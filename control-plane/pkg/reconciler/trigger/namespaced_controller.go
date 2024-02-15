@@ -62,7 +62,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
 	clientPool := clientpool.Get(ctx)
-	clientPool.RegisterSecretInformer(ctx)
 
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
@@ -80,14 +79,14 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:               brokerInformer.Lister(),
-		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceAccountLister:       serviceaccountInformer.Lister(),
-		EventingClient:             eventingclient.Get(ctx),
-		Env:                        configs,
-		GetKafkaClient:             clientPool.GetClient,
-		GetKafkaClusterAdmin:       clientPool.GetClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
+		BrokerLister:         brokerInformer.Lister(),
+		ConfigMapLister:      configmapInformer.Lister(),
+		ServiceAccountLister: serviceaccountInformer.Lister(),
+		EventingClient:       eventingclient.Get(ctx),
+		Env:                  configs,
+		GetKafkaClient:       clientPool.GetClient,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
+		InitOffsetsFunc:      offset.InitOffsets,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

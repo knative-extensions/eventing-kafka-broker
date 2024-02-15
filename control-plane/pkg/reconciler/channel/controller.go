@@ -64,7 +64,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	serviceInformer := serviceinformer.Get(ctx)
 
 	clientPool := clientpool.Get(ctx)
-	clientPool.RegisterSecretInformer(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{

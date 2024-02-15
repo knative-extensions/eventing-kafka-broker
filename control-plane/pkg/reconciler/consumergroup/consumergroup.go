@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -145,9 +144,9 @@ type Reconciler struct {
 
 	NameGenerator names.NameGenerator
 
-	// GetkafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	GetkafkaClient clientpool.GetKafkaClientFunc
+	GetKafkaClient clientpool.GetKafkaClientFunc
 
 	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
 	// It's convenient to add this as Reconciler field so that we can mock the function used during the
@@ -269,16 +268,14 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, returnCaFunc, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
-	var returnOnce sync.Once
-	defer returnOnce.Do(func() { returnCaFunc(nil) })
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
+	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	if err = kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errorIsOneOf(err, sarama.ErrUnknownTopicOrPartition, sarama.ErrGroupIDNotFound) {
-		returnOnce.Do(func() { returnCaFunc(err) })
 		return fmt.Errorf("unable to delete the consumer group %s: %w", groupId, err)
 	}
 
@@ -547,16 +544,14 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, returnCaFunc, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
-	var clusterAdminOnce sync.Once
-	defer clusterAdminOnce.Do(func() { returnCaFunc(nil) })
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
+	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
 
-	kafkaClient, returnClientFunc, err := r.GetkafkaClient(ctx, bootstrapServers, kafkaSecret)
-	var clientOnce sync.Once
-	defer clientOnce.Do(func() { returnClientFunc(nil) })
+	kafkaClient, err := r.GetKafkaClient(ctx, bootstrapServers, kafkaSecret)
+	defer kafkaClient.Close()
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
@@ -565,8 +560,6 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	topics := cg.Spec.Template.Spec.Topics
 
 	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId); err != nil {
-		clusterAdminOnce.Do(func() { returnCaFunc(err) })
-		clientOnce.Do(func() { returnClientFunc(err) })
 		return fmt.Errorf("failed to initialize offset: %w", err)
 	}
 

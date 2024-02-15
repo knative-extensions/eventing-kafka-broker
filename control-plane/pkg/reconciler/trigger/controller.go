@@ -68,7 +68,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
 	clientPool := clientpool.Get(ctx)
-	clientPool.RegisterSecretInformer(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -86,17 +85,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:               brokerInformer.Lister(),
-		ConfigMapLister:            configmapInformer.Lister(),
-		EventingClient:             eventingclient.Get(ctx),
-		Env:                        configs,
-		BrokerClass:                kafka.BrokerClass,
-		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
-		GetKafkaClient:             clientPool.GetClient,
-		GetKafkaClusterAdmin:       clientPool.GetClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
-		ServiceAccountLister:       serviceaccountInformer.Lister(),
+		BrokerLister:              brokerInformer.Lister(),
+		ConfigMapLister:           configmapInformer.Lister(),
+		EventingClient:            eventingclient.Get(ctx),
+		Env:                       configs,
+		BrokerClass:               kafka.BrokerClass,
+		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
+		KafkaFeatureFlags:         apisconfig.DefaultFeaturesConfig(),
+		GetKafkaClient:            clientPool.GetClient,
+		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
+		InitOffsetsFunc:           offset.InitOffsets,
+		ServiceAccountLister:      serviceaccountInformer.Lister(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

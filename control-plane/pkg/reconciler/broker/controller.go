@@ -66,7 +66,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	featureFlags := apisconfig.DefaultFeaturesConfig()
 
 	clientPool := clientpool.Get(ctx)
-	clientPool.RegisterSecretInformer(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{

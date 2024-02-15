@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"k8s.io/utils/pointer"
@@ -188,16 +187,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 
-	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	var returnCAOnce sync.Once
-	returnCAOnce.Do(func() { returnClusterAdmin(nil) })
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
+	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin: %w", err))
 	}
 
-	kafkaClient, returnClient, err := r.GetKafkaClient(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	var returnClientOnce sync.Once
-	returnClientOnce.Do(func() { returnClient(nil) })
+	kafkaClient, err := r.GetKafkaClient(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
+	defer kafkaClient.Close()
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka client: %w", err))
 	}
@@ -205,7 +202,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// create the topic
 	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 	if err != nil {
-		returnCAOnce.Do(func() { returnClusterAdmin(err) })
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
 	logger.Debug("Topic created", zap.Any("topic", topic))
@@ -239,12 +235,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// we still update the contract configMap even though there's an error.
 	// however, we record this error to make the reconciler try again.
 	subscribersChanged, subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdminClient, channel, channelResource)
-	if subscriptionError != nil {
-		returnCAOnce.Do(func() { returnClusterAdmin(err) })
-		returnClientOnce.Do(func() { returnClient(err) })
-
-	}
-
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
@@ -490,9 +480,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return fmt.Errorf("failed to resolve auth context: %w", err)
 	}
 
-	kafkaClusterAdminClient, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	var returnCAOnce sync.Once
-	defer returnCAOnce.Do(func() { returnClusterAdmin(nil) })
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
+	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
@@ -505,7 +494,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, topicName)
 	if err != nil {
-		returnCAOnce.Do(func() { returnClusterAdmin(err) })
 		return err
 	}
 

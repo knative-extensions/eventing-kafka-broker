@@ -426,16 +426,14 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	}
 	bootstrapServersArr := kafka.BootstrapServersArray(bootstrapServers)
 
-	kafkaClient, returnClient, err := r.GetKafkaClient(ctx, bootstrapServersArr, secret)
-	var clientOnce sync.Once
-	defer clientOnce.Do(func() { returnClient(nil) })
+	kafkaClient, err := r.GetKafkaClient(ctx, bootstrapServersArr, secret)
+	defer kafkaClient.Close()
 	if err != nil {
 		return false, fmt.Errorf("cannot obtain Kafka client, %w", err)
 	}
 
-	kafkaClusterAdmin, returnClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, bootstrapServersArr, secret)
-	var clusterAdminOnce sync.Once
-	defer clusterAdminOnce.Do(func() { returnClusterAdmin(nil) })
+	kafkaClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, bootstrapServersArr, secret)
+	defer kafkaClusterAdmin.Close()
 	if err != nil {
 		return false, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
@@ -459,7 +457,6 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	if isLatest {
 		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, topicName)
 		if err != nil {
-			clusterAdminOnce.Do(func() { returnClusterAdmin(err) })
 			return false, fmt.Errorf("topic %s doesn't exist or is invalid: %w", topicName, err)
 		}
 		if !isPresentAndValid {
@@ -467,8 +464,6 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 		}
 
 		if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID); err != nil {
-			clusterAdminOnce.Do(func() { returnClusterAdmin(err) })
-			clientOnce.Do(func() { returnClient(err) })
 			return false, fmt.Errorf("failed to initialize initial offsets: %w", err)
 		}
 

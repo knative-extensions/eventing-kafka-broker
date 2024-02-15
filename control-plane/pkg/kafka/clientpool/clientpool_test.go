@@ -37,7 +37,7 @@ func TestGetClient(t *testing.T) {
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
 	clients := &ClientPool{
-		Cache: cache,
+		cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{}, nil
 		},
@@ -46,32 +46,29 @@ func TestGetClient(t *testing.T) {
 		},
 	}
 
-	client1, returnClient1, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
-
+	client1, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
+	defer client1.Close()
 
 	controller, err := client1.Controller()
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	client2, returnClient2, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
-
+	client2, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
+	defer client2.Close()
 
 	controller, err = client2.Controller()
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
 
-	client3, returnClient3, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
+	client3, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
+	defer client3.Close()
 
 	controller, err = client3.Controller()
 	assert.NoError(t, err)
 	assert.NotNil(t, controller)
-
-	returnClient1(nil)
-	returnClient2(nil)
-	returnClient3(nil)
 
 	cancel()
 }
@@ -84,7 +81,7 @@ func TestGetClusterAdmin(t *testing.T) {
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Minute*30)
 
 	clients := &ClientPool{
-		Cache: cache,
+		cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{}, nil
 		},
@@ -93,32 +90,29 @@ func TestGetClusterAdmin(t *testing.T) {
 		},
 	}
 
-	client1, returnClient1, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
-
+	client1, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
+	defer client1.Close()
 
 	topics, err := client1.ListTopics()
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	client2, returnClient2, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
-
+	client2, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
+	defer client2.Close()
 
 	topics, err = client2.ListTopics()
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
 
-	client3, returnClient3, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	client3, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
 	assert.NoError(t, err)
+	defer client3.Close()
 
 	topics, err = client3.ListTopics()
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
-
-	returnClient1(nil)
-	returnClient2(nil)
-	returnClient3(nil)
 
 	cancel()
 }

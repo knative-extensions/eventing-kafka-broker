@@ -114,7 +114,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	clientPool := clientpool.Get(ctx)
-	clientPool.RegisterSecretInformer(ctx)
 
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
@@ -125,7 +124,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		PodLister:                          podinformer.Get(ctx).Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
-		GetkafkaClient:                     clientPool.GetClient,
+		GetKafkaClient:                     clientPool.GetClient,
 		InitOffsetsFunc:                    offset.InitOffsets,
 		SystemNamespace:                    system.Namespace(),
 		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
