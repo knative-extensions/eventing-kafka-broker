@@ -39,14 +39,14 @@ func testCache(t *testing.T, ctx context.Context, c Cache[string, Status, int], 
 	var wg sync.WaitGroup
 	errors := make(chan error, 1)
 
-	wg.Add(2)
+	wg.Add(4)
 
-	c.UpsertStatus("key1", StatusUnknown, 4, verifyNoExpired(errors))
+	c.UpsertStatus("key1", StatusUnknown, 4, verifyOnExpired("key1", 4, &wg, errors))
 	status, ok := c.Get("key1")
 	require.Equal(t, StatusUnknown, status)
 	require.True(t, ok)
 
-	c.UpsertStatus("key2", StatusNotReady, 42, verifyNoExpired(errors))
+	c.UpsertStatus("key2", StatusNotReady, 42, verifyOnExpired("key2", 42, &wg, errors))
 	status, ok = c.Get("key2")
 	require.Equal(t, StatusNotReady, status)
 	require.True(t, ok)
@@ -79,12 +79,6 @@ func testCache(t *testing.T, ctx context.Context, c Cache[string, Status, int], 
 		// Wait expiration
 		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { _, ok := c.Get("key1"); return !ok, nil }))
 		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { _, ok := c.Get("key2"); return !ok, nil }))
-	}
-}
-
-func verifyNoExpired(errors chan<- error) func(key string, val Status, arg int) {
-	return func(_ string, _ Status, _ int) {
-		errors <- fmt.Errorf("unexpected call to onExpired callback")
 	}
 }
 
