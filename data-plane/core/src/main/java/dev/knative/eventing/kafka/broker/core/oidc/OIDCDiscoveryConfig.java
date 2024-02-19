@@ -68,7 +68,8 @@ public class OIDCDiscoveryConfig {
 
                     try {
                         if (res.statusCode() >= 400) {
-                          return Future.failedFuture("Unexpected status (" + res.statusCode() + ") on OIDC discovery endpoint: " + res.bodyAsString());
+                            return Future.failedFuture("Unexpected status (" + res.statusCode()
+                                    + ") on OIDC discovery endpoint: " + res.bodyAsString());
                         }
 
                         ObjectMapper mapper = new ObjectMapper();
