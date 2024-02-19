@@ -612,8 +612,17 @@ func storeConfigMapAsStatusAnnotation(broker *eventing.Broker, cm *corev1.Config
 		broker.Status.Annotations = make(map[string]string, len(cm.Data))
 	}
 
+	keysToStore := map[string]bool{
+		kafka.DefaultTopicNumPartitionConfigMapKey:      true,
+		kafka.DefaultTopicReplicationFactorConfigMapKey: true,
+		kafka.BootstrapServersConfigMapKey:              true,
+		security.AuthSecretNameKey:                      true,
+	}
+
 	for k, v := range cm.Data {
-		broker.Status.Annotations[k] = v
+		if keysToStore[k] {
+			broker.Status.Annotations[k] = v
+		}
 	}
 }
 
