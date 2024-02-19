@@ -285,7 +285,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	broker.Status.Address = addressableStatus.Address
 	broker.Status.Addresses = addressableStatus.Addresses
 
-	if feature.FromContext(ctx).IsOIDCAuthentication() && broker.Status.Address != nil {
+	if feature.FromContext(ctx).IsOIDCAuthentication() {
 		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
 		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
 		broker.Status.Address.Audience = &audience
