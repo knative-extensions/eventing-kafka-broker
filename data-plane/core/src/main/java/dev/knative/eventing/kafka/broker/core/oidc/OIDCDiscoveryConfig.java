@@ -67,7 +67,7 @@ public class OIDCDiscoveryConfig {
                     logger.debug("Got raw OIDC discovery info: " + res.bodyAsString());
 
                     try {
-                        if (res.statusCode() >= 400) {
+                        if (res.statusCode() != 200) {
                             return Future.failedFuture("Unexpected status (" + res.statusCode()
                                     + ") on OIDC discovery endpoint: " + res.bodyAsString());
                         }
