@@ -278,7 +278,7 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventi
 	} else {
 		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
 		if topLevelCondition == nil {
-			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready")
+			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready: %+v", cg)
 		} else {
 			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
 		}
