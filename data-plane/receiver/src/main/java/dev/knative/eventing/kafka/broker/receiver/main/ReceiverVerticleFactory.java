@@ -34,6 +34,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -61,7 +62,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
             final Lister<EventType> eventTypeLister,
             Vertx vertx,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
+            final OIDCDiscoveryConfig oidcDiscoveryConfig)
+            throws NoSuchAlgorithmException {
         {
             this.env = env;
             this.producerConfigs = producerConfigs;

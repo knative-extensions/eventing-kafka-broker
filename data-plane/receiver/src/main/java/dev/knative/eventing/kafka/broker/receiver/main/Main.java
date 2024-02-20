@@ -135,21 +135,21 @@ public class Main {
         }
 
         // Configure the verticle to deploy and the deployment options
-        final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
-                env,
-                producerConfigs,
-                Metrics.getRegistry(),
-                httpServerOptions,
-                httpsServerOptions,
-                kafkaProducerFactory,
-                eventTypeClient,
-                eventTypeLister,
-                vertx,
-                oidcDiscoveryConfig);
-        DeploymentOptions deploymentOptions =
-                new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
 
         try {
+            final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
+                    env,
+                    producerConfigs,
+                    Metrics.getRegistry(),
+                    httpServerOptions,
+                    httpsServerOptions,
+                    kafkaProducerFactory,
+                    eventTypeClient,
+                    eventTypeLister,
+                    vertx,
+                    oidcDiscoveryConfig);
+            DeploymentOptions deploymentOptions =
+                    new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
             // Deploy the receiver verticles
             vertx.deployVerticle(receiverVerticleFactory, deploymentOptions)
                     .toCompletionStage()

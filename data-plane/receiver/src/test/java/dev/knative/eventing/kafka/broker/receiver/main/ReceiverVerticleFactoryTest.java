@@ -31,6 +31,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +44,7 @@ public class ReceiverVerticleFactoryTest {
     }
 
     @Test
-    public void shouldCreateMultipleReceiverVerticleInstances(Vertx vertx) {
+    public void shouldCreateMultipleReceiverVerticleInstances(Vertx vertx) throws NoSuchAlgorithmException {
         var mockClient = mock(KubernetesClient.class);
         final var supplier = new ReceiverVerticleFactory(
                 mock(ReceiverEnv.class),

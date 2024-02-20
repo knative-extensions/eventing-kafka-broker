@@ -28,6 +28,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.net.URI;
+import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +44,7 @@ public class EventTypeCreatorImplTest {
     private static final Logger logger = LoggerFactory.getLogger(EventTypeCreatorImplTest.class);
 
     @Test
-    public void testCreate(Vertx vertx, VertxTestContext vertxTestContext) {
+    public void testCreate(Vertx vertx, VertxTestContext vertxTestContext) throws NoSuchAlgorithmException {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var informer = kubernetesClient.informers().sharedIndexInformerFor(EventType.class, 100L);
         final var eventTypeLister = new Lister<>(informer.getIndexer());
@@ -95,7 +96,7 @@ public class EventTypeCreatorImplTest {
     }
 
     @Test
-    public void testCreatesOnlyOnce(Vertx vertx, VertxTestContext vertxTestContext) {
+    public void testCreatesOnlyOnce(Vertx vertx, VertxTestContext vertxTestContext) throws NoSuchAlgorithmException {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var informer = kubernetesClient.informers().sharedIndexInformerFor(EventType.class, 100L);
         informer.run();
@@ -152,7 +153,7 @@ public class EventTypeCreatorImplTest {
                     return eventTypeCreator
                             .create(event, reference)
                             .onFailure((exception) -> {
-                                logger.warn("failure occured, closing informer", exception);
+                                logger.warn("failure occurred, closing informer", exception);
                                 informer.close();
                                 vertxTestContext.failNow(exception);
                             })
