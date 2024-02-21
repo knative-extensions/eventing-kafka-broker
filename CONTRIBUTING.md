@@ -21,6 +21,10 @@ You need to install:
     - check
       [java.version](https://github.com/knative-extensions/eventing-kafka-broker/blob/master/data-plane/pom.xml)
       maven property for the required Java version used in this project
+- [`GNU sed`](https://www.gnu.org/software/sed/) - (_required_)
+    - To install on macOS, run `brew install gnu-sed`. Follow the brew post-install instructions to replace the default 
+      macOS sed with GNU sed. If you miss the post-install message, run `brew info gnu-sed` for instructions on making 
+      GNU sed the default.
 - [`protoc`](https://github.com/protocolbuffers/protobuf)
      - To install protoc, you can follow https://grpc.io/docs/protoc-installation/
 - `protoc-gen-go`

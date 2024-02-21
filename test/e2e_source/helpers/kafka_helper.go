@@ -45,7 +45,7 @@ const (
 	strimziUserResource  = "kafkausers"
 	interval             = 3 * time.Second
 	timeout              = 4 * time.Minute
-	kafkaCatImage        = "docker.io/edenhill/kafkacat:1.6.0"
+	kcatImage            = "quay.io/openshift-knative/kcat:1.7.1"
 )
 
 var (
@@ -93,7 +93,7 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	}
 	args = append(args, "-l", "/etc/mounted/payload")
 
-	client.T.Logf("Running kafkacat %s", strings.Join(args, " "))
+	client.T.Logf("Running kcat %s", strings.Join(args, " "))
 
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -102,9 +102,9 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
-				Image:   kafkaCatImage,
+				Image:   kcatImage,
 				Name:    cgName + "-producer-container",
-				Command: []string{"kafkacat"},
+				Command: []string{"kcat"},
 				Args:    args,
 				VolumeMounts: []corev1.VolumeMount{{
 					Name:      "event-payload",
