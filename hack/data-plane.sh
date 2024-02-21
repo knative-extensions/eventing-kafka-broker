@@ -54,9 +54,8 @@ if ! function_exists header; then
   }
 fi
 
-# Use GNU tools on macOS. Requires the 'grep' and 'gnu-sed' Homebrew formulae.
+# Use GNU tools on macOS. Requires the 'grep' Homebrew formulae.
 if [ "$(uname)" == "Darwin" ]; then
-  sed=gsed
   grep=ggrep
 fi
 

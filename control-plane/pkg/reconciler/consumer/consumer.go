@@ -18,7 +18,9 @@ package consumer
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -76,6 +78,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consum
 	}
 
 	bound, err := r.schedule(ctx, logger, c, addResource(resourceCt), IsPodNotRunning)
+	var sErr *PodStatusSummary
+	if errors.As(err, &sErr) {
+		// Resource will get queued once we have all resources to schedule the Consumer.
+		c.MarkBindInProgressWithMessage(sErr.Error())
+		return nil
+	}
 	if err != nil {
 		return c.MarkBindFailed(err)
 	}
@@ -411,7 +419,7 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 	// it won't become ready until we have created the
 	// ConfigMap
 	if shouldWait(p) {
-		return false, nil
+		return false, summarizePodStatus(p)
 	}
 
 	ct, err := b.GetDataPlaneConfigMapData(logger, cm)
@@ -490,4 +498,32 @@ func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	}
 	ct.TrustBundles = tb
 	return nil
+}
+
+type PodStatusSummary struct {
+	Pod *corev1.Pod
+}
+
+func (s *PodStatusSummary) Error() string {
+	return fmt.Sprintf("Pod %q is in phase %q with conditions %s", s.Pod.Name, string(s.Pod.Status.Phase), summarizePodConditions(s.Pod.Status.Conditions))
+}
+
+func summarizePodConditions(conditions []corev1.PodCondition) string {
+	sb := strings.Builder{}
+	sb.WriteRune('[')
+	for i, c := range conditions {
+		sb.WriteString(string(c.Type))
+		sb.WriteRune('=')
+		sb.WriteString(string(c.Status))
+		if len(conditions)-1 != i {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteRune(']')
+
+	return sb.String()
+}
+
+func summarizePodStatus(p *corev1.Pod) *PodStatusSummary {
+	return &PodStatusSummary{Pod: p}
 }

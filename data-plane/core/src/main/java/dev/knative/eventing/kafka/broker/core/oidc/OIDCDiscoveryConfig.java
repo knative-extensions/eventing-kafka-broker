@@ -34,6 +34,8 @@ public class OIDCDiscoveryConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(TokenVerifier.class);
 
+    private static final String OIDC_DISCOVERY_URL = "https://kubernetes.default.svc/.well-known/openid-configuration";
+
     private String issuer;
 
     private JwksVerificationKeyResolver jwksVerificationKeyResolver;
@@ -58,13 +60,18 @@ public class OIDCDiscoveryConfig {
         OIDCDiscoveryConfig oidcDiscoveryConfig = new OIDCDiscoveryConfig();
 
         return webClient
-                .getAbs("https://kubernetes.default.svc/.well-known/openid-configuration")
+                .getAbs(OIDC_DISCOVERY_URL)
                 .bearerTokenAuthentication(kubeConfig.getAutoOAuthToken())
                 .send()
                 .compose(res -> {
                     logger.debug("Got raw OIDC discovery info: " + res.bodyAsString());
 
                     try {
+                        if (res.statusCode() != 200) {
+                            return Future.failedFuture("Unexpected status (" + res.statusCode()
+                                    + ") on OIDC discovery endpoint: " + res.bodyAsString());
+                        }
+
                         ObjectMapper mapper = new ObjectMapper();
                         OIDCInfo oidcInfo = mapper.readValue(res.bodyAsString(), OIDCInfo.class);
 

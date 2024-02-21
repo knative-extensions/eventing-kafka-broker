@@ -178,6 +178,8 @@ type Reconciler struct {
 func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 	recordExpectedReplicasMetric(ctx, cg)
 
+	r.reconcileStatusSelector(cg)
+
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
@@ -257,6 +259,10 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 	r.InitOffsetLatestInitialOffsetCache.Expire(keyOf(cg))
 
 	return nil
+}
+
+func (r *Reconciler) reconcileStatusSelector(cg *kafkainternals.ConsumerGroup) {
+	cg.Status.Selector = labels.SelectorFromValidatedSet(cg.Spec.Selector).String()
 }
 
 func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
