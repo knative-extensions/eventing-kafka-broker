@@ -89,9 +89,11 @@ func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, 
 	val := &client{
 		client: saramaClient,
 		isFatalError: func(err error) bool {
-			return err != nil && strings.Contains(err.Error(), "broken pipe")
+			logger.Debug("checking if error is fatal", zap.Error(err))
+			return err != nil && (strings.Contains(err.Error(), "broken pipe") || strings.Contains(err.Error(), "metadata is out of date"))
 		},
 		onFatalError: func(err error) {
+			logger.Debug("handling fatal error, expiring key", zap.Error(err), zap.Any("key", key))
 			cp.cache.Expire(key)
 		},
 		secret: secret,

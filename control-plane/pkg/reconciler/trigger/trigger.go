@@ -427,16 +427,16 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	bootstrapServersArr := kafka.BootstrapServersArray(bootstrapServers)
 
 	kafkaClient, err := r.GetKafkaClient(ctx, bootstrapServersArr, secret)
-	defer kafkaClient.Close()
 	if err != nil {
 		return false, fmt.Errorf("cannot obtain Kafka client, %w", err)
 	}
+	defer kafkaClient.Close()
 
 	kafkaClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, bootstrapServersArr, secret)
-	defer kafkaClusterAdmin.Close()
 	if err != nil {
 		return false, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
+	defer kafkaClusterAdmin.Close()
 
 	// Existing Triggers might not yet have this annotation
 	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]

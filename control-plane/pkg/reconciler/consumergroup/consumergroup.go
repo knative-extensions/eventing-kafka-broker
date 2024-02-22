@@ -551,10 +551,10 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	}
 
 	kafkaClient, err := r.GetKafkaClient(ctx, bootstrapServers, kafkaSecret)
-	defer kafkaClient.Close()
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
+	defer kafkaClient.Close()
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	topics := cg.Spec.Template.Spec.Topics

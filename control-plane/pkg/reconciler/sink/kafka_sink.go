@@ -116,10 +116,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
-	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
+	defer kafkaClusterAdminClient.Close()
 
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 
@@ -381,12 +381,12 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		}
 
 		kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
-		defer kafkaClusterAdminClient.Close()
 		if err != nil {
 			// even in error case, we return `normal`, since we are fine with leaving the
 			// topic undeleted e.g. when we lose connection
 			return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 		}
+		defer kafkaClusterAdminClient.Close()
 
 		topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {

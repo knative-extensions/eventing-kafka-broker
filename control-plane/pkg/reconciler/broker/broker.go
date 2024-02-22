@@ -288,10 +288,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.Broker, secret *corev1.Secret, statusConditionManager base.StatusConditionManager, topicConfig *kafka.TopicConfig, logger *zap.Logger) (string, reconciler.Event) {
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
-	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
+	defer kafkaClusterAdminClient.Close()
 
 	// if we have a custom topic annotation
 	// the topic is externally manged and we do NOT need to create it
@@ -495,12 +495,12 @@ func (r *Reconciler) deleteResourceFromContractConfigMap(ctx context.Context, lo
 func (r *Reconciler) finalizeNonExternalBrokerTopic(ctx context.Context, broker *eventing.Broker, secret *corev1.Secret, topicConfig *kafka.TopicConfig, logger *zap.Logger) reconciler.Event {
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
-	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
+	defer kafkaClusterAdminClient.Close()
 
 	topicName, ok := broker.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {

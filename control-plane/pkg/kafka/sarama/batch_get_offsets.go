@@ -30,7 +30,18 @@ func GetOffsets(client sarama.Client, topicPartitions map[string][]int32, time i
 	if client.Closed() {
 		return nil, sarama.ErrClosedClient
 	}
+	offsets, err := getOffsets(client, topicPartitions, time)
+	if err != nil {
+		if err := client.RefreshMetadata(mapKeys(topicPartitions)...); err != nil {
+			return nil, err
+		}
+		return getOffsets(client, topicPartitions, time)
+	}
 
+	return offsets, nil
+}
+
+func getOffsets(client sarama.Client, topicPartitions map[string][]int32, time int64) (map[string]map[int32]int64, error) {
 	version := int16(0)
 	if client.Config().Version.IsAtLeast(sarama.V0_10_1_0) {
 		version = 1
@@ -80,4 +91,13 @@ func GetOffsets(client sarama.Client, topicPartitions map[string][]int32, time i
 	}
 
 	return offsets, nil
+
+}
+
+func mapKeys(m map[string][]int32) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }

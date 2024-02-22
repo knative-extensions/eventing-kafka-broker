@@ -188,16 +188,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin: %w", err))
 	}
+	defer kafkaClusterAdminClient.Close()
 
 	kafkaClient, err := r.GetKafkaClient(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	defer kafkaClient.Close()
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka client: %w", err))
 	}
+	defer kafkaClient.Close()
 
 	// create the topic
 	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
@@ -481,12 +481,12 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
-	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
+	defer kafkaClusterAdminClient.Close()
 
 	topicName, ok := channel.Status.Annotations[kafka.TopicAnnotation]
 	if !ok {
