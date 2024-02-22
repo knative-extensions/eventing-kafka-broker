@@ -19,6 +19,8 @@ readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 export KO_FLAGS="${KO_FLAGS:-}"
 
+readonly K8S_CLUSTER_VERSION=1.28
+
 repo_root_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..
 
 source "${repo_root_dir}"/vendor/knative.dev/hack/e2e-tests.sh

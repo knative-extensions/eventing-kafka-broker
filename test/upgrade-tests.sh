@@ -31,7 +31,7 @@ function test_setup() {
 }
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize "$@"
+  initialize "$@" --cluster-version="${K8S_CLUSTER_VERSION}"
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 

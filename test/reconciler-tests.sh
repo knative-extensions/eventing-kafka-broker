@@ -4,7 +4,7 @@ source $(dirname "$0")/e2e-common.sh
 export BROKER_TEMPLATES=./templates/kafka-broker
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize "$@" --num-nodes=4
+  initialize "$@" --cluster-version="${K8S_CLUSTER_VERSION}" --num-nodes=4
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
