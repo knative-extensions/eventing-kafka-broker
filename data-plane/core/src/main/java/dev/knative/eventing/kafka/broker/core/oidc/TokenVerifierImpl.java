@@ -56,7 +56,7 @@ public class TokenVerifierImpl implements TokenVerifier {
             } catch (InvalidJwtException e) {
                 promise.fail(e);
             }
-        });
+        },false);
     }
 
     public Future<JwtClaims> verify(final HttpServerRequest request, String expectedAudience) {
