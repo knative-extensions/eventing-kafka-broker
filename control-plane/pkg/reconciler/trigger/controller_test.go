@@ -17,7 +17,13 @@
 package trigger
 
 import (
+	"context"
+
 	"testing"
+
+	// unsure if below is necessary: 
+	"knative.dev/eventing/pkg/auth"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -27,7 +33,8 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
@@ -41,7 +48,8 @@ import (
 )
 
 func TestNewController(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	// ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
 
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -53,8 +61,14 @@ func TestNewController(t *testing.T) {
 	}
 }
 
+func SetUpInformerSelector(ctx context.Context) context.Context {
+	ctx = filteredFactory.WithSelectors(ctx, auth.OIDCLabelSelector)
+	return ctx
+}
+
 func TestFilterTriggers(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	// ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
 
 	tt := []struct {
 		name    string
