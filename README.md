@@ -4,7 +4,7 @@
 
 <p>
   <strong><a href="https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md">
-    These components are BETA
+    These components are GA
   </a></strong>
 </p>
 
