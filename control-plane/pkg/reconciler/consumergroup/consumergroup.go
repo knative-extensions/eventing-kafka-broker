@@ -867,7 +867,7 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context, cg *kafkainternals.C
 		return nil
 	}
 
-	// if there is a trigger authentication tight to the consumer group, delete it
+	// if there is a trigger authentication tight to the consumer group, delete it! and then delete the scaled object
 	if metav1.IsControlledBy(scaledObject, cg) {
 		triggerAuthName := string(cg.ObjectMeta.OwnerReferences[0].UID)
 
@@ -877,15 +877,15 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context, cg *kafkainternals.C
 		}
 
 		logging.FromContext(ctx).Infoln("Keda trigger authentication deleted")
-	}
 
-	// delete scaled object
-	err = r.KedaClient.KedaV1alpha1().ScaledObjects(cg.Namespace).Delete(ctx, scaledObjectName, metav1.DeleteOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete Keda scaled object: %w", err)
-	}
-	if err == nil {
-		logging.FromContext(ctx).Infoln("Keda scaled object deleted")
+		// delete scaled object
+		err = r.KedaClient.KedaV1alpha1().ScaledObjects(cg.Namespace).Delete(ctx, scaledObjectName, metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete Keda scaled object: %w", err)
+		}
+		if err == nil {
+			logging.FromContext(ctx).Infoln("Keda scaled object deleted")
+		}
 	}
 
 	return nil
