@@ -78,7 +78,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		)
 	}
 
-	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	var globalResync func(interface{})
+
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(_ string, obj interface{}) {
+		if globalResync != nil {
+			globalResync(obj)
+		}
+	})
 	featureStore.WatchConfigs(watcher)
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -111,7 +117,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	sinkInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	globalResync := func(_ interface{}) {
+	globalResync = func(_ interface{}) {
 		impl.GlobalResync(sinkInformer.Informer())
 	}
 

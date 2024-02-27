@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
+import java.net.URI;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -43,8 +44,8 @@ public class EventTypeTest {
         eventTypeClient
                 .resource(new EventTypeBuilder()
                         .withReference(kReference)
-                        .withSchema("sample schema")
-                        .withSchemaDescription("sample schema description")
+                        .withSchema(URI.create("/sample/schema"))
+                        .withSchemaData("sample schema data")
                         .withDescription("a sample event type")
                         .withName("sample.event.type")
                         .withNamespace("default")
@@ -58,8 +59,8 @@ public class EventTypeTest {
         Assertions.assertEquals(1, eventTypeList.getItems().size());
         EventType eventType = eventTypeList.getItems().get(0);
         Assertions.assertEquals(eventType.getSpec().getReference(), kReference);
-        Assertions.assertEquals(eventType.getSpec().getSchema(), "sample schema");
-        Assertions.assertEquals(eventType.getSpec().getSchemaDescription(), "sample schema description");
+        Assertions.assertEquals(eventType.getSpec().getSchema(), URI.create("/sample/schema"));
+        Assertions.assertEquals(eventType.getSpec().getSchemaData(), "sample schema data");
         Assertions.assertEquals(eventType.getSpec().getDescription(), "a sample event type");
         Assertions.assertEquals(eventType.getMetadata().getName(), "sample.event.type");
         Assertions.assertEquals(eventType.getMetadata().getNamespace(), "default");

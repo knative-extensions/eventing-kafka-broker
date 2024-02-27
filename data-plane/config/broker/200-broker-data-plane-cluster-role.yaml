@@ -35,3 +35,13 @@ rules:
       - serviceaccounts/token
     verbs:
       - create
+  # needed for eventtype autocreate
+  - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - eventtypes
+    verbs:
+      - get
+      - list
+      - watch
+      - create

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import java.util.Objects;
 
@@ -46,6 +47,11 @@ public class KReference implements KubernetesResource {
         this.kind = kind;
         this.name = name;
         this.namespace = namespace;
+    }
+
+    public static KReference fromDataPlaneReference(DataPlaneContract.Reference reference) {
+        return new KReference(
+                reference.getGroupVersion(), reference.getKind(), reference.getName(), reference.getNamespace());
     }
 
     @JsonProperty("apiVersion")

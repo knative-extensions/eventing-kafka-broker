@@ -85,6 +85,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private final HttpServerOptions httpServerOptions;
     private final HttpServerOptions httpsServerOptions;
     private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
+
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
     private final OIDCDiscoveryConfig oidcDiscoveryConfig;
