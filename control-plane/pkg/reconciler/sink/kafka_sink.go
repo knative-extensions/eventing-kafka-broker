@@ -23,6 +23,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
@@ -174,7 +175,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ct = &contract.Contract{}
 	}
 
-	if err := r.setTrustBundles(ct); err != nil {
+	trustBundlesChanged, err := r.setTrustBundles(ct)
+	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
@@ -222,7 +224,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// Update contract data with the new sink configuration.
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
-	if changed == coreconfig.ResourceChanged {
+	if changed == coreconfig.ResourceChanged || trustBundlesChanged {
 		// Resource changed, increment contract generation.
 		coreconfig.IncrementContractGeneration(ct)
 		// Update the configuration map with the new contract data.
@@ -443,11 +445,15 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 	return pointer.String(string(caCerts)), nil
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
 	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
 	if err != nil {
-		return fmt.Errorf("failed to get trust bundles: %w", err)
+		return false, fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	changed := false
+	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
+		changed = true
 	}
 	ct.TrustBundles = tb
-	return nil
+	return changed, nil
 }
