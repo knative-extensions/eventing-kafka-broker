@@ -60,8 +60,6 @@ type Cache[K comparable, V, A interface{}] interface {
 	UpsertStatus(key K, value V, arg A, onExpired ExpirationFunc[K, V, A])
 	// Expire will expire the given key.
 	Expire(key K)
-	// Keys returns all of the keys currently in the cache that have not expired
-	Keys() []K
 }
 
 // ExpirationFunc is a callback called once an entry in the cache is expired.
@@ -132,21 +130,6 @@ func (c *localExpiringCache[K, V, A]) UpsertStatus(key K, val V, arg A, onExpire
 	value := &value[K, V, A]{value: val, lastUpsert: time.Now(), key: key, arg: arg, onExpired: onExpired}
 	element := c.entries.PushBack(value)
 	c.targets[key] = element
-}
-
-func (c *localExpiringCache[K, V, A]) Keys() []K {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	keys := make([]K, 0, len(c.targets))
-	for k, v := range c.targets {
-		value := v.Value.(*value[K, V, A])
-		if !c.isExpired(value, time.Now()) {
-			keys = append(keys, k)
-		}
-	}
-
-	return keys
 }
 
 func (c *localExpiringCache[K, V, A]) Expire(key K) {

@@ -204,11 +204,6 @@ func (c *client) LeastLoadedBroker() *sarama.Broker {
 }
 
 func (c *client) Close() error {
-	// guard against panic, this makes it easier to defer client.Close() on the caller side
-	if c == nil {
-		return nil
-	}
-
 	if c.client.Closed() {
 		return sarama.ErrClosedClient
 	}
