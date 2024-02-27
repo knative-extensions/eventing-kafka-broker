@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -36,6 +35,7 @@ import (
 	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -63,6 +63,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -75,14 +77,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
-		NewKafkaClient:             sarama.NewClient,
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
-		Env:                        configs,
-		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceLister:              serviceInformer.Lister(),
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
+		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
+		GetKafkaClient:       clientPool.GetClient,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
+		InitOffsetsFunc:      offset.InitOffsets,
+		Env:                  configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		ServiceLister:        serviceInformer.Lister(),
+		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
 	}
 
 	logger := logging.FromContext(ctx)

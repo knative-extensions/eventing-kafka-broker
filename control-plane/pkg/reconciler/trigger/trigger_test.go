@@ -3180,10 +3180,10 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
-			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+			GetKafkaClient: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.Client, error) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName: BrokerTopic(),
 					ExpectedTopics:    []string{BrokerTopic()},

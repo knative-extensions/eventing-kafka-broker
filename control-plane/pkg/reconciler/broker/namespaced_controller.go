@@ -23,12 +23,12 @@ import (
 	"net/http"
 	"time"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
-	"github.com/IBM/sarama"
 	mfclient "github.com/manifestival/client-go-client"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
@@ -86,6 +86,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		logger.Fatal("unable to create Manifestival client-go client", zap.Error(err))
 	}
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -99,7 +101,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			DispatcherLabel:              base.BrokerDispatcherLabel,
 			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
-		NewKafkaClusterAdminClient:         sarama.NewClusterAdmin,
+		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		NamespaceLister:                    namespaceinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapInformer.Lister(),
 		ServiceAccountLister:               serviceaccountinformer.Get(ctx).Lister(),

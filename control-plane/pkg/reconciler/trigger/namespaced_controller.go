@@ -19,7 +19,7 @@ package trigger
 import (
 	"context"
 
-	"github.com/IBM/sarama"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	"k8s.io/client-go/tools/cache"
@@ -61,6 +61,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	triggerLister := triggerInformer.Lister()
 	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -77,14 +79,14 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:               brokerInformer.Lister(),
-		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceAccountLister:       serviceaccountInformer.Lister(),
-		EventingClient:             eventingclient.Get(ctx),
-		Env:                        configs,
-		NewKafkaClient:             sarama.NewClient,
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
+		BrokerLister:         brokerInformer.Lister(),
+		ConfigMapLister:      configmapInformer.Lister(),
+		ServiceAccountLister: serviceaccountInformer.Lister(),
+		EventingClient:       eventingclient.Get(ctx),
+		Env:                  configs,
+		GetKafkaClient:       clientPool.GetClient,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
+		InitOffsetsFunc:      offset.InitOffsets,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

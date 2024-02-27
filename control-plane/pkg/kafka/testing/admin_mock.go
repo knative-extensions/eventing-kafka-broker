@@ -17,6 +17,7 @@
 package testing
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/IBM/sarama"
@@ -104,7 +105,16 @@ func (m *MockKafkaClusterAdmin) CreateTopic(topic string, detail *sarama.TopicDe
 }
 
 func (m *MockKafkaClusterAdmin) ListTopics() (map[string]sarama.TopicDetail, error) {
-	panic("implement me")
+	if len(m.ExpectedTopics) == 0 {
+		return nil, fmt.Errorf("failed to list topics, no expected topics")
+	}
+
+	topics := make(map[string]sarama.TopicDetail)
+	for _, topic := range m.ExpectedTopics {
+		topics[topic] = m.ExpectedTopicDetail
+	}
+
+	return topics, nil
 }
 
 func (m *MockKafkaClusterAdmin) DescribeTopics(topics []string) (metadata []*sarama.TopicMetadata, err error) {

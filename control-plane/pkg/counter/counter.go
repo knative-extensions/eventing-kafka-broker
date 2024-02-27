@@ -24,20 +24,20 @@ import (
 )
 
 type Counter struct {
-	cache prober.Cache
+	cache prober.Cache[string, int, struct{}]
 }
 
 func NewExpiringCounter(ctx context.Context) *Counter {
-	cache := prober.NewLocalExpiringCache(ctx, 10*time.Minute)
+	cache := prober.NewLocalExpiringCache[string, int, struct{}](ctx, 10*time.Minute)
 	return &Counter{
 		cache: cache,
 	}
 }
 
 func (c *Counter) Inc(uuid string) int {
-	value := int(c.cache.GetStatus(uuid))
-	c.cache.UpsertStatus(uuid, prober.Status(value+1), nil, func(key string, arg interface{}) {})
-	return value
+	value, _ := c.cache.Get(uuid)
+	c.cache.UpsertStatus(uuid, value+1, struct{}{}, func(key string, value int, arg struct{}) {})
+	return value + 1
 }
 
 func (c *Counter) Del(uuid string) {

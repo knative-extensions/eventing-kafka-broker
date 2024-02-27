@@ -38,10 +38,13 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 )
 
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	ctx = clientpool.WithKafkaClientPool(ctx)
 
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

@@ -36,7 +36,7 @@ type asyncProber struct {
 	client    httpClient
 	enqueue   EnqueueFunc
 	logger    *zap.Logger
-	cache     Cache
+	cache     Cache[string, Status, types.NamespacedName]
 	IPsLister IPsLister
 	port      string
 }
@@ -56,7 +56,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		client:    client,
 		enqueue:   enqueue,
 		logger:    logger,
-		cache:     NewLocalExpiringCache(ctx, cacheExpiryTime),
+		cache:     NewLocalExpiringCache[string, Status, types.NamespacedName](ctx, cacheExpiryTime),
 		IPsLister: IPsLister,
 		port:      port,
 	}
@@ -100,8 +100,8 @@ func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, 
 			With(zap.String("IP", IP)).
 			With(zap.String("address", address))
 
-		currentStatus := a.cache.GetStatus(address)
-		if currentStatus == expected {
+		currentStatus, ok := a.cache.Get(address)
+		if ok && currentStatus == expected {
 			logger.Debug("Skip probing, status in cache is equal to the expected status", zap.String("status", currentStatus.String()))
 			wg.Done()
 			continue
@@ -148,6 +148,6 @@ func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, 
 	return *aggregatedCurrentKnownStatus
 }
 
-func (a *asyncProber) enqueueArg(_ string, arg interface{}) {
-	a.enqueue(arg.(types.NamespacedName))
+func (a *asyncProber) enqueueArg(_ string, _ Status, arg types.NamespacedName) {
+	a.enqueue(arg)
 }
