@@ -867,8 +867,11 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context, cg *kafkainternals.C
 		return nil
 	}
 
-	// if there is a trigger authentication tight to the consumer group, delete it! and then delete the scaled object
+	// if there is a trigger authentication tight to the consumer group, delete it, and then delete the scaled object
 	if metav1.IsControlledBy(scaledObject, cg) {
+		if len(cg.ObjectMeta.OwnerReferences) == 0 {
+			return fmt.Errorf("failed to delete Keda objects, missing owners reference: %w", err)
+		}
 		triggerAuthName := string(cg.ObjectMeta.OwnerReferences[0].UID)
 
 		err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(cg.Namespace).Delete(ctx, triggerAuthName, metav1.DeleteOptions{})
