@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
 
@@ -170,7 +171,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	if err := r.setTrustBundles(ct); err != nil {
+	trustBundlesChanged, err := r.setTrustBundles(ct)
+	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
@@ -188,7 +190,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
-	if changed == coreconfig.ResourceChanged {
+	if changed == coreconfig.ResourceChanged || trustBundlesChanged {
 		// Resource changed, increment contract generation.
 		coreconfig.IncrementContractGeneration(ct)
 
@@ -735,11 +737,15 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 	return pointer.String(string(caCerts)), nil
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
 	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
 	if err != nil {
-		return fmt.Errorf("failed to get trust bundles: %w", err)
+		return false, fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	changed := false
+	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
+		changed = true
 	}
 	ct.TrustBundles = tb
-	return nil
+	return changed, nil
 }
