@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.core.tracing;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import io.cloudevents.CloudEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -26,6 +27,8 @@ public class TracingSpan {
     private static final AttributeKey<String> MESSAGING_MESSAGE_ID = stringKey("messaging.message_id");
     private static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE = stringKey("messaging.message_source");
     private static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_type");
+    private static final AttributeKey<String> EGRESS_UUID = stringKey("egress.uuid");
+    private static final AttributeKey<String> EGRESS_NAME = stringKey("egress.name");
 
     public static void decorateCurrentWithEvent(final CloudEvent event) {
         Span span = Span.fromContextOrNull(Context.current());
@@ -35,5 +38,14 @@ public class TracingSpan {
         span.setAttribute(MESSAGING_MESSAGE_ID, event.getId());
         span.setAttribute(MESSAGING_MESSAGE_SOURCE, event.getSource().toString());
         span.setAttribute(MESSAGING_MESSAGE_TYPE, event.getType());
+    }
+
+    public static void decorateCurrentWithEgress(final Egress egress) {
+        Span span = Span.fromContextOrNull(Context.current());
+        if (span == null) {
+            return;
+        }
+        span.setAttribute(EGRESS_UUID, egress.getReference().getUuid());
+        span.setAttribute(EGRESS_NAME, egress.getReference().getName());
     }
 }
