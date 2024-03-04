@@ -40,23 +40,25 @@ public class TokenVerifierImpl implements TokenVerifier {
     }
 
     public Future<JwtClaims> verify(String token, String expectedAudience) {
-        return this.vertx.<JwtClaims>executeBlocking(promise -> {
-            // execute blocking, as jose .process() is blocking
+        return this.vertx.<JwtClaims>executeBlocking(
+                promise -> {
+                    // execute blocking, as jose .process() is blocking
 
-            JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-                    .setVerificationKeyResolver(this.oidcDiscoveryConfig.getJwksVerificationKeyResolver())
-                    .setExpectedAudience(expectedAudience)
-                    .setExpectedIssuer(this.oidcDiscoveryConfig.getIssuer())
-                    .build();
+                    JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+                            .setVerificationKeyResolver(this.oidcDiscoveryConfig.getJwksVerificationKeyResolver())
+                            .setExpectedAudience(expectedAudience)
+                            .setExpectedIssuer(this.oidcDiscoveryConfig.getIssuer())
+                            .build();
 
-            try {
-                JwtContext jwtContext = jwtConsumer.process(token);
+                    try {
+                        JwtContext jwtContext = jwtConsumer.process(token);
 
-                promise.complete(jwtContext.getJwtClaims());
-            } catch (InvalidJwtException e) {
-                promise.fail(e);
-            }
-        });
+                        promise.complete(jwtContext.getJwtClaims());
+                    } catch (InvalidJwtException e) {
+                        promise.fail(e);
+                    }
+                },
+                false);
     }
 
     public Future<JwtClaims> verify(final HttpServerRequest request, String expectedAudience) {
