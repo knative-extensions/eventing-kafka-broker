@@ -22,7 +22,6 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -38,6 +37,7 @@ import (
 	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
 	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -64,6 +64,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -74,14 +76,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
 		},
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		Env:                        configs,
-		ConfigMapLister:            configmapInformer.Lister(),
-		ServiceLister:              serviceinformer.Get(ctx).Lister(),
-		SubscriptionLister:         subscriptioninformer.Get(ctx).Lister(),
-		ConsumerGroupLister:        consumerGroupInformer.Lister(),
-		InternalsClient:            consumergroupclient.Get(ctx),
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
+		Env:                  configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		ServiceLister:        serviceinformer.Get(ctx).Lister(),
+		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
+		ConsumerGroupLister:  consumerGroupInformer.Lister(),
+		InternalsClient:      consumergroupclient.Get(ctx),
+		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -124,6 +126,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	}
 
 	reconciler.Tracker = impl.Tracker
+
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	configmapinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(

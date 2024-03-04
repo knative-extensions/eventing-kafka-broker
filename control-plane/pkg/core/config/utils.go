@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -124,6 +125,13 @@ func TrustBundles(lister corev1listers.ConfigMapNamespaceLister) ([]string, erro
 			}
 		}
 	}
+	if len(trustBundles) == 0 {
+		return nil, nil
+	}
+
+	sort.SliceStable(trustBundles, func(i, j int) bool {
+		return trustBundles[i] < trustBundles[j]
+	})
 	return trustBundles, nil
 }
 

@@ -48,6 +48,7 @@ import (
 	"knative.dev/pkg/resolver"
 
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/eventing/pkg/scheduler"
@@ -143,9 +144,9 @@ type Reconciler struct {
 
 	NameGenerator names.NameGenerator
 
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
+	GetKafkaClient clientpool.GetKafkaClientFunc
 
 	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
 	// It's convenient to add this as Reconciler field so that we can mock the function used during the
@@ -153,9 +154,9 @@ type Reconciler struct {
 	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	SystemNamespace string
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
 
 	KafkaFeatureFlags *config.KafkaFeatureFlags
 	KedaClient        kedaclientset.Interface
@@ -170,7 +171,7 @@ type Reconciler struct {
 	// When there is high load and multiple consumer group schedule calls, we get many
 	// `dial tcp 10.130.4.8:9092: i/o timeout` errors when trying to connect to Kafka.
 	// This leads to increased "time to readiness" for consumer groups.
-	InitOffsetLatestInitialOffsetCache prober.Cache
+	InitOffsetLatestInitialOffsetCache prober.Cache[string, prober.Status, struct{}]
 
 	EnqueueKey func(key string)
 }
@@ -266,23 +267,18 @@ func (r *Reconciler) reconcileStatusSelector(cg *kafkainternals.ConsumerGroup) {
 }
 
 func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
-	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
+	kafakSecret, err := r.newAuthSecret(ctx, cg)
 	if err != nil {
-		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
-	}
-
-	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		return fmt.Errorf("failed to create Admin client config: %w", err)
+		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
 	}
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
+	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdminClient.Close()
 
 	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	if err = kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errorIsOneOf(err, sarama.ErrUnknownTopicOrPartition, sarama.ErrGroupIDNotFound) {
@@ -550,34 +546,24 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 		return nil
 	}
 
-	if status := r.InitOffsetLatestInitialOffsetCache.GetStatus(keyOf(cg)); status == prober.StatusReady {
+	if status, ok := r.InitOffsetLatestInitialOffsetCache.Get(keyOf(cg)); ok && status == prober.StatusReady {
 		return nil
 	}
 
-	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
+	kafkaSecret, err := r.newAuthSecret(ctx, cg)
 	if err != nil {
-		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
-	}
-
-	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		return fmt.Errorf("failed to create Admin client config: %w", err)
-	}
-
-	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
-	if err != nil {
-		return fmt.Errorf("error getting client sarama config: %w", err)
+		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
 	}
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(bootstrapServers, kafkaClusterAdminSaramaConfig)
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
+	defer kafkaClusterAdminClient.Close()
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdminClient.Close()
 
-	kafkaClient, err := r.NewKafkaClient(bootstrapServers, kafkaClientSaramaConfig)
+	kafkaClient, err := r.GetKafkaClient(ctx, bootstrapServers, kafkaSecret)
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
 	}
@@ -590,7 +576,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 		return fmt.Errorf("failed to initialize offset: %w", err)
 	}
 
-	r.InitOffsetLatestInitialOffsetCache.UpsertStatus(keyOf(cg), prober.StatusReady, nil, func(key string, arg interface{}) {
+	r.InitOffsetLatestInitialOffsetCache.UpsertStatus(keyOf(cg), prober.StatusReady, struct{}{}, func(key string, _ prober.Status, _ struct{}) {
 		r.EnqueueKey(key)
 	})
 

@@ -16,6 +16,8 @@
 package dev.knative.eventing.kafka.broker.receiver.main;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
@@ -24,9 +26,15 @@ import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
 import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import io.cloudevents.CloudEvent;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -51,15 +59,23 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final HttpServerOptions httpServerOptions,
             final HttpServerOptions httpsServerOptions,
             final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
-        this.env = env;
-        this.producerConfigs = producerConfigs;
-        this.httpServerOptions = httpServerOptions;
-        this.httpsServerOptions = httpsServerOptions;
-        this.ingressRequestHandler =
-                new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(), metricsRegistry);
-        this.kafkaProducerFactory = kafkaProducerFactory;
-        this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+            final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
+            final Lister<EventType> eventTypeLister,
+            Vertx vertx,
+            final OIDCDiscoveryConfig oidcDiscoveryConfig)
+            throws NoSuchAlgorithmException {
+        {
+            this.env = env;
+            this.producerConfigs = producerConfigs;
+            this.httpServerOptions = httpServerOptions;
+            this.httpsServerOptions = httpsServerOptions;
+            this.ingressRequestHandler = new IngressRequestHandlerImpl(
+                    StrictRequestToRecordMapper.getInstance(),
+                    metricsRegistry,
+                    new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx));
+            this.kafkaProducerFactory = kafkaProducerFactory;
+            this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+        }
     }
 
     @Override

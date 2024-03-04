@@ -22,7 +22,6 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -42,6 +41,7 @@ import (
 	sinkinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -54,6 +54,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	configmapInformer := configmapinformer.Get(ctx)
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -65,9 +67,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister:            configmapInformer.Lister(),
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		Env:                        configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
+		Env:                  configs,
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
@@ -78,7 +80,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		)
 	}
 
-	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	var globalResync func(interface{})
+
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(_ string, obj interface{}) {
+		if globalResync != nil {
+			globalResync(obj)
+		}
+	})
 	featureStore.WatchConfigs(watcher)
 
 	impl := sinkreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -111,7 +119,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	sinkInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	globalResync := func(_ interface{}) {
+	globalResync = func(_ interface{}) {
 		impl.GlobalResync(sinkInformer.Informer())
 	}
 
@@ -129,15 +137,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	reconciler.Tracker = impl.Tracker
 
-	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(
+	ensureTypeMeta := controller.EnsureTypeMeta(
+		reconciler.Tracker.OnChanged,
+		corev1.SchemeGroupVersion.WithKind("Secret"),
+	)
+
+	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
-		controller.EnsureTypeMeta(
-			reconciler.Tracker.OnChanged,
-			corev1.SchemeGroupVersion.WithKind("Secret"),
-		),
-	))
+		ensureTypeMeta(obj)
+	}))
 
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,

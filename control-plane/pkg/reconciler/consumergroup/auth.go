@@ -23,11 +23,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
-func (r *Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals.ConsumerGroup) (kafka.ConfigOption, error) {
+func (r *Reconciler) newAuthSecret(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*corev1.Secret, error) {
 	var secret *corev1.Secret
 
 	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) {
@@ -36,7 +35,11 @@ func (r *Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals
 			return nil, err
 		}
 
-		return security.NewSaramaSecurityOptionFromSecret(secret)
+		authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+		if err != nil {
+			return nil, err
+		}
+		return authContext.VirtualSecret, nil
 
 	} else if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
 		auth, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, cg.GetNamespace(), *cg.Spec.Template.Spec.Auth.NetSpec)
@@ -49,7 +52,7 @@ func (r *Reconciler) newAuthConfigOption(ctx context.Context, cg *kafkainternals
 		}
 	}
 
-	return security.NewSaramaSecurityOptionFromSecret(secret)
+	return secret, nil
 }
 
 type NetSpecSecretLocator struct {

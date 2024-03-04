@@ -29,29 +29,37 @@ import (
 
 func TestInMemoryLocalCache(t *testing.T) {
 	d := time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), d*2)
+	ctx, cancel := context.WithTimeout(context.Background(), d*4)
 	defer cancel()
-	c := NewLocalExpiringCache(ctx, d)
+	c := NewLocalExpiringCache[string, Status, int](ctx, d)
 	testCache(t, ctx, c, d)
 }
 
-func testCache(t *testing.T, ctx context.Context, c Cache, d time.Duration) {
+func testCache(t *testing.T, ctx context.Context, c Cache[string, Status, int], d time.Duration) {
 	var wg sync.WaitGroup
 	errors := make(chan error, 1)
 
-	wg.Add(2)
+	wg.Add(4)
 
-	c.UpsertStatus("key1", StatusUnknown, 4, verifyNoExpired(errors))
-	require.Equal(t, StatusUnknown, c.GetStatus("key1"))
+	c.UpsertStatus("key1", StatusUnknown, 4, verifyOnExpired("key1", 4, &wg, errors))
+	status, ok := c.Get("key1")
+	require.Equal(t, StatusUnknown, status)
+	require.True(t, ok)
 
-	c.UpsertStatus("key2", StatusNotReady, 42, verifyNoExpired(errors))
-	require.Equal(t, StatusNotReady, c.GetStatus("key2"))
+	c.UpsertStatus("key2", StatusNotReady, 42, verifyOnExpired("key2", 42, &wg, errors))
+	status, ok = c.Get("key2")
+	require.Equal(t, StatusNotReady, status)
+	require.True(t, ok)
 
 	c.UpsertStatus("key1", StatusReady, 41, verifyOnExpired("key1", 41, &wg, errors))
-	require.Equal(t, StatusReady, c.GetStatus("key1"))
+	status, ok = c.Get("key1")
+	require.Equal(t, StatusReady, status)
+	require.True(t, ok)
 
 	c.UpsertStatus("key2", StatusReady, 43, verifyOnExpired("key2", 43, &wg, errors))
-	require.Equal(t, StatusReady, c.GetStatus("key2"))
+	status, ok = c.Get("key2")
+	require.Equal(t, StatusReady, status)
+	require.True(t, ok)
 
 	ctx, cancel := context.WithTimeout(ctx, d*2)
 	defer cancel()
@@ -69,19 +77,13 @@ func testCache(t *testing.T, ctx context.Context, c Cache, d time.Duration) {
 		t.Errorf(err.Error())
 	case <-done:
 		// Wait expiration
-		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { return StatusUnknown == c.GetStatus("key1"), nil }))
-		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { return StatusUnknown == c.GetStatus("key2"), nil }))
+		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { _, ok := c.Get("key1"); return !ok, nil }))
+		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { _, ok := c.Get("key2"); return !ok, nil }))
 	}
 }
 
-func verifyNoExpired(errors chan<- error) func(key string, arg interface{}) {
-	return func(key string, arg interface{}) {
-		errors <- fmt.Errorf("unexpected call to onExpired callback")
-	}
-}
-
-func verifyOnExpired(expectedKey string, expectedArg interface{}, wg *sync.WaitGroup, errors chan<- error) func(key string, arg interface{}) {
-	return func(key string, arg interface{}) {
+func verifyOnExpired(expectedKey string, expectedArg int, wg *sync.WaitGroup, errors chan<- error) func(key string, val Status, arg int) {
+	return func(key string, _ Status, arg int) {
 		if expectedKey != key {
 			errors <- fmt.Errorf("expected key to be %v got %v", expectedKey, key)
 		}

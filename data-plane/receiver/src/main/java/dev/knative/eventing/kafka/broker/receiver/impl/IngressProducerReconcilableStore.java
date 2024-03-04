@@ -154,7 +154,12 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             rc.increment();
 
             final var ingressInfo = new IngressProducerImpl(
-                    rc.getValue().getProducer(), resource, ingress.getPath(), ingress.getHost(), producerProps);
+                    rc.getValue().getProducer(),
+                    resource,
+                    ingress.getPath(),
+                    ingress.getHost(),
+                    producerProps,
+                    ingress.getEnableAutoCreateEventTypes());
 
             if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
                 throw new IllegalArgumentException(
@@ -268,12 +273,15 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         private final DataPlaneContract.Reference reference;
         private final String audience;
 
+        private final boolean eventTypeAutocreateEnabled;
+
         IngressProducerImpl(
                 final ReactiveKafkaProducer<String, CloudEvent> producer,
                 final DataPlaneContract.Resource resource,
                 final String path,
                 final String host,
-                final Properties producerProperties) {
+                final Properties producerProperties,
+                final boolean eventTypeAutocreateEnabled) {
             this.producer = producer;
             this.topic = resource.getTopics(0);
             this.reference = resource.getReference();
@@ -281,6 +289,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             this.path = path;
             this.host = host;
             this.producerProperties = producerProperties;
+            this.eventTypeAutocreateEnabled = eventTypeAutocreateEnabled;
         }
 
         @Override
@@ -313,6 +322,11 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
         Properties getProducerProperties() {
             return producerProperties;
+        }
+
+        @Override
+        public boolean isEventTypeAutocreateEnabled() {
+            return eventTypeAutocreateEnabled;
         }
     }
 

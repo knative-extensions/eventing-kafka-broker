@@ -23,6 +23,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
@@ -36,6 +37,7 @@ import (
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -64,11 +66,10 @@ type Reconciler struct {
 
 	ConfigMapLister corelisters.ConfigMapLister
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
-
-	Prober prober.NewProber
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
+	Prober               prober.NewProber
 
 	IngressHost string
 }
@@ -111,22 +112,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		)
 	}
 
-	// get security option for Sarama with secret info in it
-	securityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
-	if err != nil {
-		return fmt.Errorf("failed to parse secret data for kafka: %w", err)
-	}
-
 	if err := r.TrackSecret(secret, ks); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
-	if err != nil {
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
@@ -177,7 +167,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ct = &contract.Contract{}
 	}
 
-	if err := r.setTrustBundles(ct); err != nil {
+	trustBundlesChanged, err := r.setTrustBundles(ct)
+	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
@@ -225,7 +216,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// Update contract data with the new sink configuration.
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
-	if changed == coreconfig.ResourceChanged {
+	if changed == coreconfig.ResourceChanged || trustBundlesChanged {
 		// Resource changed, increment contract generation.
 		coreconfig.IncrementContractGeneration(ct)
 		// Update the configuration map with the new contract data.
@@ -396,20 +387,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 			)
 		}
 
-		// get security option for Sarama with secret info in it
-		securityOption, err := security.NewSaramaSecurityOptionFromSecret(secret)
-		if err != nil {
-			return fmt.Errorf("failed to parse secret data for kafka: %w", err)
-		}
-
-		saramaConfig, err := kafka.GetSaramaConfig(securityOption)
-		if err != nil {
-			// even in error case, we return `normal`, since we are fine with leaving the
-			// topic undeleted e.g. when we lose connection
-			return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-		}
-
-		kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
+		kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
 		if err != nil {
 			// even in error case, we return `normal`, since we are fine with leaving the
 			// topic undeleted e.g. when we lose connection
@@ -449,11 +427,15 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 	return pointer.String(string(caCerts)), nil
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
 	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
 	if err != nil {
-		return fmt.Errorf("failed to get trust bundles: %w", err)
+		return false, fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	changed := false
+	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
+		changed = true
 	}
 	ct.TrustBundles = tb
-	return nil
+	return changed, nil
 }

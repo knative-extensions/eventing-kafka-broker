@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -34,6 +33,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
@@ -117,6 +117,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		//KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName), //To be added with channel/v2 reconciler version only
 	}
 
+	clientPool := clientpool.Get(ctx)
+
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
 		ConsumerLister:                     consumer.Get(ctx).Lister(),
@@ -126,15 +128,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		PodLister:                          podinformer.Get(ctx).Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
-		NewKafkaClient:                     sarama.NewClient,
+		GetKafkaClient:                     clientPool.GetClient,
 		InitOffsetsFunc:                    offset.InitOffsets,
 		SystemNamespace:                    system.Namespace(),
-		NewKafkaClusterAdminClient:         sarama.NewClusterAdmin,
+		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
-		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, 20*time.Minute),
+		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, 20*time.Minute),
 	}
 
 	consumerInformer := consumer.Get(ctx)

@@ -50,6 +50,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/propagator"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -74,9 +75,9 @@ type NamespacedReconciler struct {
 	StatefulSetLister        appslisters.StatefulSetLister
 	BrokerLister             eventinglisters.BrokerLister
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
 
 	BootstrapServers string
 
@@ -234,14 +235,14 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 				appendBrokerAsOwnerRef(broker)(cm)
 			},
 		},
-		Env:                        r.Env,
-		Resolver:                   r.Resolver,
-		ConfigMapLister:            r.ConfigMapLister,
-		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
-		BootstrapServers:           r.BootstrapServers,
-		Prober:                     r.Prober,
-		Counter:                    r.Counter,
-		KafkaFeatureFlags:          r.KafkaFeatureFlags,
+		Env:                  r.Env,
+		Resolver:             r.Resolver,
+		ConfigMapLister:      r.ConfigMapLister,
+		GetKafkaClusterAdmin: r.GetKafkaClusterAdmin,
+		BootstrapServers:     r.BootstrapServers,
+		Prober:               r.Prober,
+		Counter:              r.Counter,
+		KafkaFeatureFlags:    r.KafkaFeatureFlags,
 	}
 }
 

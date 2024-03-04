@@ -29,3 +29,14 @@ rules:
       - get
       - list
       - watch
+  # needed for eventtype autocreate
+  - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - eventtypes
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+
