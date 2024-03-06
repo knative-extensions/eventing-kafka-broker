@@ -151,7 +151,7 @@ func (l *logger) startForPod(pod *corev1.Pod, fileWriter io.Writer) {
 			defer stream.Close()
 
 			for scanner := bufio.NewScanner(stream); scanner.Scan(); {
-				fileWriter.Write(scanner.Bytes())
+				fileWriter.Write(append(scanner.Bytes(), '\n'))
 			}
 		}()
 	}
