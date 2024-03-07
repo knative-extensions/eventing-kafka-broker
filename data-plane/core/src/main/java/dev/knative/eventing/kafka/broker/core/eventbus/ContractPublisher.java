@@ -98,7 +98,7 @@ public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, 
             this.parser.merge(content, contract);
             return contract.build();
         } catch (final InvalidProtocolBufferException ex) {
-            logger.debug("failed to parse from JSON", ex);
+            logger.error("failed to parse from JSON", ex);
         }
         return null;
     }
