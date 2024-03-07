@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/IBM/sarama v1.41.2
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.3.1-0.20230918062809-28780a762825
-	github.com/cloudevents/sdk-go/v2 v2.13.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.5.0
