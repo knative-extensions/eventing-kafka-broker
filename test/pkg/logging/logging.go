@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"reflect"
 
@@ -82,14 +81,10 @@ func (l *logger) Start() error {
 		go func() {
 			defer watcher.Stop()
 			watchedPods := sets.New[string]()
-			fileWriters := map[string]*os.File{}
 
 			for {
 				select {
 				case <-l.ctx.Done():
-					for _, writer := range fileWriters {
-						writer.Close()
-					}
 					return
 				case event := <-watcher.ResultChan():
 					if event.Object == nil || reflect.ValueOf(event.Object).IsNil() {
@@ -106,21 +101,11 @@ func (l *logger) Start() error {
 						watchedPods.Delete(pod.Name)
 					case watch.Added, watch.Modified:
 						if !watchedPods.Has(pod.Name) && isPodReady(pod) {
-							label, ok := pod.Labels["app"]
 							if !ok {
 								continue
 							}
-							fileWriter, ok := fileWriters[label]
-							if !ok {
-								f, err := os.OpenFile(fmt.Sprintf("%s/new-logs/%s.log", artifacts, label), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-								if err != nil {
-									continue
-								}
-								fileWriter = f
-								fileWriters[label] = f
-							}
 							watchedPods.Insert(pod.Name)
-							l.startForPod(pod, fileWriter)
+							l.startForPod(pod, artifacts)
 						}
 					}
 				}
@@ -131,12 +116,17 @@ func (l *logger) Start() error {
 	return nil
 }
 
-func (l *logger) startForPod(pod *corev1.Pod, fileWriter io.Writer) {
+func (l *logger) startForPod(pod *corev1.Pod, artifactsDirt string) {
 	for _, container := range pod.Spec.Containers {
 		podNs, podName, containerName := pod.Namespace, pod.Name, container.Name
-		fileWriter := fileWriter
 
 		go func() {
+			f, err := os.OpenFile(fmt.Sprintf("%s/new-logs/%s-%s.log", artifactsDirt, podName, containerName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				return
+			}
+			defer f.Close()
+
 			options := &corev1.PodLogOptions{
 				Container:    containerName,
 				Follow:       true,
@@ -151,7 +141,7 @@ func (l *logger) startForPod(pod *corev1.Pod, fileWriter io.Writer) {
 			defer stream.Close()
 
 			for scanner := bufio.NewScanner(stream); scanner.Scan(); {
-				fileWriter.Write(append(scanner.Bytes(), '\n'))
+				f.Write(append(scanner.Bytes(), '\n'))
 			}
 		}()
 	}
