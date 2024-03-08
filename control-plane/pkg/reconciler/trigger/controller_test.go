@@ -18,7 +18,6 @@ package trigger
 
 import (
 	"context"
-
 	"testing"
 
 	// unsure if below is necessary: 
