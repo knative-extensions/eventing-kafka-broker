@@ -116,12 +116,12 @@ func (l *logger) Start() error {
 	return nil
 }
 
-func (l *logger) startForPod(pod *corev1.Pod, artifactsDirt string) {
+func (l *logger) startForPod(pod *corev1.Pod, artifactsDir string) {
 	for _, container := range pod.Spec.Containers {
 		podNs, podName, containerName := pod.Namespace, pod.Name, container.Name
 
 		go func() {
-			f, err := os.OpenFile(fmt.Sprintf("%s/new-logs/%s-%s.log", artifactsDirt, podName, containerName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			f, err := os.OpenFile(fmt.Sprintf("%s/new-logs/%s-%s.log", artifactsDir, podName, containerName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				return
 			}
