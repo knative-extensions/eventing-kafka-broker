@@ -22,6 +22,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"knative.dev/eventing/pkg/auth"
+
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"

@@ -20,8 +20,6 @@ import (
 	"context"
 
 	"knative.dev/eventing/pkg/auth"
-	
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -100,8 +98,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		GetKafkaClient:            clientPool.GetClient,
 		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
 		InitOffsetsFunc:           offset.InitOffsets,
-		// ServiceAccountLister:      serviceaccountInformer.Lister(),
-		serviceAccountLister:       oidcServiceaccountInformer.Lister(),
+		ServiceAccountLister:      oidcServiceaccountInformer.Lister(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
