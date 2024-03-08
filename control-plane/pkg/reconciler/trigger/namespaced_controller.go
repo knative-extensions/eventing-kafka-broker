@@ -22,6 +22,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
+	"knative.dev/eventing/pkg/auth"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
