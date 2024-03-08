@@ -1662,7 +1662,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				ReceiverLabel:               base.SinkReceiverLabel,
 			},
 			ConfigMapLister: listers.GetConfigMapLister(),
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
 					ExpectedTopicDetail:                    expectedTopicDetail,

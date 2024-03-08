@@ -220,6 +220,17 @@ rules:
     verbs:
       - update
 
+  # resources needed to grant eventtype autocreate rbac to namespaced data plane component
+  - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - "eventtypes"
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+
   # messaging.knative.dev resources and finalizers we care about.
   - apiGroups:
       - messaging.knative.dev

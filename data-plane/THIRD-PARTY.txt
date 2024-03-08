@@ -1,5 +1,5 @@
 
-Lists of 230 third-party dependencies.
+Lists of 231 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.4.14 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.4.14 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.12.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -30,6 +30,7 @@ Lists of 230 third-party dependencies.
      (Apache 2.0 License) scala-logging (com.typesafe.scala-logging:scala-logging_2.12:3.9.4 - https://github.com/lightbend/scala-logging)
      (Apache License 2.0) Metrics Core Library (com.yammer.metrics:metrics-core:2.2.0 - http://metrics.codahale.com/metrics-core/)
      (Apache License, Version 2.0) Apache Commons CLI (commons-cli:commons-cli:1.4 - http://commons.apache.org/proper/commons-cli/)
+     (Apache-2.0) Apache Commons Codec (commons-codec:commons-codec:1.16.0 - https://commons.apache.org/proper/commons-codec/)
      (Unknown license) contract (dev.knative.eventing.kafka.broker:contract:1.0-SNAPSHOT - no url defined)
      (Unknown license) core (dev.knative.eventing.kafka.broker:core:1.0-SNAPSHOT - no url defined)
      (Unknown license) dispatcher (dev.knative.eventing.kafka.broker:dispatcher:1.0-SNAPSHOT - no url defined)
@@ -196,7 +197,7 @@ Lists of 230 third-party dependencies.
      (The Apache License, Version 2.0) org.apiguardian:apiguardian-api (org.apiguardian:apiguardian-api:1.1.2 - https://github.com/apiguardian-team/apiguardian)
      (Apache License, Version 2.0) AssertJ fluent assertions (org.assertj:assertj-core:3.22.0 - https://assertj.github.io/doc/assertj-core/)
      (Apache 2.0) Awaitility (org.awaitility:awaitility:4.2.0 - http://awaitility.org)
-     (The Apache Software License, Version 2.0) jose4j (org.bitbucket.b_c:jose4j:0.9.4 - https://bitbucket.org/b_c/jose4j/)
+     (The Apache Software License, Version 2.0) jose4j (org.bitbucket.b_c:jose4j:0.9.6 - https://bitbucket.org/b_c/jose4j/)
      (The MIT License) Checker Qual (org.checkerframework:checker-qual:3.34.0 - https://checkerframework.org/)
      (Apache License, Version 2.0) MicroProfile Config API (org.eclipse.microprofile.config:microprofile-config-api:3.0.3 - https://microprofile.io/project/eclipse/microprofile-config/microprofile-config-api)
      (Apache License, Version 2.0) MicroProfile Context Propagation (org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3 - http://microprofile.io/microprofile-context-propagation-api)

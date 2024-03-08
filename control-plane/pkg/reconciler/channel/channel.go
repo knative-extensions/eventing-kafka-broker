@@ -52,6 +52,7 @@ import (
 	"knative.dev/pkg/resolver"
 
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
@@ -83,13 +84,13 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	GetKafkaClusterAdmin clientpool.GetKafkaClusterAdminFunc
 
-	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
+	// GetKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClient kafka.NewClientFunc
+	GetKafkaClient clientpool.GetKafkaClientFunc
 
 	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
 	// It's convenient to add this as Reconciler field so that we can mock the function used during the
@@ -167,9 +168,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
 	}
 
-	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
-
 	if err := r.TrackSecret(secret, channel); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
@@ -189,26 +187,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	channel.Status.Annotations[kafka.TopicAnnotation] = topicName
 
-	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
-	}
-
-	// Manually commit the offsets in KafkaChannel controller.
-	// That's because we want to make sure we initialize the offsets within the controller
-	// before dispatcher actually starts consuming messages.
-	kafkaClientSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption, kafka.DisableOffsetAutoCommitConfigOption)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, kafkaClusterAdminSaramaConfig)
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin: %w", err))
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
+	kafkaClient, err := r.GetKafkaClient(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka client: %w", err))
 	}
@@ -236,7 +221,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	if err := r.setTrustBundles(ct); err != nil {
+	trustBundlesChanged, err := r.setTrustBundles(ct)
+	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
@@ -250,13 +236,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// we still update the contract configMap even though there's an error.
 	// however, we record this error to make the reconciler try again.
 	subscribersChanged, subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdminClient, channel, channelResource)
-
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
-	if changed == coreconfig.ResourceChanged || subscribersChanged == coreconfig.EgressChanged {
+	if changed == coreconfig.ResourceChanged || subscribersChanged == coreconfig.EgressChanged || trustBundlesChanged {
 		// Resource changed, increment contract generation.
 		coreconfig.IncrementContractGeneration(ct)
 
@@ -496,17 +481,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return fmt.Errorf("failed to resolve auth context: %w", err)
 	}
 
-	// get security option for Sarama with secret info in it
-	saramaSecurityOption := security.NewSaramaSecurityOptionFromSecret(authContext.VirtualSecret)
-
-	saramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
-	if err != nil {
-		// even in error case, we return `normal`, since we are fine with leaving the
-		// topic undeleted e.g. when we lose connection
-		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
-	}
-
-	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
@@ -808,11 +783,15 @@ func findSubscriptionStatus(kc *messagingv1beta1.KafkaChannel, subUID types.UID)
 	return nil
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
 	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
 	if err != nil {
-		return fmt.Errorf("failed to get trust bundles: %w", err)
+		return false, fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	changed := false
+	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
+		changed = true
 	}
 	ct.TrustBundles = tb
-	return nil
+	return changed, nil
 }

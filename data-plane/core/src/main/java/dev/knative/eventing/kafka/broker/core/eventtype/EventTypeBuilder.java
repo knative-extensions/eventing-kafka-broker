@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.eventtype;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;
+import java.net.URI;
 import java.util.List;
 
 public class EventTypeBuilder {
@@ -46,6 +47,16 @@ public class EventTypeBuilder {
         return this;
     }
 
+    public EventTypeBuilder withType(String type) {
+        this.spec.setType(type);
+        return this;
+    }
+
+    public EventTypeBuilder withSource(URI source) {
+        this.spec.setSource(source);
+        return this;
+    }
+
     public EventTypeBuilder withReference(KReference reference) {
         this.spec.setReference(reference);
         return this;
@@ -56,7 +67,7 @@ public class EventTypeBuilder {
         return this;
     }
 
-    public EventTypeBuilder withSchema(String schema) {
+    public EventTypeBuilder withSchema(URI schema) {
         this.spec.setSchema(schema);
         return this;
     }
@@ -76,8 +87,8 @@ public class EventTypeBuilder {
         return this;
     }
 
-    public EventTypeBuilder withSchemaDescription(String schemaDescription) {
-        this.spec.setSchemaDescription(schemaDescription);
+    public EventTypeBuilder withSchemaData(String schemaDescription) {
+        this.spec.setSchemaData(schemaDescription);
         return this;
     }
 }

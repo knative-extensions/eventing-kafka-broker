@@ -111,7 +111,7 @@ public class ResourceReconcilerTestRunner {
     }
 
     public ReconcileStep expect() {
-        return this.reconcileSteps.getLast();
+        return this.reconcileSteps.get(this.reconcileSteps.size() - 1);
     }
 
     public ResourceReconcilerTestRunner enableIngressListener(final IngressReconcilerListenerMock mock) {

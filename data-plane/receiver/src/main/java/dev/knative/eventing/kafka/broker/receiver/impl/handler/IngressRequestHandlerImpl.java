@@ -21,6 +21,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
@@ -70,10 +71,15 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
     private final RequestToRecordMapper requestToRecordMapper;
     private final MeterRegistry meterRegistry;
 
+    private final EventTypeCreator eventTypeCreator;
+
     public IngressRequestHandlerImpl(
-            final RequestToRecordMapper requestToRecordMapper, final MeterRegistry meterRegistry) {
+            final RequestToRecordMapper requestToRecordMapper,
+            final MeterRegistry meterRegistry,
+            final EventTypeCreator eventTypeCreator) {
         this.requestToRecordMapper = requestToRecordMapper;
         this.meterRegistry = meterRegistry;
+        this.eventTypeCreator = eventTypeCreator;
     }
 
     @Override
@@ -159,6 +165,23 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                                                 "path",
                                                 requestContext.getRequest().path()),
                                         cause);
+                            })
+                            .compose((recordMetadata) -> {
+                                if (producer.isEventTypeAutocreateEnabled()) {
+                                    return this.eventTypeCreator
+                                            .create(record.value(), producer.getReference())
+                                            .compose(
+                                                    et -> {
+                                                        logger.debug("successfully created eventtype {}", et);
+                                                        return Future.succeededFuture(recordMetadata);
+                                                    },
+                                                    cause -> {
+                                                        logger.warn("failed to create eventtype", cause);
+                                                        return Future.succeededFuture(recordMetadata);
+                                                    });
+                                } else {
+                                    return Future.succeededFuture(recordMetadata);
+                                }
                             });
                 });
     }

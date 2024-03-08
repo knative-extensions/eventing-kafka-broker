@@ -497,7 +497,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			ServiceAccountLister:     listers.GetServiceAccountLister(),
 			ServiceLister:            listers.GetServiceLister(),
 			ClusterRoleBindingLister: listers.GetClusterRoleBindingLister(),
-			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
 					ExpectedTopicDetail:                    expectedTopicDetail,

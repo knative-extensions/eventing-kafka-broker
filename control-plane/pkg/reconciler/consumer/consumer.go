@@ -24,6 +24,7 @@ import (
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
@@ -401,11 +402,12 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 		return false, fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}
 
-	if err := r.setTrustBundles(ct); err != nil {
+	trustBundlesChanged, err := r.setTrustBundles(ct)
+	if err != nil {
 		return false, fmt.Errorf("failed to set trust bundles: %w", err)
 	}
 
-	if changed := mutatorFunc(logger, ct, c); changed == coreconfig.ResourceChanged {
+	if changed := mutatorFunc(logger, ct, c); changed == coreconfig.ResourceChanged || trustBundlesChanged {
 		logger.Debug("Contract changed", zap.Int("changed", changed))
 
 		ct.IncrementGeneration()
@@ -465,13 +467,17 @@ func FalseAnyStatus(*corev1.Pod) bool {
 	return false
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
 	tb, err := coreconfig.TrustBundles(r.TrustBundleConfigMapLister)
 	if err != nil {
-		return fmt.Errorf("failed to get trust bundles: %w", err)
+		return false, fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+	changed := false
+	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
+		changed = true
 	}
 	ct.TrustBundles = tb
-	return nil
+	return changed, nil
 }
 
 type PodStatusSummary struct {

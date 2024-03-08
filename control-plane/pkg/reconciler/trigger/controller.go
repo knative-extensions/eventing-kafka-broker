@@ -36,6 +36,7 @@ import (
 	"knative.dev/pkg/resolver"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
@@ -71,6 +72,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	// serviceaccountInformer := serviceaccountinformer.Get(ctx)
 	oidcServiceaccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -87,17 +90,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:               brokerInformer.Lister(),
-		ConfigMapLister:            configmapInformer.Lister(),
-		EventingClient:             eventingclient.Get(ctx),
-		Env:                        configs,
-		BrokerClass:                kafka.BrokerClass,
-		DataPlaneConfigMapLabeler:  base.NoopConfigmapOption,
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
-		NewKafkaClient:             sarama.NewClient,
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		InitOffsetsFunc:            offset.InitOffsets,
-		// ServiceAccountLister:       serviceaccountInformer.Lister(),
+		BrokerLister:              brokerInformer.Lister(),
+		ConfigMapLister:           configmapInformer.Lister(),
+		EventingClient:            eventingclient.Get(ctx),
+		Env:                       configs,
+		BrokerClass:               kafka.BrokerClass,
+		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
+		KafkaFeatureFlags:         apisconfig.DefaultFeaturesConfig(),
+		GetKafkaClient:            clientPool.GetClient,
+		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
+		InitOffsetsFunc:           offset.InitOffsets,
+		// ServiceAccountLister:      serviceaccountInformer.Lister(),
 		serviceAccountLister:       oidcServiceaccountInformer.Lister(),
 	}
 

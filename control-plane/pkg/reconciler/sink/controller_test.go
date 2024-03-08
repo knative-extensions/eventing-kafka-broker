@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/eventing/v1alpha1/kafkasink/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/pkg/system"
 
 	eventingtlstesting "knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
@@ -43,6 +44,8 @@ import (
 func TestNewController(t *testing.T) {
 
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	ctx = clientpool.WithKafkaClientPool(ctx)
 
 	secret := types.NamespacedName{
 		Namespace: system.Namespace(),

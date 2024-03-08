@@ -36,11 +36,14 @@ import (
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 )
 
 func TestNewNamespacedController(t *testing.T) {
 	// ctx, _ := reconcilertesting.SetupFakeContext(t)
 	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
+
+	ctx = clientpool.WithKafkaClientPool(ctx)
 
 	controller := NewNamespacedController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

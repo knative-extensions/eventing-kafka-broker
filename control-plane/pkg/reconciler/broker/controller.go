@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -49,6 +48,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
@@ -65,6 +65,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	configmapInformer := configmapinformer.Get(ctx)
 	featureFlags := apisconfig.DefaultFeaturesConfig()
 
+	clientPool := clientpool.Get(ctx)
+
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -77,11 +79,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
-		ConfigMapLister:            configmapInformer.Lister(),
-		Env:                        env,
-		Counter:                    counter.NewExpiringCounter(ctx),
-		KafkaFeatureFlags:          featureFlags,
+		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
+		ConfigMapLister:      configmapInformer.Lister(),
+		Env:                  env,
+		Counter:              counter.NewExpiringCounter(ctx),
+		KafkaFeatureFlags:    featureFlags,
 	}
 
 	logger := logging.FromContext(ctx)
@@ -94,7 +96,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		)
 	}
 
-	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"))
+	var globalResync func(interface{})
+
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(_ string, obj interface{}) {
+		if globalResync != nil {
+			globalResync(obj)
+		}
+	})
 	featureStore.WatchConfigs(watcher)
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
@@ -137,7 +145,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		Handler:    controller.HandleAll(impl.Enqueue),
 	})
 
-	globalResync := func(_ interface{}) {
+	globalResync = func(_ interface{}) {
 		impl.GlobalResync(brokerInformer.Informer())
 	}
 

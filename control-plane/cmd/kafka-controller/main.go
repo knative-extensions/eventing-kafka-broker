@@ -30,6 +30,7 @@ import (
 	"knative.dev/eventing/pkg/eventingtls"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
@@ -64,6 +65,7 @@ func main() {
 	ctx = filteredFactory.WithSelectors(ctx,
 		eventingtls.TrustBundleLabelSelector,
 	)
+	ctx = clientpool.WithKafkaClientPool(ctx)
 
 	sharedmain.MainNamed(ctx, component,
 
