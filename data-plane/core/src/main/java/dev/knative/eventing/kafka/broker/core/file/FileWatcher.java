@@ -22,9 +22,7 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
+import java.nio.file.*;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
@@ -121,6 +119,9 @@ public class FileWatcher implements AutoCloseable {
 
         this.waitRunning.countDown();
 
+        // If the container restarts, the mounted file never gets reconciled, so update as soon as we
+        // start watching
+        logger.debug("Calling trigger function for initial run");
         triggerFunction.run();
 
         while (!Thread.interrupted()) {
@@ -140,11 +141,16 @@ public class FileWatcher implements AutoCloseable {
             }
 
             // Loop through all watch service events
-            for (final var event : key.pollEvents()) {
-                final var kind = event.kind();
+            for (final var e : key.pollEvents()) {
+                final var kind = e.kind();
+                WatchEvent<Path> event = (WatchEvent<Path>) e;
+
+                File file = event.context().toFile();
+                logger.debug("Got " + kind.name() + " for file: " + file.getAbsolutePath() + ", count: " + event.count());
 
                 // We check if the event's context (the file) matches our target file
                 if (kind != OVERFLOW) {
+                    logger.debug("Calling trigger func as we got a " + kind.name() + " on " + file.getAbsolutePath());
                     triggerFunction.run();
                     break;
                 }
