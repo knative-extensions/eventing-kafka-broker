@@ -123,7 +123,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         } else {
             try {
                 TracingSpan.decorateCurrentWithEvent(event);
-                TracingSpan.decorateCurrentWithEgress(consumerVerticleContext.getEgress());
+                TracingSpan.decorateCurrentWithConsumer(consumerVerticleContext.getEgress());
                 requestEmitted();
                 // here we send the event
                 send(event, promise).onComplete(v -> requestCompleted());

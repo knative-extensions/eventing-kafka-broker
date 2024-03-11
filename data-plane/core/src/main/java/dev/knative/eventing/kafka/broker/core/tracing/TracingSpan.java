@@ -27,8 +27,8 @@ public class TracingSpan {
     private static final AttributeKey<String> MESSAGING_MESSAGE_ID = stringKey("messaging.message_id");
     private static final AttributeKey<String> MESSAGING_MESSAGE_SOURCE = stringKey("messaging.message_source");
     private static final AttributeKey<String> MESSAGING_MESSAGE_TYPE = stringKey("messaging.message_type");
-    private static final AttributeKey<String> EGRESS_UUID = stringKey("egress.uuid");
-    private static final AttributeKey<String> EGRESS_NAME = stringKey("egress.name");
+    private static final AttributeKey<String> CONSUMER_UUID = stringKey("consumer.uuid");
+    private static final AttributeKey<String> CONSUMER_NAME = stringKey("consumer.name");
 
     public static void decorateCurrentWithEvent(final CloudEvent event) {
         Span span = Span.fromContextOrNull(Context.current());
@@ -40,12 +40,12 @@ public class TracingSpan {
         span.setAttribute(MESSAGING_MESSAGE_TYPE, event.getType());
     }
 
-    public static void decorateCurrentWithEgress(final Egress egress) {
+    public static void decorateCurrentWithConsumer(final Egress egress) {
         Span span = Span.fromContextOrNull(Context.current());
         if (span == null) {
             return;
         }
-        span.setAttribute(EGRESS_UUID, egress.getReference().getUuid());
-        span.setAttribute(EGRESS_NAME, egress.getReference().getName());
+        span.setAttribute(CONSUMER_UUID, egress.getReference().getUuid());
+        span.setAttribute(CONSUMER_NAME, egress.getReference().getName());
     }
 }
