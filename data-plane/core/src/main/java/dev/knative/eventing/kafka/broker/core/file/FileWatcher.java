@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +47,7 @@ public class FileWatcher implements AutoCloseable {
 
     private final File fileToWatch;
     private long fileLastModified;
-    private Runnable triggerFunction;
+    private Consumer<File> triggerFunction;
 
     private Thread watcherThread;
     private WatchService watcher;
@@ -57,7 +60,7 @@ public class FileWatcher implements AutoCloseable {
      * @param file             file to watch
      * @param triggerFunction  the function to run on file changes
      */
-    public FileWatcher(File file, Runnable triggerFunction) {
+    public FileWatcher(File file, Consumer<File> triggerFunction) {
         Objects.requireNonNull(file, "provide file");
         Objects.requireNonNull(triggerFunction, "provide trigger function");
 
@@ -123,7 +126,7 @@ public class FileWatcher implements AutoCloseable {
         // If the container restarts, the mounted file never gets reconciled, so update as soon as we
         // start watching
         logger.debug("Calling trigger function for initial run");
-        triggerFunction.run();
+        triggerFunction.accept(this.fileToWatch);
 
         while (!Thread.interrupted()) {
 
@@ -162,7 +165,7 @@ public class FileWatcher implements AutoCloseable {
 
                 if (kind != OVERFLOW) {
                     logger.debug("Calling trigger func as we got a " + kind.name() + " on " + file.getAbsolutePath());
-                    triggerFunction.run();
+                    triggerFunction.accept(this.fileToWatch);
                     this.fileLastModified = file.lastModified();
                     break;
                 }

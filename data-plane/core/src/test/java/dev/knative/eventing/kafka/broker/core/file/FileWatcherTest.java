@@ -47,8 +47,8 @@ public class FileWatcherTest {
         // Set up a counter to track how many times the trigger function is called
         AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> {
-            counter.incrementAndGet();
+        fileWatcher = new FileWatcher(tempFile, file -> {
+          counter.incrementAndGet();
         });
         fileWatcher.start().await();
 
@@ -67,7 +67,7 @@ public class FileWatcherTest {
         // Set up a counter to track how many times the trigger function is called
         AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> {
+        fileWatcher = new FileWatcher(tempFile, file -> {
             counter.incrementAndGet();
         });
         fileWatcher.start().await();
@@ -82,7 +82,7 @@ public class FileWatcherTest {
       // Set up a counter to track how many times the trigger function is called
       AtomicInteger counter = new AtomicInteger(0);
 
-      fileWatcher = new FileWatcher(tempFile, () -> {
+      fileWatcher = new FileWatcher(tempFile, file -> {
         counter.incrementAndGet();
       });
       fileWatcher.start().await();
