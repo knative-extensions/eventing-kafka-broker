@@ -26,8 +26,6 @@ import java.nio.file.*;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
-import java.util.function.Function;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,18 +147,23 @@ public class FileWatcher implements AutoCloseable {
                 final var kind = e.kind();
                 WatchEvent<Path> event = (WatchEvent<Path>) e;
 
-                File file = new File(this.fileToWatch.getParentFile(), event.context().toFile().getName());
-                logger.debug("Got " + kind.name() + " for file: " + file.getAbsolutePath() + ", count: " + event.count());
+                File file = new File(
+                        this.fileToWatch.getParentFile(),
+                        event.context().toFile().getName());
+                logger.debug(
+                        "Got " + kind.name() + " for file: " + file.getAbsolutePath() + ", count: " + event.count());
 
                 if (file.lastModified() == this.fileLastModified) {
-                  logger.debug("Modification date didn't change (" + file.lastModified() + " - " + this.fileLastModified + ") . Skipping...");
-                  continue;
+                    logger.debug("Modification date didn't change (" + file.lastModified() + " - "
+                            + this.fileLastModified + ") . Skipping...");
+                    continue;
                 }
 
                 // We check if the event's context (the file) matches our target file
                 if (!event.context().toString().equals(this.fileToWatch.getName())) {
-                  logger.debug("Skipping event for " + file.getAbsolutePath() + " as we only watch " + this.fileToWatch.getAbsolutePath());
-                  continue;
+                    logger.debug("Skipping event for " + file.getAbsolutePath() + " as we only watch "
+                            + this.fileToWatch.getAbsolutePath());
+                    continue;
                 }
 
                 if (kind != OVERFLOW) {
