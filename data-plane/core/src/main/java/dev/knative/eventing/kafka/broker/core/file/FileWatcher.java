@@ -43,6 +43,7 @@ public class FileWatcher implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
     private final File toWatch;
+    private long fileLastModified;
     private Runnable triggerFunction;
 
     private Thread watcherThread;
@@ -145,13 +146,19 @@ public class FileWatcher implements AutoCloseable {
                 final var kind = e.kind();
                 WatchEvent<Path> event = (WatchEvent<Path>) e;
 
-                File file = event.context().toFile();
+                File file = new File(this.toWatch.getParentFile(), event.context().toFile().getName());
                 logger.debug("Got " + kind.name() + " for file: " + file.getAbsolutePath() + ", count: " + event.count());
+
+                if (file.lastModified() == this.fileLastModified) {
+                  logger.debug("Modification date didn't change (" + file.lastModified() + " - " + this.fileLastModified + ") . Skipping...");
+                  continue;
+                }
 
                 // We check if the event's context (the file) matches our target file
                 if (kind != OVERFLOW) {
                     logger.debug("Calling trigger func as we got a " + kind.name() + " on " + file.getAbsolutePath());
                     triggerFunction.run();
+                    this.fileLastModified = file.lastModified();
                     break;
                 }
             }
