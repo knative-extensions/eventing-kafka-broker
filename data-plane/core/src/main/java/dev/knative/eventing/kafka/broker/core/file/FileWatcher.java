@@ -155,6 +155,11 @@ public class FileWatcher implements AutoCloseable {
                 }
 
                 // We check if the event's context (the file) matches our target file
+                if (!event.context().toString().equals(this.toWatch.getName())) {
+                  logger.debug("Skipping event for " + file.getAbsolutePath() + " as we only watch " + this.toWatch.getAbsolutePath());
+                  continue;
+                }
+
                 if (kind != OVERFLOW) {
                     logger.debug("Calling trigger func as we got a " + kind.name() + " on " + file.getAbsolutePath());
                     triggerFunction.run();
