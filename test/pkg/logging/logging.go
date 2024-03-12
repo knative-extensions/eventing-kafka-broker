@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -121,7 +122,7 @@ func (l *logger) startForPod(pod *corev1.Pod, artifactsDir string) {
 		podNs, podName, containerName := pod.Namespace, pod.Name, container.Name
 
 		go func() {
-			f, err := os.OpenFile(fmt.Sprintf("%s/new-logs/%s-%s.log", artifactsDir, podName, containerName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			f, err := os.OpenFile(fmt.Sprintf("%s/new-logs/%s-%s-%s.log", artifactsDir, podName, containerName, time.Now().String()), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				return
 			}
