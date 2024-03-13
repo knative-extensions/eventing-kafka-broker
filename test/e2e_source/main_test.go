@@ -20,32 +20,35 @@
 package e2e_source
 
 import (
-	"os"
-	"testing"
 	"context"
 	"fmt"
+	"os"
+	"testing"
 
-	kubeclient "knative.dev/pkg/client/injection/kube/client"
-
+	"k8s.io/client-go/kubernetes"
 	"knative.dev/eventing-kafka-broker/test/pkg/logging"
-	"knative.dev/reconciler-test/pkg/environment"
+	pkgtest "knative.dev/pkg/test"
 )
-
-// global is the singleton instance of GlobalEnvironment. It is used to parse
-// the testing config for the test run. The config will specify the cluster
-// config as well as the parsing level and state flags.
-var global environment.GlobalEnvironment
 
 func TestMain(m *testing.M) {
 	os.Exit(func() int {
-		ctx, _ := global.Environment()
+
 		// make sure that this context only cancels after the tests finish running
-		ctx = context.WithoutCancel(ctx)
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		client := kubeclient.Get(ctx)
-		logger := logging.NewLogger(ctx, client, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
+		config, err := pkgtest.Flags.GetRESTConfig()
+		if err != nil {
+			log.Printf("Failed to create REST config: %v\n", err)
+			return
+		}
+
+		kubeClient, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to create kube client: %v\n", err)
+			return
+		}
+		logger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
 		err := logger.Start()
 		if err != nil {
 			fmt.Printf("failed to start logger: %s", err.Error())
