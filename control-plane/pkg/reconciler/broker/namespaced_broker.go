@@ -431,24 +431,30 @@ func (r *NamespacedReconciler) createManifestFromSystemStatefulSet(broker *event
 		spec.Replicas = pointer.Int32(1)
 	}
 
-	foundContractResource := false
-	for _, volume := range spec.Template.Spec.Volumes {
-		if volume.Name == "contract-resources" {
-			foundContractResource = true
-		}
-	}
-	if !foundContractResource {
-		// need to add the contract resource volume to the spec
-		spec.Template.Spec.Volumes = append(spec.Template.Spec.Volumes, corev1.Volume{
-			Name: "contract-resources",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "contract-resources",
-					},
+	expectedVolume := corev1.Volume{
+		Name: "contract-resources",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: "kafka-broker-brokers-triggers",
 				},
 			},
-		})
+		},
+	}
+
+	foundContractResource := false
+	for i, volume := range spec.Template.Spec.Volumes {
+		if volume.Name == "contract-resources" {
+			foundContractResource = true
+			if volume.ConfigMap == nil || volume.ConfigMap.Name != "kafka-broker-brokers-triggers" {
+				spec.Template.Spec.Volumes[i] = expectedVolume
+			}
+		}
+	}
+
+	if !foundContractResource {
+		// need to add the contract resource volume to the spec
+		spec.Template.Spec.Volumes = append(spec.Template.Spec.Volumes, expectedVolume)
 
 	}
 

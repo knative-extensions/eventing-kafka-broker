@@ -72,7 +72,7 @@ spec:
               value: knative-eventing
 
             - name: BROKER_CONTRACT_CONFIG_MAP_NAME
-              value: contract-resources
+              value: kafka-broker-brokers-triggers
             - name: CHANNEL_CONTRACT_CONFIG_MAP_NAME
               value: kafka-channel-channels-subscriptions
             - name: SINK_CONTRACT_CONFIG_MAP_NAME

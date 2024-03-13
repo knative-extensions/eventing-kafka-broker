@@ -167,7 +167,7 @@ spec:
       volumes:
         - name: contract-resources
           configMap:
-            name: contract-resources
+            name: kafka-broker-brokers-triggers
         - name: config-kafka-broker-data-plane
           configMap:
             name: config-kafka-broker-data-plane
