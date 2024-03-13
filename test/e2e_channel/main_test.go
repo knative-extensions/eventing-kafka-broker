@@ -30,13 +30,21 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 	"knative.dev/eventing-kafka-broker/test/pkg/logging"
+	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
 )
+
+var channelTestRunner testlib.ComponentsTestRunner
 
 func TestMain(m *testing.M) {
 
 	eventingTest.InitializeEventingFlags()
 	flag.Parse()
+
+    channelTestRunner = testlib.ComponentsTestRunner{
+		ComponentFeatureMap: ChannelFeatureMap,
+		ComponentsToTest:    eventingTest.EventingFlags.Channels,
+	}
 
 	os.Exit(func() int {
 		// make sure that this context only cancels after the tests finish running
