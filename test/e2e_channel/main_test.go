@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"log"
 
 	eventingTest "knative.dev/eventing/test"
 

@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"log"
 
 	"k8s.io/client-go/kubernetes"
 	"knative.dev/eventing-kafka-broker/test/pkg/logging"
