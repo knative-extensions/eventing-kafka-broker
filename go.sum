@@ -125,8 +125,8 @@ github.com/cloudevents/conformance v0.2.0 h1:NvSXOKlagcsOWMEbi8U7Ex/0oQ4JZE1HQ45
 github.com/cloudevents/conformance v0.2.0/go.mod h1:rHKDwylBH89Rns6U3wL9ww8bg9/4GbwRCDNuyoC6bcc=
 github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.13.0 h1:Mf5y5GYVusfOpPQsKHOvr9c3Y76fZnSZzuZo+LQr/aU=
 github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.13.0/go.mod h1:vgBrMXc1h8htR8PUlGViBcNEkri4fw98nY8Tqsgdtfs=
-github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.3.1-0.20230918062809-28780a762825 h1:7yA1t+ruyBVy8KHXAxk2RlHz3r3+lUPNTtss90FNcxo=
-github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.3.1-0.20230918062809-28780a762825/go.mod h1:hh+AlY88cpaWzAJXrcTer/IEqOjZoHc/nQOYmnRZgqE=
+github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.15.2 h1:dl2xbFLV2FGd3OBNC6ncSN9l+gPNEP0DYE+1yKVV5DQ=
+github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.15.2/go.mod h1:jXfl9I1Q78+4zdYGTjHNQcrbNtJL63jpzSgVE2rE79U=
 github.com/cloudevents/sdk-go/sql/v2 v2.13.0 h1:gMJvQ3XFkygY9JmrusgK80d9yRAb8+J3X8IA1OC+oc0=
 github.com/cloudevents/sdk-go/sql/v2 v2.13.0/go.mod h1:XZRQBCgRreddIpQrdjBJQUrRg3BCs3aikplJQkHrK44=
 github.com/cloudevents/sdk-go/v2 v2.15.2 h1:54+I5xQEnI73RBhWHxbI1XJcqOFOVJN85vb41+8mHUc=
