@@ -23,9 +23,11 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
+	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 
+	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
@@ -52,7 +54,7 @@ const (
 	FinalizerName = "kafka.triggers.eventing.knative.dev"
 )
 
-func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	logger := logging.FromContext(ctx).Desugar()
 
@@ -60,6 +62,15 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
+
+	var globalResync func()
+
+	featureStore := feature.NewStore(logger.Sugar().Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync()
+		}
+	})
+	featureStore.WatchConfigs(watcher)
 
 	reconciler := &Reconciler{
 		BrokerLister:        brokerInformer.Lister(),
@@ -81,6 +92,10 @@ func NewController(ctx context.Context, configs *config.Env) *controller.Impl {
 			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister),
 		}
 	})
+
+	globalResync = func() {
+		impl.GlobalResync(triggerInformer.Informer())
+	}
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterTriggers(reconciler.BrokerLister),

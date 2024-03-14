@@ -19,6 +19,9 @@ package v2
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
@@ -27,6 +30,7 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	"knative.dev/pkg/configmap"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
@@ -34,7 +38,12 @@ import (
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	controller := NewController(ctx, &config.Env{})
+	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "config-features",
+		},
+	}), &config.Env{})
+
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}

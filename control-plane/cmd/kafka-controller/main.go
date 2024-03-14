@@ -82,7 +82,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "trigger-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return triggerv2.NewController(ctx, brokerEnv)
+				return triggerv2.NewController(ctx, watcher, brokerEnv)
 			},
 		},
 
