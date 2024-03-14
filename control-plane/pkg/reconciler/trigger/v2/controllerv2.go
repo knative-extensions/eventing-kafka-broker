@@ -99,7 +99,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	})
 
 	globalResync = func() {
-		impl.GlobalResync(triggerInformer.Informer())
+		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister), triggerInformer.Informer())
 	}
 
 	triggerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
