@@ -16,11 +16,16 @@
 
 package installation
 
-import pkgupgrade "knative.dev/pkg/test/upgrade"
+import (
+	pkgupgrade "knative.dev/pkg/test/upgrade"
+	"knative.dev/reconciler-test/pkg/environment"
+)
 
 // LatestStable installs the latest stable eventing kafka.
-func LatestStable() pkgupgrade.Operation {
+func LatestStable(glob environment.GlobalEnvironment) pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("LatestStable", func(c pkgupgrade.Context) {
+		cleanupTriggerv2ConsumerGroups(c, glob)
 		runShellFunc("install_latest_release", c)
+		cleanupTriggerv2Deployments(c, glob)
 	})
 }

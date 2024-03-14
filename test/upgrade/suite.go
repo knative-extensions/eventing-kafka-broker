@@ -52,13 +52,13 @@ func Suite(glob environment.GlobalEnvironment) pkgupgrade.Suite {
 		},
 		Installations: pkgupgrade.Installations{
 			Base: []pkgupgrade.Operation{
-				installation.LatestStable(),
+				installation.LatestStable(glob),
 			},
 			UpgradeWith: []pkgupgrade.Operation{
 				installation.GitHead(),
 			},
 			DowngradeWith: []pkgupgrade.Operation{
-				installation.LatestStable(),
+				installation.LatestStable(glob),
 			},
 		},
 	}
