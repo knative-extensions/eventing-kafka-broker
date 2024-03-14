@@ -27,6 +27,7 @@ import (
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
 
+	"knative.dev/eventing/pkg/auth"
 	"knative.dev/eventing/pkg/eventingtls"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -65,6 +66,7 @@ func main() {
 	ctx := signals.NewContext()
 	ctx = filteredFactory.WithSelectors(ctx,
 		eventingtls.TrustBundleLabelSelector,
+		auth.OIDCLabelSelector,
 	)
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
