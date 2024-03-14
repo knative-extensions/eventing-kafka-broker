@@ -55,18 +55,16 @@ func TestMain(m *testing.M) {
 		config, err := pkgtest.Flags.GetRESTConfig()
 		if err != nil {
 			log.Printf("Failed to create REST config: %v\n", err)
-			return
 		}
 
 		kubeClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to create kube client: %v\n", err)
-			return
 		}
 		logger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
-		err := logger.Start()
+		e2e_channel_err := logger.Start()
 		if err != nil {
-			fmt.Printf("failed to start logger: %s", err.Error())
+			fmt.Printf("failed to start logger: %s", e2e_channel_err.Error())
 		}
 		return m.Run()
 	}())
