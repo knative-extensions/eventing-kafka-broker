@@ -37,7 +37,7 @@ readonly DISPATCHER_VERTX_DIRECTORY=dispatcher-vertx
 readonly RECEIVER_LOOM_DIRECTORY=receiver-loom
 readonly DISPATCHER_LOOM_DIRECTORY=dispatcher-loom
 
-USE_LOOM=${USE_LOOM:-"false"}
+USE_LOOM=${USE_LOOM:-"true"}
 
 if [ $USE_LOOM == "true" ]; then
   echo "Using loom modules ${USE_LOOM}"

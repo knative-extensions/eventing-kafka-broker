@@ -44,29 +44,19 @@ public class ProducerTracer<S> {
      * with a Kafka Producer use case. The method will return {@code null} if Tracing is not setup in Vert.x.
      * {@code TracingPolicy} is always set to {@code TracingPolicy.ALWAYS}.
      * @param tracer the generic tracer object
-     * @param <S> the type of spans that is going to be generated, depending on the tracing system (zipkin, opentracing ...)
-     * @return a new instance of {@code ProducerTracer}, or {@code null}
      */
-    public static <S> ProducerTracer create(VertxTracer tracer) {
-        if (tracer == null) {
-            return null;
-        }
-        TracingPolicy policy = TracingPolicy.ALWAYS;
-        return new ProducerTracer<S>(tracer, policy, "");
-    }
-
-    private ProducerTracer(VertxTracer<Void, S> tracer, TracingPolicy policy, String bootstrapServer) {
+    public ProducerTracer(VertxTracer<Void, S> tracer, TracingPolicy policy, String bootstrapServer) {
         this.tracer = tracer;
         this.address = bootstrapServer;
         this.hostname = Utils.getHost(bootstrapServer);
-        Integer port = Utils.getPort(bootstrapServer);
+        final var port = Utils.getPort(bootstrapServer);
         this.port = port == null ? null : port.toString();
         this.policy = policy;
     }
 
-    public StartedSpan prepareSendMessage(Context context, ProducerRecord record) {
-        TraceContext tc = new TraceContext("producer", address, hostname, port, record.topic());
-        S span = tracer.sendRequest(
+    public StartedSpan prepareSendMessage(Context context, ProducerRecord<?, ?> record) {
+        final var tc = new TraceContext("producer", address, hostname, port, record.topic());
+        final var span = tracer.sendRequest(
                 context,
                 SpanKind.MESSAGING,
                 policy,
