@@ -89,6 +89,11 @@ func waitDeploymentExists(ctx context.Context, client kubernetes.Interface, name
 
 func deleteConsumerGroups(ctx context.Context, client kubernetes.Interface) error {
 	namespaces, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if errors.IsNotFound(err) {
+		// the server doesn't have consumergroups yet so no need to do anything
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
