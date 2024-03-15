@@ -64,6 +64,11 @@ func SetupBrokerAuthSslSaslScram512(ctx context.Context) *feature.Feature {
 		kafkaauthsecret.WithSslSaslScram512Data(ctx))
 }
 
+func SetupBrokerAuthRestrictedSslSaslScram512(ctx context.Context) *feature.Feature {
+	return SetupBrokerAuth(testpkg.BootstrapServersSslSaslScram,
+		kafkaauthsecret.WithRestrictedSslSaslScram512Data(ctx))
+}
+
 func SetupBrokerAuth(bootstrapServer string, authSecretOptions ...manifest.CfgFn) *feature.Feature {
 	f := feature.NewFeatureNamed("Broker with Kafka Auth Secret")
 

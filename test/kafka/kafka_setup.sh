@@ -33,8 +33,11 @@ kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml || kubectl -n kafka
 echo "Create TLS user"
 kubectl apply -n kafka -f $(dirname $0)/user-tls.yaml
 
-echo "Create SASL SCRUM 512 user"
+echo "Create SASL SCRAM 512 user"
 kubectl apply -n kafka -f $(dirname $0)/user-sasl-scram-512.yaml
+
+echo "Create SASL SCRAM 512 user with limited privileges"
+kubectl apply -n kafka -f $(dirname $0)/user-sasl-scram-512-restricted.yaml
 
 # Waits until the given object exists.
 # Parameters: $1 - the kind of the object.

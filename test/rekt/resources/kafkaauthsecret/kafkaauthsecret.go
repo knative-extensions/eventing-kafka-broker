@@ -103,3 +103,23 @@ func WithSslSaslScram512Data(ctx context.Context) manifest.CfgFn {
 		"password":       saslUserSecret.Data["password"],
 	})
 }
+
+func WithRestrictedSslSaslScram512Data(ctx context.Context) manifest.CfgFn {
+	caSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.CaSecretName, metav1.GetOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	saslRestrictedUserSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.SaslRestrictedUserSecretName, metav1.GetOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	return secret.WithData(map[string][]byte{
+		"protocol":       []byte("SASL_SSL"),
+		"sasl.mechanism": []byte("SCRAM-SHA-512"),
+		"ca.crt":         caSecret.Data["ca.crt"],
+		"user":           []byte(pkg.SaslRestrictedUserSecretName),
+		"password":       saslRestrictedUserSecret.Data["password"],
+	})
+}
