@@ -24,8 +24,8 @@ import (
 // LatestStable installs the latest stable eventing kafka.
 func LatestStable(glob environment.GlobalEnvironment) pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("LatestStable", func(c pkgupgrade.Context) {
-		cleanupTriggerv2ConsumerGroups(c, glob)
 		runShellFunc("install_latest_release", c)
+		cleanupTriggerv2ConsumerGroups(c, glob)
 		cleanupTriggerv2Deployments(c, glob)
 	})
 }
