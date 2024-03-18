@@ -48,6 +48,9 @@ public class BaseEnv {
     public static final String CONFIG_TRACING_PATH = "CONFIG_TRACING_PATH";
     private final String configTracingPath;
 
+    public static final String CONFIG_FEATURES_PATH = "CONFIG_FEATURES_PATH";
+    private final String configFeaturesPath;
+
     public static final String WAIT_STARTUP_SECONDS = "WAIT_STARTUP_SECONDS";
     private final int waitStartupSeconds;
 
@@ -61,6 +64,7 @@ public class BaseEnv {
         this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
         this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
         this.configTracingPath = requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
+        this.configFeaturesPath = envProvider.apply(CONFIG_FEATURES_PATH);
         this.waitStartupSeconds = Integer.parseInt(envProvider.apply(WAIT_STARTUP_SECONDS));
     }
 
@@ -98,6 +102,10 @@ public class BaseEnv {
 
     public String getConfigTracingPath() {
         return configTracingPath;
+    }
+
+    public String getConfigFeaturesPath() {
+        return configFeaturesPath;
     }
 
     public int getWaitStartupSeconds() {

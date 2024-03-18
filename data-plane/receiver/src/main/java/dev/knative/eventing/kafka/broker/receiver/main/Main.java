@@ -21,6 +21,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
@@ -76,6 +77,8 @@ public class Main {
         OpenTelemetrySdk openTelemetry =
                 TracingConfig.fromDir(env.getConfigTracingPath()).setup();
 
+        FeaturesConfig featuresConfig = new FeaturesConfig(env.getConfigFeaturesPath());
+
         // Read producer properties and override some defaults
         Properties producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
         producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -108,10 +111,22 @@ public class Main {
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
         // Setup OIDC discovery config
-        OIDCDiscoveryConfig oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
-                .toCompletionStage()
-                .toCompletableFuture()
-                .get();
+        OIDCDiscoveryConfig oidcDiscoveryConfig = null;
+        try {
+            oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get();
+        } catch (ExecutionException ex) {
+            if (featuresConfig.isAuthenticationOIDC()) {
+                logger.error("Could not load OIDC config while OIDC authentication feature is enabled.");
+                throw ex;
+            } else {
+                logger.warn(
+                        "Could not load OIDC configuration. This will lead to problems, when the {} flag will be enabled later",
+                        FeaturesConfig.KEY_AUTHENTICATION_OIDC);
+            }
+        }
 
         final var kubernetesClient = new KubernetesClientBuilder().build();
         final SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
