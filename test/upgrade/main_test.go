@@ -20,17 +20,21 @@
 package upgrade
 
 import (
+	"context"
 	"log"
 	"os"
 	"testing"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
+	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	pkgTest "knative.dev/pkg/test"
 
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/pkg/test/zipkin"
 	"knative.dev/reconciler-test/pkg/environment"
+
+	"knative.dev/eventing-kafka-broker/test/pkg/logging"
 )
 
 var global environment.GlobalEnvironment
@@ -39,6 +43,20 @@ func TestMain(m *testing.M) {
 	restConfig, err := pkgTest.Flags.ClientConfig.GetRESTConfig()
 	if err != nil {
 		log.Fatal("Error building client config: ", err)
+	}
+
+	kubeClient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		log.Fatal("failed to create kube client: ", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	logger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
+
+	err := logger.Start()
+	if err != nil {
+		log.Fatal("failed to start logging: ", err)
 	}
 
 	// Getting the rest config explicitly and passing it further will prevent re-initializing the flagset
@@ -52,6 +70,7 @@ func TestMain(m *testing.M) {
 	// Run the tests.
 	os.Exit(func() int {
 		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
+		defer cancel()
 		return m.Run()
 	}())
 }
