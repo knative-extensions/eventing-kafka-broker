@@ -36,3 +36,4 @@ rules:
     verbs:
       - "get"
       - "list"
+
