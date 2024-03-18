@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 
 	logger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
 
-	err := logger.Start()
+	err = logger.Start()
 	if err != nil {
 		log.Fatal("failed to start logging: ", err)
 	}
