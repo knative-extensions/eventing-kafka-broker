@@ -61,6 +61,6 @@ public class FeaturesConfigTest {
         }
 
         fc = new FeaturesConfig(featuresDir.getAbsolutePath());
-        Assertions.assertTrue(fc.isAuthenticationOIDC(), "should be false, if feature is enabled");
+        Assertions.assertTrue(fc.isAuthenticationOIDC(), "should be true, if feature is enabled");
     }
 }
