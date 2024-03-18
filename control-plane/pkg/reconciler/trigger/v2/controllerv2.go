@@ -18,7 +18,6 @@ package v2
 
 import (
 	"context"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
@@ -42,6 +41,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 
 	apiseventing "knative.dev/eventing/pkg/apis/eventing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"

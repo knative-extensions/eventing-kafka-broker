@@ -18,7 +18,6 @@ package v2
 
 import (
 	"context"
-	"knative.dev/eventing/pkg/auth"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +35,8 @@ import (
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
+
+	"knative.dev/eventing/pkg/auth"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )

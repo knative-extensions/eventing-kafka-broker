@@ -19,7 +19,6 @@ package v2
 import (
 	"context"
 	"fmt"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 	"strings"
 
 	"go.uber.org/zap"
@@ -50,6 +49,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
