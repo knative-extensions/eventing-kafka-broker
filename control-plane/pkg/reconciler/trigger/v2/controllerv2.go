@@ -18,6 +18,7 @@ package v2
 
 import (
 	"context"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
@@ -68,7 +69,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	var globalResync func()
 
+	flagsHolder := trigger.FlagsHolder{}
+
 	featureStore := feature.NewStore(logger.Sugar().Named("feature-config-store"), func(name string, value interface{}) {
+		flags, ok := value.(feature.Flags)
+		if ok {
+			flagsHolder.FlagsLock.Lock()
+			defer flagsHolder.FlagsLock.Unlock()
+			flagsHolder.Flags = flags
+		}
 		if globalResync != nil {
 			globalResync()
 		}
@@ -86,7 +95,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		SecretLister:         secretinformer.Get(ctx).Lister(),
 		KubeClient:           kubeclient.Get(ctx),
 		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
-		FeatureStore:         *featureStore,
+		FlagsHolder:          &flagsHolder,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

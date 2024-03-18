@@ -39,7 +39,7 @@ func NewStatefulSet(name, namespace string, sso ...StatefulSetOption) *appsv1.St
 						VolumeSource: corev1.VolumeSource{
 							ConfigMap: &corev1.ConfigMapVolumeSource{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "contract-resources",
+									Name: "kafka-broker-brokers-triggers",
 								},
 							},
 						},

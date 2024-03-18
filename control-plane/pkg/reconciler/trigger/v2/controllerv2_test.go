@@ -17,6 +17,8 @@
 package v2
 
 import (
+	"context"
+	"knative.dev/eventing/pkg/auth"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -28,14 +30,18 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
+
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
 
 func TestNewController(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, setupInformerSelector)
 
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -45,4 +51,8 @@ func TestNewController(t *testing.T) {
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")
 	}
+}
+
+func setupInformerSelector(ctx context.Context) context.Context {
+	return filteredFactory.WithSelectors(ctx, auth.OIDCLabelSelector)
 }

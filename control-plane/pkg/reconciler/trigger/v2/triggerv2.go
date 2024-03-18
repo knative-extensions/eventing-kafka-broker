@@ -19,6 +19,7 @@ package v2
 import (
 	"context"
 	"fmt"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 	"strings"
 
 	"go.uber.org/zap"
@@ -30,7 +31,6 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/auth"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
@@ -73,7 +73,7 @@ type Reconciler struct {
 	SecretLister         corelisters.SecretLister
 	KubeClient           kubernetes.Interface
 	KafkaFeatureFlags    *apisconfig.KafkaFeatureFlags
-	FeatureStore         feature.Store
+	FlagsHolder          *trigger.FlagsHolder
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -83,7 +83,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 		trigger.Status.Annotations = make(map[string]string, 0)
 	}
 
-	errOIDC := auth.SetupOIDCServiceAccount(ctx, r.FeatureStore.Load(), r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(a *duckv1.AuthStatus) { trigger.Status.Auth = a })
+	r.FlagsHolder.FlagsLock.RLock()
+	defer r.FlagsHolder.FlagsLock.RUnlock()
+
+	errOIDC := auth.SetupOIDCServiceAccount(ctx, r.FlagsHolder.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(a *duckv1.AuthStatus) { trigger.Status.Auth = a })
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -284,7 +287,7 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventi
 	} else {
 		topLevelCondition := cg.GetConditionSet().Manage(cg.GetStatus()).GetTopLevelCondition()
 		if topLevelCondition == nil {
-			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready: %+v", cg)
+			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready")
 		} else {
 			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
 		}
