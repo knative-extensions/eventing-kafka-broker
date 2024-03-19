@@ -23,9 +23,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"testing"
-	"log"
 
 	eventingTest "knative.dev/eventing/test"
 
@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 	eventingTest.InitializeEventingFlags()
 	flag.Parse()
 
-    channelTestRunner = testlib.ComponentsTestRunner{
+	channelTestRunner = testlib.ComponentsTestRunner{
 		ComponentFeatureMap: ChannelFeatureMap,
 		ComponentsToTest:    eventingTest.EventingFlags.Channels,
 	}

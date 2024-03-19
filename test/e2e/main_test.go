@@ -22,9 +22,9 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"testing"
-	"log"
 
 	"k8s.io/client-go/kubernetes"
 	"knative.dev/eventing-kafka-broker/test/pkg/logging"
