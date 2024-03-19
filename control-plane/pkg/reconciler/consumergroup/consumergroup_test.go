@@ -1673,14 +1673,14 @@ func TestReconcileKind(t *testing.T) {
 		store.OnConfigChanged(exampleConfig)
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) Scheduler {
+			SchedulerFunc: func(s string) (Scheduler, bool) {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
 					Scheduler: ss,
 					SchedulerConfig: SchedulerConfig{
 						StatefulSetName: kafkainternals.SourceStatefulSetName,
 					},
-				}
+				}, true
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -1820,11 +1820,11 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 		ctx, _ = kedaclient.With(ctx)
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) Scheduler {
+			SchedulerFunc: func(s string) (Scheduler, bool) {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
 					Scheduler: ss,
-				}
+				}, true
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -2230,11 +2230,11 @@ func TestFinalizeKind(t *testing.T) {
 		errorOnDeleteKafkaCG := row.OtherTestData[kafkatesting.ErrorOnDeleteConsumerGroupTestKey]
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) Scheduler {
+			SchedulerFunc: func(s string) (Scheduler, bool) {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
 					Scheduler: ss,
-				}
+				}, true
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
