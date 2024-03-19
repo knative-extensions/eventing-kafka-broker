@@ -130,7 +130,7 @@ type Scheduler struct {
 	SchedulerConfig
 }
 
-type schedulerFunc func(s string) Scheduler
+type schedulerFunc func(s string) (Scheduler, bool)
 
 type Reconciler struct {
 	SchedulerFunc   schedulerFunc
@@ -401,7 +401,15 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 	startTime := time.Now()
 	defer recordScheduleLatency(ctx, cg, startTime)
 
-	statefulSetScheduler := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind)
+	resourceRef := cg.GetUserFacingResourceRef()
+	if resourceRef == nil {
+		return fmt.Errorf("the consumergroup has no valid owner references, unable to find a scheduler")
+	}
+
+	statefulSetScheduler, ok := r.SchedulerFunc(resourceRef.Kind)
+	if !ok {
+		return fmt.Errorf("no scheduler found for owner reference")
+	}
 
 	// Ensure Contract configmaps are created before scheduling to avoid having pending pods due to missing
 	// volumes.
@@ -415,7 +423,9 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
 	// Sort placements by pod name.
-	sort.SliceStable(placements, func(i, j int) bool { return placements[i].PodName < placements[j].PodName })
+	sort.SliceStable(placements, func(i, j int) bool {
+		return placements[i].PodName < placements[j].PodName
+	})
 
 	cg.Status.Placements = placements
 
