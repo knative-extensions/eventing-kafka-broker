@@ -114,7 +114,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	r := &Reconciler{
-		SchedulerFunc:                      func(s string) Scheduler { return schedulers[strings.ToLower(s)] },
+		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
 		ConsumerLister:                     consumer.Get(ctx).Lister(),
 		InternalsClient:                    internalsclient.Get(ctx).InternalV1alpha1(),
 		SecretLister:                       secretinformer.Get(ctx).Lister(),
