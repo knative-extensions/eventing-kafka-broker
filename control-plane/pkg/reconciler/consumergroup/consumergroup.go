@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -232,7 +233,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 	cg.Spec.Replicas = pointer.Int32(0)
 	err := r.schedule(ctx, cg) //de-schedule placements
 
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "no scheduler found") {
 		// return an error to 1. update the status. 2. not clear the finalizer
 		return cg.MarkScheduleConsumerFailed("Deschedule", fmt.Errorf("failed to unschedule consumer group: %w", err))
 	}
@@ -403,7 +404,7 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 
 	resourceRef := cg.GetUserFacingResourceRef()
 	if resourceRef == nil {
-		return fmt.Errorf("the consumergroup has no valid owner references, unable to find a scheduler")
+		return fmt.Errorf("the consumergroup has no valid owner references, no scheduler found")
 	}
 
 	statefulSetScheduler, ok := r.SchedulerFunc(resourceRef.Kind)
