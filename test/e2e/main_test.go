@@ -20,17 +20,37 @@
 package e2e
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"os"
 	"testing"
 
-	testlib "knative.dev/eventing/test/lib"
-	"knative.dev/pkg/system"
+	"k8s.io/client-go/kubernetes"
+	"knative.dev/eventing-kafka-broker/test/pkg/logging"
+	pkgtest "knative.dev/pkg/test"
 )
 
 func TestMain(m *testing.M) {
 	os.Exit(func() int {
-		defer testlib.ExportLogs(testlib.SystemLogsDir, system.Namespace())
+		// make sure that this context only cancels after the tests finish running
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
+		config, err := pkgtest.Flags.GetRESTConfig()
+		if err != nil {
+			log.Printf("Failed to create REST config: %v\n", err)
+		}
+
+		kubeClient, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			log.Printf("Failed to create kube client: %v\n", err)
+		}
+		e2elogger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
+		erre2e := e2elogger.Start()
+		if erre2e != nil {
+			fmt.Printf("failed to start logger: %s", erre2e.Error())
+		}
 		return m.Run()
 	}())
 }
