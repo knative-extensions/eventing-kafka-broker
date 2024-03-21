@@ -23,5 +23,5 @@ metadata:
     knative.dev/config-category: eventing
 data:
   {{ if .triggerConsumerGroupTemplate }}
-  triggers.consumergroup.template: {{ .triggerConsumerGroupTemplate }}
+  triggers-consumergroup-template: {{ .triggerConsumerGroupTemplate }}
   {{ end }}
