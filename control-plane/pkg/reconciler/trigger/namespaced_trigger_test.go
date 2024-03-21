@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 	"fmt"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"testing"
 
 	"github.com/IBM/sarama"
@@ -199,6 +200,7 @@ func useNamespacedTable(t *testing.T, table TableTest, env *config.Env) {
 					T: t,
 				}, nil
 			},
+			KafkaFeatureFlags: apisconfig.DefaultFeaturesConfig(),
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))

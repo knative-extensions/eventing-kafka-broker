@@ -171,6 +171,8 @@ func TriggerUsesConsumerGroupIDTemplate() *feature.Feature {
 	// check that the trigger has the correct annotation
 	f.Assert("trigger has correct consumergroup template", checkTriggerConsumerGroupIDAnnotation(triggerName, fmt.Sprintf("test-trigger-name-%s", triggerName)))
 
+	f.Teardown("restore kafka-config-features configmap", configkafkafeatures.Install(configkafkafeatures.WithTriggerConsumerGroupIDTemplate("knative-trigger-{{ .Namespace }}-{{ .Name }}")))
+
 	return f
 }
 
