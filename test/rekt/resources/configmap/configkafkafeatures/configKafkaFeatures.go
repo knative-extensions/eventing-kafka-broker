@@ -18,31 +18,51 @@ package configkafkafeatures
 
 import (
 	"context"
-	"embed"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/system"
 
 	"knative.dev/reconciler-test/pkg/feature"
-	"knative.dev/reconciler-test/pkg/manifest"
 )
 
-//go:embed *.yaml
-var yaml embed.FS
+const configKafkaFeatures = "config-kafka-features"
 
-func Install(opts ...manifest.CfgFn) feature.StepFn {
-	cfg := map[string]interface{}{}
+type CfgFn func(cfg map[string]string)
+
+func Install(opts ...CfgFn) feature.StepFn {
+	cfg := map[string]string{}
 
 	for _, fn := range opts {
 		fn(cfg)
 	}
 
 	return func(ctx context.Context, t feature.T) {
-		if _, err := manifest.InstallYamlFS(ctx, yaml, cfg); err != nil {
-			t.Fatal(err)
+		client := kubeclient.Get(ctx)
+		ns := system.Namespace()
+		cm, err := client.CoreV1().ConfigMaps(ns).Get(ctx, configKafkaFeatures, metav1.GetOptions{})
+		if err != nil {
+			t.Fatalf("failed to get configmap config-kafka-features: %s", err.Error())
+		}
+
+		if cm.Data == nil {
+			cm.Data = make(map[string]string)
+		}
+
+		for k, v := range cfg {
+			cm.Data[k] = v
+		}
+
+		_, err = client.CoreV1().ConfigMaps(ns).Update(ctx, cm, metav1.UpdateOptions{})
+		if err != nil {
+			t.Fatalf("failed to update configmap config-kafka-features: %s", err.Error())
 		}
 	}
 }
 
-func WithTriggerConsumerGroupIDTemplate(template string) manifest.CfgFn {
-	return func(cfg map[string]interface{}) {
-		cfg["triggerConsumerGroupTemplate"] = template
+func WithTriggerConsumerGroupIDTemplate(template string) CfgFn {
+	return func(cfg map[string]string) {
+		cfg["triggers.consumergroup.template"] = template
 	}
 }
