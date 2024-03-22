@@ -35,10 +35,11 @@ const (
 	NumPartitions     = 10
 	ReplicationFactor = 3
 
-	KafkaClusterNamespace = "kafka"
-	TlsUserSecretName     = "my-tls-user"
-	SaslUserSecretName    = "my-sasl-user"
-	CaSecretName          = "my-cluster-cluster-ca-cert"
+	KafkaClusterNamespace        = "kafka"
+	TlsUserSecretName            = "my-tls-user"
+	SaslUserSecretName           = "my-sasl-user"
+	SaslRestrictedUserSecretName = "my-restricted-sasl-user"
+	CaSecretName                 = "my-cluster-cluster-ca-cert"
 )
 
 var (
