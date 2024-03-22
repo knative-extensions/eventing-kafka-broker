@@ -185,9 +185,13 @@ func checkTriggerConsumerGroupIDAnnotation(triggerName string) feature.StepFn {
 			t.Fatal(err)
 		}
 
-		expectedTemplateStr, ok := cm.Data["triggers.consumergroup.template"]
+		expectedTemplateStr, ok := cm.Data["triggers-consumergroup-template"]
 		if !ok {
-			t.Fatal("no consumergroup template in config-kafka-features")
+			// there are two keys the value could be in
+			expectedTemplateStr, ok = cm.Data["triggers.consumergroup.template"]
+			if !ok {
+				t.Fatal("no consumergroup template in config-kafka-features")
+			}
 		}
 
 		expectedTemplate, err := template.New("consumergroup-id").Parse(expectedTemplateStr)
