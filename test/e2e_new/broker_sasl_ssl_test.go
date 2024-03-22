@@ -113,6 +113,18 @@ func TestRestrictedBrokerAuthSslSaslScram512(t *testing.T) {
 	env.Test(ctx, t, features.SetupBrokerAuthRestrictedSslSaslScram512(ctx))
 }
 
+func TestTriggerUsesConsumerGroupIDFromTemplate(t *testing.T) {
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.TriggerUsesConsumerGroupIDTemplate())
+}
+
 func TestBrokerNotReadyWithoutAuthSecret(t *testing.T) {
 	t.Parallel()
 

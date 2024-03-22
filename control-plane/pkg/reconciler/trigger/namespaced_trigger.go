@@ -47,6 +47,7 @@ type NamespacedReconciler struct {
 	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 	NewKafkaClient             kafka.NewClientFunc
 	InitOffsetsFunc            kafka.InitOffsetsFunc
+	KafkaFeatureFlags          *apisconfig.KafkaFeatureFlags
 }
 
 func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -89,7 +90,7 @@ func (r *NamespacedReconciler) createReconcilerForTriggerInstance(trigger *event
 		// override
 		BrokerClass:                kafka.NamespacedBrokerClass,
 		DataPlaneConfigMapLabeler:  kafka.NamespacedDataplaneLabelConfigmapOption,
-		KafkaFeatureFlags:          apisconfig.DefaultFeaturesConfig(),
+		KafkaFeatureFlags:          r.KafkaFeatureFlags,
 		NewKafkaClusterAdminClient: r.NewKafkaClusterAdminClient,
 		NewKafkaClient:             r.NewKafkaClient,
 		InitOffsetsFunc:            r.InitOffsetsFunc,
