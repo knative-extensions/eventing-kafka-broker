@@ -17,9 +17,13 @@
 package features
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+	"text/template"
 	"time"
+
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -44,7 +48,6 @@ import (
 	"knative.dev/reconciler-test/resources/svc"
 
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/configkafkafeatures"
 )
 
 func SetupBrokerAuthPlaintext() *feature.Feature {
@@ -158,7 +161,6 @@ func TriggerUsesConsumerGroupIDTemplate() *feature.Feature {
 	triggerName := feature.MakeRandomK8sName("trigger")
 	sinkName := feature.MakeRandomK8sName("sink")
 
-	f.Setup("update config kafka features", configkafkafeatures.Install(configkafkafeatures.WithTriggerConsumerGroupIDTemplate("test-trigger-name-{{ .Name }}")))
 	f.Setup("install broker", broker.Install(brokerName))
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 
@@ -169,21 +171,42 @@ func TriggerUsesConsumerGroupIDTemplate() *feature.Feature {
 	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	// check that the trigger has the correct annotation
-	f.Assert("trigger has correct consumergroup template", checkTriggerConsumerGroupIDAnnotation(triggerName, fmt.Sprintf("test-trigger-name-%s", triggerName)))
-
-	f.Teardown("restore kafka-config-features configmap", configkafkafeatures.Install(configkafkafeatures.WithTriggerConsumerGroupIDTemplate("knative-trigger-{{ .Namespace }}-{{ .Name }}")))
+	f.Assert("trigger has correct consumergroup template", checkTriggerConsumerGroupIDAnnotation(triggerName))
 
 	return f
 }
 
-func checkTriggerConsumerGroupIDAnnotation(triggerName, expectedAnnotation string) feature.StepFn {
+func checkTriggerConsumerGroupIDAnnotation(triggerName string) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		ns := environment.FromContext(ctx).Namespace()
+
+		cm, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, "config-kafka-features", metav1.GetOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		expectedTemplateStr, ok := cm.Data["triggers.consumergroup.template"]
+		if !ok {
+			t.Fatal("no consumergroup template in config-kafka-features")
+		}
+
+		expectedTemplate, err := template.New("consumergroup-id").Parse(expectedTemplateStr)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		trig, err := triggersclient.Get(ctx).EventingV1().Triggers(ns).Get(ctx, triggerName, metav1.GetOptions{})
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		var expectedBytes bytes.Buffer
+		err = expectedTemplate.Execute(&expectedBytes, trig.ObjectMeta)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		expectedAnnotation := expectedBytes.String()
 
 		cgAnnotation, ok := trig.Status.Annotations[kafka.GroupIdAnnotation]
 		if !ok {
