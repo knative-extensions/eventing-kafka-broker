@@ -41,4 +41,6 @@ header "Running tests"
 
 go_test_e2e -timeout=1h -run=KafkaSource ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 
+go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E sacura tests failed"
+
 success
