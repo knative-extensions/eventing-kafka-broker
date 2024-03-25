@@ -69,6 +69,7 @@ func (f SchedulerFunc) Schedule(vpod scheduler.VPod) ([]eventingduckv1alpha1.Pla
 
 const (
 	testSchedulerKey = "scheduler"
+	noTestScheduler  = "no-scheduler"
 
 	systemNamespace = "knative-eventing"
 	finalizerName   = "consumergroups.internal.kafka.eventing.knative.dev"
@@ -1673,14 +1674,14 @@ func TestReconcileKind(t *testing.T) {
 		store.OnConfigChanged(exampleConfig)
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) Scheduler {
+			SchedulerFunc: func(s string) (Scheduler, bool) {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
 					Scheduler: ss,
 					SchedulerConfig: SchedulerConfig{
 						StatefulSetName: kafkainternals.SourceStatefulSetName,
 					},
-				}
+				}, true
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -1820,11 +1821,11 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 		ctx, _ = kedaclient.With(ctx)
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) Scheduler {
+			SchedulerFunc: func(s string) (Scheduler, bool) {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
 					Scheduler: ss,
-				}
+				}, true
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -1993,6 +1994,86 @@ func TestFinalizeKind(t *testing.T) {
 				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
+			},
+			WantDeletes: []clientgotesting.DeleteActionImpl{
+				{
+					ActionImpl: clientgotesting.ActionImpl{
+						Namespace: ConsumerGroupNamespace,
+						Resource: schema.GroupVersionResource{
+							Group:    kafkainternals.SchemeGroupVersion.Group,
+							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Resource: "consumers",
+						},
+					},
+					Name: fmt.Sprintf("%s-%d", ConsumerNamePrefix, 1),
+				},
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
+		{
+			Name: "Finalize normal - with consumers, no valid scheduler",
+			Objects: []runtime.Object{
+				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(1,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
+						ConsumerSubscriber(NewSourceSinkReference()),
+					)),
+				),
+				NewDeletedConsumeGroup(
+					ConsumerGroupReplicas(1),
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIdConfig("my.group.id"),
+						),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				noTestScheduler: true,
 			},
 			WantDeletes: []clientgotesting.DeleteActionImpl{
 				{
@@ -2230,11 +2311,14 @@ func TestFinalizeKind(t *testing.T) {
 		errorOnDeleteKafkaCG := row.OtherTestData[kafkatesting.ErrorOnDeleteConsumerGroupTestKey]
 
 		r := &Reconciler{
-			SchedulerFunc: func(s string) Scheduler {
+			SchedulerFunc: func(s string) (Scheduler, bool) {
+				if noScheduler, ok := row.OtherTestData[noTestScheduler]; ok && noScheduler.(bool) == true {
+					return Scheduler{}, false
+				}
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
 					Scheduler: ss,
-				}
+				}, true
 			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
