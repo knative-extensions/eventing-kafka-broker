@@ -124,7 +124,7 @@ func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []st
 		return nil, err
 	}
 
-	ca, err := cp.newClusterAdminFromClient(c)
+	ca, err := clusterAdminFromClient(c, cp.newClusterAdminFromClient)
 	if err != nil {
 		c.Close()
 		return nil, err
