@@ -26,7 +26,7 @@ import (
 
 // clusterAdmin is a proxy for sarama.ClusterAdmin
 //
-// It keeps track of callers that are actively using the cluster admin useing incrementCallers and Close()
+// It keeps track of callers that are actively using the cluster admin using incrementCallers and Close()
 type clusterAdmin struct {
 	client       *client
 	clusterAdmin sarama.ClusterAdmin
