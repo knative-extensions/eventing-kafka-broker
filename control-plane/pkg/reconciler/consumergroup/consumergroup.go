@@ -124,12 +124,20 @@ func init() {
 	}
 }
 
+type NoSchedulerFoundError struct{}
+
+func (NoSchedulerFoundError) Error() string {
+	return "no scheduler found"
+}
+
+var _ error = NoSchedulerFoundError{}
+
 type Scheduler struct {
 	scheduler.Scheduler
 	SchedulerConfig
 }
 
-type schedulerFunc func(s string) Scheduler
+type schedulerFunc func(s string) (Scheduler, bool)
 
 type Reconciler struct {
 	SchedulerFunc   schedulerFunc
@@ -231,7 +239,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 	cg.Spec.Replicas = pointer.Int32(0)
 	err := r.schedule(ctx, cg) //de-schedule placements
 
-	if err != nil {
+	if err != nil && !errors.Is(err, NoSchedulerFoundError{}) {
 		// return an error to 1. update the status. 2. not clear the finalizer
 		return cg.MarkScheduleConsumerFailed("Deschedule", fmt.Errorf("failed to unschedule consumer group: %w", err))
 	}
@@ -405,7 +413,15 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 	startTime := time.Now()
 	defer recordScheduleLatency(ctx, cg, startTime)
 
-	statefulSetScheduler := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind)
+	resourceRef := cg.GetUserFacingResourceRef()
+	if resourceRef == nil {
+		return NoSchedulerFoundError{}
+	}
+
+	statefulSetScheduler, ok := r.SchedulerFunc(resourceRef.Kind)
+	if !ok {
+		return NoSchedulerFoundError{}
+	}
 
 	// Ensure Contract configmaps are created before scheduling to avoid having pending pods due to missing
 	// volumes.
@@ -419,7 +435,9 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
 	// Sort placements by pod name.
-	sort.SliceStable(placements, func(i, j int) bool { return placements[i].PodName < placements[j].PodName })
+	sort.SliceStable(placements, func(i, j int) bool {
+		return placements[i].PodName < placements[j].PodName
+	})
 
 	cg.Status.Placements = placements
 
