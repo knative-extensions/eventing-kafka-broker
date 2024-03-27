@@ -15,10 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,8 +25,8 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
  * This class is responsible for watching a given file and reports update or execute a trigger function.
@@ -128,6 +126,7 @@ public class FileWatcher implements AutoCloseable {
             WatchKey key;
             try {
                 key = watcher.take();
+                Thread.sleep( 50 );
                 logger.debug("Contract updates");
             } catch (InterruptedException e) {
                 break; // Thread.interrupt was invoked

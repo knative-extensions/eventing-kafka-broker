@@ -43,6 +43,7 @@ public class FileWatcherTest {
     }
 
     @Test
+    @RepeatedTest(10)
     public void testFileModification() throws Exception {
         // Set up a counter to track how many times the trigger function is called
         AtomicInteger counter = new AtomicInteger(0);
