@@ -36,7 +36,6 @@ Lists of 234 third-party dependencies.
      (Unknown license) core (dev.knative.eventing.kafka.broker:core:1.0-SNAPSHOT - no url defined)
      (Unknown license) dispatcher (dev.knative.eventing.kafka.broker:dispatcher:1.0-SNAPSHOT - no url defined)
      (Unknown license) dispatcher-loom (dev.knative.eventing.kafka.broker:dispatcher-loom:1.0-SNAPSHOT - no url defined)
-     (Unknown license) dispatcher-vertx (dev.knative.eventing.kafka.broker:dispatcher-vertx:1.0-SNAPSHOT - no url defined)
      (Unknown license) receiver (dev.knative.eventing.kafka.broker:receiver:1.0-SNAPSHOT - no url defined)
      (Unknown license) receiver-loom (dev.knative.eventing.kafka.broker:receiver-loom:1.0-SNAPSHOT - no url defined)
      (The Apache Software License, Version 2.0) CloudEvents - API (io.cloudevents:cloudevents-api:2.5.0 - https://cloudevents.github.io/sdk-java/cloudevents-api/)
