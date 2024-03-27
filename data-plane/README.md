@@ -32,10 +32,8 @@ update another one will be created. This allows to not block or use locks.
 ├── core
 ├── dispatcher
 ├── dispatcher-loom
-├── dispatcher-vertx
 ├── receiver
 ├── receiver-loom
-├── receiver-vertx
 ├── contract
 └── tests
 ```
@@ -44,9 +42,7 @@ update another one will be created. This allows to not block or use locks.
 - `core` directory contains the core module, in particular, it contains classes for representing Eventing objects
 - `dispatcher` directory contains the base [_Dispatcher_](#dispatcher) application.
 - `dispatcher-loom` directory contains the [_Dispatcher_](#dispatcher) application's entrypoit that use Loom virtual thread implementation for kafka communication.
-- `dispatcher-vertx` directory contains application's entrypoit that use Vert.x kafka client implementation for kafka communication.
 - `receiver` directory contains the [_Receiver_](#receiver) application.
 - `receiver-loom` directory contains the [_Receiver_](#receiver) application's entrypoit that use Loom virtual thread implementation for kafka communication.
-- `receiver-vertx` directory contains application's entrypoit that use Vert.x kafka client implementation for kafka communication.
 - `contract` directory contains a module in which the protobuf compiler (`protoc`) generates code. Git ignores the
 - `tests` directory contains tests for the whole data-plane.
