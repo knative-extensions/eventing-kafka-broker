@@ -49,6 +49,11 @@
       <version>${jmh.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>dev.knative.eventing.kafka.broker</groupId>
+      <artifactId>dispatcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
