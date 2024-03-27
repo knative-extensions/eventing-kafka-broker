@@ -74,8 +74,6 @@
     <module>core</module>
     <module>receiver</module>
     <module>dispatcher</module>
-    <module>receiver-vertx</module>
-    <module>dispatcher-vertx</module>
     <module>receiver-loom</module>
     <module>dispatcher-loom</module>
   </modules>
@@ -140,21 +138,6 @@
         <version>${antlr.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-kafka-client</artifactId>
-        <version>${vertx.kafka.clients.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-opentelemetry</artifactId>

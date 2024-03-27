@@ -48,11 +48,6 @@
     </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
-      <artifactId>dispatcher-vertx</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>dispatcher-loom</artifactId>
       <version>${project.version}</version>
     </dependency>
