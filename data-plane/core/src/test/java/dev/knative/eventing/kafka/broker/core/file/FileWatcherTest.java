@@ -42,12 +42,12 @@ public class FileWatcherTest {
         Files.deleteIfExists(tempFile.toPath());
     }
 
-    @Test
+    @RepeatedTest(20)
     public void testFileModification() throws Exception {
         // Set up a counter to track how many times the trigger function is called
         AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> {
+        fileWatcher = new FileWatcher(tempFile, file -> {
             counter.incrementAndGet();
         });
         fileWatcher.start().await();
@@ -67,7 +67,7 @@ public class FileWatcherTest {
         // Set up a counter to track how many times the trigger function is called
         AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> {
+        fileWatcher = new FileWatcher(tempFile, file -> {
             counter.incrementAndGet();
         });
         fileWatcher.start().await();
@@ -75,5 +75,32 @@ public class FileWatcherTest {
         // Await until the trigger function is called once: 1 is for the initial file
         // read
         await().until(() -> counter.get() == 1);
+    }
+
+    @RepeatedTest(20)
+    public void testDifferentFileCreated() throws Exception {
+        // Set up a counter to track how many times the trigger function is called
+        AtomicInteger counter = new AtomicInteger(0);
+
+        fileWatcher = new FileWatcher(tempFile, file -> {
+            counter.incrementAndGet();
+        });
+        fileWatcher.start().await();
+
+        // Create another file in the same directory and write to it
+        File otherFile = Files.createTempFile("test", ".txt").toFile();
+        try (FileWriter writer = new FileWriter(otherFile)) {
+            writer.write("Some other test Data");
+        }
+        Files.createTempFile("test", ".txt"); // and another file
+
+        // Modify the watched file
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write("Test Data");
+        }
+
+        // Await until the trigger function is called twice: 1 is for the initial file
+        // read, and 1 is for the file modification
+        await().until(() -> counter.get() == 2);
     }
 }

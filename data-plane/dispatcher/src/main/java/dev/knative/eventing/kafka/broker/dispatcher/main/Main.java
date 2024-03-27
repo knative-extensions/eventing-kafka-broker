@@ -131,7 +131,7 @@ public class Main {
                     new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
 
             File file = new File(env.getDataPlaneConfigFilePath());
-            FileWatcher fileWatcher = new FileWatcher(file, () -> publisher.updateContract(file));
+            FileWatcher fileWatcher = new FileWatcher(file, publisher::updateContract);
             fileWatcher.start();
 
             //     Register shutdown hook for graceful shutdown.

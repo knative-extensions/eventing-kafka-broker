@@ -22,11 +22,10 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
+import java.nio.file.*;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +43,9 @@ public class FileWatcher implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
 
-    private final File toWatch;
-    private Runnable triggerFunction;
+    private final File fileToWatch;
+    private long fileLastModified;
+    private Consumer<File> triggerFunction;
 
     private Thread watcherThread;
     private WatchService watcher;
@@ -55,15 +55,15 @@ public class FileWatcher implements AutoCloseable {
     /**
      * All args constructor.
      *
-     * @param contractConsumer updates receiver.
      * @param file             file to watch
+     * @param triggerFunction  the function to run on file changes
      */
-    public FileWatcher(File file, Runnable triggerFunction) {
+    public FileWatcher(File file, Consumer<File> triggerFunction) {
         Objects.requireNonNull(file, "provide file");
         Objects.requireNonNull(triggerFunction, "provide trigger function");
 
         this.triggerFunction = triggerFunction;
-        this.toWatch = file.getAbsoluteFile();
+        this.fileToWatch = file.getAbsoluteFile();
         this.waitRunning = new CountDownLatch(1);
     }
 
@@ -87,7 +87,7 @@ public class FileWatcher implements AutoCloseable {
 
             // Start watching
             this.watcher = FileSystems.getDefault().newWatchService();
-            toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+            fileToWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
             // Start the watcher thread
             this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
@@ -112,16 +112,19 @@ public class FileWatcher implements AutoCloseable {
             // register the given watch service.
             // Note: this watches a directory and not the single file we're interested in, so
             // that's the reason we filter watch service events based on the updated file.
-            this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+            this.fileToWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         } catch (IOException e) {
             logger.error("Error while starting watching the file", e);
             return;
         }
-        logger.info("Started watching {}", toWatch);
+        logger.info("Started watching {}", fileToWatch);
 
         this.waitRunning.countDown();
 
-        triggerFunction.run();
+        // If the container restarts, the mounted file never gets reconciled, so update as soon as we
+        // start watching
+        logger.debug("Calling trigger function for initial run");
+        triggerFunction.accept(this.fileToWatch);
 
         while (!Thread.interrupted()) {
 
@@ -140,12 +143,33 @@ public class FileWatcher implements AutoCloseable {
             }
 
             // Loop through all watch service events
-            for (final var event : key.pollEvents()) {
-                final var kind = event.kind();
+            for (final var e : key.pollEvents()) {
+                final var kind = e.kind();
+                WatchEvent<Path> event = (WatchEvent<Path>) e;
+
+                File file = new File(
+                        this.fileToWatch.getParentFile(),
+                        event.context().toFile().getName());
+                logger.debug(
+                        "Got " + kind.name() + " for file: " + file.getAbsolutePath() + ", count: " + event.count());
+
+                if (file.lastModified() == this.fileLastModified) {
+                    logger.debug("Modification date didn't change (" + file.lastModified() + " - "
+                            + this.fileLastModified + ") . Skipping...");
+                    continue;
+                }
 
                 // We check if the event's context (the file) matches our target file
+                if (!event.context().toString().equals(this.fileToWatch.getName())) {
+                    logger.debug("Skipping event for " + file.getAbsolutePath() + " as we only watch "
+                            + this.fileToWatch.getAbsolutePath());
+                    continue;
+                }
+
                 if (kind != OVERFLOW) {
-                    triggerFunction.run();
+                    logger.debug("Calling trigger func as we got a " + kind.name() + " on " + file.getAbsolutePath());
+                    triggerFunction.accept(this.fileToWatch);
+                    this.fileLastModified = file.lastModified();
                     break;
                 }
             }
