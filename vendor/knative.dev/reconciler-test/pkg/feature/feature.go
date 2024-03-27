@@ -258,10 +258,48 @@ func DeleteResources(ctx context.Context, t T, refs []corev1.ObjectReference) er
 	})
 	if err != nil {
 		LogReferences(lastResource)(ctx, t)
+		dumpConsumerGroups(ctx, t, refs)
+
 		return fmt.Errorf("failed to wait for resources to be deleted: %v", err)
 	}
 
 	return nil
+}
+
+func dumpConsumerGroups(ctx context.Context, t T, refs []corev1.ObjectReference) {
+	t.Logf("=== Dumping consumer groups ===")
+
+	namespaces := map[string]struct{}{}
+
+	for _, ref := range refs {
+		namespaces[ref.Namespace] = struct{}{}
+	}
+
+	cgRefs := make([]corev1.ObjectReference, 0, 16)
+	for ns, _ := range namespaces {
+		dc := dynamicclient.Get(ctx).Resource(schema.GroupVersionResource{
+			Group:    "internal.kafka.eventing.knative.dev",
+			Version:  "v1alpha1",
+			Resource: "consumergroups",
+		})
+
+		cgs, err := dc.Namespace(ns).List(ctx, metav1.ListOptions{})
+		if err != nil {
+			t.Logf("Failed to list consumergroups: %+v", err)
+			continue
+		}
+
+		for _, cg := range cgs.Items {
+			cgRefs = append(cgRefs, corev1.ObjectReference{
+				APIVersion: "internal.kafka.eventing.knative.dev/v1alpha1",
+				Kind:       "ConsumerGroup",
+				Namespace:  cg.GetNamespace(),
+				Name:       cg.GetName(),
+			})
+		}
+	}
+
+	LogReferences(cgRefs...)(ctx, t)
 }
 
 var (
