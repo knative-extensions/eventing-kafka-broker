@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 
+	"knative.dev/eventing/pkg/auth"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -44,7 +45,8 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
-	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
+	// serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
+	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -65,7 +67,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
-	serviceaccountInformer := serviceaccountinformer.Get(ctx)
+	// serviceaccountInformer := serviceaccountinformer.Get(ctx)
+	oidcServiceaccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
 	clientPool := clientpool.Get(ctx)
 
@@ -95,7 +98,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		GetKafkaClient:            clientPool.GetClient,
 		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
 		InitOffsetsFunc:           offset.InitOffsets,
-		ServiceAccountLister:      serviceaccountInformer.Lister(),
+		ServiceAccountLister:      oidcServiceaccountInformer.Lister(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -153,7 +156,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	// Reconciler Trigger when the OIDC service account changes
-	serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	// serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterController(&eventing.Trigger{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})

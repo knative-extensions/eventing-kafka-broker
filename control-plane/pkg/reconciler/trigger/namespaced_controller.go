@@ -23,12 +23,15 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
+	"knative.dev/eventing/pkg/auth"
 	"k8s.io/client-go/tools/cache"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
-	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
+	// serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
+	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered"
+
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -60,7 +63,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
-	serviceaccountInformer := serviceaccountinformer.Get(ctx)
+	// serviceaccountInformer := serviceaccountinformer.Get(ctx)
+	oidcServiceaccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
 	clientPool := clientpool.Get(ctx)
 
@@ -82,7 +86,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		},
 		BrokerLister:         brokerInformer.Lister(),
 		ConfigMapLister:      configmapInformer.Lister(),
-		ServiceAccountLister: serviceaccountInformer.Lister(),
+		// ServiceAccountLister: serviceaccountInformer.Lister(),
+		ServiceAccountLister:		oidcServiceaccountInformer.Lister(),
 		EventingClient:       eventingclient.Get(ctx),
 		Env:                  configs,
 		GetKafkaClient:       clientPool.GetClient,
@@ -150,7 +155,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	// Reconciler Trigger when the OIDC service account changes
-	serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	// serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterController(&eventing.Trigger{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
