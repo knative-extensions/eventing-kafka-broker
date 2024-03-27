@@ -30,9 +30,11 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/auth"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/reconciler"
 
@@ -47,6 +49,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
@@ -60,24 +63,30 @@ const (
 )
 
 type Reconciler struct {
-	BrokerLister        eventinglisters.BrokerLister
-	ConfigMapLister     corelisters.ConfigMapLister
-	EventingClient      eventingclientset.Interface
-	Env                 *config.Env
-	ConsumerGroupLister internalslst.ConsumerGroupLister
-	InternalsClient     internalsclient.Interface
-	SecretLister        corelisters.SecretLister
-	KubeClient          kubernetes.Interface
-	KafkaFeatureFlags   *apisconfig.KafkaFeatureFlags
+	BrokerLister         eventinglisters.BrokerLister
+	ConfigMapLister      corelisters.ConfigMapLister
+	ServiceAccountLister corelisters.ServiceAccountLister
+	EventingClient       eventingclientset.Interface
+	Env                  *config.Env
+	ConsumerGroupLister  internalslst.ConsumerGroupLister
+	InternalsClient      internalsclient.Interface
+	SecretLister         corelisters.SecretLister
+	KubeClient           kubernetes.Interface
+	KafkaFeatureFlags    *apisconfig.KafkaFeatureFlags
+	FlagsHolder          *trigger.FlagsHolder
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	trigger.Status.MarkOIDCIdentityCreatedNotSupported()
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	if trigger.Status.Annotations == nil {
 		trigger.Status.Annotations = make(map[string]string, 0)
 	}
+
+	r.FlagsHolder.FlagsLock.RLock()
+	defer r.FlagsHolder.FlagsLock.RUnlock()
+
+	errOIDC := auth.SetupOIDCServiceAccount(ctx, r.FlagsHolder.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(a *duckv1.AuthStatus) { trigger.Status.Auth = a })
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -116,10 +125,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	propagateConsumerGroupStatus(cg, trigger)
 
-	return nil
+	return errOIDC
 }
 
-func (r Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
+func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
 	var deliveryOrdering = sources.Unordered
 	var err error

@@ -355,6 +355,8 @@ func (r *Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafk
 
 	expectedSpec.VReplicas = pointer.Int32(placement.VReplicas)
 
+	expectedSpec.OIDCServiceAccountName = cg.Spec.OIDCServiceAccountName
+
 	if equality.Semantic.DeepDerivative(expectedSpec, c.Spec) {
 		// Consumer is equal to the template.
 		return nil

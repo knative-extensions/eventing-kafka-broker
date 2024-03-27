@@ -168,6 +168,8 @@ rules:
       - watch
       - update
       - patch
+      - create
+      - delete
 
   # Internal APIs
   - apiGroups:
@@ -293,3 +295,4 @@ rules:
       - update
       - create
       - delete
+
