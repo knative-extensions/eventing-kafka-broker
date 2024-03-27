@@ -69,6 +69,7 @@ public abstract class AbstractConsumerVerticleTest {
     public void subscribedToTopic(final Vertx vertx, final VertxTestContext context) {
         final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
         final var recordDispatcher = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> false,
                 CloudEventSender.noop("subscriber send called"),
@@ -116,6 +117,7 @@ public abstract class AbstractConsumerVerticleTest {
     public void stop(final Vertx vertx, final VertxTestContext context) {
         final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
         final var recordDispatcher = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> false,
                 CloudEventSender.noop("subscriber send called"),
@@ -199,6 +201,7 @@ public abstract class AbstractConsumerVerticleTest {
         final var sinkClosed = new AtomicBoolean(false);
 
         final var recordDispatcher = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 ce -> true,
                 new CloudEventSenderMock(record -> Future.succeededFuture(), () -> {

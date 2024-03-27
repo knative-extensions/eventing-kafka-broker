@@ -17,14 +17,14 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
+import io.vertx.core.Vertx;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,6 +32,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class AllFilterTest {
+
+    static final Vertx vertx = Vertx.vertx();
 
     static final CloudEvent event = CloudEventBuilder.v1()
             .withId("123-42")
@@ -47,29 +49,42 @@ public class AllFilterTest {
     @MethodSource(value = {"testCases"})
     public void match(CloudEvent event, Filter filter, boolean shouldMatch) {
         assertThat(filter.test(event)).isEqualTo(shouldMatch);
+        filter.close(vertx);
     }
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AllFilter(List.of(new ExactFilter(Map.of("id", "123-42")))), true),
                 Arguments.of(
                         event,
-                        new AllFilter(List.of(
-                                new ExactFilter(Map.of("id", "123-42")),
-                                new ExactFilter(Map.of("source", "/api/some-source")))),
+                        new AllFilter(ImmutableList.of(new ExactFilter(Map.of("id", "123-42"))), vertx, 500),
                         true),
                 Arguments.of(
                         event,
-                        new AllFilter(List.of(
-                                new ExactFilter(Map.of("id", "123")),
-                                new ExactFilter(Map.of("source", "/api/some-source")))),
+                        new AllFilter(
+                                ImmutableList.of(
+                                        new ExactFilter(Map.of("id", "123-42")),
+                                        new ExactFilter(Map.of("source", "/api/some-source"))),
+                                vertx,
+                                500),
+                        true),
+                Arguments.of(
+                        event,
+                        new AllFilter(
+                                ImmutableList.of(
+                                        new ExactFilter(Map.of("id", "123")),
+                                        new ExactFilter(Map.of("source", "/api/some-source"))),
+                                vertx,
+                                500),
                         false),
                 Arguments.of(
                         event,
-                        new AllFilter(List.of(
-                                new ExactFilter(Map.of("id", "123-42")),
-                                new ExactFilter(Map.of("source", "/api/something-else")))),
+                        new AllFilter(
+                                ImmutableList.of(
+                                        new ExactFilter(Map.of("id", "123-42")),
+                                        new ExactFilter(Map.of("source", "/api/something-else"))),
+                                vertx,
+                                500),
                         false),
-                Arguments.of(event, new AllFilter(Collections.emptyList()), true));
+                Arguments.of(event, new AllFilter(ImmutableList.of(), Vertx.vertx(), 500), true));
     }
 }

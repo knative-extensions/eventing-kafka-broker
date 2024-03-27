@@ -64,6 +64,8 @@ public abstract class AttributesFilter implements Filter {
 
     private final List<AttributeEntry> attributes;
 
+    private int count;
+
     /**
      * All args constructor.
      *
@@ -81,6 +83,7 @@ public abstract class AttributesFilter implements Filter {
                             }
                         })))
                 .collect(Collectors.toUnmodifiableList());
+        this.count = 0;
     }
 
     /**
@@ -131,5 +134,15 @@ public abstract class AttributesFilter implements Filter {
 
     private static boolean isNotEmpty(final String value) {
         return !(value == null || value.isEmpty());
+    }
+
+    @Override
+    public int getCount() {
+        return this.count;
+    }
+
+    @Override
+    public int incrementCount() {
+        return this.count++;
     }
 }
