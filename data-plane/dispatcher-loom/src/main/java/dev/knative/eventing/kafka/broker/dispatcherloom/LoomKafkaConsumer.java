@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcherloom;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -30,6 +32,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,14 +45,13 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     private final BlockingQueue<Runnable> taskQueue;
     private final AtomicBoolean isClosed;
     private final Thread taskRunnerThread;
-    private Handler<Throwable> exceptionHandler;
 
     public LoomKafkaConsumer(Vertx vertx, Consumer<K, V> consumer) {
         this.consumer = consumer;
         this.taskQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
 
-        taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
+        this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
     }
 
     private void addTask(Runnable task, Promise<?> promise) {
@@ -61,6 +63,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     }
 
     private void processTaskQueue() {
+        // Process queue elements until this is closed and the tasks queue is empty
         while (!isClosed.get() || !taskQueue.isEmpty()) {
             try {
                 taskQueue.take().run();
@@ -76,13 +79,12 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
         addTask(
                 () -> {
-                    consumer.commitAsync(offset, (offsetMap, exception) -> {
-                        if (exception != null) {
-                            promise.fail(exception);
-                        } else {
-                            promise.complete(offsetMap);
-                        }
-                    });
+                    try {
+                        consumer.commitSync(offset);
+                        promise.complete(offset);
+                    } catch (final KafkaException exception) {
+                        promise.fail(exception);
+                    }
                 },
                 promise);
         return promise.future();
@@ -90,29 +92,44 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> close() {
+
         final Promise<Void> promise = Promise.promise();
-        isClosed.set(true);
         taskQueue.add(() -> {
             try {
+                logger.debug("Closing underlying Kafka consumer client");
                 consumer.close();
             } catch (Exception e) {
-                promise.fail(e);
+                promise.tryFail(e);
             }
         });
+
+        logger.debug("Closing consumer {}", keyValue("size", taskQueue.size()));
+        isClosed.set(true);
 
         Thread.ofVirtual().start(() -> {
             try {
                 while (!taskQueue.isEmpty()) {
+                    logger.debug("Queue is not empty {}", keyValue("taskQueue.size", taskQueue.size()));
                     Thread.sleep(2000L);
                 }
+                logger.debug("Queue is empty, interrupting background thread and waiting for it to complete");
+
                 taskRunnerThread.interrupt();
                 taskRunnerThread.join();
                 promise.tryComplete();
+
+                logger.debug("Background thread completed");
+
             } catch (InterruptedException e) {
-                logger.debug("Interrupted while waiting for taskRunnerThread to finish", e);
-                promise.tryFail(e);
+                final var size = taskQueue.size();
+                logger.debug(
+                        "Interrupted while waiting for taskRunnerThread to finish {}",
+                        keyValue("taskQueueSize", size),
+                        e);
+                promise.tryFail(new InterruptedException("taskQueue.size = " + size + ". " + e.getMessage()));
             }
         });
+
         return promise.future();
     }
 
@@ -203,7 +220,6 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public ReactiveKafkaConsumer<K, V> exceptionHandler(Handler<Throwable> handler) {
-        this.exceptionHandler = handler;
         return this;
     }
 

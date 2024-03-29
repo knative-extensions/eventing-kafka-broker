@@ -22,13 +22,10 @@ aliases:
   - rhuss
   discovery-approvers:
   - lberk
-  docs-wg-leads:
-  - snneji
   docs-writers:
   - csantanapr
   - retocode
   - skonto
-  - snneji
   eventing-autoscaler-keda-approvers: []
   eventing-awssqs-approvers:
   - lberk
@@ -47,15 +44,11 @@ aliases:
   - lberk
   - matzew
   - sebgoa
-  - tzununbekov
   eventing-kafka-approvers:
   - aliok
-  - eric-sap
   - lberk
   - matzew
   - pierDipi
-  - steven0711dong
-  - travis-minke-sap
   eventing-kafka-broker-approvers:
   - aliok
   - matzew
@@ -63,16 +56,9 @@ aliases:
   eventing-kafka-broker-reviewers:
   - Leo6Leo
   - cali0707
-  eventing-kafka-mtsource-approvers:
-  - steven0711dong
-  eventing-kafka-wg-leads:
-  - travis-minke-sap
-  eventing-kafka-writers:
-  - travis-minke-sap
+  eventing-kafka-writers: []
   eventing-kogito-approvers:
   - ricardozanini
-  - spolti
-  - vaibhavjainwiz
   eventing-natss-approvers:
   - astelmashenko
   - dan-j
@@ -81,8 +67,9 @@ aliases:
   - lberk
   - matzew
   eventing-rabbitmq-approvers:
-  - gabo1208
-  - tcnghia
+  - Zerpet
+  - ikavgo
+  - mkuratczyk
   eventing-redis-approvers:
   - aavarghese
   - lionelvillard
@@ -188,7 +175,6 @@ aliases:
   - nainaz
   - pierDipi
   - psschwei
-  - puerco
   - salaboy
   - skonto
   - upodroid
@@ -217,7 +203,6 @@ aliases:
   - skonto
   net-kourier-approvers:
   - skonto
-  networking-wg-leads: []
   operations-wg-leads:
   - houshengbo
   operations-writers:
@@ -271,7 +256,6 @@ aliases:
   - aliok
   - evankanderson
   - nainaz
-  - puerco
   - salaboy
   technical-oversight-committee:
   - davidhadas

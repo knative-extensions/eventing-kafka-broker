@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.core.oidc;
 
+import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -43,6 +44,13 @@ public class TokenVerifierImpl implements TokenVerifier {
         return this.vertx.<JwtClaims>executeBlocking(
                 promise -> {
                     // execute blocking, as jose .process() is blocking
+
+                    if (oidcDiscoveryConfig == null) {
+                        promise.fail(
+                                "OIDC discovery config not initialized. This is most likely the case when the pod was started with an invalid OIDC config in place and then later the "
+                                        + FeaturesConfig.KEY_AUTHENTICATION_OIDC
+                                        + " flag was enabled. Restarting the pod should help.");
+                    }
 
                     JwtConsumer jwtConsumer = new JwtConsumerBuilder()
                             .setVerificationKeyResolver(this.oidcDiscoveryConfig.getJwksVerificationKeyResolver())

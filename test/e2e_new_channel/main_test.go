@@ -20,6 +20,8 @@
 package e2e_new_channel
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -31,6 +33,9 @@ import (
 	_ "knative.dev/pkg/system/testing"
 	"knative.dev/pkg/test/zipkin"
 
+	kubeclient "knative.dev/pkg/client/injection/kube/client"
+
+	"knative.dev/eventing-kafka-broker/test/pkg/logging"
 	"knative.dev/reconciler-test/pkg/environment"
 )
 
@@ -52,6 +57,18 @@ func TestMain(m *testing.M) {
 		// place that cleans it up. If an individual test calls this instead, then it will break other
 		// tests that need the tracing in place.
 		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
+		ctx, _ := global.Environment()
+		// make sure that this context only cancels after the tests finish running
+		ctx = context.WithoutCancel(ctx)
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		client := kubeclient.Get(ctx)
+		logger := logging.NewLogger(ctx, client, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
+		err := logger.Start()
+		if err != nil {
+			fmt.Printf("failed to start logger: %s", err.Error())
+		}
 		return m.Run()
 	}())
 }

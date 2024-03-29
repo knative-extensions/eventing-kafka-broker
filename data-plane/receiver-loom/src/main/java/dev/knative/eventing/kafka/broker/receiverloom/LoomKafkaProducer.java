@@ -22,6 +22,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.tracing.TracingPolicy;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -41,9 +42,8 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final BlockingQueue<RecordPromise<K, V>> eventQueue;
     private final AtomicBoolean isClosed;
-    private final ProducerTracer tracer;
+    private final ProducerTracer<?> tracer;
     private final VertxInternal vertx;
-    private final ContextInternal ctx;
     private final Thread sendFromQueueThread;
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
@@ -52,9 +52,13 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         this.eventQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
         this.vertx = (VertxInternal) v;
-        this.ctx = vertx.getOrCreateContext();
-        ContextInternal ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
-        this.tracer = ProducerTracer.create(ctxInt.tracer());
+        final var ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
+        if (ctxInt.tracer() != null) {
+            this.tracer =
+                    new ProducerTracer(ctxInt.tracer(), TracingPolicy.PROPAGATE, "" /* TODO add bootrstrap servers */);
+        } else {
+            this.tracer = null;
+        }
 
         sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
     }
@@ -65,47 +69,54 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         if (isClosed.get()) {
             promise.fail("Producer is closed");
         } else {
-            eventQueue.add(new RecordPromise<K, V>(record, promise));
+            eventQueue.add(new RecordPromise<>(record, this.vertx.getOrCreateContext(), promise));
         }
         return promise.future();
     }
 
     private void sendFromQueue() {
+        // Process queue elements until this is closed and the tasks queue is empty
         while (!isClosed.get() || !eventQueue.isEmpty()) {
             try {
-                RecordPromise<K, V> recordPromise = eventQueue.take();
-                ProducerTracer.StartedSpan startedSpan =
-                        this.tracer == null ? null : this.tracer.prepareSendMessage(ctx, recordPromise.getRecord());
+                final var recordPromise = eventQueue.take();
+                final var startedSpan = this.tracer == null
+                        ? null
+                        : this.tracer.prepareSendMessage(recordPromise.getContext(), recordPromise.getRecord());
 
                 recordPromise
                         .getPromise()
                         .future()
                         .onComplete(v -> {
                             if (startedSpan != null) {
-                                startedSpan.finish(ctx);
+                                startedSpan.finish(recordPromise.getContext());
                             }
                         })
                         .onFailure(cause -> {
                             if (startedSpan != null) {
-                                startedSpan.fail(ctx, cause);
+                                startedSpan.fail(recordPromise.getContext(), cause);
                             }
                         });
                 try {
-                    producer.send(recordPromise.getRecord(), (metadata, exception) -> {
-                        if (exception != null) {
-                            recordPromise.getPromise().fail(exception);
-                        }
-                        recordPromise.getPromise().complete(metadata);
-                    });
+                    producer.send(
+                            recordPromise.getRecord(),
+                            (metadata, exception) -> recordPromise.getContext().runOnContext(v -> {
+                                if (exception != null) {
+                                    recordPromise.getPromise().fail(exception);
+                                }
+                                recordPromise.getPromise().complete(metadata);
+                            }));
                 } catch (final KafkaException exception) {
-                    recordPromise.getPromise().fail(exception);
+                    recordPromise
+                            .getContext()
+                            .runOnContext(v -> recordPromise.getPromise().fail(exception));
                 }
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for event queue to be populated.");
                 break;
             }
         }
-        logger.debug("Background thread finish.");
+
+        logger.debug("Background thread completed.");
     }
 
     @Override
@@ -149,10 +160,12 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private static class RecordPromise<K, V> {
         private final ProducerRecord<K, V> record;
+        private final ContextInternal context;
         private final Promise<RecordMetadata> promise;
 
-        private RecordPromise(ProducerRecord<K, V> record, Promise<RecordMetadata> promise) {
+        private RecordPromise(ProducerRecord<K, V> record, ContextInternal context, Promise<RecordMetadata> promise) {
             this.record = record;
+            this.context = context;
             this.promise = promise;
         }
 
@@ -162,6 +175,10 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
         public Promise<RecordMetadata> getPromise() {
             return promise;
+        }
+
+        public ContextInternal getContext() {
+            return context;
         }
     }
 

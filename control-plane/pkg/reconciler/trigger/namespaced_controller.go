@@ -19,6 +19,7 @@ package trigger
 import (
 	"context"
 
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
@@ -92,6 +93,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		GetKafkaClient:       clientPool.GetClient,
 		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		InitOffsetsFunc:      offset.InitOffsets,
+		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -121,6 +123,14 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	globalResync := func(_ interface{}) {
 		impl.GlobalResync(brokerInformer.Informer())
 	}
+
+	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
+		reconciler.KafkaFeatureFlags.Reset(value)
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
+	kafkaConfigStore.WatchConfigs(watcher)
 
 	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
 		if globalResync != nil {
