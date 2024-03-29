@@ -17,7 +17,6 @@
 package trigger
 
 import (
-	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -41,8 +40,7 @@ import (
 )
 
 func TestNewNamespacedController(t *testing.T) {
-	// ctx, _ := reconcilertesting.SetupFakeContext(t)
-	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 
 	ctx = clientpool.WithKafkaClientPool(ctx)
 

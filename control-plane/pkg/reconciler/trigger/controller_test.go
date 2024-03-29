@@ -20,7 +20,6 @@ import (
 	"context"
 	"testing"
 
-	// unsure if below is necessary: 
 	"knative.dev/eventing/pkg/auth"
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 
@@ -49,8 +48,7 @@ import (
 
 func TestNewController(t *testing.T) {
 	// ctx, _ := reconcilertesting.SetupFakeContext(t)
-	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
-
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
@@ -73,8 +71,7 @@ func SetUpInformerSelector(ctx context.Context) context.Context {
 }
 
 func TestFilterTriggers(t *testing.T) {
-	// ctx, _ := reconcilertesting.SetupFakeContext(t)
-	ctx, _ := SetupFakeContext(t, SetUpInformerSelector)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 
 	tt := []struct {
 		name    string
