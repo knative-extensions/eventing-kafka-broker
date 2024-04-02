@@ -113,7 +113,11 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 	}
 
 	egress.Reference = userFacingResourceRef
-	egress.VReplicas = *c.Spec.VReplicas
+	if c.Spec.VReplicas != nil {
+		egress.VReplicas = *c.Spec.VReplicas
+	} else {
+		egress.VReplicas = 1
+	}
 
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),
@@ -326,6 +330,12 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 //
 // The actual mutation is done by calling the provided contractMutatorFunc.
 func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer, mutatorFunc contractMutatorFunc, shouldWait PodStatusWaitFunc) (bool, error) {
+	if c.Spec.PodBind == nil {
+		// No PodBind so Pod will not be found, return no error since the Consumer
+		// will get re-queued when the pod is added.
+		return false, nil
+	}
+
 	// Get the data plane pod when the Consumer should be scheduled.
 	p, err := r.PodLister.Pods(c.Spec.PodBind.PodNamespace).Get(c.Spec.PodBind.PodName)
 	if apierrors.IsNotFound(err) {
