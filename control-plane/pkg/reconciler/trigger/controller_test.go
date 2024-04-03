@@ -46,6 +46,10 @@ func TestNewController(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "config-features",
 		},
+	}, &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "config-kafka-features",
+		},
 	}), &config.Env{})
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")

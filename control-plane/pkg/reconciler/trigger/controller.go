@@ -121,6 +121,21 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister, kafka.BrokerClass, FinalizerName), triggerInformer.Informer())
 	}
 
+	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
+		reconciler.KafkaFeatureFlags.Reset(value)
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
+	kafkaConfigStore.WatchConfigs(watcher)
+
+	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
+	featureStore.WatchConfigs(watcher)
+
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.ContractConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
