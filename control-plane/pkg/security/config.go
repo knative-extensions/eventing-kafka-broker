@@ -48,11 +48,21 @@ type SecretLocator interface {
 // SecretProviderFunc provides a secret given a namespace/name pair.
 type SecretProviderFunc func(ctx context.Context, namespace, name string) (*corev1.Secret, error)
 
-func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) kafka.ConfigOption {
+func NewSaramaSecurityOptionFromSecret(secret *corev1.Secret) (kafka.ConfigOption, error) {
 	if secret == nil {
-		return kafka.NoOpConfigOption
+		return kafka.NoOpConfigOption, nil
 	}
-	return secretData(secret.Data)
+
+	// if the secret does not have a protocol, try and resolve it from the legacy format
+	if _, ok := secret.Data[ProtocolKey]; !ok {
+		authContext, err := ResolveAuthContextFromLegacySecret(secret)
+		if err != nil {
+			return nil, err
+		}
+		secret = authContext.VirtualSecret
+	}
+
+	return secretData(secret.Data), nil
 }
 
 func Secret(ctx context.Context, config SecretLocator, secretProviderFunc SecretProviderFunc) (*corev1.Secret, error) {

@@ -165,7 +165,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 
 	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
 	if err != nil {
-		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
+		return fmt.Errorf("failed to resolve auth context: %w", err)
 	}
 
 	if err := r.TrackSecret(secret, channel); err != nil {
@@ -477,9 +477,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 
 	authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-	if err != nil {
-		return fmt.Errorf("failed to resolve auth context: %w", err)
-	}
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
 	if err != nil {

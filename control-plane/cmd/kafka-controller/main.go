@@ -27,6 +27,7 @@ import (
 	"knative.dev/pkg/injection/sharedmain"
 	"knative.dev/pkg/signals"
 
+	"knative.dev/eventing/pkg/auth"
 	"knative.dev/eventing/pkg/eventingtls"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -38,6 +39,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
+	triggerv2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger/v2"
 )
 
 const (
@@ -64,6 +66,7 @@ func main() {
 	ctx := signals.NewContext()
 	ctx = filteredFactory.WithSelectors(ctx,
 		eventingtls.TrustBundleLabelSelector,
+		auth.OIDCLabelSelector,
 	)
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
@@ -81,7 +84,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "trigger-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return trigger.NewController(ctx, watcher, brokerEnv)
+				return triggerv2.NewController(ctx, watcher, brokerEnv)
 			},
 		},
 

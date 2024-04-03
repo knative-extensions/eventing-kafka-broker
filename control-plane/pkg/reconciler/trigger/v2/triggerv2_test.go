@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -50,6 +51,7 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
 
 const (
@@ -125,6 +127,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -179,6 +182,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -226,6 +230,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -274,6 +279,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -314,6 +320,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						reconcilertesting.WithTriggerDependencyFailed("failed to reconcile consumer group", "invalid annotation kafka.eventing.knative.dev/delivery.order value: invalid. Allowed values [ \"ordered\" | \"unordered\" ]"),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "invalid"),
@@ -370,6 +377,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -432,6 +440,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -490,6 +499,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -573,6 +583,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -621,6 +632,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -668,6 +680,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -716,6 +729,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -763,6 +777,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -794,6 +809,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -812,6 +828,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -828,6 +845,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerBrokerNotConfigured(),
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -847,6 +865,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
 			},
@@ -900,6 +919,7 @@ func TestReconcileKind(t *testing.T) {
 				{
 					Object: newTrigger(
 						reconcilertesting.WithInitTriggerConditions,
+						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerSubscribed(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(),
@@ -915,16 +935,20 @@ func TestReconcileKind(t *testing.T) {
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 		logger := logging.FromContext(ctx)
 
+		ctxFlags := feature.FromContextOrDefaults(ctx)
+
 		reconciler := &Reconciler{
-			BrokerLister:        listers.GetBrokerLister(),
-			ConfigMapLister:     listers.GetConfigMapLister(),
-			EventingClient:      eventingclient.Get(ctx),
-			Env:                 env,
-			ConsumerGroupLister: listers.GetConsumerGroupLister(),
-			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
-			SecretLister:        listers.GetSecretLister(),
-			KubeClient:          kubeclient.Get(ctx),
-			KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
+			BrokerLister:         listers.GetBrokerLister(),
+			ConfigMapLister:      listers.GetConfigMapLister(),
+			ServiceAccountLister: listers.GetServiceAccountLister(),
+			EventingClient:       eventingclient.Get(ctx),
+			Env:                  env,
+			ConsumerGroupLister:  listers.GetConsumerGroupLister(),
+			InternalsClient:      fakeconsumergroupinformer.Get(ctx),
+			SecretLister:         listers.GetSecretLister(),
+			KubeClient:           kubeclient.Get(ctx),
+			KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
+			FlagsHolder:          &trigger.FlagsHolder{Flags: ctxFlags},
 		}
 
 		return triggerreconciler.NewReconciler(
