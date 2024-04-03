@@ -107,6 +107,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		}
 	})
 
+	kafkaFeatureStore := apisconfig.NewStore(ctx, func(_ string, value *apisconfig.KafkaFeatureFlags) {
+		reconciler.KafkaFeatureFlags.Reset(value)
+		if globalResync != nil {
+			globalResync()
+		}
+	})
+	kafkaFeatureStore.WatchConfigs(watcher)
+
 	globalResync = func() {
 		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister), triggerInformer.Informer())
 	}
