@@ -83,6 +83,7 @@ github.com/cloudevents/sdk-go/sql/v2/utils
 ## explicit; go 1.18
 github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
+github.com/cloudevents/sdk-go/v2/binding/buffering
 github.com/cloudevents/sdk-go/v2/binding/format
 github.com/cloudevents/sdk-go/v2/binding/spec
 github.com/cloudevents/sdk-go/v2/binding/transformer
@@ -466,6 +467,9 @@ github.com/stretchr/testify/require
 # github.com/tsenart/vegeta/v12 v12.11.1
 ## explicit; go 1.20
 github.com/tsenart/vegeta/v12/lib
+# github.com/valyala/bytebufferpool v1.0.0
+## explicit
+github.com/valyala/bytebufferpool
 # github.com/wavesoftware/go-ensure v1.0.0
 ## explicit; go 1.13
 github.com/wavesoftware/go-ensure
@@ -1326,7 +1330,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.40.1-0.20240402102742-4cec55450957
+# knative.dev/eventing v0.40.1-0.20240404013432-ce5b77fc2d0c
 ## explicit; go 1.21
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1410,6 +1414,7 @@ knative.dev/eventing/pkg/client/listers/sources/v1beta2
 knative.dev/eventing/pkg/duck
 knative.dev/eventing/pkg/eventingtls
 knative.dev/eventing/pkg/eventingtls/eventingtlstesting
+knative.dev/eventing/pkg/eventtype
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/kncloudevents/attributes
 knative.dev/eventing/pkg/metrics
@@ -1496,10 +1501,10 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20240327150553-47368d631660
+# knative.dev/hack v0.0.0-20240404013450-1133b37da8d7
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20240402144403-fef5da99bd14
+# knative.dev/pkg v0.0.0-20240404013351-5d4af76051e4
 ## explicit; go 1.21
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1620,7 +1625,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20240327131444-6346b918a853
+# knative.dev/reconciler-test v0.0.0-20240404013441-de880e87410f
 ## explicit; go 1.21
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
