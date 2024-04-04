@@ -47,6 +47,21 @@ func (k *kafkaDeploymentDeleter) DeleteBrokerDeployments(ctx context.Context) er
 	return nil
 }
 
+func (k *kafkaDeploymentDeleter) DeleteChannelDeployments(ctx context.Context) error {
+	deployments := []string{
+		"kafka-channel-receiver",
+		"kafka-channel-dispatcher",
+	}
+
+	for _, deployment := range deployments {
+		if err := k.deleteDeployment(ctx, deployment); err != nil {
+			return fmt.Errorf("failed to delete deployment %s: %v", deployment, err)
+		}
+	}
+
+	return nil
+}
+
 func (k *kafkaDeploymentDeleter) deleteDeployment(ctx context.Context, deploymentName string) error {
 	err := k.waiteStatefulSetExists(ctx, deploymentName)
 	if err != nil {

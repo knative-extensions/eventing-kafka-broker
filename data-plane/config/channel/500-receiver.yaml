@@ -15,7 +15,7 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: kafka-channel-receiver
   namespace: knative-eventing
@@ -25,6 +25,8 @@ metadata:
     app.kubernetes.io/component: kafka-channel-receiver
     app.kubernetes.io/name: knative-eventing
 spec:
+  serviceName: kafka-channel-receiver
+  podManagementPolicy: "Parallel"
   selector:
     matchLabels:
       app: kafka-channel-receiver
@@ -36,6 +38,7 @@ spec:
         app.kubernetes.io/version: devel
         app.kubernetes.io/component: kafka-channel-receiver
         app.kubernetes.io/name: knative-eventing
+        app.kubernetes.io/kind: kafka-receiver
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -65,8 +68,8 @@ spec:
             - mountPath: /etc/config
               name: config-kafka-channel-data-plane
               readOnly: true
-            - mountPath: /etc/channels-subscriptions
-              name: kafka-channel-channels-subscriptions
+            - mountPath: /etc/contract-resources
+              name: contract-resources
               readOnly: true
             - mountPath: /tmp
               name: cache
@@ -108,7 +111,7 @@ spec:
             - name: HTTPSERVER_CONFIG_FILE_PATH
               value: /etc/config/config-kafka-channel-httpserver.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/channels-subscriptions/data
+              value: /etc/contract-resources/data
             - name: LIVENESS_PROBE_PATH
               value: /healthz
             - name: READINESS_PROBE_PATH
@@ -168,7 +171,7 @@ spec:
             seccompProfile:
               type: RuntimeDefault
       volumes:
-        - name: kafka-channel-channels-subscriptions
+        - name: contract-resources
           configMap:
             name: kafka-channel-channels-subscriptions
         - name: config-kafka-channel-data-plane

@@ -65,5 +65,9 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("broker migration failed: %v", err)
 	}
 
+	if err := deploymentDeleter.DeleteChannelDeployments(ctx); err != nil {
+		return fmt.Errorf("channel migration failed: %v", err)
+	}
+
 	return nil
 }

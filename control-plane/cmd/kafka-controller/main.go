@@ -33,7 +33,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
+	channelv2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/v2"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
@@ -108,7 +108,7 @@ func main() {
 		injection.NamedControllerConstructor{
 			Name: "channel-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return channel.NewController(ctx, watcher, channelEnv)
+				return channelv2.NewController(ctx, watcher, channelEnv)
 			},
 		},
 
