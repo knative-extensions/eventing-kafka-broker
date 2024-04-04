@@ -35,10 +35,10 @@ require (
 	k8s.io/apiserver v0.29.2
 	k8s.io/client-go v0.29.2
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
-	knative.dev/eventing v0.40.1-0.20240402102742-4cec55450957
-	knative.dev/hack v0.0.0-20240327150553-47368d631660
-	knative.dev/pkg v0.0.0-20240402144403-fef5da99bd14
-	knative.dev/reconciler-test v0.0.0-20240327131444-6346b918a853
+	knative.dev/eventing v0.40.1-0.20240404013432-ce5b77fc2d0c
+	knative.dev/hack v0.0.0-20240404013450-1133b37da8d7
+	knative.dev/pkg v0.0.0-20240404013351-5d4af76051e4
+	knative.dev/reconciler-test v0.0.0-20240404013441-de880e87410f
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -127,6 +127,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tsenart/vegeta/v12 v12.11.1 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/wavesoftware/go-ensure v1.0.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
