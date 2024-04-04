@@ -38,7 +38,7 @@ func cleanupTriggerv2ConsumerGroups(c pkgupgrade.Context, glob environment.Globa
 	ctx, _ := glob.Environment()
 	client := kubeclient.Get(ctx)
 
-	err := deleteConsumerGroups(ctx, client)
+	err := deleteConsumerGroups(ctx, client, "Trigger")
 	if err != nil {
 		c.T.Fatal("failed to downgrade from triggerv2", err.Error())
 	}
@@ -87,7 +87,7 @@ func waitDeploymentExists(ctx context.Context, client kubernetes.Interface, name
 	})
 }
 
-func deleteConsumerGroups(ctx context.Context, client kubernetes.Interface) error {
+func deleteConsumerGroups(ctx context.Context, client kubernetes.Interface, kind string) error {
 	namespaces, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func deleteConsumerGroups(ctx context.Context, client kubernetes.Interface) erro
 
 		for _, cg := range cgList.Items {
 			for _, owner := range cg.OwnerReferences {
-				if owner.Kind == "Trigger" {
+				if owner.Kind == kind {
 					err := cgClient.Delete(ctx, cg.Name, metav1.DeleteOptions{})
 					if err != nil && !errors.IsNotFound(err) {
 						return err

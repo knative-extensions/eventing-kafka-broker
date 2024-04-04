@@ -27,5 +27,7 @@ func LatestStable(glob environment.GlobalEnvironment) pkgupgrade.Operation {
 		runShellFunc("install_latest_release", c)
 		cleanupTriggerv2ConsumerGroups(c, glob)
 		cleanupTriggerv2Deployments(c, glob)
+		cleanupChannelv2ConsumerGroups(c, glob)
+		cleanupChannelv2Deployments(c, glob)
 	})
 }
