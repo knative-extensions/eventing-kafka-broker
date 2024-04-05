@@ -605,7 +605,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 						"bootstrap.servers": strings.Join(bootstrapServers, ","),
 					}},
 					Delivery: &internalscg.DeliverySpec{
-						DeliverySpec: channel.Spec.Delivery,
+						DeliverySpec: mergeDeliverySpecs(s.Delivery, channel.Spec.Delivery),
 						Ordering:     DefaultDeliveryOrder,
 					},
 					Subscriber: duckv1.Destination{
@@ -624,6 +624,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 					CACerts:  s.ReplyCACerts,
 					Audience: s.ReplyAudience,
 				},
+				Enabled: true,
 			},
 		}
 	} else {
@@ -800,4 +801,36 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 		return nil, nil
 	}
 	return pointer.String(string(caCerts)), nil
+}
+
+// d1 takes preference over d22, where both are set
+func mergeDeliverySpecs(d1, d2 *v1.DeliverySpec) *v1.DeliverySpec {
+	if d1 == nil {
+		return d2
+	}
+	if d2 == nil {
+		return d1
+	}
+	d := d1.DeepCopy()
+
+	if d.DeadLetterSink == nil {
+		d.DeadLetterSink = d2.DeadLetterSink
+	}
+	if d.Retry == nil {
+		d.Retry = d2.Retry
+	}
+	if d.Timeout == nil {
+		d.Timeout = d2.Timeout
+	}
+	if d.BackoffPolicy == nil {
+		d.BackoffPolicy = d2.BackoffPolicy
+	}
+	if d.BackoffDelay == nil {
+		d.BackoffDelay = d2.BackoffDelay
+	}
+	if d.RetryAfterMax == nil {
+		d.RetryAfterMax = d2.RetryAfterMax
+	}
+
+	return d
 }
