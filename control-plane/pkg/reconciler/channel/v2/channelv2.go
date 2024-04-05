@@ -616,6 +616,24 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 		},
 	}
 
+	if s.ReplyURI != nil {
+		expectedCg.Spec.Template.Spec.Reply = &internalscg.ReplyStrategy{
+			URLReply: &internalscg.DestinationReply{
+				Destination: duckv1.Destination{
+					URI:      s.ReplyURI,
+					CACerts:  s.ReplyCACerts,
+					Audience: s.ReplyAudience,
+				},
+			},
+		}
+	} else {
+		expectedCg.Spec.Template.Spec.Reply = &internalscg.ReplyStrategy{
+			NoReply: &internalscg.NoReply{
+				Enabled: true,
+			},
+		}
+	}
+
 	// TODO: make keda annotation values configurable and maybe unexposed
 	subscriptionAnnotations, err := r.getSubscriptionAnnotations(channel, s)
 	if err != nil && !apierrors.IsNotFound(err) {
