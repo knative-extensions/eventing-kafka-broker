@@ -609,7 +609,9 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 						Ordering:     DefaultDeliveryOrder,
 					},
 					Subscriber: duckv1.Destination{
-						URI: s.SubscriberURI,
+						URI:      s.SubscriberURI,
+						Audience: s.SubscriberAudience,
+						CACerts:  s.SubscriberCACerts,
 					},
 				},
 			},
