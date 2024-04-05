@@ -166,6 +166,10 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(fmt.Errorf("failed to resolve auth context: %w", err))
 	}
 
+	if err := r.TrackSecret(secret, channel); err != nil {
+		return fmt.Errorf("failed to track secret: %w", err)
+	}
+
 	if channel.Status.Annotations == nil {
 		channel.Status.Annotations = make(map[string]string)
 	}
