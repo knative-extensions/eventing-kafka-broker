@@ -45,4 +45,32 @@ if ! ${LOCAL_DEVELOPMENT}; then
 	go_test_e2e -run=KafkaSource -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E sacura tests failed"
 fi
 
+
+if [[ -z "${BROKER_CLASS}" ]]; then
+	fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
+else
+	echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
+fi
+
+if [ "${BROKER_CLASS}" == "KafkaNamespaced" ]; then
+	# if flag exists, only test tests that are relevant to namespaced KafkaBroker
+	echo "BROKER_CLASS is set to 'KafkaNamespaced'. Only running the relevant tests."
+	go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+	success
+fi
+
+go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+
+go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new_channel/... || fail_test "E2E (new - KafkaChannel) suite failed"
+
+go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
+
+echo "Running E2E Reconciler tests with consumergroup id template changed"
+
+kubectl apply -f "$(dirname "$0")/config-kafka-features/new-cg-id.yaml"
+
+go_test_e2e -tags=e2e -timeout=15m ./test/e2e_new -run TestTriggerUsesConsumerGroupIDFromTemplate
+
+kubectl apply -f "$(dirname "$0")/config-kafka-features/restore-cg-id.yaml"
+
 success
