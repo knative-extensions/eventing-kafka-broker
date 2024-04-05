@@ -635,6 +635,10 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 		}
 	}
 
+	if s.Auth != nil && s.Auth.ServiceAccountName != nil {
+		expectedCg.Spec.OIDCServiceAccountName = s.Auth.ServiceAccountName
+	}
+
 	// TODO: make keda annotation values configurable and maybe unexposed
 	subscriptionAnnotations, err := r.getSubscriptionAnnotations(channel, s)
 	if err != nil && !apierrors.IsNotFound(err) {
