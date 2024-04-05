@@ -39,14 +39,14 @@ export_logs_continuously
 
 header "Running tests"
 
-if ! ${LOCAL_DEVELOPMENT}; then
-	go_test_e2e -run=KafkaSource -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E sacura tests failed"
-fi
-
 if [[ -z "${BROKER_CLASS}" ]]; then
 	fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
 else
 	echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
+fi
+
+if ! ${LOCAL_DEVELOPMENT}; then
+	go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E sacura tests failed"
 fi
 
 go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
