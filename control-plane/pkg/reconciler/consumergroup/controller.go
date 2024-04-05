@@ -189,8 +189,30 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
-	globalResync := func(interface{}) {
-		impl.GlobalResync(consumerGroupInformer.Informer())
+	globalResync := func(obj interface{}) {
+		ss, ok := obj.(*appsv1.StatefulSet)
+		if !ok {
+			return
+		}
+
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetName(ss.GetName())
+		if !ok {
+			return
+		}
+
+		impl.FilteredGlobalResync(func(i interface{}) bool {
+			cg, ok := i.(*kafkainternals.ConsumerGroup)
+			if !ok {
+				return false
+			}
+			for _, owner := range cg.OwnerReferences {
+				if owner.Kind == kind {
+					return true
+				}
+			}
+
+			return false
+		}, consumerGroupInformer.Informer())
 	}
 
 	ResyncOnStatefulSetChange(ctx, globalResync)
