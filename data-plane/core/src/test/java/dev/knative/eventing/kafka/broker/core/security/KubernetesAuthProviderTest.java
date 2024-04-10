@@ -51,8 +51,8 @@ public class KubernetesAuthProviderTest {
     private static final String userPasswordSecretKey = "password";
 
     @BeforeEach
-    public void setUp() {
-        provider = new KubernetesAuthProvider(client);
+    public void setUp(final Vertx vertx) {
+        provider = new KubernetesAuthProvider(vertx, client);
     }
 
     @Test
