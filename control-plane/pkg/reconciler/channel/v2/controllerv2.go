@@ -47,6 +47,7 @@ import (
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing/pkg/apis/feature"
 
 	"knative.dev/pkg/controller"
 
@@ -96,7 +97,20 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		)
 	}
 
-	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
+	var globalResync func(obj interface{})
+	featureStore := feature.NewStore(logger.Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync(nil)
+		}
+	})
+	featureStore.WatchConfigs(watcher)
+
+	impl := kafkachannelreconciler.NewImpl(ctx, reconciler,
+		func(impl *controller.Impl) controller.Options {
+			return controller.Options{
+				ConfigStore: featureStore,
+			}
+		})
 
 	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
 		reconciler.KafkaFeatureFlags.Reset(value)

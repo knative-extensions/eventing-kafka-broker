@@ -297,7 +297,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		}
 
 		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channelService, caCerts)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -315,7 +315,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channelService, caCerts)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 		addressableStatus.Address = &httpsAddress
 	} else {
@@ -697,6 +697,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Ingress: &contract.Ingress{
 			Host:                       receiver.Host(channel.GetNamespace(), channel.GetName()),
 			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+			Path:                       receiver.Path(channel.GetNamespace(), channel.GetName()),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
