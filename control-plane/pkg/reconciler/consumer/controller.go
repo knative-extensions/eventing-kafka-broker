@@ -90,7 +90,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		impl.GlobalResync(consumerInformer.Informer())
 	}
 
-	cgreconciler.ResyncOnStatefulSetChange(ctx, globalResync)
+	cgreconciler.ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerInformer.Informer())
 
 	trustBundleConfigMapInformer.Informer().AddEventHandler(controller.HandleAll(globalResync))
 
