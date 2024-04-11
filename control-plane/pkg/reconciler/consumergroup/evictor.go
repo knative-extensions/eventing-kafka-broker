@@ -60,12 +60,12 @@ func newEvictor(ctx context.Context, fields ...zap.Field) *evictor {
 	}
 }
 
-func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
+func (e *evictor) evict(_ *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
 	key := vpod.GetKey()
 
 	logger := e.logger.
 		With(zap.String("consumergroup", key.String())).
-		With(zap.String("pod", fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())))
+		With(zap.String("pod", from.PodName))
 
 	cgBefore, err := e.InternalsClient.
 		ConsumerGroups(key.Namespace).
