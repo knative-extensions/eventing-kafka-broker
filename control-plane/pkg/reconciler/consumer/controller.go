@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/logging"
 
@@ -35,6 +36,7 @@ import (
 	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
@@ -90,7 +92,21 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		impl.GlobalResync(consumerInformer.Informer())
 	}
 
-	cgreconciler.ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerInformer.Informer())
+	cgreconciler.ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerInformer.Informer(), func(obj interface{}) (*kafkainternals.ConsumerGroup, bool) {
+		c, ok := obj.(*kafkainternals.Consumer)
+		if !ok {
+			return nil, false
+		}
+
+		for _, ref := range c.GetOwnerReferences() {
+			if ref.Kind == "ConsumerGroup" {
+				cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(ref.Name)
+				return cg, err == nil
+			}
+		}
+
+		return nil, false
+	})
 
 	trustBundleConfigMapInformer.Informer().AddEventHandler(controller.HandleAll(globalResync))
 

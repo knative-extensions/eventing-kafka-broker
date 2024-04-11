@@ -189,14 +189,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
-	ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerGroupInformer.Informer())
+	ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerGroupInformer.Informer(), func(obj interface{}) (*kafkainternals.ConsumerGroup, bool) {
+		cg, ok := obj.(*kafkainternals.ConsumerGroup)
+		return cg, ok
+	})
 
 	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
 }
 
-func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(interface{}) bool, si cache.SharedInformer), informer cache.SharedInformer) {
+func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(interface{}) bool, si cache.SharedInformer), informer cache.SharedInformer, getConsumerGroupFromObj func(obj interface{}) (*kafkainternals.ConsumerGroup, bool)) {
 	systemNamespace := system.Namespace()
 
 	handleResync := func(obj interface{}) {
@@ -212,7 +215,7 @@ func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(i
 		}
 
 		filteredResync(func(i interface{}) bool {
-			cg, ok := i.(*kafkainternals.ConsumerGroup)
+			cg, ok := getConsumerGroupFromObj(i)
 			if !ok {
 				return false
 			}
