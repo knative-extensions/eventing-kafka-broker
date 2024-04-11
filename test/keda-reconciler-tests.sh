@@ -35,8 +35,6 @@ wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing 
 
 kubectl apply -f $(dirname $0)/keda/enable-keda-autoscaling.yaml
 
-kubectl apply -f ./test/e2e_new/config/features.yaml
-
 export_logs_continuously
 
 header "Running tests"
