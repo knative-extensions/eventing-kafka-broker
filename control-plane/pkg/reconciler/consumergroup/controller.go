@@ -189,7 +189,18 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
-	globalResync := func(obj interface{}) {
+	ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerGroupInformer.Informer())
+
+	//Todo: ScaledObject informer when KEDA is installed
+
+	return impl
+}
+
+func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(interface{}) bool, si cache.SharedInformer), informer cache.SharedInformer) {
+	systemNamespace := system.Namespace()
+
+	handleResync := func(obj interface{}) {
+
 		ss, ok := obj.(*appsv1.StatefulSet)
 		if !ok {
 			return
@@ -200,7 +211,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 			return
 		}
 
-		impl.FilteredGlobalResync(func(i interface{}) bool {
+		filteredResync(func(i interface{}) bool {
 			cg, ok := i.(*kafkainternals.ConsumerGroup)
 			if !ok {
 				return false
@@ -212,18 +223,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 			}
 
 			return false
-		}, consumerGroupInformer.Informer())
+		}, informer)
 	}
-
-	ResyncOnStatefulSetChange(ctx, globalResync)
-
-	//Todo: ScaledObject informer when KEDA is installed
-
-	return impl
-}
-
-func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
-	systemNamespace := system.Namespace()
 
 	statefulset.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: func(obj interface{}) bool {
@@ -231,7 +232,7 @@ func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
 			return ss.GetNamespace() == systemNamespace && kafkainternals.IsKnownStatefulSet(ss.GetName())
 		},
 		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: handle,
+			AddFunc: handleResync,
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				o, ok := oldObj.(*appsv1.StatefulSet)
 				if !ok {
@@ -252,9 +253,9 @@ func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
 					return
 				}
 
-				handle(newObj)
+				handleResync(newObj)
 			},
-			DeleteFunc: handle,
+			DeleteFunc: handleResync,
 		},
 	})
 }
