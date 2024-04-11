@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/logging"
 
