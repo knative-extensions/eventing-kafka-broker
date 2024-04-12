@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -37,6 +38,7 @@ import (
 	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
 	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
@@ -152,6 +154,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			corev1.SchemeGroupVersion.WithKind("ConfigMap"),
 		),
 	))
+
+	parts := strings.Split(eventingtls.TrustBundleLabelSelector, "=")
+
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.FilterWithLabel(parts[0], parts[1]),
+		Handler:    controller.HandleAll(globalResync),
+	})
+
 	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	// ConsumerGroup changes and enqueue associated channel

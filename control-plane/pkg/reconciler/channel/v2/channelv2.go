@@ -213,6 +213,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
+	trustBundlesChanges, err := r.setTrustBundles(ct)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
 	if err != nil {
@@ -236,7 +241,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
-	if changed == coreconfig.ResourceChanged {
+	if changed == coreconfig.ResourceChanged || trustBundlesChanges {
 		logger.Debug("Contract changed", zap.Int("changed", changed))
 
 		ct.IncrementGeneration()
@@ -808,6 +813,21 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 		return nil, nil
 	}
 	return pointer.String(string(caCerts)), nil
+}
+
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
+	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
+	if err != nil {
+		return false, fmt.Errorf("failed to get trust bundles: %w", err)
+	}
+
+	changed := false
+	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
+		changed = true
+	}
+
+	ct.TrustBundles = tb
+	return changed, nil
 }
 
 // d1 takes preference over d22, where both are set
