@@ -19,6 +19,7 @@ package features
 import (
 	"context"
 	"fmt"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
 	"knative.dev/eventing/test/rekt/resources/trigger"
