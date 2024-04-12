@@ -213,6 +213,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -277,6 +278,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
 								DeadLetter: ServiceURL,
@@ -341,6 +343,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -394,6 +397,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -454,6 +458,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 				),
 			},
@@ -468,6 +473,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -523,6 +529,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 				),
 			},
@@ -537,6 +544,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -593,6 +601,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 				),
 			},
@@ -607,6 +616,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -667,6 +677,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -686,6 +697,7 @@ func TestReconcileKind(t *testing.T) {
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 							ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+							ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 						)),
 						ConsumerGroupReady,
 					),
@@ -737,6 +749,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					ConsumerGroupReplicas(1),
 					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
@@ -772,6 +785,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -814,6 +828,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 				),
 				NewConsumerGroup(
@@ -830,6 +845,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
+						ConsumerReply(ConsumerNoReply()),
 					)),
 				),
 			},
@@ -844,6 +860,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -918,6 +935,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 				),
 			},
@@ -932,6 +950,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1092,6 +1111,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1152,6 +1172,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 						ConsumerAuth(&internalscg.Auth{
 							SecretSpec: &internalscg.SecretSpec{
 								Ref: &internalscg.SecretReference{
@@ -1198,6 +1219,7 @@ func TestReconcileKind(t *testing.T) {
 							},
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1254,6 +1276,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 						ConsumerAuth(&internalscg.Auth{
 							SecretSpec: &internalscg.SecretSpec{
 								Ref: &internalscg.SecretReference{
@@ -1300,6 +1323,7 @@ func TestReconcileKind(t *testing.T) {
 							},
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1355,6 +1379,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 						ConsumerAuth(&internalscg.Auth{
 							SecretSpec: &internalscg.SecretSpec{
 								Ref: &internalscg.SecretReference{
@@ -1398,6 +1423,7 @@ func TestReconcileKind(t *testing.T) {
 							},
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1460,6 +1486,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
+						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 				),
 			},
@@ -1474,6 +1501,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1522,6 +1550,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1577,6 +1606,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},
@@ -1670,6 +1700,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
 								DeadLetter: ServiceURL,
@@ -1754,6 +1785,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
 								DeadLetter: ServiceURL,
@@ -1791,7 +1823,7 @@ func TestReconcileKind(t *testing.T) {
 						WithChannelAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								URL:     httpsURL(ChannelName, ChannelNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 							{
@@ -1847,6 +1879,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 							EgressConfig: &contract.EgressConfig{
 								DeadLetter: ServiceURL,
@@ -1884,13 +1917,13 @@ func TestReconcileKind(t *testing.T) {
 						WithChannelAddresses([]duckv1.Addressable{
 							{
 								Name:    pointer.String("https"),
-								URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+								URL:     httpsURL(ChannelName, ChannelNamespace),
 								CACerts: pointer.String(testCaCerts),
 							},
 						}),
 						WithChannelAddress(duckv1.Addressable{
 							Name:    pointer.String("https"),
-							URL:     httpsURL(ChannelServiceName, ChannelNamespace),
+							URL:     httpsURL(ChannelName, ChannelNamespace),
 							CACerts: pointer.String(testCaCerts),
 						}),
 						WithChannelAddessable(),
@@ -1932,6 +1965,7 @@ func TestReconcileKind(t *testing.T) {
 							Reference:        ChannelReference(),
 							Ingress: &contract.Ingress{
 								Host: receiver.Host(ChannelNamespace, ChannelName),
+								Path: receiver.Path(ChannelNamespace, ChannelName),
 							},
 						},
 					},

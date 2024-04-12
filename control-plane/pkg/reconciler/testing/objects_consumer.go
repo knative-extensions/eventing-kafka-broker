@@ -338,6 +338,10 @@ func ConsumerTopicReply() *kafkainternals.ReplyStrategy {
 	return &kafkainternals.ReplyStrategy{TopicReply: &kafkainternals.TopicReply{Enabled: true}}
 }
 
+func ConsumerUrlReply(uri *apis.URL) *kafkainternals.ReplyStrategy {
+	return &kafkainternals.ReplyStrategy{URLReply: &kafkainternals.DestinationReply{Enabled: true, Destination: duckv1.Destination{URI: uri}}}
+}
+
 func ConsumerOwnerRef(reference metav1.OwnerReference) ConsumerOption {
 	return func(cg *kafkainternals.Consumer) {
 		cg.OwnerReferences = append(cg.OwnerReferences, reference)
