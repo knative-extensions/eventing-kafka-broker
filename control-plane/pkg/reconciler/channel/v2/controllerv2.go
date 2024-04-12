@@ -78,6 +78,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			ContractConfigMapName:       configs.ContractConfigMapName,
 			ContractConfigMapFormat:     configs.ContractConfigMapFormat,
 			DataPlaneNamespace:          configs.SystemNamespace,
+			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
 		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		Env:                  configs,
