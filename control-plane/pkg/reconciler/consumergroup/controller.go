@@ -220,7 +220,7 @@ func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(i
 				return false
 			}
 			for _, owner := range cg.OwnerReferences {
-				if owner.Kind == kind {
+				if strings.EqualFold(owner.Kind, kind) {
 					return true
 				}
 			}

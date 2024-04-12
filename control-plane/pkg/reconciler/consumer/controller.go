@@ -97,14 +97,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 			return nil, false
 		}
 
-		for _, ref := range c.GetOwnerReferences() {
-			if ref.Kind == "ConsumerGroup" {
-				cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(ref.Name)
-				return cg, err == nil
-			}
-		}
-
-		return nil, false
+		cgRef := c.GetConsumerGroup()
+		cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(cgRef.Name)
+		return cg, err == nil
 	})
 
 	trustBundleConfigMapInformer.Informer().AddEventHandler(controller.HandleAll(globalResync))
