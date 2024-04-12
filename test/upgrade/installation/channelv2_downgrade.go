@@ -27,7 +27,7 @@ func cleanupChannelv2ConsumerGroups(c pkgupgrade.Context, glob environment.Globa
 	ctx, _ := glob.Environment()
 	client := kubeclient.Get(ctx)
 
-	err := deleteConsumerGroups(ctx, client, "Channel")
+	err := deleteConsumerGroups(ctx, client, "KafkaChannel")
 	if err != nil {
 		c.T.Fatal("failed to downgrade from triggerv2", err.Error())
 	}
