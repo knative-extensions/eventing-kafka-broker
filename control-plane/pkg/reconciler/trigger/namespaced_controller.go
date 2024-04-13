@@ -23,8 +23,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
-	"knative.dev/eventing/pkg/auth"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/auth"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -84,10 +84,10 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:         brokerInformer.Lister(),
-		ConfigMapLister:      configmapInformer.Lister(),
+		BrokerLister:    brokerInformer.Lister(),
+		ConfigMapLister: configmapInformer.Lister(),
 		// ServiceAccountLister: serviceaccountInformer.Lister(),
-		ServiceAccountLister:		oidcServiceaccountInformer.Lister(),
+		ServiceAccountLister: oidcServiceaccountInformer.Lister(),
 		EventingClient:       eventingclient.Get(ctx),
 		Env:                  configs,
 		GetKafkaClient:       clientPool.GetClient,

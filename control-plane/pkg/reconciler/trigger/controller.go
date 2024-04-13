@@ -19,10 +19,10 @@ package trigger
 import (
 	"context"
 
-	"knative.dev/eventing/pkg/auth"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/auth"
 	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -157,7 +157,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	// Reconciler Trigger when the OIDC service account changes
 	// serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.FilterController(&eventing.Trigger{}),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
