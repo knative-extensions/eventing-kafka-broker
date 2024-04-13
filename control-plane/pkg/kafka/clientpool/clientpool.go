@@ -154,7 +154,12 @@ func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clien
 }
 
 func (cp *ClientPool) makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
-	config, err := kafka.GetSaramaConfig(security.NewSaramaSecurityOptionFromSecret(secret), kafka.DisableOffsetAutoCommitConfigOption)
+	secretOpt, err := security.NewSaramaSecurityOptionFromSecret(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := kafka.GetSaramaConfig(secretOpt, kafka.DisableOffsetAutoCommitConfigOption)
 	if err != nil {
 		return nil, err
 	}

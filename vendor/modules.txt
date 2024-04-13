@@ -83,6 +83,7 @@ github.com/cloudevents/sdk-go/sql/v2/utils
 ## explicit; go 1.18
 github.com/cloudevents/sdk-go/v2
 github.com/cloudevents/sdk-go/v2/binding
+github.com/cloudevents/sdk-go/v2/binding/buffering
 github.com/cloudevents/sdk-go/v2/binding/format
 github.com/cloudevents/sdk-go/v2/binding/spec
 github.com/cloudevents/sdk-go/v2/binding/transformer
@@ -420,7 +421,7 @@ github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.6.0
 ## explicit; go 1.19
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.51.1
+# github.com/prometheus/common v0.52.2
 ## explicit; go 1.21
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
@@ -466,6 +467,9 @@ github.com/stretchr/testify/require
 # github.com/tsenart/vegeta/v12 v12.11.1
 ## explicit; go 1.20
 github.com/tsenart/vegeta/v12/lib
+# github.com/valyala/bytebufferpool v1.0.0
+## explicit
+github.com/valyala/bytebufferpool
 # github.com/wavesoftware/go-ensure v1.0.0
 ## explicit; go 1.13
 github.com/wavesoftware/go-ensure
@@ -553,7 +557,7 @@ go.uber.org/zap/internal/stacktrace
 go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
-# golang.org/x/crypto v0.21.0
+# golang.org/x/crypto v0.22.0
 ## explicit; go 1.18
 golang.org/x/crypto/cast5
 golang.org/x/crypto/chacha20
@@ -576,7 +580,7 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.22.0
+# golang.org/x/net v0.24.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -599,18 +603,18 @@ golang.org/x/oauth2/google/internal/stsexchange
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sync v0.6.0
+# golang.org/x/sync v0.7.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
 golang.org/x/sync/singleflight
-# golang.org/x/sys v0.18.0
+# golang.org/x/sys v0.19.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.18.0
+# golang.org/x/term v0.19.0
 ## explicit; go 1.18
 golang.org/x/term
 # golang.org/x/text v0.14.0
@@ -1326,7 +1330,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.40.1-0.20240328132724-7e1c08246ca3
+# knative.dev/eventing v0.40.1-0.20240411124755-1ed11b74e509
 ## explicit; go 1.21
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1410,6 +1414,7 @@ knative.dev/eventing/pkg/client/listers/sources/v1beta2
 knative.dev/eventing/pkg/duck
 knative.dev/eventing/pkg/eventingtls
 knative.dev/eventing/pkg/eventingtls/eventingtlstesting
+knative.dev/eventing/pkg/eventtype
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/kncloudevents/attributes
 knative.dev/eventing/pkg/metrics
@@ -1496,10 +1501,10 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20240327150553-47368d631660
+# knative.dev/hack v0.0.0-20240404013450-1133b37da8d7
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20240401190221-03bf3de6e2bc
+# knative.dev/pkg v0.0.0-20240409141558-1ff9a77566f6
 ## explicit; go 1.21
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1519,7 +1524,6 @@ knative.dev/pkg/client/injection/kube/client
 knative.dev/pkg/client/injection/kube/client/fake
 knative.dev/pkg/client/injection/kube/informers/admissionregistration/v1/mutatingwebhookconfiguration
 knative.dev/pkg/client/injection/kube/informers/admissionregistration/v1/validatingwebhookconfiguration
-knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment
 knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset
 knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/configmap
@@ -1621,7 +1625,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20240327131444-6346b918a853
+# knative.dev/reconciler-test v0.0.0-20240410132651-3991c6ef9162
 ## explicit; go 1.21
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment

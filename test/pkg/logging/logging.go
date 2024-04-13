@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	"knative.dev/pkg/ptr"
 )
 
 type Logger interface {
@@ -129,9 +128,8 @@ func (l *logger) startForPod(pod *corev1.Pod, artifactsDir string) {
 			defer f.Close()
 
 			options := &corev1.PodLogOptions{
-				Container:    containerName,
-				Follow:       true,
-				SinceSeconds: ptr.Int64(1),
+				Container: containerName,
+				Follow:    true,
 			}
 
 			req := l.kc.CoreV1().Pods(podNs).GetLogs(podName, options)
