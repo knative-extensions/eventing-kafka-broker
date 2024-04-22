@@ -21,6 +21,7 @@ import pkgupgrade "knative.dev/pkg/test/upgrade"
 // GitHead installs the eventing kafka from git HEAD.
 func GitHead() pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("GitHead", func(c pkgupgrade.Context) {
+		runShellFunc("install_eventing_core", c)
 		runShellFunc("install_head", c)
 	})
 }

@@ -84,16 +84,7 @@ function knative_teardown() {
   fi
 }
 
-function knative_eventing() {
-  # we need cert-manager installed to be able to create the issuers
-  kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
-
-  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "cert-manager" || fail_test "Failed to install cert manager"
-
-  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "cert-manager" || fail_test "Failed to install trust manager"
-
+function install_eventing_core() {
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
@@ -104,6 +95,21 @@ function knative_eventing() {
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE}"
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE_TLS}"
   fi
+
+  ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+}
+
+function knative_eventing() {
+  # we need cert-manager installed to be able to create the issuers
+  kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
+
+  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
+  wait_until_pods_running "cert-manager" || fail_test "Failed to install cert manager"
+
+  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
+  wait_until_pods_running "cert-manager" || fail_test "Failed to install trust manager"
+
+  install_eventing_core
 
   ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
 
