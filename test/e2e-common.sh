@@ -168,6 +168,13 @@ function build_source_components_from_source() {
 }
 
 function install_latest_release() {
+  echo "Installing previous eventing core release"
+
+  eventing_version=$(echo ${LATEST_RELEASE_VERSION} | sed 's/knative-v\(.*\)/\1/')
+
+  # Hack - need to find a way to find the patch version for eventing core, for now default to 0
+  start_release_knative_eventing "$(major_version ${eventing_version}).$(minor_version ${eventing_version}).0"
+
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
   ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
