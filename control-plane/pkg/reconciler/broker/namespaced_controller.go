@@ -23,9 +23,10 @@ import (
 	"net/http"
 	"time"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/network"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/util"
 
@@ -52,6 +53,7 @@ import (
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
+	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	namespaceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/namespace"
@@ -108,6 +110,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		ServiceLister:                      serviceinformer.Get(ctx).Lister(),
 		ClusterRoleBindingLister:           clusterrolebindinginformer.Get(ctx).Lister(),
 		StatefulSetLister:                  statefulsetinformer.Get(ctx).Lister(),
+		DeploymentLister:                   deploymentinformer.Get(ctx).Lister(),
 		BrokerLister:                       brokerinformer.Get(ctx).Lister(),
 		Env:                                env,
 		Counter:                            counter.NewExpiringCounter(ctx),
@@ -176,11 +179,19 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	statefulsetinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.FilterAny(
 			kafka.FilterWithLabel("app", "kafka-broker-dispatcher"),
-			kafka.FilterWithLabel("app", "kafka-broker-receiver"),
 		),
 		Handler: controller.HandleAll(controller.EnsureTypeMeta(
 			globalResync,
 			appsv1.SchemeGroupVersion.WithKind("StatefulSet"),
+		)),
+	})
+	deploymentinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: kafka.FilterAny(
+			kafka.FilterWithLabel("app", "kafka-broker-receiver"),
+		),
+		Handler: controller.HandleAll(controller.EnsureTypeMeta(
+			globalResync,
+			appsv1.SchemeGroupVersion.WithKind("Deployment"),
 		)),
 	})
 

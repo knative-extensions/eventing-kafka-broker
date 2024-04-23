@@ -34,7 +34,6 @@ type kafkaDeploymentDeleter struct {
 
 func (k *kafkaDeploymentDeleter) DeleteBrokerDeployments(ctx context.Context) error {
 	deployments := []string{
-		"kafka-broker-receiver",
 		"kafka-broker-dispatcher",
 	}
 
