@@ -192,8 +192,8 @@ function install_latest_release() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function install_head() {
@@ -208,8 +208,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function install_latest_release_source() {
@@ -220,8 +220,8 @@ function install_latest_release_source() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function install_head_source() {
@@ -231,8 +231,8 @@ function install_head_source() {
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function test_setup() {
