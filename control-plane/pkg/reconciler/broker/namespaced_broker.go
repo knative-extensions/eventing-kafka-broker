@@ -72,6 +72,7 @@ type NamespacedReconciler struct {
 	ServiceAccountLister     corelisters.ServiceAccountLister
 	ServiceLister            corelisters.ServiceLister
 	ClusterRoleBindingLister rbaclisters.ClusterRoleBindingLister
+	DeploymentLister         appslisters.DeploymentLister
 	StatefulSetLister        appslisters.StatefulSetLister
 	BrokerLister             eventinglisters.BrokerLister
 
@@ -316,7 +317,13 @@ func (r *NamespacedReconciler) getManifestFromSystemNamespace(broker *eventing.B
 	}
 	resources = append(resources, additionalConfigMaps...)
 
-	additionalDeployments, err := r.statefulSetsFromSystemNamespace(broker)
+	additionalStatefulsets, err := r.statefulSetsFromSystemNamespace(broker)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	resources = append(resources, additionalStatefulsets...)
+
+	additionalDeployments, err := r.deploymentsFromSystemNamespace(broker)
 	if err != nil {
 		return mf.Manifest{}, err
 	}
@@ -368,12 +375,26 @@ func (r *NamespacedReconciler) getManifestFromAdditionalResources(broker *eventi
 
 func (r *NamespacedReconciler) statefulSetsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
 	deployments := []string{
-		"kafka-broker-receiver",
 		"kafka-broker-dispatcher",
 	}
 	resources := make([]unstructured.Unstructured, 0, len(deployments))
 	for _, name := range deployments {
 		resource, err := r.createManifestFromSystemStatefulSet(broker, name)
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, resource)
+	}
+	return resources, nil
+}
+
+func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
+	deployments := []string{
+		"kafka-broker-receiver",
+	}
+	resources := make([]unstructured.Unstructured, 0, len(deployments))
+	for _, name := range deployments {
+		resource, err := r.createManifestFromSystemDeployment(broker, name)
 		if err != nil {
 			return nil, err
 		}
@@ -468,6 +489,25 @@ func (r *NamespacedReconciler) createManifestFromSystemStatefulSet(broker *event
 			Annotations: sysStatefulSet.Annotations,
 		},
 		Spec: spec,
+	}
+	return unstructuredFromObject(cm)
+}
+
+func (r *NamespacedReconciler) createManifestFromSystemDeployment(broker *eventing.Broker, name string) (unstructured.Unstructured, error) {
+	sysDeployment, err := r.DeploymentLister.Deployments(r.SystemNamespace).Get(name)
+	if err != nil {
+		return unstructured.Unstructured{}, fmt.Errorf("failed to get Deployment %s/%s: %w", r.SystemNamespace, name, err)
+	}
+
+	cm := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{Kind: "Deployment", APIVersion: appsv1.SchemeGroupVersion.String()},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   broker.GetNamespace(),
+			Name:        sysDeployment.Name,
+			Labels:      sysDeployment.Labels,
+			Annotations: sysDeployment.Annotations,
+		},
+		Spec: sysDeployment.Spec,
 	}
 	return unstructuredFromObject(cm)
 }
