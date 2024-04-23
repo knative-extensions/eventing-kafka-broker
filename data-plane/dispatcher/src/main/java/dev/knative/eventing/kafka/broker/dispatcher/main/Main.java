@@ -113,7 +113,7 @@ public class Main {
                             consumerConfig,
                             webClientOptions,
                             producerConfig,
-                            AuthProvider.kubernetes(),
+                            AuthProvider.kubernetes(vertx),
                             Metrics.getRegistry(),
                             reactiveConsumerFactory,
                             reactiveProducerFactory),
