@@ -207,7 +207,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             closeFuture = rc.getValue().close();
         }
 
-        closeFuture.onComplete(v -> {
+        closeFuture.onSuccess(v -> {
             // Remove ingress info from the maps
             if (!isRootPath(ingressInfo.getPath())) {
                 this.pathMapper.remove(ingressInfo.getPath());
