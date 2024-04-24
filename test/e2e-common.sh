@@ -111,8 +111,6 @@ function knative_eventing() {
 
   install_eventing_core
 
-  ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
-
   # Publish test images.
   echo ">> Publishing test images from eventing"
   ./test/upload-test-images.sh ${VENDOR_EVENTING_TEST_IMAGES} e2e || fail_test "Error uploading test images"
