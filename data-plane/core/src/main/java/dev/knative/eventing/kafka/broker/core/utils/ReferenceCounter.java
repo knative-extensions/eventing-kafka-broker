@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.core.utils;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Thread unsafe holder with reference counter.
@@ -25,12 +26,12 @@ import java.util.Objects;
 public class ReferenceCounter<T> {
 
     private final T value;
-    private int refs;
+    private final AtomicInteger refs;
 
     public ReferenceCounter(final T value) {
         Objects.requireNonNull(value);
         this.value = value;
-        this.refs = 0;
+        this.refs = new AtomicInteger(0);
     }
 
     /**
@@ -44,14 +45,13 @@ public class ReferenceCounter<T> {
      * Increment the ref count
      */
     public void increment() {
-        this.refs++;
+        this.refs.incrementAndGet();
     }
 
     /**
      * @return true if the count is 0, hence nobody is referring anymore to this value
      */
     public boolean decrementAndCheck() {
-        this.refs--;
-        return this.refs == 0;
+        return this.refs.decrementAndGet() == 0;
     }
 }
