@@ -84,7 +84,7 @@ metadata:
   namespace: knative-eventing
   labels:
     networking.knative.dev/trust-bundle: "true"
-    app.kubernetes.io/version: "20240308-f81f1d3dd"
+    app.kubernetes.io/version: "20240423-4ba426cd4"
     app.kubernetes.io/name: knative-eventing
 
 ---
