@@ -96,7 +96,7 @@ function install_eventing_core() {
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE_TLS}"
   fi
 
-  ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+  kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
 }
 
 function knative_eventing() {
