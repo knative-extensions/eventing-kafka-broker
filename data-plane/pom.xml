@@ -62,7 +62,7 @@
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.4.0</jib.version>
-    <quarkus.version>3.2.9.Final</quarkus.version>
+    <quarkus.version>3.8.4</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
     <palantirJavaFormat.version>2.38.0</palantirJavaFormat.version>
