@@ -448,7 +448,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
         if (logger.isDebugEnabled()) {
             logger.error(
-                    msg + " {} {} {} {} {} {} {}",
+                    msg + " {} {} {} {} {} {}",
                     consumerVerticleContext.getLoggingKeyValue(),
                     keyValue("topic", record.topic()),
                     keyValue("partition", record.partition()),
