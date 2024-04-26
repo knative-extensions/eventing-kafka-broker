@@ -317,17 +317,17 @@ func (r *NamespacedReconciler) getManifestFromSystemNamespace(broker *eventing.B
 	}
 	resources = append(resources, additionalConfigMaps...)
 
-	additionalStatefulsets, err := r.statefulSetsFromSystemNamespace(broker)
-	if err != nil {
-		return mf.Manifest{}, err
-	}
-	resources = append(resources, additionalStatefulsets...)
-
 	additionalDeployments, err := r.deploymentsFromSystemNamespace(broker)
 	if err != nil {
 		return mf.Manifest{}, err
 	}
 	resources = append(resources, additionalDeployments...)
+
+	additionalStatefulsets, err := r.statefulSetsFromSystemNamespace(broker)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	resources = append(resources, additionalStatefulsets...)
 
 	additionalServiceAccounts, err := r.serviceAccountsFromSystemNamespace(broker)
 	if err != nil {
