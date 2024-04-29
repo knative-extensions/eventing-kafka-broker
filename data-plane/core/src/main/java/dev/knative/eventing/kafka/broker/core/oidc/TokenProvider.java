@@ -20,7 +20,6 @@ import com.google.common.cache.CacheBuilder;
 import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import io.fabric8.kubernetes.api.model.authentication.TokenRequest;
 import io.fabric8.kubernetes.api.model.authentication.TokenRequestBuilder;
-import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
@@ -44,55 +43,66 @@ public class TokenProvider {
 
     public TokenProvider(Vertx vertx) {
         this.vertx = vertx;
-        Config clientConfig = new ConfigBuilder().build();
-        kubernetesClient =
-                new KubernetesClientBuilder().withConfig(clientConfig).build();
-
+        this.kubernetesClient = new KubernetesClientBuilder()
+                .withConfig(new ConfigBuilder().build())
+                .build();
         this.tokenCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(CACHE_EXPIRATION_TIME_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAXIMUM_SIZE)
+                .initialCapacity(2)
                 .build();
     }
 
     public Future<String> getToken(NamespacedName serviceAccount, String audience) {
-        String cacheKey = generateCacheKey(serviceAccount, audience);
-        String token = tokenCache.getIfPresent(cacheKey);
+        final var cacheKey = generateCacheKey(serviceAccount, audience);
 
+        final var token = tokenCache.getIfPresent(cacheKey);
         if (token != null) {
             return Future.succeededFuture(token);
-        } else {
-            return requestToken(serviceAccount, audience).onSuccess(t -> {
-                if (t != null) {
-                    tokenCache.put(cacheKey, t);
-                }
-            });
         }
+
+        return requestToken(serviceAccount, audience).onSuccess(t -> {
+            if (t != null) {
+                tokenCache.put(cacheKey, t);
+            }
+        });
     }
 
     private Future<String> requestToken(NamespacedName serviceAccount, String audience) {
         return this.vertx.executeBlocking(
                 promise -> {
-                    TokenRequest tokenRequest = new TokenRequestBuilder()
-                            .withNewSpec()
-                            .withAudiences(audience)
-                            .withExpirationSeconds(TOKEN_EXPIRATION_SECONDS)
-                            .endSpec()
-                            .build();
+                    try {
+                        final var builder = new TokenRequestBuilder()
+                                .withNewSpec()
+                                .withAudiences(audience)
+                                .withExpirationSeconds(TOKEN_EXPIRATION_SECONDS)
+                                .endSpec()
+                                .build();
 
-                    tokenRequest = kubernetesClient
-                            .serviceAccounts()
-                            .inNamespace(serviceAccount.namespace())
-                            .withName(serviceAccount.name())
-                            .tokenRequest(tokenRequest);
+                        final var tokenRequest = kubernetesClient
+                                .serviceAccounts()
+                                .inNamespace(serviceAccount.namespace())
+                                .withName(serviceAccount.name())
+                                .tokenRequest(builder);
 
-                    if (tokenRequest != null && tokenRequest.getStatus() != null) {
-                        promise.complete(tokenRequest.getStatus().getToken());
-                    } else {
-                        promise.fail("could not request token for " + serviceAccount.name() + "/"
-                                + serviceAccount.namespace());
+                        if (isValidTokenRequest(tokenRequest)) {
+                            promise.tryComplete(tokenRequest.getStatus().getToken());
+                        } else {
+                            promise.tryFail("could not request token for " + serviceAccount.name() + "/"
+                                    + serviceAccount.namespace());
+                        }
+                    } catch (final RuntimeException exception) {
+                        promise.tryFail(exception);
                     }
                 },
                 false);
+    }
+
+    private static boolean isValidTokenRequest(final TokenRequest tokenRequest) {
+        return tokenRequest != null
+                && tokenRequest.getStatus() != null
+                && tokenRequest.getStatus().getToken() != null
+                && !tokenRequest.getStatus().getToken().isBlank();
     }
 
     private String generateCacheKey(NamespacedName serviceAccount, String audience) {

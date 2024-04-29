@@ -83,7 +83,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         Objects.requireNonNull(vertx);
         Objects.requireNonNull(client, "provide client");
         Objects.requireNonNull(additionalTags, "provide additional tags");
-        if (target == null || target.equals("")) {
+        if (target == null || target.isEmpty()) {
             throw new IllegalArgumentException("provide a target");
         }
         if (!URI.create(target).isAbsolute()) {
