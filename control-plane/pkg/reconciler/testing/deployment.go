@@ -23,7 +23,7 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
-func NewDeployment(name, namespace string, sso ...reconcilertesting.DeploymentOption) *appsv1.Deployment{
+func NewDeployment(name, namespace string, sso ...reconcilertesting.DeploymentOption) *appsv1.Deployment {
 	ss := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
