@@ -103,6 +103,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                             (metadata, exception) -> recordPromise.getContext().runOnContext(v -> {
                                 if (exception != null) {
                                     recordPromise.getPromise().fail(exception);
+                                    return;
                                 }
                                 recordPromise.getPromise().complete(metadata);
                             }));
