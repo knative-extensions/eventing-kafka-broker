@@ -35,17 +35,16 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 
+	apiseventing "knative.dev/eventing/pkg/apis/eventing"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
-
-	apiseventing "knative.dev/eventing/pkg/apis/eventing"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
@@ -69,20 +68,19 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	var globalResync func()
 
-	flagsHolder := trigger.FlagsHolder{}
-
-	featureStore := feature.NewStore(logger.Sugar().Named("feature-config-store"), func(name string, value interface{}) {
-		flags, ok := value.(feature.Flags)
-		if ok {
-			flagsHolder.FlagsLock.Lock()
-			defer flagsHolder.FlagsLock.Unlock()
-			flagsHolder.Flags = flags
-		}
+	coreFeatureStore := feature.NewStore(logger.Sugar().Named("feature-config-store"), func(_ string, _ interface{}) {
 		if globalResync != nil {
 			globalResync()
 		}
 	})
-	featureStore.WatchConfigs(watcher)
+	coreFeatureStore.WatchConfigs(watcher)
+
+	kafkaFeatureStore := apisconfig.NewStore(ctx, func(_ string, _ *apisconfig.KafkaFeatureFlags) {
+		if globalResync != nil {
+			globalResync()
+		}
+	})
+	kafkaFeatureStore.WatchConfigs(watcher)
 
 	reconciler := &Reconciler{
 		BrokerLister:         brokerInformer.Lister(),
@@ -94,26 +92,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		InternalsClient:      consumergroupclient.Get(ctx),
 		SecretLister:         secretinformer.Get(ctx).Lister(),
 		KubeClient:           kubeclient.Get(ctx),
-		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
-		FlagsHolder:          &flagsHolder,
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
 		return controller.Options{
+			ConfigStore:       apisconfig.Stores{coreFeatureStore, kafkaFeatureStore},
 			FinalizerName:     FinalizerName,
 			AgentName:         ControllerAgentName,
 			SkipStatusUpdates: false,
 			PromoteFilterFunc: filterTriggers(reconciler.BrokerLister),
 		}
 	})
-
-	kafkaFeatureStore := apisconfig.NewStore(ctx, func(_ string, value *apisconfig.KafkaFeatureFlags) {
-		reconciler.KafkaFeatureFlags.Reset(value)
-		if globalResync != nil {
-			globalResync()
-		}
-	})
-	kafkaFeatureStore.WatchConfigs(watcher)
 
 	globalResync = func() {
 		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister), triggerInformer.Informer())

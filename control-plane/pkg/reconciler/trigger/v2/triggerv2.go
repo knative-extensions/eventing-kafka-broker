@@ -30,6 +30,7 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/auth"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
@@ -49,7 +50,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
@@ -72,21 +72,27 @@ type Reconciler struct {
 	InternalsClient      internalsclient.Interface
 	SecretLister         corelisters.SecretLister
 	KubeClient           kubernetes.Interface
-	KafkaFeatureFlags    *apisconfig.KafkaFeatureFlags
-	FlagsHolder          *trigger.FlagsHolder
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, trigger)
 
 	if trigger.Status.Annotations == nil {
-		trigger.Status.Annotations = make(map[string]string, 0)
+		trigger.Status.Annotations = make(map[string]string)
 	}
 
-	r.FlagsHolder.FlagsLock.RLock()
-	defer r.FlagsHolder.FlagsLock.RUnlock()
-
-	errOIDC := auth.SetupOIDCServiceAccount(ctx, r.FlagsHolder.Flags, r.ServiceAccountLister, r.KubeClient, eventing.SchemeGroupVersion.WithKind("Trigger"), trigger.ObjectMeta, &trigger.Status, func(a *duckv1.AuthStatus) { trigger.Status.Auth = a })
+	err := auth.SetupOIDCServiceAccount(ctx,
+		feature.FromContext(ctx),
+		r.ServiceAccountLister,
+		r.KubeClient,
+		eventing.SchemeGroupVersion.WithKind("Trigger"),
+		trigger.ObjectMeta,
+		&trigger.Status,
+		func(a *duckv1.AuthStatus) { trigger.Status.Auth = a },
+	)
+	if err != nil {
+		return fmt.Errorf("failed to setup OIDC service account: %w", err)
+	}
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -125,7 +131,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 	propagateConsumerGroupStatus(cg, trigger)
 
-	return errOIDC
+	return nil
 }
 
 func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
@@ -175,7 +181,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 
 		// No existing consumer groups, use new naming
 		if apierrors.IsNotFound(err) {
-			groupId, err = r.KafkaFeatureFlags.ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
+			groupId, err = apisconfig.FromContext(ctx).ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
 			if err != nil {
 				return nil, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
 			}

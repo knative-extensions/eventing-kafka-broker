@@ -26,10 +26,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 
 	"knative.dev/reconciler-test/pkg/environment"
 )
@@ -47,12 +48,8 @@ func cleanupTriggerv2ConsumerGroups(c pkgupgrade.Context, glob environment.Globa
 func cleanupTriggerv2Deployments(c pkgupgrade.Context, glob environment.GlobalEnvironment) {
 	ctx, _ := glob.Environment()
 	client := kubeclient.Get(ctx)
-	err := deleteStatefulSet(ctx, client, "kafka-broker-receiver", system.Namespace())
-	if err != nil {
-		c.T.Fatal("failed to downgrade from triggerv2", err.Error())
-	}
 
-	deleteStatefulSet(ctx, client, "kafka-broker-dispatcher", system.Namespace())
+	err := deleteStatefulSet(ctx, client, "kafka-broker-dispatcher", system.Namespace())
 	if err != nil {
 		c.T.Fatal("failed to downgrade from triggerv2", err.Error())
 	}
