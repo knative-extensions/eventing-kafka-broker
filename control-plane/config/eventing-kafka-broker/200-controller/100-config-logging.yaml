@@ -27,7 +27,12 @@ data:
       <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
       </appender>
+      <appender name="async" class="ch.qos.logback.classic.AsyncAppender">
+          <appender-ref ref="jsonConsoleAppender" />
+          <neverBlock>true</neverBlock>
+          <maxFlushTime>1000</maxFlushTime>
+      </appender>
       <root level="INFO">
-        <appender-ref ref="jsonConsoleAppender"/>
+        <appender-ref ref="async"/>
       </root>
     </configuration>
