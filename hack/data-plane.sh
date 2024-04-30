@@ -31,9 +31,6 @@ readonly SINK_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/sink-tls
 readonly CHANNEL_DATA_PLANE_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel
 readonly CHANNEL_TLS_CONFIG_DIR=${DATA_PLANE_CONFIG_DIR}/channel-tls
 
-readonly RECEIVER_VERTX_DIRECTORY=receiver-vertx
-readonly DISPATCHER_VERTX_DIRECTORY=dispatcher-vertx
-
 readonly RECEIVER_LOOM_DIRECTORY=receiver-loom
 readonly DISPATCHER_LOOM_DIRECTORY=dispatcher-loom
 
@@ -64,15 +61,9 @@ function receiver_build_push() {
 
   local receiver_sha=""
 
-  if [ $USE_LOOM == "true" ]; then
-    local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver-loom}"
-    ./mvnw clean package jib:build -pl "${RECEIVER_LOOM_DIRECTORY}" -DskipTests || return $?
-    receiver_sha=$(cat "${RECEIVER_LOOM_DIRECTORY}/target/jib-image.digest")
-  else
-    local receiver="${KNATIVE_KAFKA_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver}"
-    ./mvnw clean package jib:build -pl "${RECEIVER_VERTX_DIRECTORY}" -DskipTests || return $?
-    receiver_sha=$(cat "${RECEIVER_VERTX_DIRECTORY}/target/jib-image.digest")
-  fi
+  local receiver="${KNATIVE_KAFKA_BROKER_RECEIVER:-${KO_DOCKER_REPO}/knative-kafka-broker-receiver-loom}"
+  ./mvnw clean package jib:build -pl "${RECEIVER_LOOM_DIRECTORY}" -DskipTests || return $?
+  receiver_sha=$(cat "${RECEIVER_LOOM_DIRECTORY}/target/jib-image.digest")
 
   export KNATIVE_KAFKA_RECEIVER_IMAGE="${receiver}@${receiver_sha}"
 
@@ -84,16 +75,10 @@ function dispatcher_build_push() {
 
   local dispatcher_sha=""
 
-  if [ "${USE_LOOM}" == "true" ]; then
-    local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher-loom}"
-    ./mvnw clean package jib:build -pl "${DISPATCHER_LOOM_DIRECTORY}" -DskipTests || return $?
-    dispatcher_sha=$(cat "${DISPATCHER_LOOM_DIRECTORY}/target/jib-image.digest")
-  else
-    local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher}"
-    ./mvnw clean package jib:build -pl "${DISPATCHER_VERTX_DIRECTORY}" -DskipTests || return $?
-    dispatcher_sha=$(cat "${DISPATCHER_VERTX_DIRECTORY}/target/jib-image.digest")
-  fi
-  
+  local dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-${KO_DOCKER_REPO}/knative-kafka-broker-dispatcher-loom}"
+  ./mvnw clean package jib:build -pl "${DISPATCHER_LOOM_DIRECTORY}" -DskipTests || return $?
+  dispatcher_sha=$(cat "${DISPATCHER_LOOM_DIRECTORY}/target/jib-image.digest")
+
   export KNATIVE_KAFKA_DISPATCHER_IMAGE="${dispatcher}@${dispatcher_sha}"
 
   echo "Dispatcher image ${KNATIVE_KAFKA_DISPATCHER_IMAGE}"
