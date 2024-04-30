@@ -24,7 +24,6 @@ import (
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 
-	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
@@ -37,7 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -51,7 +49,6 @@ import (
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
 
 const (
@@ -935,8 +932,6 @@ func TestReconcileKind(t *testing.T) {
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 		logger := logging.FromContext(ctx)
 
-		ctxFlags := feature.FromContextOrDefaults(ctx)
-
 		reconciler := &Reconciler{
 			BrokerLister:         listers.GetBrokerLister(),
 			ConfigMapLister:      listers.GetConfigMapLister(),
@@ -947,8 +942,6 @@ func TestReconcileKind(t *testing.T) {
 			InternalsClient:      fakeconsumergroupinformer.Get(ctx),
 			SecretLister:         listers.GetSecretLister(),
 			KubeClient:           kubeclient.Get(ctx),
-			KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
-			FlagsHolder:          &trigger.FlagsHolder{Flags: ctxFlags},
 		}
 
 		return triggerreconciler.NewReconciler(

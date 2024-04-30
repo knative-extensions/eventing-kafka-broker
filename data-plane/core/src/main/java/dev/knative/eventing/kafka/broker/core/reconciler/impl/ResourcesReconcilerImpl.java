@@ -268,11 +268,17 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                 && Objects.equals(e1.getKeyType(), e2.getKeyType())
                 && Objects.equals(e1.getDialectedFilterList(), e2.getDialectedFilterList())
                 && Objects.equals(e1.getDestinationCACerts(), e2.getDestinationCACerts())
+                && Objects.equals(e1.getDestinationAudience(), e2.getDestinationAudience())
                 && Objects.equals(e1.getReplyUrlCACerts(), e2.getReplyUrlCACerts())
+                && Objects.equals(e1.getReplyUrlAudience(), e2.getReplyUrlAudience())
+                && Objects.equals(e1.getOidcServiceAccountName(), e2.getOidcServiceAccountName())
                 && Objects.equals(e1.getReference(), e2.getReference())
                 && Objects.equals(
                         e1.getEgressConfig().getDeadLetterCACerts(),
-                        e2.getEgressConfig().getDeadLetterCACerts());
+                        e2.getEgressConfig().getDeadLetterCACerts())
+                && Objects.equals(
+                        e1.getEgressConfig().getDeadLetterAudience(),
+                        e2.getEgressConfig().getDeadLetterAudience());
     }
 
     private static boolean trustBundlesEquals(Set<String> oldTrustBundles, Set<String> newTrustBundles) {

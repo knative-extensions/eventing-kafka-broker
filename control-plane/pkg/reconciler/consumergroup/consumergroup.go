@@ -185,20 +185,27 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+	logger := logging.FromContext(ctx)
+	logger.Debugw("Reconciling consumergroup")
+
 	recordExpectedReplicasMetric(ctx, cg)
 
 	r.reconcileStatusSelector(cg)
 
+	logger.Debugw("Reconciling initial offset")
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
 
+	logger.Debugw("Scheduling consumergroup")
 	if err := r.schedule(ctx, cg); err != nil {
 		return err
 	}
 	cg.MarkScheduleSucceeded()
+	logger.Debugw("Scheduling completed", zap.Any("placement", cg.Status.PlaceableStatus))
 
 	if keda.IsEnabled(ctx, r.KafkaFeatureFlags, r.KedaClient, cg) {
+		logger.Debugw("Reconciling KEDA objects")
 		if err := r.reconcileKedaObjects(ctx, cg); err != nil {
 			return cg.MarkAutoscalerFailed("AutoscalerFailed", err)
 		}
@@ -208,10 +215,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consu
 		cg.MarkAutoscalerDisabled()
 	}
 
+	logger.Debugw("Reconciling consumers")
 	if err := r.reconcileConsumers(ctx, cg); err != nil {
 		return err
 	}
 
+	logger.Debugw("Propagating consumers status")
 	errCondition, err := r.propagateStatus(ctx, cg)
 	if err != nil {
 		return cg.MarkReconcileConsumersFailed("PropagateConsumerStatus", err)
@@ -232,18 +241,23 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consu
 	}
 	cg.MarkReconcileConsumersSucceeded()
 
+	logger.Debugw("Reconciliation succeeded")
+
 	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+	logger := logging.FromContext(ctx)
+	logger.Debugw("Reconciling consumergroup (finalization)")
 
+	logger.Debugw("Scheduling consumergroup")
 	cg.Spec.Replicas = pointer.Int32(0)
 	err := r.schedule(ctx, cg) //de-schedule placements
-
 	if err != nil && !errors.Is(err, NoSchedulerFoundError{}) {
 		// return an error to 1. update the status. 2. not clear the finalizer
 		return cg.MarkScheduleConsumerFailed("Deschedule", fmt.Errorf("failed to unschedule consumer group: %w", err))
 	}
+	logger.Debugw("Scheduling completed", zap.Any("placement", cg.Status.PlaceableStatus))
 
 	// Get consumers associated with the ConsumerGroup.
 	existingConsumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
@@ -251,12 +265,14 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 		return cg.MarkReconcileConsumersFailed("ListConsumers", err)
 	}
 
+	logger.Debugw("Removing consumers", zap.Any("consumers", existingConsumers))
 	for _, c := range existingConsumers {
 		if err := r.finalizeConsumer(ctx, c); err != nil {
 			return cg.MarkReconcileConsumersFailed("FinalizeConsumer", err)
 		}
 	}
 
+	logger.Debugw("Deleteing consumergroup metadata from Kafka cluster")
 	if err := r.deleteConsumerGroupMetadata(ctx, cg); err != nil {
 		// We retry a few times to delete Consumer group metadata from Kafka before giving up.
 		if v := r.DeleteConsumerGroupMetadataCounter.Inc(string(cg.GetUID())); v <= 5 {
@@ -266,6 +282,8 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 	}
 
 	r.InitOffsetLatestInitialOffsetCache.Expire(keyOf(cg))
+
+	logger.Debugw("Reconciliation succeeded (finalization)")
 
 	return nil
 }

@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	logger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
+	logger := logging.NewLogger(ctx, kubeClient, logging.CommonLoggingLabels)
 
 	err = logger.Start()
 	if err != nil {

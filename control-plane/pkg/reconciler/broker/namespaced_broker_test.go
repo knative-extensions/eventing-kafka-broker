@@ -60,12 +60,13 @@ import (
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var (
@@ -121,7 +122,7 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					base.VolumeGenerationAnnotationKey: "0",
 					"annotation_to_preserve":           "value_to_preserve",
 				}),
-				NewStatefulSet("kafka-broker-receiver", SystemNamespace),
+				NewDeployment("kafka-broker-receiver", SystemNamespace),
 				NewStatefulSet("kafka-broker-dispatcher", SystemNamespace),
 				NewServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
 				reconcilertesting.NewService("kafka-broker-ingress", SystemNamespace),
@@ -199,7 +200,7 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 					WithNamespacedLabel,
 				),
 				ToManifestivalResource(t,
-					NewStatefulSet("kafka-broker-receiver", BrokerNamespace),
+					NewDeployment("kafka-broker-receiver", BrokerNamespace),
 					WithNamespacedBrokerOwnerRef,
 					WithNamespacedLabel,
 				),
@@ -371,7 +372,7 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
 				reconcilertesting.NewConfigMap("config-tracing", SystemNamespace),
 				reconcilertesting.NewConfigMap("config-features", SystemNamespace),
 				reconcilertesting.NewConfigMap("kafka-config-logging", SystemNamespace),
-				NewStatefulSet("kafka-broker-receiver", SystemNamespace),
+				NewDeployment("kafka-broker-receiver", SystemNamespace),
 				NewStatefulSet("kafka-broker-dispatcher", SystemNamespace),
 				NewServiceAccount(SystemNamespace, "knative-kafka-broker-data-plane"),
 				reconcilertesting.NewService("kafka-broker-ingress", SystemNamespace),
@@ -503,6 +504,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			NamespaceLister:          listers.GetNamespaceLister(),
 			ConfigMapLister:          listers.GetConfigMapLister(),
 			StatefulSetLister:        listers.GetStatefulSetLister(),
+			DeploymentLister:         listers.GetDeploymentLister(),
 			BrokerLister:             listers.GetBrokerLister(),
 			ServiceAccountLister:     listers.GetServiceAccountLister(),
 			ServiceLister:            listers.GetServiceLister(),

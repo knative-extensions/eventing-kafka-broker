@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.security;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 
 /**
  * AuthProvider provides auth credentials.
@@ -25,8 +26,8 @@ import io.vertx.core.Future;
 @FunctionalInterface
 public interface AuthProvider {
 
-    static AuthProvider kubernetes() {
-        return new KubernetesAuthProvider(new DefaultKubernetesClient());
+    static AuthProvider kubernetes(final Vertx vertx) {
+        return new KubernetesAuthProvider(vertx, new DefaultKubernetesClient());
     }
 
     static AuthProvider noAuth() {

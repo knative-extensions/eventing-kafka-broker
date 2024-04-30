@@ -29,6 +29,7 @@ import (
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/reconciler"
 )
 
 const (
@@ -216,4 +217,13 @@ func executeTemplateToString(template template.Template, metadata v1.ObjectMeta,
 	}
 
 	return result.String(), nil
+}
+
+type Stores []reconciler.ConfigStore
+
+func (css Stores) ToContext(ctx context.Context) context.Context {
+	for _, cs := range css {
+		ctx = cs.ToContext(ctx)
+	}
+	return ctx
 }

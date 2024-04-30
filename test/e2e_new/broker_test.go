@@ -305,3 +305,18 @@ func TestBrokerSendsEventsWithOIDCSupport(t *testing.T) {
 
 	env.TestSet(ctx, t, brokereventingfeatures.BrokerSendEventWithOIDC())
 }
+
+func TestBrokerDispatcherKedaScaling(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.TriggerScalesToZeroWithKeda())
+}

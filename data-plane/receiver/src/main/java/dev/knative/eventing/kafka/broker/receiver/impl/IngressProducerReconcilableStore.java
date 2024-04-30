@@ -197,32 +197,28 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
         final var ingressInfo = this.ingressInfos.get(resource.getUid());
 
+        Future<Void> closeFuture = Future.succeededFuture();
+
         // Get the rc
         final var rc = this.producerReferences.get(ingressInfo.getProducerProperties());
         if (rc.decrementAndCheck()) {
             // Nobody is referring to this producer anymore, clean it up and close it
             this.producerReferences.remove(ingressInfo.getProducerProperties());
-            return rc.getValue().close().onSuccess(r -> {
-                // Remove ingress info from the maps
-                if (!isRootPath(ingressInfo.getPath())) {
-                    this.pathMapper.remove(ingressInfo.getPath());
-                }
-                if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
-                    this.hostMapper.remove(ingressInfo.getHost());
-                }
-                this.ingressInfos.remove(resource.getUid());
-            });
+            closeFuture = rc.getValue().close();
         }
-        // Remove ingress info from the maps
-        if (!isRootPath(ingressInfo.getPath())) {
-            this.pathMapper.remove(ingressInfo.getPath());
-        }
-        if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
-            this.hostMapper.remove(ingressInfo.getHost());
-        }
-        this.ingressInfos.remove(resource.getUid());
 
-        return Future.succeededFuture();
+        closeFuture.onSuccess(v -> {
+            // Remove ingress info from the maps
+            if (!isRootPath(ingressInfo.getPath())) {
+                this.pathMapper.remove(ingressInfo.getPath());
+            }
+            if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
+                this.hostMapper.remove(ingressInfo.getHost());
+            }
+            this.ingressInfos.remove(resource.getUid());
+        });
+
+        return closeFuture;
     }
 
     private static String encoding(final DataPlaneContract.ContentMode contentMode) {
