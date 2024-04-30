@@ -20,20 +20,4 @@ metadata:
   name: knative-kafka-controller-post-install
   labels:
     app.kubernetes.io/version: devel
-rules:
-  # we need to be able to delete old deployments
-  - apiGroups:
-      - "apps"
-    resources:
-      - "deployments"
-    verbs:
-      - "delete"
-  # we need to get statefulsets
-  - apiGroups:
-      - "apps"
-    resources:
-      - "statefulsets"
-    verbs:
-      - "get"
-      - "list"
-
+rules: []
