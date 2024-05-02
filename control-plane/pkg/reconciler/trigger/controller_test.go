@@ -18,9 +18,10 @@ package trigger
 
 import (
 	"context"
+	"testing"
+
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	"knative.dev/pkg/ptr"
-	"testing"
 
 	"knative.dev/eventing/pkg/auth"
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
