@@ -28,14 +28,16 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 class KubernetesAuthProvider implements AuthProvider {
 
+    private final Vertx vertx;
     private final KubernetesClient kubernetesClient;
 
-    KubernetesAuthProvider(final KubernetesClient client) {
+    KubernetesAuthProvider(final Vertx vertx, final KubernetesClient client) {
+        this.vertx = vertx;
         this.kubernetesClient = client;
     }
 
     private Future<Credentials> getCredentials(final DataPlaneContract.Reference secretReference) {
-        return Vertx.currentContext().executeBlocking(p -> {
+        return this.vertx.executeBlocking(p -> {
             try {
                 final Secret secret = getSecretFromKubernetes(secretReference);
                 final var credentials = new KubernetesCredentials(secret);
@@ -52,7 +54,7 @@ class KubernetesAuthProvider implements AuthProvider {
     }
 
     private Future<Credentials> getCredentials(final DataPlaneContract.MultiSecretReference secretReferences) {
-        return Vertx.currentContext().executeBlocking(p -> {
+        return this.vertx.executeBlocking(p -> {
             try {
                 final var credentials = new KubernetesCredentials(secretDataOf(secretReferences));
                 final var error = CredentialsValidator.validate(credentials);

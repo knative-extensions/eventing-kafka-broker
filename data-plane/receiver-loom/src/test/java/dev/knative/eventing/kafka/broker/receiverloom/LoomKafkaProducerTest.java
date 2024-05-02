@@ -29,6 +29,7 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -83,10 +84,14 @@ public class LoomKafkaProducerTest {
     }
 
     @Test
-    public void testSendAfterClose(VertxTestContext testContext) {
+    public void testSendAfterClose(VertxTestContext testContext) throws ExecutionException, InterruptedException {
 
         // Close the producer before sending a record
-        producer.close().onFailure(testContext::failNow);
+        producer.close()
+                .onFailure(testContext::failNow)
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get();
 
         // Attempt to send a record after the producer is closed
         ProducerRecord<String, Integer> record = new ProducerRecord<>("test", "sequence number", 123);
@@ -113,6 +118,7 @@ public class LoomKafkaProducerTest {
             producer.send(record)
                     .onSuccess(ar -> {
                         checkpoints.flag();
+                        assertTrue(producer.isSendFromQueueThreadAlive());
                     })
                     .onFailure(testContext::failNow);
         }

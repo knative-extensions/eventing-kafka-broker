@@ -39,6 +39,40 @@ func TestNewEvictor(t *testing.T) {
 	require.NotPanics(t, func() { newEvictor(ctx, zap.String("k", "n")) })
 }
 
+func TestEvictorNilPodNoPanic(t *testing.T) {
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	var pod *corev1.Pod
+
+	pod1 := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns1", Name: "name1"},
+	}
+
+	cg := &kafkainternals.ConsumerGroup{
+		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
+		Status: kafkainternals.ConsumerGroupStatus{
+			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
+				MaxAllowedVReplicas: pointer.Int32(1),
+				Placements: []eventingduckv1alpha1.Placement{
+					{PodName: "name", VReplicas: 1},
+					{PodName: pod1.GetName(), VReplicas: 1},
+				},
+			}},
+		},
+	}
+	cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
+	cg.MarkScheduleSucceeded()
+
+	placement := &eventingduckv1alpha1.Placement{PodName: pod1.GetName(), VReplicas: 1}
+
+	ctx, _ = kafkainternalsclient.With(ctx, cg)
+
+	e := newEvictor(ctx)
+	err := e.evict(pod, cg, placement)
+
+	require.Nil(t, err)
+}
+
 func TestEvictorEvictSuccess(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 

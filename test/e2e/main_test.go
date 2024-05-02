@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			log.Printf("Failed to create kube client: %v\n", err)
 		}
-		e2elogger := logging.NewLogger(ctx, kubeClient, map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook"}})
+		e2elogger := logging.NewLogger(ctx, kubeClient, logging.CommonLoggingLabels)
 		erre2e := e2elogger.Start()
 		if erre2e != nil {
 			fmt.Printf("failed to start logger: %s", erre2e.Error())

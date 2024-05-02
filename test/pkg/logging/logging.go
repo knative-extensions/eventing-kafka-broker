@@ -34,6 +34,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var CommonLoggingLabels = map[string][]string{"knative-eventing": {"kafka-broker-dispatcher", "kafka-broker-receiver", "kafka-sink-receiver", "kafka-channel-receiver", "kafka-channel-dispatcher", "kafka-source-dispatcher", "kafka-webhook-eventing", "kafka-controller", "kafka-source-controller", "eventing-webhook", "eventing-controller"}}
+
 type Logger interface {
 	Start() error
 }

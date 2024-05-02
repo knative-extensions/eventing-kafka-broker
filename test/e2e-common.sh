@@ -84,16 +84,7 @@ function knative_teardown() {
   fi
 }
 
-function knative_eventing() {
-  # we need cert-manager installed to be able to create the issuers
-  kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
-
-  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "cert-manager" || fail_test "Failed to install cert manager"
-
-  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "cert-manager" || fail_test "Failed to install trust manager"
-
+function install_eventing_core() {
   if ! is_release_branch; then
     echo ">> Install Knative Eventing from latest - ${EVENTING_CONFIG}"
     kubectl apply -f "${EVENTING_CONFIG}/eventing-crds.yaml"
@@ -105,7 +96,20 @@ function knative_eventing() {
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE_TLS}"
   fi
 
-  ! kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+  kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
+}
+
+function knative_eventing() {
+  # we need cert-manager installed to be able to create the issuers
+  kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
+
+  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
+  wait_until_pods_running "cert-manager" || fail_test "Failed to install cert manager"
+
+  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
+  wait_until_pods_running "cert-manager" || fail_test "Failed to install trust manager"
+
+  install_eventing_core
 
   # Publish test images.
   echo ">> Publishing test images from eventing"
@@ -168,6 +172,13 @@ function build_source_components_from_source() {
 }
 
 function install_latest_release() {
+  echo "Installing previous eventing core release"
+
+  eventing_version=$(echo ${LATEST_RELEASE_VERSION} | sed 's/knative-v\(.*\)/\1/')
+
+  # Hack - need to find a way to find the patch version for eventing core, for now default to 0
+  start_release_knative_eventing "$(major_version ${eventing_version}).$(minor_version ${eventing_version}).0"
+
   echo "Installing latest release from ${PREVIOUS_RELEASE_URL}"
 
   ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
@@ -179,8 +190,8 @@ function install_latest_release() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function install_head() {
@@ -195,8 +206,8 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function install_latest_release_source() {
@@ -207,8 +218,8 @@ function install_latest_release_source() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function install_head_source() {
@@ -218,8 +229,8 @@ function install_head_source() {
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
-  kubectl replace -f ./test/config/100-config-kafka-features.yaml
+  kubectl apply -f ./test/config/100-config-tracing.yaml
+  kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
 function test_setup() {
@@ -238,7 +249,7 @@ function test_setup() {
   setup_kafka_channel_auth || fail_test "Failed to apply channel auth configuration ${EVENTING_KAFKA_BROKER_CHANNEL_AUTH_SCENARIO}"
 
   kubectl rollout restart statefulset -n knative-eventing kafka-source-dispatcher
-  kubectl rollout restart statefulset -n knative-eventing kafka-broker-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart statefulset -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-channel-receiver

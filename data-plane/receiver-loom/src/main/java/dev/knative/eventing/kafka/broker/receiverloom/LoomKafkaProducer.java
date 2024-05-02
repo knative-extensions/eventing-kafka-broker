@@ -45,6 +45,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     private final ProducerTracer<?> tracer;
     private final VertxInternal vertx;
     private final Thread sendFromQueueThread;
+    private final Promise<Void> closePromise = Promise.promise();
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
         Objects.requireNonNull(v, "Vertx cannot be null");
@@ -102,6 +103,7 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                             (metadata, exception) -> recordPromise.getContext().runOnContext(v -> {
                                 if (exception != null) {
                                     recordPromise.getPromise().fail(exception);
+                                    return;
                                 }
                                 recordPromise.getPromise().complete(metadata);
                             }));
@@ -121,22 +123,31 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     @Override
     public Future<Void> close() {
-        final Promise<Void> promise = Promise.promise();
-        this.isClosed.set(true);
+        if (!this.isClosed.compareAndSet(false, true)) {
+            return closePromise.future();
+        }
+
+        logger.debug("Closing producer");
+
         Thread.ofVirtual().start(() -> {
             try {
                 while (!eventQueue.isEmpty()) {
+                    logger.debug("Waiting for the eventQueue to become empty");
                     Thread.sleep(2000L);
                 }
+                logger.debug("Interrupting sendFromQueueThread thread");
                 sendFromQueueThread.interrupt();
+                logger.debug("Waiting for sendFromQueueThread thread to complete");
                 sendFromQueueThread.join();
+                logger.debug("Closing the producer");
                 producer.close();
-                promise.complete();
+                closePromise.complete();
             } catch (Exception e) {
-                promise.fail(e);
+                closePromise.fail(e);
             }
         });
-        return promise.future();
+
+        return closePromise.future();
     }
 
     @Override
