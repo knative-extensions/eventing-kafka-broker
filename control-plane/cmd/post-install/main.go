@@ -16,54 +16,5 @@
 
 package main
 
-import (
-	"context"
-	"flag"
-	"fmt"
-	"log"
-
-	"k8s.io/client-go/kubernetes"
-
-	"knative.dev/pkg/environment"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/signals"
-)
-
 func main() {
-	ctx := signals.NewContext()
-
-	config, err := logging.NewConfigFromMap(nil)
-	if err != nil {
-		log.Fatal("Failed to create logging config: ", err)
-	}
-
-	logger, _ := logging.NewLoggerFromConfig(config, "kafka-broker-post-install")
-	defer logger.Sync()
-
-	logging.WithLogger(ctx, logger)
-
-	if err := run(ctx); err != nil {
-		logger.Fatal(err)
-	}
-}
-
-func run(ctx context.Context) error {
-	env := environment.ClientConfig{}
-	env.InitFlags(flag.CommandLine)
-	flag.Parse()
-
-	config, err := env.GetRESTConfig()
-	if err != nil {
-		return fmt.Errorf("failed to get kubeconfig: %w", err)
-	}
-
-	deploymentDeleter := &kafkaDeploymentDeleter{
-		k8s: kubernetes.NewForConfigOrDie(config),
-	}
-
-	if err := deploymentDeleter.DeleteBrokerDeployments(ctx); err != nil {
-		return fmt.Errorf("broker migration failed: %v", err)
-	}
-
-	return nil
 }
