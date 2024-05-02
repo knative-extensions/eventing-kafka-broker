@@ -38,7 +38,6 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
@@ -158,7 +157,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	// Reconciler Trigger when the OIDC service account changes
 	// serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 	oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterController(&eventing.Trigger{}),
+		FilterFunc: filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister(), kafka.BrokerClass, FinalizerName),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
