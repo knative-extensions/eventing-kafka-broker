@@ -49,7 +49,6 @@ import (
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
-	// serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
 	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -71,7 +70,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
-	// serviceaccountInformer := serviceaccountinformer.Get(ctx)
 	oidcServiceaccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
 	clientPool := clientpool.Get(ctx)

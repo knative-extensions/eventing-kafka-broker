@@ -63,7 +63,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
-	// serviceaccountInformer := serviceaccountinformer.Get(ctx)
 	oidcServiceaccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
 	clientPool := clientpool.Get(ctx)
@@ -84,9 +83,8 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		FlagsHolder: &FlagsHolder{
 			Flags: feature.Flags{},
 		},
-		BrokerLister:    brokerInformer.Lister(),
-		ConfigMapLister: configmapInformer.Lister(),
-		// ServiceAccountLister: serviceaccountInformer.Lister(),
+		BrokerLister:         brokerInformer.Lister(),
+		ConfigMapLister:      configmapInformer.Lister(),
 		ServiceAccountLister: oidcServiceaccountInformer.Lister(),
 		EventingClient:       eventingclient.Get(ctx),
 		Env:                  configs,
@@ -155,7 +153,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	// Reconciler Trigger when the OIDC service account changes
-	// serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 	oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister(), kafka.BrokerClass, FinalizerName),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),

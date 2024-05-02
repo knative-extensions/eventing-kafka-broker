@@ -50,7 +50,6 @@ import (
 )
 
 func TestNewController(t *testing.T) {
-	// ctx, _ := reconcilertesting.SetupFakeContext(t)
 	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
