@@ -153,7 +153,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 
 	// Reconciler Trigger when the OIDC service account changes
 	oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister(), kafka.BrokerClass, FinalizerName),
+		FilterFunc: filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister(), kafka.NamespacedBrokerClass, FinalizerName),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
