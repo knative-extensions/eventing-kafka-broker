@@ -73,10 +73,18 @@ jobs:
           ./data-plane/profiler/run.sh || exit 1
           ls -al
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
+          name: profile-${{ matrix.event }}-receiver.html
           path: profile-${{ matrix.event }}-receiver.html
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
+          name: profile-${{ matrix.event }}-dispatcher.html
           path: profile-${{ matrix.event }}-dispatcher.html
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs
+          path: /tmp/eventing-kafka-broker-logs/profiler/
