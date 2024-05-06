@@ -139,6 +139,8 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                 sendFromQueueThread.interrupt();
                 logger.debug("Waiting for sendFromQueueThread thread to complete");
                 sendFromQueueThread.join();
+                logger.debug("flushing the producer");
+                producer.flush();
                 logger.debug("Closing the producer");
                 producer.close();
                 closePromise.complete();
