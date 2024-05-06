@@ -86,7 +86,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
             return;
         }
         if (inFlightRecords.get() >= getConsumerVerticleContext().getMaxPollRecords()) {
-            logger.info(
+            logger.debug(
                     "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG
                             + " waiting for response from subscriber before polling for new records {} {} {}",
                     keyValue(
