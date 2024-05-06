@@ -97,7 +97,7 @@ export EGRESSES_INITIAL_CAPACITY="1"
 export HTTP2_DISABLE="true"
 export WAIT_STARTUP_SECONDS="8"
 export CONFIG_FEATURES_PATH=""
-export DISABLE_VIRTUAL_THREADS="true"
+export ENABLE_VIRTUAL_THREADS="true"
 
 # Define receiver specific env variables.
 export SERVICE_NAME="kafka-broker-receiver"
