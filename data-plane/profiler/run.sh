@@ -111,6 +111,8 @@ export INSTANCE_ID="receiver"
 java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
+  -XX:+EnableDynamicAgentLoading \
+  -Djdk.tracePinnedThreads=full \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
   -jar "${PROJECT_ROOT_DIR}"/receiver-vertx/target/receiver-vertx-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
 receiver_pid=$!
@@ -127,6 +129,8 @@ export INSTANCE_ID="dispatcher"
 java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
+  -XX:+EnableDynamicAgentLoading \
+  -Djdk.tracePinnedThreads=full \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
   -jar "${PROJECT_ROOT_DIR}"/dispatcher-vertx/target/dispatcher-vertx-1.0-SNAPSHOT.jar >"${LOG_DIR}/dispatcher.log" &
 dispatcher_pid=$!
