@@ -51,11 +51,11 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         this.taskQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
 
-        if (Boolean.parseBoolean(System.getenv("DISABLE_VIRTUAL_THREADS"))) {
+        if (Boolean.parseBoolean(System.getenv("ENABLE_VIRTUAL_THREADS"))) {
+            this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
+        } else {
             this.taskRunnerThread = new Thread(this::processTaskQueue);
             this.taskRunnerThread.start();
-        } else {
-            this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
         }
     }
 
