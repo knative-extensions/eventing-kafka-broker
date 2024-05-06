@@ -61,12 +61,12 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             this.tracer = null;
         }
 
-      if (Boolean.parseBoolean(System.getenv("DISABLE_VIRTUAL_THREADS"))) {
-        this.sendFromQueueThread = new Thread(this::sendFromQueue);
-        this.sendFromQueueThread.start();
-      } else {
-        this.sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
-      }
+        if (Boolean.parseBoolean(System.getenv("DISABLE_VIRTUAL_THREADS"))) {
+            this.sendFromQueueThread = new Thread(this::sendFromQueue);
+            this.sendFromQueueThread.start();
+        } else {
+            this.sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
+        }
     }
 
     @Override
