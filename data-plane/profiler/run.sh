@@ -96,6 +96,7 @@ export METRICS_PUBLISH_QUANTILES="false"
 export EGRESSES_INITIAL_CAPACITY="1"
 export HTTP2_DISABLE="true"
 export WAIT_STARTUP_SECONDS="8"
+export CONFIG_FEATURES_PATH=""
 
 # Define receiver specific env variables.
 export SERVICE_NAME="kafka-broker-receiver"
