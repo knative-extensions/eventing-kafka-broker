@@ -117,7 +117,7 @@ public class Main {
                     .toCompletionStage()
                     .toCompletableFuture()
                     .get();
-        } catch (ExecutionException ex) {
+        } catch (Exception ex) {
             if (featuresConfig.isAuthenticationOIDC()) {
                 logger.error("Could not load OIDC config while OIDC authentication feature is enabled.");
                 throw ex;
