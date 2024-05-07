@@ -32,7 +32,7 @@ func KafkaChannelLease() *feature.Feature {
 	f := feature.NewFeatureNamed("KafkaChannel lease")
 
 	f.Assert("verify lease name", verifyLeaseAcquired(
-		"kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.channel.v2.reconciler.00-of-01",
+		"kafkachannel-controller.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.controller.reconciler.00-of-01",
 	))
 
 	return f

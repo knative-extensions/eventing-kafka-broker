@@ -156,10 +156,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		),
 	))
 
-	parts := strings.Split(eventingtls.TrustBundleLabelSelector, "=")
-
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: kafka.FilterWithLabel(parts[0], parts[1]),
+		FilterFunc: kafka.FilterWithLabel(eventingtls.TrustBundleLabelKey, eventingtls.TrustBundleLabelValue),
 		Handler:    controller.HandleAll(globalResync),
 	})
 
