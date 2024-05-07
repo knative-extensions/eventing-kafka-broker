@@ -17,7 +17,14 @@
 package trigger
 
 import (
+	"context"
 	"testing"
+
+	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
+	"knative.dev/pkg/ptr"
+
+	"knative.dev/eventing/pkg/auth"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -27,7 +34,8 @@ import (
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
@@ -42,8 +50,7 @@ import (
 )
 
 func TestNewController(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
-
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
@@ -60,8 +67,13 @@ func TestNewController(t *testing.T) {
 	}
 }
 
+func SetUpInformerSelector(ctx context.Context) context.Context {
+	ctx = filteredFactory.WithSelectors(ctx, auth.OIDCLabelSelector)
+	return ctx
+}
+
 func TestFilterTriggers(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 
 	tt := []struct {
 		name    string
@@ -180,6 +192,169 @@ func TestFilterTriggers(t *testing.T) {
 			}
 			filter := filterTriggers(brokerInformer.Lister(), kafka.BrokerClass, FinalizerName)
 			pass := filter(tc.trigger)
+			assert.Equal(t, tc.pass, pass)
+		})
+	}
+}
+
+func TestFilterOIDCServiceAccounts(t *testing.T) {
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
+
+	tt := []struct {
+		name    string
+		sa      *corev1.ServiceAccount
+		trigger *eventing.Trigger
+		brokers []*eventing.Broker
+		pass    bool
+	}{{
+		name: "matching owner reference",
+		sa: &corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "sa",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: eventing.SchemeGroupVersion.String(),
+						Kind:       "Trigger",
+						Name:       "tr",
+						Controller: ptr.Bool(true),
+					},
+				},
+			},
+		},
+		trigger: &eventing.Trigger{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:  "ns",
+				Name:       "tr",
+				Finalizers: []string{FinalizerName},
+			},
+			Spec: eventing.TriggerSpec{
+				Broker: "br",
+			},
+		},
+		brokers: []*eventing.Broker{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "br",
+				Annotations: map[string]string{
+					eventing.BrokerClassAnnotationKey: kafka.BrokerClass,
+				},
+			},
+		}},
+		pass: true,
+	}, {
+		name: "references trigger for wrong broker class",
+		sa: &corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "sa",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: eventing.SchemeGroupVersion.String(),
+						Kind:       "Trigger",
+						Name:       "tr",
+						Controller: ptr.Bool(true),
+					},
+				},
+			},
+		},
+		trigger: &eventing.Trigger{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "tr",
+			},
+			Spec: eventing.TriggerSpec{
+				Broker: "br",
+			},
+		},
+		brokers: []*eventing.Broker{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "br",
+				Annotations: map[string]string{
+					eventing.BrokerClassAnnotationKey: "another-broker-class",
+				},
+			},
+		}},
+		pass: false,
+	}, {
+		name: "references trigger with correct finalizer",
+		sa: &corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "sa",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: eventing.SchemeGroupVersion.String(),
+						Kind:       "Trigger",
+						Name:       "tr",
+						Controller: ptr.Bool(true),
+					},
+				},
+			},
+		},
+		trigger: &eventing.Trigger{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:  "ns",
+				Name:       "tr",
+				Finalizers: []string{FinalizerName},
+			},
+			Spec: eventing.TriggerSpec{
+				Broker: "br",
+			},
+		},
+		brokers: []*eventing.Broker{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "br",
+			},
+		}},
+		pass: true,
+	}, {
+		name: "no owner reference",
+		sa: &corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "sa",
+			},
+		},
+		trigger: &eventing.Trigger{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:  "ns",
+				Name:       "tr",
+				Finalizers: []string{FinalizerName},
+			},
+			Spec: eventing.TriggerSpec{
+				Broker: "br",
+			},
+		},
+		brokers: []*eventing.Broker{{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "ns",
+				Name:      "br",
+				Annotations: map[string]string{
+					eventing.BrokerClassAnnotationKey: kafka.BrokerClass,
+				},
+			},
+		}},
+		pass: false,
+	}}
+
+	for _, tc := range tt {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			brokerInformer := brokerinformer.Get(ctx)
+			for _, obj := range tc.brokers {
+				err := brokerInformer.Informer().GetStore().Add(obj)
+				assert.NoError(t, err)
+			}
+
+			triggerInformer := triggerinformer.Get(ctx)
+			err := triggerInformer.Informer().GetStore().Add(tc.trigger)
+			assert.NoError(t, err)
+
+			filter := filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister(), kafka.BrokerClass, FinalizerName)
+			pass := filter(tc.sa)
 			assert.Equal(t, tc.pass, pass)
 		})
 	}

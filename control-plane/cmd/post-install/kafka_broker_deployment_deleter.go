@@ -32,20 +32,6 @@ type kafkaDeploymentDeleter struct {
 	k8s kubernetes.Interface
 }
 
-func (k *kafkaDeploymentDeleter) DeleteBrokerDeployments(ctx context.Context) error {
-	deployments := []string{
-		"kafka-broker-dispatcher",
-	}
-
-	for _, deployment := range deployments {
-		if err := k.deleteDeployment(ctx, deployment); err != nil {
-			return fmt.Errorf("failed to delete deployment %s: %v", deployment, err)
-		}
-	}
-
-	return nil
-}
-
 func (k *kafkaDeploymentDeleter) DeleteChannelDeployments(ctx context.Context) error {
 	deployments := []string{
 		"kafka-channel-receiver",

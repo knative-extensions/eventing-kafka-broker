@@ -17,10 +17,18 @@
 package installation
 
 import (
+	"context"
+	"fmt"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 	"knative.dev/reconciler-test/pkg/environment"
+	"time"
 )
 
 func cleanupChannelv2ConsumerGroups(c pkgupgrade.Context, glob environment.GlobalEnvironment) {
@@ -45,4 +53,64 @@ func cleanupChannelv2Deployments(c pkgupgrade.Context, glob environment.GlobalEn
 	if err != nil {
 		c.T.Fatal("failed to downgrade from channelv2", err.Error())
 	}
+}
+
+func deleteStatefulSet(ctx context.Context, client kubernetes.Interface, name string, namespace string) error {
+	err := waitDeploymentExists(ctx, client, name, namespace)
+	if err != nil {
+		return err
+	}
+
+	err = client.AppsV1().StatefulSets(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return fmt.Errorf("failed to delete statefulset: %w", err)
+	}
+
+	return nil
+}
+
+func waitDeploymentExists(ctx context.Context, client kubernetes.Interface, name string, namespace string) error {
+	return wait.PollUntilContextTimeout(ctx, time.Second*10, time.Minute*3, true, func(ctx context.Context) (bool, error) {
+		_, err := client.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, fmt.Errorf("failed to get deployment: %w", err)
+		}
+
+		return true, nil
+	})
+}
+
+func deleteConsumerGroups(ctx context.Context, client kubernetes.Interface, kind string) error {
+	namespaces, err := client.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	internalClient := internalsclient.Get(ctx)
+
+	for _, ns := range namespaces.Items {
+		cgClient := internalClient.InternalV1alpha1().ConsumerGroups(ns.Name)
+		cgList, err := cgClient.List(ctx, metav1.ListOptions{})
+
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+
+		for _, cg := range cgList.Items {
+			for _, owner := range cg.OwnerReferences {
+				if owner.Kind == kind {
+					err := cgClient.Delete(ctx, cg.Name, metav1.DeleteOptions{})
+					if err != nil && !errors.IsNotFound(err) {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }
