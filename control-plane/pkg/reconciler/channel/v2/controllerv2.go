@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
