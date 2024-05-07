@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +144,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
                     .poll(POLLING_TIMEOUT)
                     .onSuccess(records -> vertx.runOnContext(v -> this.recordsHandler(records)))
                     .onFailure(t -> {
-                        if (this.closed.get()) {
+                        if (this.closed.get() || t instanceof WakeupException) {
                             // The failure might have been caused by stopping the consumer, so we just ignore it
                             return;
                         }

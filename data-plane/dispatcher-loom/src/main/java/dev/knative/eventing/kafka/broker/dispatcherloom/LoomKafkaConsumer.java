@@ -102,6 +102,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         taskQueue.add(() -> {
             try {
                 logger.debug("Closing underlying Kafka consumer client");
+                consumer.wakeup();
                 consumer.close();
             } catch (Exception e) {
                 promise.tryFail(e);
