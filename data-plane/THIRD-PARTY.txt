@@ -1,5 +1,5 @@
 
-Lists of 245 third-party dependencies.
+Lists of 244 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.4.14 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.4.14 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.16.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -169,7 +169,6 @@ Lists of 245 third-party dependencies.
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) vertx-codegen (io.vertx:vertx-codegen:4.5.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-codegen)
      (Eclipse Public License - v 2.0) (The Apache Software License, Version 2.0) Vert.x Core (io.vertx:vertx-core:4.5.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-core)
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) Vert.x JUnit 5 support :: Core (io.vertx:vertx-junit5:4.4.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-junit5)
-     (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) Vert.x Kafka Client (io.vertx:vertx-kafka-client:4.5.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-kafka-client)
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) Vert.x metrics implementation for Micrometer.io (io.vertx:vertx-micrometer-metrics:4.5.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-micrometer-metrics)
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) Vert.x OpenTelemetry (io.vertx:vertx-opentelemetry:4.4.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-tracing-parent/vertx-opentelemetry)
      (Eclipse Public License - v 1.0) (The Apache Software License, Version 2.0) Vert.x URI Template (io.vertx:vertx-uri-template:4.5.7 - http://nexus.sonatype.org/oss-repository-hosting.html/vertx-parent/vertx-ext/vertx-ext-parent/vertx-uri-template)
