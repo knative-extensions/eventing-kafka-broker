@@ -19,6 +19,9 @@ package v2
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -127,7 +130,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	// Reconciler Trigger when the OIDC service account changes
 	oidcServiceAccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterController(&eventing.Trigger{}),
+		FilterFunc: filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister()),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
@@ -152,6 +155,34 @@ func filterTriggers(lister eventinglisters.BrokerLister) func(interface{}) bool 
 
 		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
 		return ok && value == kafka.BrokerClass
+	}
+}
+
+// filterOIDCServiceAccounts returns a function that returns true if the resource passed
+// is a service account, which is owned by a trigger pointing to a the given broker class.
+func filterOIDCServiceAccounts(triggerLister eventinglisters.TriggerLister, brokerLister eventinglisters.BrokerLister) func(interface{}) bool {
+	return func(obj interface{}) bool {
+		controlledByTrigger := controller.FilterController(&eventing.Trigger{})(obj)
+		if !controlledByTrigger {
+			return false
+		}
+
+		sa, ok := obj.(*corev1.ServiceAccount)
+		if !ok {
+			return false
+		}
+
+		owner := metav1.GetControllerOf(sa)
+		if owner == nil {
+			return false
+		}
+
+		trigger, err := triggerLister.Triggers(sa.Namespace).Get(owner.Name)
+		if err != nil {
+			return false
+		}
+
+		return filterTriggers(brokerLister)(trigger)
 	}
 }
 

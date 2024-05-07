@@ -29,6 +29,9 @@ import (
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
+
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 
@@ -37,7 +40,7 @@ import (
 )
 
 func TestNewNamespacedController(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, SetUpInformerSelector)
 
 	ctx = clientpool.WithKafkaClientPool(ctx)
 

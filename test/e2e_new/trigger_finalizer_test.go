@@ -36,8 +36,6 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/resources/service"
-
-	triggerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
 
 func TestTriggerNoFinalizer(t *testing.T) {
@@ -101,7 +99,7 @@ func hasNoKafkaBrokerFinalizer() func(ctx context.Context, t feature.T) {
 		time.Sleep(time.Second * 20) // "eventually"
 		tr := triggerfeatures.GetTrigger(ctx, t)
 		for _, f := range tr.Finalizers {
-			require.NotEqual(t, f, triggerreconciler.FinalizerName, "%+v", tr)
+			require.NotEqual(t, f, "kafka.triggers.eventing.knative.dev", "%+v", tr)
 		}
 	}
 }

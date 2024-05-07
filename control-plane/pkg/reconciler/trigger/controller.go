@@ -19,9 +19,13 @@ package trigger
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/eventing/pkg/auth"
 	v1 "knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -44,7 +48,8 @@ import (
 	triggerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
-	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount"
+
+	serviceaccountinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/filtered"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -65,7 +70,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	brokerInformer := brokerinformer.Get(ctx)
 	triggerInformer := triggerinformer.Get(ctx)
 	triggerLister := triggerInformer.Lister()
-	serviceaccountInformer := serviceaccountinformer.Get(ctx)
+	oidcServiceaccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
 	clientPool := clientpool.Get(ctx)
 
@@ -95,7 +100,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		GetKafkaClient:            clientPool.GetClient,
 		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
 		InitOffsetsFunc:           offset.InitOffsets,
-		ServiceAccountLister:      serviceaccountInformer.Lister(),
+		ServiceAccountLister:      oidcServiceaccountInformer.Lister(),
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
@@ -153,8 +158,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.Tracker.OnChanged))
 
 	// Reconciler Trigger when the OIDC service account changes
-	serviceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterController(&eventing.Trigger{}),
+	oidcServiceaccountInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: filterOIDCServiceAccounts(triggerInformer.Lister(), brokerInformer.Lister(), kafka.BrokerClass, FinalizerName),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})
 
@@ -179,6 +184,34 @@ func filterTriggers(lister eventinglisters.BrokerLister, brokerClass string, fin
 
 		value, ok := broker.GetAnnotations()[apiseventing.BrokerClassKey]
 		return ok && value == brokerClass
+	}
+}
+
+// filterOIDCServiceAccounts returns a function that returns true if the resource passed
+// is a service account, which is owned by a trigger pointing to a the given broker class.
+func filterOIDCServiceAccounts(triggerLister eventinglisters.TriggerLister, brokerLister eventinglisters.BrokerLister, brokerClass string, finalizer string) func(interface{}) bool {
+	return func(obj interface{}) bool {
+		controlledByTrigger := controller.FilterController(&eventing.Trigger{})(obj)
+		if !controlledByTrigger {
+			return false
+		}
+
+		sa, ok := obj.(*corev1.ServiceAccount)
+		if !ok {
+			return false
+		}
+
+		owner := metav1.GetControllerOf(sa)
+		if owner == nil {
+			return false
+		}
+
+		trigger, err := triggerLister.Triggers(sa.Namespace).Get(owner.Name)
+		if err != nil {
+			return false
+		}
+
+		return filterTriggers(brokerLister, brokerClass, finalizer)(trigger)
 	}
 }
 
