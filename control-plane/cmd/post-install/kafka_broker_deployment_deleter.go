@@ -48,7 +48,7 @@ func (k *kafkaDeploymentDeleter) DeleteChannelDeployments(ctx context.Context) e
 }
 
 func (k *kafkaDeploymentDeleter) deleteDeployment(ctx context.Context, deploymentName string) error {
-	err := k.waiteStatefulSetExists(ctx, deploymentName)
+	err := k.waiteStatefulSetReady(ctx, deploymentName)
 	if err != nil {
 		return fmt.Errorf("failed while waiting for statefulset to come up: %w", err)
 	}
@@ -64,15 +64,15 @@ func (k *kafkaDeploymentDeleter) deleteDeployment(ctx context.Context, deploymen
 	return nil
 }
 
-func (k *kafkaDeploymentDeleter) waiteStatefulSetExists(ctx context.Context, statefulSetName string) error {
+func (k *kafkaDeploymentDeleter) waiteStatefulSetReady(ctx context.Context, statefulSetName string) error {
 	return wait.PollUntilContextTimeout(ctx, 10*time.Second, 10*time.Minute, false, func(ctx context.Context) (done bool, err error) {
-		_, err = k.k8s.AppsV1().StatefulSets(system.Namespace()).Get(ctx, statefulSetName, metav1.GetOptions{})
+		ss, err := k.k8s.AppsV1().StatefulSets(system.Namespace()).Get(ctx, statefulSetName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
 		if err != nil {
 			return false, fmt.Errorf("failed to get statefulset %s/%s: %w", system.Namespace(), statefulSetName, err)
 		}
-		return true, nil
+		return ss.Spec.Replicas != nil && *ss.Spec.Replicas == ss.Status.ReadyReplicas, nil
 	})
 }
