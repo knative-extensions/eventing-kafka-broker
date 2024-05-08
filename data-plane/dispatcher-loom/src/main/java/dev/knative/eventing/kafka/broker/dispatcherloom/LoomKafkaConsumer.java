@@ -45,13 +45,19 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     private final BlockingQueue<Runnable> taskQueue;
     private final AtomicBoolean isClosed;
     private final Thread taskRunnerThread;
+    private final Promise<Void> closePromise = Promise.promise();
 
     public LoomKafkaConsumer(Vertx vertx, Consumer<K, V> consumer) {
         this.consumer = consumer;
         this.taskQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
 
-        this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
+        if (Boolean.parseBoolean(System.getenv("ENABLE_VIRTUAL_THREADS"))) {
+            this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
+        } else {
+            this.taskRunnerThread = new Thread(this::processTaskQueue);
+            this.taskRunnerThread.start();
+        }
     }
 
     private void addTask(Runnable task, Promise<?> promise) {
@@ -92,19 +98,21 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
     @Override
     public Future<Void> close() {
+        if (!this.isClosed.compareAndSet(false, true)) {
+            return closePromise.future();
+        }
 
-        final Promise<Void> promise = Promise.promise();
         taskQueue.add(() -> {
             try {
                 logger.debug("Closing underlying Kafka consumer client");
+                consumer.wakeup();
                 consumer.close();
             } catch (Exception e) {
-                promise.tryFail(e);
+                closePromise.tryFail(e);
             }
         });
 
         logger.debug("Closing consumer {}", keyValue("size", taskQueue.size()));
-        isClosed.set(true);
 
         Thread.ofVirtual().start(() -> {
             try {
@@ -116,7 +124,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
                 taskRunnerThread.interrupt();
                 taskRunnerThread.join();
-                promise.tryComplete();
+                closePromise.tryComplete();
 
                 logger.debug("Background thread completed");
 
@@ -126,11 +134,11 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                         "Interrupted while waiting for taskRunnerThread to finish {}",
                         keyValue("taskQueueSize", size),
                         e);
-                promise.tryFail(new InterruptedException("taskQueue.size = " + size + ". " + e.getMessage()));
+                closePromise.tryFail(new InterruptedException("taskQueue.size = " + size + ". " + e.getMessage()));
             }
         });
 
-        return promise.future();
+        return closePromise.future();
     }
 
     @Override

@@ -54,7 +54,10 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
     static {
-        System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
+        if (System.getProperty("logback.configurationFile") == null
+                || System.getProperty("logback.configurationFile").isEmpty()) {
+            System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
+        }
     }
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
