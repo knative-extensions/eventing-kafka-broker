@@ -96,6 +96,8 @@ export METRICS_PUBLISH_QUANTILES="false"
 export EGRESSES_INITIAL_CAPACITY="1"
 export HTTP2_DISABLE="true"
 export WAIT_STARTUP_SECONDS="8"
+export CONFIG_FEATURES_PATH=""
+export ENABLE_VIRTUAL_THREADS="true"
 
 # Define receiver specific env variables.
 export SERVICE_NAME="kafka-broker-receiver"
@@ -109,6 +111,8 @@ export INSTANCE_ID="receiver"
 java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
+  -XX:+EnableDynamicAgentLoading \
+  -Djdk.tracePinnedThreads=full \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
   -jar "${PROJECT_ROOT_DIR}"/receiver-loom/target/receiver-loom-1.0-SNAPSHOT.jar >"${LOG_DIR}/receiver.log" &
 receiver_pid=$!
@@ -125,6 +129,8 @@ export INSTANCE_ID="dispatcher"
 java \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
+  -XX:+EnableDynamicAgentLoading \
+  -Djdk.tracePinnedThreads=full \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
   -jar "${PROJECT_ROOT_DIR}"/dispatcher-loom/target/dispatcher-loom-1.0-SNAPSHOT.jar >"${LOG_DIR}/dispatcher.log" &
 dispatcher_pid=$!

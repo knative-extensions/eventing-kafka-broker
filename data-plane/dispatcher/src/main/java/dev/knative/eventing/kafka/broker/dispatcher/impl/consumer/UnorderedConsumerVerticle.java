@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +87,7 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
             return;
         }
         if (inFlightRecords.get() >= getConsumerVerticleContext().getMaxPollRecords()) {
-            logger.info(
+            logger.debug(
                     "In flight records exceeds " + ConsumerConfig.MAX_POLL_RECORDS_CONFIG
                             + " waiting for response from subscriber before polling for new records {} {} {}",
                     keyValue(
@@ -101,6 +102,10 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
                     .poll(POLL_TIMEOUT)
                     .onSuccess(records -> vertx.runOnContext(v -> this.handleRecords(records)))
                     .onFailure(cause -> {
+                        if (cause instanceof WakeupException) {
+                            return; // Do nothing we're shutting down
+                        }
+
                         isPollInFlight.set(false);
                         logger.error(
                                 "Failed to poll messages {}",
