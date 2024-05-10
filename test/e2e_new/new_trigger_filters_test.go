@@ -20,6 +20,7 @@
 package e2e_new
 
 import (
+	"context"
 	"testing"
 
 	"knative.dev/pkg/system"
@@ -45,22 +46,17 @@ func TestNewTriggerFilters(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.ParallelTestSet(ctx, t, newfilters.NewFiltersFeatureSet(InstallKafkaBroker))
+	env.ParallelTestSet(ctx, t, newfilters.NewFiltersFeatureSet(InstallKafkaBrokerStepFn))
 }
 
-func InstallKafkaBroker(f *feature.Feature) string {
-	brokerName := feature.MakeRandomK8sName("kafka-broker")
-
-	install, cmName := single_partition_config.MakeInstall()
-
-	f.Setup("install one partition configuration", install)
-	f.Setup("install kafka broker", broker.Install(
-		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
-		broker.WithConfig(cmName),
-	))
-	f.Setup("kafka broker is ready", broker.IsReady(brokerName))
-	f.Setup("kafka broker is addressable", broker.IsAddressable(brokerName))
-
-	return brokerName
+func InstallKafkaBrokerStepFn(brokerName string) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		install, cmName := single_partition_config.MakeInstall()
+		install(ctx, t)
+		broker.Install(
+			brokerName,
+			broker.WithBrokerClass(kafka.BrokerClass),
+			broker.WithConfig(cmName),
+		)(ctx, t)
+	}
 }
