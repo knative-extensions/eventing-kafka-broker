@@ -45,6 +45,7 @@ func TestGenerateScaledObjectName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := GenerateScaledObjectName(tt.args.obj)
+
 			soNameLength := len(got)
 			if soNameLength != 39 {
 				t.Errorf("GenerateScaledObjectName() length = %v, want length %v", len(got), soNameLength)
@@ -52,7 +53,8 @@ func TestGenerateScaledObjectName(t *testing.T) {
 			if !strings.HasPrefix(got, scaledObjectPrefixName) {
 				t.Errorf("GenerateScaledObjectName() prefix = %v, want prefix %v", got, tt.wantPrefix)
 			}
-			uid := types.UID(strings.TrimLeft(got, scaledObjectPrefixName+"-"))
+
+			uid := types.UID(strings.TrimPrefix(got, scaledObjectPrefixName))
 			uidLength := len(uid)
 			if uidLength != 36 {
 				t.Errorf("GenerateScaledObjectName() UID length = %v, want length 36", len(string(uid)))
