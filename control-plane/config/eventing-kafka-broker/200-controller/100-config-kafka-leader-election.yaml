@@ -46,4 +46,4 @@ data:
   renewDeadline: "10s"
   retryPeriod: "2s"
   map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.source.Reconciler: kafka-controller.knative.dev.eventing-kafka.pkg.source.reconciler.source.reconciler
-  map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.channel.v2.Reconciler: kafkachannel-controller.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.controller.reconciler
+  map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.channel.Reconciler: kafkachannel-controller.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.controller.reconciler
