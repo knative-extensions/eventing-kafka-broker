@@ -56,7 +56,8 @@ public class ReceiverVerticleFactoryTest {
                 mockClient.resources(EventType.class),
                 mock(Lister.class),
                 vertx,
-                mock(OIDCDiscoveryConfig.class));
+                mock(OIDCDiscoveryConfig.class),
+                0);
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
     }
