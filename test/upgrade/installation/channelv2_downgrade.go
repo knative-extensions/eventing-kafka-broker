@@ -44,12 +44,8 @@ func cleanupChannelv2ConsumerGroups(c pkgupgrade.Context, glob environment.Globa
 func cleanupChannelv2Deployments(c pkgupgrade.Context, glob environment.GlobalEnvironment) {
 	ctx, _ := glob.Environment()
 	client := kubeclient.Get(ctx)
-	err := deleteStatefulSet(ctx, client, "kafka-channel-receiver", system.Namespace())
-	if err != nil {
-		c.T.Fatal("failed to downgrade from channelv2", err.Error())
-	}
 
-	deleteStatefulSet(ctx, client, "kafka-channel-dispatcher", system.Namespace())
+	err := deleteStatefulSet(ctx, client, "kafka-channel-dispatcher", system.Namespace())
 	if err != nil {
 		c.T.Fatal("failed to downgrade from channelv2", err.Error())
 	}

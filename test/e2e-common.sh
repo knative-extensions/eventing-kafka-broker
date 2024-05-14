@@ -280,7 +280,7 @@ function test_setup() {
   kubectl rollout restart deployment -n knative-eventing kafka-broker-receiver
   kubectl rollout restart statefulset -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
-  kubectl rollout restart statefulset -n knative-eventing kafka-channel-receiver
+  kubectl rollout restart deployment -n knative-eventing kafka-channel-receiver
   kubectl rollout restart statefulset -n knative-eventing kafka-channel-dispatcher
 }
 
