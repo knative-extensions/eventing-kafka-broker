@@ -31,13 +31,13 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
-	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing/test/rekt/features/broker"
 	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
 	"knative.dev/eventing/test/rekt/features/oidc"
 	brokerresources "knative.dev/eventing/test/rekt/resources/broker"
+
+	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 )
 
 const (
@@ -263,7 +263,7 @@ func InstallBroker(brokerName string) *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install kafka broker", brokerresources.Install(
 		brokerName,
-		brokerresources.WithBrokerClass(kafka.BrokerClass),
+		brokerresources.WithBrokerClass(brokerresources.EnvCfg.BrokerClass),
 		brokerresources.WithConfig(cmName),
 	))
 	f.Requirement("kafka broker is ready", brokerresources.IsReady(brokerName))
