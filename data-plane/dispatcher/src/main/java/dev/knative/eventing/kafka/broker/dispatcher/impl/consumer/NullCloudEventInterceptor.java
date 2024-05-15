@@ -82,6 +82,6 @@ public class NullCloudEventInterceptor implements ConsumerInterceptor<Object, Cl
         // headers even though the record is a valid CloudEvent.
         logger.debug("deserializing null record");
         return KafkaConsumerRecordUtils.copyRecordAssigningValue(
-                record, cloudEventDeserializer.deserialize(record.topic(), record.headers(), null));
+                record, cloudEventDeserializer.deserialize(record.topic(), record.headers(), (byte[]) null));
     }
 }

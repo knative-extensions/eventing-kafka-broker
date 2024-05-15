@@ -362,7 +362,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         // headers even though the record is a valid CloudEvent.
         logDebug("Value is null", recordContext.getRecord());
         final var value = cloudEventDeserializer.deserialize(
-                recordContext.getRecord().topic(), recordContext.getRecord().headers(), null);
+                recordContext.getRecord().topic(), recordContext.getRecord().headers(), (byte[]) null);
         recordContext.setRecord(KafkaConsumerRecordUtils.copyRecordAssigningValue(recordContext.getRecord(), value));
         return recordContext;
     }
