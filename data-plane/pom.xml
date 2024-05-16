@@ -48,7 +48,7 @@
     <micrometer.version>1.11.5</micrometer.version>
     <opentelemetry.version>1.17.0</opentelemetry.version>
     <jackson.version>2.14.1</jackson.version>
-    <protobuf.version>3.24.4</protobuf.version>
+    <protobuf.version>3.25.2</protobuf.version>
     <bucket4j.version>7.6.0</bucket4j.version>
     <slf4j.version>2.0.9</slf4j.version>
     <ch.qos.logback.version>1.4.14</ch.qos.logback.version>
@@ -56,7 +56,7 @@
     <assertj.version>3.22.0</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
     <junit.jupiter.version>5.10.1</junit.jupiter.version>
-    <mokito.junit.jupiter.version>5.8.0</mokito.junit.jupiter.version>
+    <mokito.junit.jupiter.version>5.12.0</mokito.junit.jupiter.version>
     <fabric8.kubernetes.version>6.10.0</fabric8.kubernetes.version>
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
