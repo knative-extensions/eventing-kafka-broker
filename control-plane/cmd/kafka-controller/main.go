@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	channelv2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"log"
 
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
@@ -34,6 +33,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	channelv2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"

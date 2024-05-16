@@ -19,6 +19,8 @@ package installation
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -28,7 +30,6 @@ import (
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 	"knative.dev/reconciler-test/pkg/environment"
-	"time"
 )
 
 func cleanupChannelv2ConsumerGroups(c pkgupgrade.Context, glob environment.GlobalEnvironment) {

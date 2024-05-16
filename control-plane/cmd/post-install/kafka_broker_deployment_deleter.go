@@ -19,13 +19,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
-	"knative.dev/pkg/system"
 )
 
 type kafkaDeploymentDeleter struct {
@@ -38,40 +34,10 @@ func (k *kafkaDeploymentDeleter) DeleteChannelDeployments(ctx context.Context) e
 	}
 
 	for _, deployment := range deployments {
-		if err := k.deleteDeployment(ctx, deployment); err != nil {
+		if err := k.deleteDeployment(ctx, types.NamespacedName{Name: deployment, Namespace: "knative-eventing"}); err != nil {
 			return fmt.Errorf("failed to delete deployment %s: %v", deployment, err)
 		}
 	}
 
 	return nil
-}
-
-func (k *kafkaDeploymentDeleter) deleteDeployment(ctx context.Context, deploymentName string) error {
-	err := k.waiteStatefulSetReady(ctx, deploymentName)
-	if err != nil {
-		return fmt.Errorf("failed while waiting for statefulset to come up: %w", err)
-	}
-
-	err = k.k8s.
-		AppsV1().
-		Deployments(system.Namespace()).
-		Delete(ctx, deploymentName, metav1.DeleteOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete deployment %s/%s: %w", system.Namespace(), deploymentName, err)
-	}
-
-	return nil
-}
-
-func (k *kafkaDeploymentDeleter) waiteStatefulSetReady(ctx context.Context, statefulSetName string) error {
-	return wait.PollUntilContextTimeout(ctx, 10*time.Second, 10*time.Minute, false, func(ctx context.Context) (done bool, err error) {
-		ss, err := k.k8s.AppsV1().StatefulSets(system.Namespace()).Get(ctx, statefulSetName, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			return false, nil
-		}
-		if err != nil {
-			return false, fmt.Errorf("failed to get statefulset %s/%s: %w", system.Namespace(), statefulSetName, err)
-		}
-		return ss.Spec.Replicas != nil && *ss.Spec.Replicas == ss.Status.ReadyReplicas, nil
-	})
 }
