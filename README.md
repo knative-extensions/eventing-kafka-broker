@@ -15,6 +15,7 @@
   <a href="https://github.com/knative-extensions/eventing-kafka-broker/releases">
     <img src="https://img.shields.io/github/release-pre/knative-extensions/eventing-kafka-broker.svg">
   </a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fknative-extensions%2Feventing-kafka-broker?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknative-extensions%2Feventing-kafka-broker.svg?type=shield"/></a>
   <a href="https://github.com/knative-sanbox/eventing-kafka-broker/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/knative-extensions/eventing-kafka-broker.svg">
   </a>
@@ -52,6 +53,9 @@
   <a href="https://clotributor.dev/search?project=knative&ts_query_web=knative">Open Knative Issues to Work On</a>
 
 </p>
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknative-extensions%2Feventing-kafka-broker.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fknative-extensions%2Feventing-kafka-broker?ref=badge_large)
 
 ## Working Group
 
