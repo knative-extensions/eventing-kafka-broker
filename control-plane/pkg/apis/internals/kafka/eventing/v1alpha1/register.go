@@ -75,3 +75,15 @@ func IsKnownStatefulSet(name string) bool {
 		name == ChannelStatefulSetName ||
 		name == BrokerStatefulSetName
 }
+
+func GetOwnerKindFromStatefulSetName(name string) (string, bool) {
+	switch name {
+	case SourceStatefulSetName:
+		return "KafkaSource", true
+	case ChannelStatefulSetName:
+		return "KafkaChannel", true
+	case BrokerStatefulSetName:
+		return "Trigger", true
+	}
+	return "", false
+}

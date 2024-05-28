@@ -189,19 +189,45 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
-	globalResync := func(interface{}) {
-		impl.GlobalResync(consumerGroupInformer.Informer())
-	}
-
-	ResyncOnStatefulSetChange(ctx, globalResync)
+	ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerGroupInformer.Informer(), func(obj interface{}) (*kafkainternals.ConsumerGroup, bool) {
+		cg, ok := obj.(*kafkainternals.ConsumerGroup)
+		return cg, ok
+	})
 
 	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
 }
 
-func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
+func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(interface{}) bool, si cache.SharedInformer), informer cache.SharedInformer, getConsumerGroupFromObj func(obj interface{}) (*kafkainternals.ConsumerGroup, bool)) {
 	systemNamespace := system.Namespace()
+
+	handleResync := func(obj interface{}) {
+
+		ss, ok := obj.(*appsv1.StatefulSet)
+		if !ok {
+			return
+		}
+
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetName(ss.GetName())
+		if !ok {
+			return
+		}
+
+		filteredResync(func(i interface{}) bool {
+			cg, ok := getConsumerGroupFromObj(i)
+			if !ok {
+				return false
+			}
+			for _, owner := range cg.OwnerReferences {
+				if strings.EqualFold(owner.Kind, kind) {
+					return true
+				}
+			}
+
+			return false
+		}, informer)
+	}
 
 	statefulset.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: func(obj interface{}) bool {
@@ -209,7 +235,7 @@ func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
 			return ss.GetNamespace() == systemNamespace && kafkainternals.IsKnownStatefulSet(ss.GetName())
 		},
 		Handler: cache.ResourceEventHandlerFuncs{
-			AddFunc: handle,
+			AddFunc: handleResync,
 			UpdateFunc: func(oldObj, newObj interface{}) {
 				o, ok := oldObj.(*appsv1.StatefulSet)
 				if !ok {
@@ -230,9 +256,9 @@ func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
 					return
 				}
 
-				handle(newObj)
+				handleResync(newObj)
 			},
-			DeleteFunc: handle,
+			DeleteFunc: handleResync,
 		},
 	})
 }
