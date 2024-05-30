@@ -38,7 +38,7 @@ func cleanupChannelv2ConsumerGroups(c pkgupgrade.Context, glob environment.Globa
 
 	err := deleteConsumerGroups(ctx, client, "KafkaChannel")
 	if err != nil {
-		c.T.Fatal("failed to downgrade from triggerv2", err.Error())
+		c.T.Fatal("failed to downgrade from channelv2", err.Error())
 	}
 }
 
@@ -60,7 +60,7 @@ func deleteStatefulSet(ctx context.Context, client kubernetes.Interface, name st
 
 	err = client.AppsV1().StatefulSets(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		return fmt.Errorf("failed to delete statefulset: %w", err)
+		return fmt.Errorf("failed to delete statefulset %s/%s: %w", namespace, name, err)
 	}
 
 	return nil
