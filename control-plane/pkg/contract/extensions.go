@@ -16,7 +16,16 @@
 
 package contract
 
+import (
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
+)
+
 // IncrementGeneration increments Generation.
 func (x *Contract) IncrementGeneration() {
 	x.Generation++
+}
+
+func SemanticEqual(ct1 *Contract, ct2 *Contract) bool {
+	return cmp.Equal(ct1, ct2, protocmp.Transform(), protocmp.IgnoreFields(ct1, "generation"))
 }

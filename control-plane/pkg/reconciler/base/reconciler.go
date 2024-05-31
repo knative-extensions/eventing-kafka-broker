@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/pointer"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -235,7 +236,21 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	return ct, nil
 }
 
+func CompareSemanticEqual(ctx context.Context, ct *contract.Contract, existing *corev1.ConfigMap, format string) bool {
+	existingCt, err := GetDataPlaneConfigMapData(logging.FromContext(ctx).Desugar(), existing, format)
+	if existingCt != nil && err == nil {
+		return contract.SemanticEqual(existingCt, ct)
+	}
+	return false
+}
+
 func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *contract.Contract, configMap *corev1.ConfigMap) error {
+	if CompareSemanticEqual(ctx, contract, configMap, r.ContractConfigMapFormat) {
+		return nil
+	}
+
+	// Resource changed, increment contract generation.
+	coreconfig.IncrementContractGeneration(contract)
 
 	var data []byte
 	var err error
@@ -377,9 +392,6 @@ func (r *Reconciler) DeleteResource(ctx context.Context, logger *zap.Logger, uui
 		coreconfig.DeleteResource(ct, resourceIndex)
 
 		logger.Debug("Resource deleted", zap.Int("index", resourceIndex))
-
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
 
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
