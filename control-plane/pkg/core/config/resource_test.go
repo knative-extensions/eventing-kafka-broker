@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -86,7 +87,6 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 		newResource  *contract.Resource
 		index        int
 		wantContract *contract.Contract
-		changed      int
 	}{
 		{
 			name: "resource not found - add resource",
@@ -314,8 +314,7 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 					ContentMode: contract.ContentMode_STRUCTURED,
 				},
 			},
-			index:   0,
-			changed: ResourceUnchanged,
+			index: 0,
 			wantContract: &contract.Contract{
 				Resources: []*contract.Resource{
 					{
@@ -346,13 +345,16 @@ func TestAddOrUpdateResourcesConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			changed := AddOrUpdateResourceConfig(tt.haveContract, tt.newResource, tt.index, zap.NewNop())
+			before := proto.Clone(tt.haveContract).(*contract.Contract)
+			AddOrUpdateResourceConfig(tt.haveContract, tt.newResource, tt.index, zap.NewNop())
 
 			if diff := cmp.Diff(tt.wantContract, tt.haveContract, protocmp.Transform()); diff != "" {
 				t.Errorf("(-want, +got) %s", diff)
 			}
-			if changed != tt.changed {
-				t.Errorf("Changed want %d got %d", tt.changed, changed)
+
+			gotEqual := contract.SemanticEqual(before, tt.wantContract)
+			if expectedEqual := contract.SemanticEqual(before, tt.wantContract); expectedEqual != gotEqual {
+				t.Errorf("expectEqual want %v got %v", expectedEqual, gotEqual)
 			}
 		})
 	}

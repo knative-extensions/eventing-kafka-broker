@@ -24,7 +24,6 @@ import (
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
@@ -34,6 +33,8 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
+
+	"knative.dev/eventing/pkg/apis/feature"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
@@ -45,7 +46,6 @@ import (
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	"knative.dev/eventing/pkg/apis/feature"
 )
 
 type Reconciler struct {
@@ -364,21 +364,20 @@ func reconcileFilters(ctx context.Context, c *kafkainternals.Consumer) (*contrac
 	return filter, filters
 }
 
-type contractMutatorFunc func(logger *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) int
+type contractMutatorFunc func(logger *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer)
 
 func addResource(resource *contract.Resource) contractMutatorFunc {
-	return func(logger *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) int {
-		return coreconfig.AddOrUpdateResourceConfig(ct, resource, coreconfig.FindResource(ct, c.GetUID()), logger)
+	return func(logger *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) {
+		coreconfig.AddOrUpdateResourceConfig(ct, resource, coreconfig.FindResource(ct, c.GetUID()), logger)
 	}
 }
 
-func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) int {
+func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Consumer) {
 	idx := coreconfig.FindResource(ct, c.GetUID())
 	if idx == coreconfig.NoResource {
-		return coreconfig.ResourceUnchanged
+		return
 	}
 	coreconfig.DeleteResource(ct, idx)
-	return coreconfig.ResourceChanged
 }
 
 // schedule mutates the ConfigMap associated with the pod specified by Consumer.Spec.PodBind.
@@ -428,19 +427,14 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 		return false, fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", p.GetNamespace(), cmName, err)
 	}
 
-	trustBundlesChanged, err := r.setTrustBundles(ct)
-	if err != nil {
+	if err := r.setTrustBundles(ct); err != nil {
 		return false, fmt.Errorf("failed to set trust bundles: %w", err)
 	}
 
-	if changed := mutatorFunc(logger, ct, c); changed == coreconfig.ResourceChanged || trustBundlesChanged {
-		logger.Debug("Contract changed", zap.Int("changed", changed))
+	mutatorFunc(logger, ct, c)
 
-		ct.IncrementGeneration()
-
-		if err := b.UpdateDataPlaneConfigMap(ctx, ct, cm); err != nil {
-			return false, err
-		}
+	if err := b.UpdateDataPlaneConfigMap(ctx, ct, cm); err != nil {
+		return false, err
 	}
 
 	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, ct.Generation, []*corev1.Pod{p})
@@ -493,17 +487,13 @@ func FalseAnyStatus(*corev1.Pod) bool {
 	return false
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	tb, err := coreconfig.TrustBundles(r.TrustBundleConfigMapLister)
 	if err != nil {
-		return false, fmt.Errorf("failed to get trust bundles: %w", err)
-	}
-	changed := false
-	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
-		changed = true
+		return fmt.Errorf("failed to get trust bundles: %w", err)
 	}
 	ct.TrustBundles = tb
-	return changed, nil
+	return nil
 }
 
 type PodStatusSummary struct {

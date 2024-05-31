@@ -214,7 +214,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	trustBundlesChanges, err := r.setTrustBundles(ct)
+	_, err := r.setTrustBundles(ct)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -239,23 +239,15 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
-	logger.Debug("Change detector", zap.Int("changed", changed))
-
-	if changed == coreconfig.ResourceChanged || trustBundlesChanges {
-		logger.Debug("Contract changed", zap.Int("changed", changed))
-
-		ct.IncrementGeneration()
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			logger.Error("failed to update data plane config map", zap.Error(
-				statusConditionManager.FailedToUpdateConfigMap(err),
-			))
-			return err
-		}
-		logger.Debug("Contract config map updated")
+	coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
+	// Update the configuration map with the new contract data.
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+		logger.Error("failed to update data plane config map", zap.Error(
+			statusConditionManager.FailedToUpdateConfigMap(err),
+		))
+		return err
 	}
+	logger.Debug("Contract config map updated")
 	statusConditionManager.ConfigMapUpdated()
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact
@@ -407,9 +399,6 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		coreconfig.DeleteResource(ct, channelIndex)
 
 		logger.Debug("Channel deleted", zap.Int("index", channelIndex))
-
-		// Resource changed, increment contract generation.
-		ct.IncrementGeneration()
 
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
