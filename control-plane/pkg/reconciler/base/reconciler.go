@@ -239,10 +239,7 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 func CompareSemanticEqual(ctx context.Context, ct *contract.Contract, existing *corev1.ConfigMap, format string) bool {
 	existingCt, err := GetDataPlaneConfigMapData(logging.FromContext(ctx).Desugar(), existing, format)
 	if existingCt != nil && err == nil {
-		if contract.SemanticEqual(existingCt, ct) {
-			return true
-		}
-		return false
+		return contract.SemanticEqual(existingCt, ct)
 	}
 	return false
 }
@@ -251,6 +248,9 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 	if CompareSemanticEqual(ctx, contract, configMap, r.ContractConfigMapFormat) {
 		return nil
 	}
+
+	// Resource changed, increment contract generation.
+	coreconfig.IncrementContractGeneration(contract)
 
 	var data []byte
 	var err error
@@ -392,9 +392,6 @@ func (r *Reconciler) DeleteResource(ctx context.Context, logger *zap.Logger, uui
 		coreconfig.DeleteResource(ct, resourceIndex)
 
 		logger.Debug("Resource deleted", zap.Int("index", resourceIndex))
-
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
 
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {

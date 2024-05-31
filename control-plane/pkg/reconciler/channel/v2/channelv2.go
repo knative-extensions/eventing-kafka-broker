@@ -38,12 +38,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
@@ -229,23 +230,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
-	logger.Debug("Change detector", zap.Int("changed", changed))
+	coreconfig.AddOrUpdateResourceConfig(ct, channelResource, channelIndex, logger)
 
-	if changed == coreconfig.ResourceChanged {
-		logger.Debug("Contract changed", zap.Int("changed", changed))
-
-		ct.IncrementGeneration()
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			logger.Error("failed to update data plane config map", zap.Error(
-				statusConditionManager.FailedToUpdateConfigMap(err),
-			))
-			return err
-		}
-		logger.Debug("Contract config map updated")
+	// Update the configuration map with the new contract data.
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+		logger.Error("failed to update data plane config map", zap.Error(
+			statusConditionManager.FailedToUpdateConfigMap(err),
+		))
+		return err
 	}
+	logger.Debug("Contract config map updated")
 	statusConditionManager.ConfigMapUpdated()
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact
@@ -397,9 +391,6 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 		coreconfig.DeleteResource(ct, channelIndex)
 
 		logger.Debug("Channel deleted", zap.Int("index", channelIndex))
-
-		// Resource changed, increment contract generation.
-		ct.IncrementGeneration()
 
 		// Update the configuration map with the new contract data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {

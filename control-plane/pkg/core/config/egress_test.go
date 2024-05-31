@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
@@ -210,12 +211,16 @@ func TestAddOrUpdateEgressConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := AddOrUpdateEgressConfig(tt.givenCt, tt.brokerIndex, tt.egress, tt.egressIndex); got != tt.changed {
-				t.Errorf("AddOrUpdateEgressConfig() = %v, want %v", got, tt.changed)
-			}
+			before := proto.Clone(tt.givenCt).(*contract.Contract)
+			AddOrUpdateEgressConfig(tt.givenCt, tt.brokerIndex, tt.egress, tt.egressIndex)
 
 			if diff := cmp.Diff(tt.wantCt, tt.givenCt, protocmp.Transform()); diff != "" {
 				t.Errorf("(-want, +got) %s", diff)
+			}
+
+			gotEqual := contract.SemanticEqual(before, tt.wantCt)
+			if expectedEqual := contract.SemanticEqual(before, tt.wantCt); expectedEqual != gotEqual {
+				t.Errorf("expectEqual want %v got %v", expectedEqual, gotEqual)
 			}
 		})
 	}

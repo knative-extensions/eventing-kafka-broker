@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/equality"
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
 
@@ -171,8 +170,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	trustBundlesChanged, err := r.setTrustBundles(ct)
-	if err != nil {
+	if err := r.setTrustBundles(ct); err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
@@ -186,23 +184,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	// Update contract data with the new contract configuration
 	coreconfig.SetResourceEgressesFromContract(ct, brokerResource, brokerIndex)
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, brokerResource, brokerIndex, logger)
+	coreconfig.AddOrUpdateResourceConfig(ct, brokerResource, brokerIndex, logger)
 
-	logger.Debug("Change detector", zap.Int("changed", changed))
-
-	if changed == coreconfig.ResourceChanged || trustBundlesChanged {
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			logger.Error("failed to update data plane config map", zap.Error(
-				statusConditionManager.FailedToUpdateConfigMap(err),
-			))
-			return err
-		}
-		logger.Debug("Contract config map updated")
+	// Update the configuration map with the new contract data.
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+		logger.Error("failed to update data plane config map", zap.Error(
+			statusConditionManager.FailedToUpdateConfigMap(err),
+		))
+		return err
 	}
+	logger.Debug("Contract config map updated")
 	statusConditionManager.ConfigMapUpdated()
 
 	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
@@ -737,15 +728,11 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 	return pointer.String(string(caCerts)), nil
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
 	if err != nil {
-		return false, fmt.Errorf("failed to get trust bundles: %w", err)
-	}
-	changed := false
-	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
-		changed = true
+		return fmt.Errorf("failed to get trust bundles: %w", err)
 	}
 	ct.TrustBundles = tb
-	return changed, nil
+	return nil
 }
