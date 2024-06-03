@@ -22,11 +22,12 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 )
 
 const (
@@ -106,6 +107,33 @@ func TestConsumerGroup_Validate(t *testing.T) {
 								URI: &apis.URL{
 									Scheme: "http",
 									Host:   "127.0.0.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "subscriber different namespace",
+			ctx:  apis.AllowDifferentNamespace(context.Background()),
+			given: &ConsumerGroup{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-cg",
+					Namespace: "my-ns",
+				},
+				Spec: ConsumerGroupSpec{
+					Replicas: pointer.Int32(1),
+					Selector: map[string]string{"app": "app"},
+					Template: ConsumerTemplateSpec{
+						Spec: ConsumerSpec{
+							Subscriber: duckv1.Destination{
+								Ref: &duckv1.KReference{
+									Kind:       "Sequence",
+									Namespace:  "ma-ns-2",
+									Name:       "my-seq",
+									APIVersion: "flows.knative.dev/v1",
 								},
 							},
 						},

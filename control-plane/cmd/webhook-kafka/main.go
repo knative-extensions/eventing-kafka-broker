@@ -21,6 +21,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
@@ -32,9 +33,10 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingcorev1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
+
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 
@@ -65,7 +67,7 @@ func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) 
 
 	// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
 	ctxFunc := func(ctx context.Context) context.Context {
-		return ctx
+		return apis.AllowDifferentNamespace(ctx)
 	}
 
 	return defaulting.NewAdmissionController(ctx,
@@ -90,7 +92,7 @@ func NewPodDefaultingAdmissionController(ctx context.Context, _ configmap.Watche
 
 	// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
 	ctxFunc := func(ctx context.Context) context.Context {
-		return ctx
+		return apis.AllowDifferentNamespace(ctx)
 	}
 
 	return defaulting.NewAdmissionController(ctx,
@@ -121,7 +123,7 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 
 	// Decorate contexts with the current state of the config.
 	ctxFunc := func(ctx context.Context) context.Context {
-		return featureStore.ToContext(ctx)
+		return apis.AllowDifferentNamespace(featureStore.ToContext(ctx))
 	}
 
 	return validation.NewAdmissionController(ctx,
