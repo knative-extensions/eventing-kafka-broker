@@ -61,6 +61,10 @@ func run(ctx context.Context) error {
 		k8s: kubernetes.NewForConfigOrDie(config),
 	}
 
+	if err := deploymentDeleter.DeleteChannelDeployments(ctx); err != nil {
+		return fmt.Errorf("channel migration failed: %v", err)
+	}
+
 	if err := deploymentDeleter.DeleteBrokerDeployments(ctx); err != nil {
 		return fmt.Errorf("broker migration failed: %v", err)
 	}

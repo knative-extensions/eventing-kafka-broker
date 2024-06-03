@@ -25,12 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 )
-
-type kafkaDeploymentDeleter struct {
-	k8s kubernetes.Interface
-}
 
 func (k *kafkaDeploymentDeleter) DeleteBrokerDeployments(ctx context.Context) error {
 	deployments := make([]types.NamespacedName, 0)

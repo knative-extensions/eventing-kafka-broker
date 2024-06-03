@@ -25,5 +25,7 @@ import (
 func LatestStable(glob environment.GlobalEnvironment) pkgupgrade.Operation {
 	return pkgupgrade.NewOperation("LatestStable", func(c pkgupgrade.Context) {
 		runShellFunc("install_latest_release", c)
+		cleanupChannelv2Deployments(c, glob)
+		cleanupChannelv2ConsumerGroups(c, glob)
 	})
 }
