@@ -214,7 +214,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	_, err := r.setTrustBundles(ct)
+	_, err = r.setTrustBundles(ct)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
