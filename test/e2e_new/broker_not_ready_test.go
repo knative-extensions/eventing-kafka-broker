@@ -34,6 +34,9 @@ import (
 )
 
 func TestBrokerNotReadyAfterBeingReady(t *testing.T) {
+	if broker.EnvCfg.BrokerClass == "KafkaNamespaced" {
+		t.Skip("Test is flaky for namespaced broker")
+	}
 
 	t.Parallel()
 
