@@ -23,7 +23,6 @@ import (
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
@@ -167,8 +166,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		ct = &contract.Contract{}
 	}
 
-	trustBundlesChanged, err := r.setTrustBundles(ct)
-	if err != nil {
+	if err := r.setTrustBundles(ct); err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
@@ -214,18 +212,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)
 	// Update contract data with the new sink configuration.
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
+	coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
 
-	if changed == coreconfig.ResourceChanged || trustBundlesChanged {
-		// Resource changed, increment contract generation.
-		coreconfig.IncrementContractGeneration(ct)
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			logger.Error("failed to update data plane config map", zap.Error(
-				statusConditionManager.FailedToUpdateConfigMap(err),
-			))
-			return err
-		}
+	// Update the configuration map with the new contract data.
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+		logger.Error("failed to update data plane config map", zap.Error(
+			statusConditionManager.FailedToUpdateConfigMap(err),
+		))
+		return err
 	}
 	statusConditionManager.ConfigMapUpdated()
 
@@ -427,15 +421,11 @@ func (r *Reconciler) getCaCerts() (*string, error) {
 	return pointer.String(string(caCerts)), nil
 }
 
-func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
+func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	tb, err := coreconfig.TrustBundles(r.ConfigMapLister.ConfigMaps(r.SystemNamespace))
 	if err != nil {
-		return false, fmt.Errorf("failed to get trust bundles: %w", err)
-	}
-	changed := false
-	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
-		changed = true
+		return fmt.Errorf("failed to get trust bundles: %w", err)
 	}
 	ct.TrustBundles = tb
-	return changed, nil
+	return nil
 }

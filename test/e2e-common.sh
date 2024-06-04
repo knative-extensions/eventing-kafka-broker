@@ -96,6 +96,8 @@ function install_eventing_core() {
     kubectl apply -f "${KNATIVE_EVENTING_RELEASE_TLS}"
   fi
 
+  install_eventing_core_test_tls_resources || return $?
+
   kubectl patch horizontalpodautoscalers.autoscaling -n knative-eventing eventing-webhook -p '{"spec": {"minReplicas": '${REPLICAS}'}}'
 }
 
@@ -281,7 +283,7 @@ function test_setup() {
   kubectl rollout restart statefulset -n knative-eventing kafka-broker-dispatcher
   kubectl rollout restart deployment -n knative-eventing kafka-sink-receiver
   kubectl rollout restart deployment -n knative-eventing kafka-channel-receiver
-  kubectl rollout restart deployment -n knative-eventing kafka-channel-dispatcher
+  kubectl rollout restart statefulset -n knative-eventing kafka-channel-dispatcher
 }
 
 function test_teardown() {
@@ -514,4 +516,8 @@ function setup_kafka_channel_auth() {
       --type=json \
       -p='[{"op": "remove", "path": "/data/auth.secret.ref.name"}, {"op": "remove", "path": "/data/auth.secret.ref.namespace"}]' || true
   fi
+}
+
+function install_eventing_core_test_tls_resources() {
+    ko apply -Rf "${repo_root_dir}/vendor/knative.dev/eventing/test/config/tls" || return $?
 }

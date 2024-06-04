@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
+
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
@@ -39,6 +40,8 @@ import (
 	"knative.dev/pkg/configmap"
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
+
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )
@@ -90,12 +93,12 @@ func TestNewController(t *testing.T) {
 		configmap.NewStaticWatcher(&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: apisconfig.FlagsConfigName,
-			}}, &corev1.ConfigMap{
+			},
+		}, &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "config-features",
 			},
 		}),
-
 		configs,
 	)
 	if controller == nil {

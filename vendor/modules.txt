@@ -1445,6 +1445,7 @@ knative.dev/eventing/pkg/scheduler/statefulset
 knative.dev/eventing/pkg/tracing
 knative.dev/eventing/pkg/utils
 knative.dev/eventing/test
+knative.dev/eventing/test/config/tls
 knative.dev/eventing/test/conformance/helpers
 knative.dev/eventing/test/conformance/helpers/tracing
 knative.dev/eventing/test/e2e/helpers

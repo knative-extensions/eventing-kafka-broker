@@ -18,7 +18,6 @@ package config
 
 import (
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 	"k8s.io/apimachinery/pkg/types"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -41,11 +40,6 @@ func FindResource(contract *contract.Contract, resource types.UID) int {
 	return resourceIndex
 }
 
-const (
-	ResourceChanged = iota
-	ResourceUnchanged
-)
-
 func SetResourceEgressesFromContract(contract *contract.Contract, resource *contract.Resource, index int) {
 	if index != NoResource {
 		resource.Egresses = contract.Resources[index].Egresses
@@ -53,25 +47,15 @@ func SetResourceEgressesFromContract(contract *contract.Contract, resource *cont
 }
 
 // AddOrUpdateResourceConfig adds or updates the given resourceConfig to the given resources at the specified index.
-func AddOrUpdateResourceConfig(contract *contract.Contract, resource *contract.Resource, index int, logger *zap.Logger) int {
-
+func AddOrUpdateResourceConfig(contract *contract.Contract, resource *contract.Resource, index int, logger *zap.Logger) {
 	if index != NoResource {
 		logger.Debug("Resource exists", zap.Int("index", index))
-
-		prev := contract.Resources[index]
 		contract.Resources[index] = resource
-
-		if proto.Equal(prev, resource) {
-			return ResourceUnchanged
-		}
-		return ResourceChanged
+		return
 	}
 
 	logger.Debug("Resource doesn't exist")
-
 	contract.Resources = append(contract.Resources, resource)
-
-	return ResourceChanged
 }
 
 // DeleteResource deletes the resource at the given index from Resources.

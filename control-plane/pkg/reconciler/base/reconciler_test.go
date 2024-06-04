@@ -363,3 +363,162 @@ const dataPlaneContractExtraData = `{
   ]
 }
 `
+
+func TestCompareSemanticEqual(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		contract *contract.Contract
+		existing *corev1.ConfigMap
+		format   string
+	}
+
+	ctx, _ := reconcilertesting.SetupFakeContext(t)
+
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "only generation changes",
+			args: args{
+				ctx: ctx,
+				contract: &contract.Contract{
+					Generation:   0,
+					Resources:    nil,
+					TrustBundles: nil,
+				},
+				existing: &corev1.ConfigMap{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{},
+					Immutable:  nil,
+					Data:       nil,
+					BinaryData: map[string][]byte{
+						base.ConfigMapDataKey: mustMarshal(&contract.Contract{
+							Generation:   1,
+							Resources:    nil,
+							TrustBundles: nil,
+						}),
+					},
+				},
+				format: string(contract.Json),
+			},
+			want: true,
+		},
+		{
+			name: "only generation changes with resources",
+			args: args{
+				ctx: ctx,
+				contract: &contract.Contract{
+					Generation: 0,
+					Resources: []*contract.Resource{
+						{
+							Uid: "aaa",
+						},
+					},
+					TrustBundles: []string{"---"},
+				},
+				existing: &corev1.ConfigMap{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{},
+					Immutable:  nil,
+					Data:       nil,
+					BinaryData: map[string][]byte{
+						base.ConfigMapDataKey: mustMarshal(&contract.Contract{
+							Generation: 1,
+							Resources: []*contract.Resource{
+								{
+									Uid: "aaa",
+								},
+							},
+							TrustBundles: []string{"---"},
+						}),
+					},
+				},
+				format: string(contract.Json),
+			},
+			want: true,
+		},
+		{
+			name: "resources changes",
+			args: args{
+				ctx: ctx,
+				contract: &contract.Contract{
+					Generation: 0,
+					Resources: []*contract.Resource{
+						{
+							Uid: "aaa",
+						},
+					},
+					TrustBundles: []string{"---"},
+				},
+				existing: &corev1.ConfigMap{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{},
+					Immutable:  nil,
+					Data:       nil,
+					BinaryData: map[string][]byte{
+						base.ConfigMapDataKey: mustMarshal(&contract.Contract{
+							Generation: 1,
+							Resources: []*contract.Resource{
+								{
+									Uid: "aab",
+								},
+							},
+							TrustBundles: []string{"---"},
+						}),
+					},
+				},
+				format: string(contract.Json),
+			},
+			want: false,
+		},
+		{
+			name: "trust bundle changes",
+			args: args{
+				ctx: ctx,
+				contract: &contract.Contract{
+					Generation: 0,
+					Resources: []*contract.Resource{
+						{
+							Uid: "aaa",
+						},
+					},
+					TrustBundles: []string{"--"},
+				},
+				existing: &corev1.ConfigMap{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{},
+					Immutable:  nil,
+					Data:       nil,
+					BinaryData: map[string][]byte{
+						base.ConfigMapDataKey: mustMarshal(&contract.Contract{
+							Generation: 1,
+							Resources: []*contract.Resource{
+								{
+									Uid: "aaa",
+								},
+							},
+							TrustBundles: []string{"xyz"},
+						}),
+					},
+				},
+				format: string(contract.Json),
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, base.CompareSemanticEqual(tt.args.ctx, tt.args.contract, tt.args.existing, tt.args.format), "CompareSemanticEqual(%v, %v, %v, %v)", tt.args.ctx, tt.args.contract, tt.args.existing, tt.args.format)
+		})
+	}
+}
+
+func mustMarshal(c *contract.Contract) []byte {
+	b, err := protojson.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}

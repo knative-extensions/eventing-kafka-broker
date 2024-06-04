@@ -190,33 +190,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&trigger.Status.DeliveryStatus, triggerConfig.EgressConfig)
 
-	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
+	coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
+	// Update the configuration map with the new dataPlaneConfig data.
+	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
+		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
+		return err
+	}
 
-	coreconfig.IncrementContractGeneration(ct)
+	// Update volume generation annotation of dispatcher pods
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
+		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
+		// ready. So, log out the error and move on to the next step.
+		logger.Warn(
+			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
+			zap.Error(err),
+		)
 
-	logger.Debug("Egress changes", zap.Int("changed", changed))
-
-	if changed == coreconfig.EgressChanged {
-		// Update the configuration map with the new dataPlaneConfig data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
-			return err
-		}
-
-		// Update volume generation annotation of dispatcher pods
-		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-			// ready. So, log out the error and move on to the next step.
-			logger.Warn(
-				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-				zap.Error(err),
-			)
-
-			statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
-		} else {
-			logger.Debug("Updated dispatcher pod annotation")
-		}
+		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
+	} else {
+		logger.Debug("Updated dispatcher pod annotation")
 	}
 
 	logger.Debug("Contract config map updated")
@@ -286,9 +279,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 
 	// Delete the Trigger from the config map data.
 	ct.Resources[brokerIndex].Egresses = deleteTrigger(egresses, triggerIndex)
-
-	// Increment volume generation
-	coreconfig.IncrementContractGeneration(ct)
 
 	// Update data plane config map.
 	err = r.UpdateDataPlaneConfigMap(ctx, ct, dataPlaneConfigMap)
