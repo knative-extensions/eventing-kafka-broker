@@ -34,6 +34,7 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/state"
 
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkachannel"
 	kafkachannelresource "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
 )
@@ -108,4 +109,19 @@ func TestKafkaChannelOIDC(t *testing.T) {
 	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
 
 	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkachannelresource.GVR(), "KafkaChannel", name, env.Namespace()))
+}
+
+func TestKafkaChannelKedaScaling(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(2*time.Second, 12*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.ChannelScalesToZeroWithKeda())
 }

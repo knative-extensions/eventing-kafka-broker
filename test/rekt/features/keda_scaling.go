@@ -35,11 +35,14 @@ import (
 	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkafeatureflags"
+	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/eventing/test/rekt/resources/broker"
+	subscriptionresources "knative.dev/eventing/test/rekt/resources/subscription"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
@@ -127,6 +130,47 @@ func TriggerScalesToZeroWithKeda() *feature.Feature {
 	return f
 }
 
+func ChannelScalesToZeroWithKeda() *feature.Feature {
+	f := feature.NewFeature()
+
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
+	event := cetest.FullEvent()
+
+	channelName := feature.MakeRandomK8sName("channel")
+	subscriptionName := feature.MakeRandomK8sName("subscription")
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+
+	// check that the trigger initially has replicas = 0
+	f.Setup("Subscription should start with replicas = 0", verifyConsumerGroupReplicas(getSubscriptionCg(subscriptionName), 0, true))
+
+	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
+	f.Setup("install channel", kafkachannelresources.Install(channelName,
+		kafkachannelresources.WithNumPartitions("3"),
+		kafkachannelresources.WithReplicationFactor("1"),
+		kafkachannelresources.WithRetentionDuration("P1D"),
+	))
+
+	f.Setup("install subscription", subscriptionresources.Install(subscriptionName,
+		subscriptionresources.WithChannel(&duckv1.KReference{
+			Kind:       "KafkaChannel",
+			APIVersion: "messaging.knative.dev/v1beta1",
+			Name:       channelName,
+		}),
+		subscriptionresources.WithSubscriber(service.AsKReference(sinkName), "", ""),
+	))
+
+	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(kafkachannelresources.GVR(), channelName), eventshub.InputEvent(event)))
+
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+
+	//after the event is sent, the subscription should scale down to zero replicas
+	f.Alpha("Subscription").Must("Scale down to zero", verifyConsumerGroupReplicas(getSubscriptionCg(subscriptionName), 0, false))
+
+	return f
+}
+
 type getCgName func(ctx context.Context) (string, error)
 
 func getKafkaSourceCg(source string) getCgName {
@@ -142,6 +186,22 @@ func getKafkaSourceCg(source string) getCgName {
 		}
 
 		return string(ks.UID), nil
+	}
+}
+
+func getSubscriptionCg(subscriptionName string) getCgName {
+	return func(ctx context.Context) (string, error) {
+		ns := environment.FromContext(ctx).Namespace()
+
+		sub, err := eventingclient.Get(ctx).
+			MessagingV1().
+			Subscriptions(ns).
+			Get(ctx, subscriptionName, metav1.GetOptions{})
+		if err != nil {
+			return "", err
+		}
+
+		return string(sub.UID), nil
 	}
 }
 
