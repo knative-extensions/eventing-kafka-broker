@@ -334,7 +334,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
         final ReactiveKafkaConsumer<String, CloudEvent> consumer = mock(ReactiveKafkaConsumer.class);
         when(consumer.commit((Map<TopicPartition, OffsetAndMetadata>) any())).then(invocationOnMock -> {
             if (counter.incrementAndGet() == 1) {
-                return Future.failedFuture(new RuntimeException());
+                return Future.failedFuture(new RuntimeException("throw exception for testing"));
             }
             return Future.succeededFuture();
         });
@@ -359,7 +359,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
         final ReactiveKafkaConsumer<String, CloudEvent> consumer = mock(ReactiveKafkaConsumer.class);
         when(consumer.commit((Map<TopicPartition, OffsetAndMetadata>) any()))
-                .then(invocationOnMock -> Future.failedFuture(new RuntimeException()));
+                .then(invocationOnMock -> Future.failedFuture(new RuntimeException("throw exception for testing")));
 
         final var r = record("aaa", 0, 0);
 
