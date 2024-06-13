@@ -1336,7 +1336,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.41.1-0.20240611185006-b18b1b1f3fff
+# knative.dev/eventing v0.41.1-0.20240612160448-8da4543f0d1e
 ## explicit; go 1.21
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1349,6 +1349,7 @@ knative.dev/eventing/pkg/apis/duck/v1alpha1
 knative.dev/eventing/pkg/apis/duck/v1beta1
 knative.dev/eventing/pkg/apis/eventing
 knative.dev/eventing/pkg/apis/eventing/v1
+knative.dev/eventing/pkg/apis/eventing/v1alpha1
 knative.dev/eventing/pkg/apis/eventing/v1beta1
 knative.dev/eventing/pkg/apis/eventing/v1beta2
 knative.dev/eventing/pkg/apis/eventing/v1beta3
@@ -1371,6 +1372,8 @@ knative.dev/eventing/pkg/client/clientset/versioned/fake
 knative.dev/eventing/pkg/client/clientset/versioned/scheme
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1/fake
+knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1alpha1
+knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta1/fake
 knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1beta2
@@ -1390,6 +1393,7 @@ knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1beta2/fake
 knative.dev/eventing/pkg/client/informers/externalversions
 knative.dev/eventing/pkg/client/informers/externalversions/eventing
 knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1
+knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1alpha1
 knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1beta1
 knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1beta2
 knative.dev/eventing/pkg/client/informers/externalversions/eventing/v1beta3
@@ -1416,6 +1420,7 @@ knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription/fa
 knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker
 knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger
 knative.dev/eventing/pkg/client/listers/eventing/v1
+knative.dev/eventing/pkg/client/listers/eventing/v1alpha1
 knative.dev/eventing/pkg/client/listers/eventing/v1beta1
 knative.dev/eventing/pkg/client/listers/eventing/v1beta2
 knative.dev/eventing/pkg/client/listers/eventing/v1beta3
