@@ -16,7 +16,7 @@ kind: Namespace
 metadata:
   name: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 
 ---
@@ -40,7 +40,7 @@ metadata:
   name: eventing-controller
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -48,7 +48,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -64,7 +64,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-resolver
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -80,7 +80,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-source-observer
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -96,7 +96,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-sources-controller
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -112,7 +112,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-manipulator
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -128,7 +128,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-controller-crossnamespace-subscriber
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -160,7 +160,7 @@ metadata:
   name: job-sink
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -168,7 +168,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-eventing-job-sink
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -200,7 +200,7 @@ metadata:
   name: pingsource-mt-adapter
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -208,7 +208,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-eventing-pingsource-mt-adapter
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -240,7 +240,7 @@ metadata:
   name: eventing-webhook
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -248,7 +248,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -265,7 +265,7 @@ metadata:
   namespace: knative-eventing
   name: eventing-webhook
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -281,7 +281,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook-resolver
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -297,7 +297,7 @@ kind: ClusterRoleBinding
 metadata:
   name: eventing-webhook-podspecable-binding
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 subjects:
   - kind: ServiceAccount
@@ -329,7 +329,7 @@ metadata:
   name: config-br-default-channel
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 data:
   channel-template-spec: |
@@ -357,7 +357,7 @@ metadata:
   name: config-br-defaults
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 data:
   # Configures the default for any Broker that does not specify a spec.config or Broker class.
@@ -394,7 +394,7 @@ metadata:
   name: default-ch-webhook
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 data:
   # Configuration for defaulting channels that do not specify CRD implementations.
@@ -429,7 +429,7 @@ metadata:
   namespace: knative-eventing
   annotations:
     knative.dev/example-checksum: "9185c153"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 data:
   _example: |
@@ -475,7 +475,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 data:
   # ALPHA feature: The kreference-group allows you to use the Group field in KReferences.
@@ -503,6 +503,11 @@ data:
   # ALPHA feature: The aauthentication-oidc flag allows you to use OIDC authentication for Eventing.
   # For more details: https://github.com/knative/eventing/issues/7174
   authentication-oidc: "disabled"
+  # ALPHA feature: The default-authorization-mode flag allows you to change the default
+  # authorization mode for resources that have no EventPolicy associated with them.
+  #
+  # This feature flag is only used when "authentication-oidc" is enabled.
+  default-authorization-mode: "allow-same-namespace"
   # ALPHA feature: The cross-namespace-event-links flag allows you to use cross-namespace referencing for Eventing.
   # For more details: https://github.com/knative/eventing/issues/7739
   cross-namespace-event-links: "disabled"
@@ -579,7 +584,7 @@ metadata:
   name: config-leader-election
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "f7948630"
@@ -642,7 +647,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 data:
   # Common configuration for all Knative codebase
@@ -695,7 +700,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "f46cf09d"
@@ -769,7 +774,7 @@ metadata:
   name: config-sugar
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "62dfac6f"
@@ -828,7 +833,7 @@ metadata:
   labels:
     knative.dev/config-propagation: original
     knative.dev/config-category: eventing
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   annotations:
     knative.dev/example-checksum: "0492ceb0"
@@ -885,7 +890,7 @@ metadata:
   labels:
     knative.dev/high-availability: "true"
     app.kubernetes.io/component: eventing-controller
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
     bindings.knative.dev/exclude: "true"
 spec:
@@ -897,7 +902,7 @@ spec:
       labels:
         app: eventing-controller
         app.kubernetes.io/component: eventing-controller
-        app.kubernetes.io/version: "20240612-67ceb9ed2"
+        app.kubernetes.io/version: "20240618-e298f3244"
         app.kubernetes.io/name: knative-eventing
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
@@ -915,7 +920,7 @@ spec:
       containers:
         - name: eventing-controller
           terminationMessagePolicy: FallbackToLogsOnError
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/controller@sha256:91dfbbcfb7746ef1fe92c834ec63aac02e9e83df679a9d12cc1cfa913f12b2cf
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/controller@sha256:6f5d2ab5e65273120f5486a474b2b952badb7f54a3c9c8d9a3027d0a91fc403b
           resources:
             requests:
               cpu: 100m
@@ -933,7 +938,7 @@ spec:
               value: knative.dev/eventing
             # APIServerSource
             - name: APISERVER_RA_IMAGE
-              value: gcr.io/knative-nightly/knative.dev/eventing/cmd/apiserver_receive_adapter@sha256:780d68a7ef25b775fcb9ad942add30c025ed7f8ef174c47561f9e223c953de90
+              value: gcr.io/knative-nightly/knative.dev/eventing/cmd/apiserver_receive_adapter@sha256:4d96d1cf6d1cc33adece8c6a8703db47c28cf2c64e04686702a93485d475adfa
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -1003,7 +1008,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: job-sink
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   replicas: 1
@@ -1015,7 +1020,7 @@ spec:
       labels:
         sinks.knative.dev/sink: job-sink
         app.kubernetes.io/component: job-sink
-        app.kubernetes.io/version: "20240612-67ceb9ed2"
+        app.kubernetes.io/version: "20240618-e298f3244"
         app.kubernetes.io/name: knative-eventing
     spec:
       affinity:
@@ -1031,7 +1036,7 @@ spec:
       containers:
         - name: job-sink
           terminationMessagePolicy: FallbackToLogsOnError
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/jobsink@sha256:f5decd9df2bf59262d3478fb882a09e48b21c998eae2a603862053c18c8e4e91
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/jobsink@sha256:e5245147abe13ba0777e31d6eedc54ab9d81c6ee97c28dc0904900595c1ab802
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
@@ -1113,7 +1118,7 @@ metadata:
   labels:
     sinks.knative.dev/sink: job-sink
     app.kubernetes.io/component: job-sink
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   name: job-sink
   namespace: knative-eventing
@@ -1156,7 +1161,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: pingsource-mt-adapter
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
     bindings.knative.dev/exclude: "true"
 spec:
@@ -1172,7 +1177,7 @@ spec:
         eventing.knative.dev/source: ping-source-controller
         sources.knative.dev/role: adapter
         app.kubernetes.io/component: pingsource-mt-adapter
-        app.kubernetes.io/version: "20240612-67ceb9ed2"
+        app.kubernetes.io/version: "20240618-e298f3244"
         app.kubernetes.io/name: knative-eventing
     spec:
       affinity:
@@ -1188,7 +1193,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: dispatcher
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/mtping@sha256:a8bddf3e6b0f7e039e4d4245c56f526287f0b29d9427e58789ec4cc0baab2ecf
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/mtping@sha256:b300592e6bcfb0103f04d4d38fcffd6484ca0e97e080db5ad5a4abc352c33c41
           env:
             - name: SYSTEM_NAMESPACE
               value: ''
@@ -1262,7 +1267,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   scaleTargetRef:
@@ -1287,7 +1292,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   minAvailable: 80%
@@ -1317,7 +1322,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
     bindings.knative.dev/exclude: "true"
 spec:
@@ -1331,7 +1336,7 @@ spec:
         app: eventing-webhook
         role: eventing-webhook
         app.kubernetes.io/component: eventing-webhook
-        app.kubernetes.io/version: "20240612-67ceb9ed2"
+        app.kubernetes.io/version: "20240618-e298f3244"
         app.kubernetes.io/name: knative-eventing
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
@@ -1351,7 +1356,7 @@ spec:
           terminationMessagePolicy: FallbackToLogsOnError
           # This is the Go import path for the binary that is containerized
           # and substituted here.
-          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/webhook@sha256:06a30b2a68a3ab913451eb99e0fd1595451edc6629c330a13f4aa3a768240cc4
+          image: gcr.io/knative-nightly/knative.dev/eventing/cmd/webhook@sha256:7cd6c510a8a944c60e8be906e1c433f928a47401f80d97ae669a91fefc681f3f
           resources:
             requests:
               # taken from serving.
@@ -1430,7 +1435,7 @@ metadata:
   labels:
     role: eventing-webhook
     app.kubernetes.io/component: eventing-webhook
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   name: eventing-webhook
   namespace: knative-eventing
@@ -1465,7 +1470,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -1752,7 +1757,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1865,6 +1870,18 @@ spec:
                   description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
+                policies:
+                  description: List of applied EventPolicies
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      apiVersion:
+                        description: The API version of the applied EventPolicy. This indicates, which version of EventPolicy is supported by the resource.
+                        type: string
+                      name:
+                        description: The name of the applied EventPolicy
+                        type: string
                 conditions:
                   description: Conditions the latest available observations of a resource's current state.
                   type: array
@@ -1955,7 +1972,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -2301,7 +2318,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -2457,6 +2474,188 @@ spec:
   scope: Namespaced
 
 ---
+# Copyright 2024 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: eventpolicies.eventing.knative.dev
+  labels:
+    knative.dev/crd-install: "true"
+    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/name: knative-eventing
+spec:
+  group: eventing.knative.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              description: Spec defines the desired state of the EventPolicy.
+              type: object
+              properties:
+                from:
+                  description: From is the list of sources or oidc identities, which are allowed to send events to the targets (.spec.to).
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      ref:
+                        description: Ref contains a direct reference to a resource which is allowed to send events to the target.
+                        type: object
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          kind:
+                            description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                          namespace:
+                            description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
+                            type: string
+                      sub:
+                        description: Sub sets the OIDC identity name to be allowed to send events to the target. It is also possible to set a glob-like pattern to match any suffix.
+                        type: string
+                to:
+                  description: To lists all resources for which this policy applies. Resources in this list must act like an ingress and have an audience. The resources are part of the same namespace as the EventPolicy. An empty list means it applies to all resources in the EventPolicies namespace
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      ref:
+                        description: Ref contains the direct reference to a target
+                        type: object
+                        properties:
+                          apiVersion:
+                            description: API version of the referent.
+                            type: string
+                          kind:
+                            description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                            type: string
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                            type: string
+                      selector:
+                        description: Selector contains a selector to group targets
+                        type: object
+                        properties:
+                          apiVersion:
+                            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                            type: string
+                          kind:
+                            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                            type: string
+                          matchExpressions:
+                            description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                key:
+                                  description: key is the label key that the selector applies to.
+                                  type: string
+                                operator:
+                                  description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                  type: string
+                                values:
+                                  description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                  type: array
+                                  items:
+                                    type: string
+                          matchLabels:
+                            description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+            status:
+              description: Status represents the current state of the EventPolicy. This data may be out of date.
+              type: object
+              properties:
+                annotations:
+                  description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                conditions:
+                  description: Conditions the latest available observations of a resource's current state.
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      lastTransitionTime:
+                        description: LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
+                        type: string
+                      message:
+                        description: A human readable message indicating details about the transition.
+                        type: string
+                      reason:
+                        description: The reason for the condition's last transition.
+                        type: string
+                      severity:
+                        description: Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.
+                        type: string
+                      status:
+                        description: Status of the condition, one of True, False, Unknown.
+                        type: string
+                      type:
+                        description: Type of condition.
+                        type: string
+                from:
+                  description: From is the list of resolved oidc identities from .spec.from
+                  type: array
+                  items:
+                    type: string
+                observedGeneration:
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
+                  type: integer
+                  format: int64
+      additionalPrinterColumns:
+        - name: Ready
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+        - name: Reason
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+  names:
+    kind: EventPolicy
+    plural: eventpolicies
+    singular: eventpolicy
+    categories:
+      - all
+      - knative
+      - eventing
+  scope: Namespaced
+  conversion:
+    strategy: Webhook
+    webhook:
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: eventing-webhook
+          namespace: knative-eventing
+
+---
 # Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -2476,7 +2675,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -2869,7 +3068,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -3004,7 +3203,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -3401,6 +3600,18 @@ spec:
                               uid:
                                 description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                                 type: string
+                policies:
+                  description: List of applied EventPolicies
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      apiVersion:
+                        description: The API version of the applied EventPolicy. This indicates, which version of EventPolicy is supported by the resource.
+                        type: string
+                      name:
+                        description: The name of the applied EventPolicy
+                        type: string
                 conditions:
                   description: Conditions the latest available observations of a resource's current state.
                   type: array
@@ -3520,7 +3731,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -3892,7 +4103,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -4131,6 +4342,18 @@ spec:
                           type:
                             description: Type of condition.
                             type: string
+                policies:
+                  description: List of applied EventPolicies
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      apiVersion:
+                        description: The API version of the applied EventPolicy. This indicates, which version of EventPolicy is supported by the resource.
+                        type: string
+                      name:
+                        description: The name of the applied EventPolicy
+                        type: string
                 conditions:
                   description: Conditions the latest available observations of a resource's current state.
                   type: array
@@ -4264,7 +4487,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -4479,7 +4702,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -4741,7 +4964,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -4977,7 +5200,7 @@ kind: ClusterRole
 metadata:
   name: addressable-resolver
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -4991,7 +5214,7 @@ metadata:
   name: service-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -5010,7 +5233,7 @@ metadata:
   name: serving-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -5032,7 +5255,7 @@ metadata:
   name: channel-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -5058,7 +5281,7 @@ metadata:
   name: broker-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -5078,7 +5301,7 @@ metadata:
   name: flows-addressable-resolver
   labels:
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -5114,7 +5337,7 @@ kind: ClusterRole
 metadata:
   name: eventing-broker-filter
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5140,7 +5363,7 @@ kind: ClusterRole
 metadata:
   name: eventing-broker-ingress
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5157,7 +5380,7 @@ kind: ClusterRole
 metadata:
   name: eventing-config-reader
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5190,7 +5413,7 @@ kind: ClusterRole
 metadata:
   name: channelable-manipulator
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -5204,7 +5427,7 @@ metadata:
   name: meta-channelable-manipulator
   labels:
     duck.knative.dev/channelable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
 rules:
@@ -5243,7 +5466,7 @@ metadata:
   name: knative-eventing-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["eventing.knative.dev"]
@@ -5256,7 +5479,7 @@ metadata:
   name: knative-messaging-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["messaging.knative.dev"]
@@ -5269,7 +5492,7 @@ metadata:
   name: knative-flows-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["flows.knative.dev"]
@@ -5282,7 +5505,7 @@ metadata:
   name: knative-sources-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["sources.knative.dev"]
@@ -5295,7 +5518,7 @@ metadata:
   name: knative-bindings-namespaced-admin
   labels:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["bindings.knative.dev"]
@@ -5308,7 +5531,7 @@ metadata:
   name: knative-eventing-namespaced-edit
   labels:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["eventing.knative.dev", "messaging.knative.dev", "sources.knative.dev", "flows.knative.dev", "bindings.knative.dev"]
@@ -5321,7 +5544,7 @@ metadata:
   name: knative-eventing-namespaced-view
   labels:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups: ["eventing.knative.dev", "messaging.knative.dev", "sources.knative.dev", "flows.knative.dev", "bindings.knative.dev"]
@@ -5348,7 +5571,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-controller
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5555,7 +5778,7 @@ kind: ClusterRole
 metadata:
   name: crossnamespace-subscriber
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -5569,7 +5792,7 @@ metadata:
   name: channel-subscriber
   labels:
     duck.knative.dev/crossnamespace-subscribable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5585,7 +5808,7 @@ metadata:
   name: broker-subscriber
   labels:
     duck.knative.dev/crossnamespace-subscribable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5615,7 +5838,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-job-sink
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5701,7 +5924,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-pingsource-mt-adapter
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -5774,7 +5997,7 @@ kind: ClusterRole
 metadata:
   name: podspecable-binding
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -5788,7 +6011,7 @@ metadata:
   name: builtin-podspecable-binding
   labels:
     duck.knative.dev/podspecable: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "podspecable-binding role.
 rules:
@@ -5834,7 +6057,7 @@ kind: ClusterRole
 metadata:
   name: source-observer
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 aggregationRule:
   clusterRoleSelectors:
@@ -5848,7 +6071,7 @@ metadata:
   name: eventing-sources-source-observer
   labels:
     duck.knative.dev/source: "true"
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # Do not use this role directly. These rules will be added to the "source-observer" role.
 rules:
@@ -5884,7 +6107,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-sources-controller
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   - apiGroups:
@@ -6005,7 +6228,7 @@ kind: ClusterRole
 metadata:
   name: knative-eventing-webhook
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   # For watching logging configuration and getting certs.
@@ -6174,7 +6397,7 @@ metadata:
   namespace: knative-eventing
   name: knative-eventing-webhook
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 rules:
   # For manipulating certs into secrets.
@@ -6210,7 +6433,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: config.webhook.eventing.knative.dev
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
@@ -6248,7 +6471,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: webhook.eventing.knative.dev
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
@@ -6281,7 +6504,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.eventing.knative.dev
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
@@ -6315,7 +6538,7 @@ metadata:
   name: eventing-webhook-certs
   namespace: knative-eventing
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 # The data is populated at install time.
 
@@ -6339,7 +6562,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: sinkbindings.webhook.sources.knative.dev
   labels:
-    app.kubernetes.io/version: "20240612-67ceb9ed2"
+    app.kubernetes.io/version: "20240618-e298f3244"
     app.kubernetes.io/name: knative-eventing
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
