@@ -77,13 +77,14 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 		}
 
 		trigger := kedav1alpha1.ScaleTriggers{
-			Type:              "kafka",
-			Metadata:          triggerMetadata,
-			AuthenticationRef: &kedav1alpha1.ScaledObjectAuthRef{},
+			Type:     "kafka",
+			Metadata: triggerMetadata,
 		}
 
 		if triggerAuthentication != nil {
-			trigger.AuthenticationRef.Name = triggerAuthentication.Name
+			trigger.AuthenticationRef = &kedav1alpha1.ScaledObjectAuthRef{
+				Name: triggerAuthentication.Name,
+			}
 		}
 
 		triggers = append(triggers, trigger)
