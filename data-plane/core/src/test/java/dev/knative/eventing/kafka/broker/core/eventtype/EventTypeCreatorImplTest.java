@@ -47,8 +47,7 @@ public class EventTypeCreatorImplTest {
     public void testCreate(Vertx vertx, VertxTestContext vertxTestContext) throws NoSuchAlgorithmException {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var informer = kubernetesClient.informers().sharedIndexInformerFor(EventType.class, 100L);
-        final var eventTypeLister = new Lister<>(informer.getIndexer());
-        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx);
+        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, new EventTypeListerFactory(informer), vertx);
         var event = new CloudEventBuilder()
                 .withType("example.event.type")
                 .withSource(URI.create("/example/source"))
@@ -100,8 +99,7 @@ public class EventTypeCreatorImplTest {
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var informer = kubernetesClient.informers().sharedIndexInformerFor(EventType.class, 100L);
         informer.run();
-        final var eventTypeLister = new Lister<>(informer.getIndexer());
-        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx);
+        var eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, new EventTypeListerFactory(informer), vertx);
         var event = new CloudEventBuilder()
                 .withType("example.event.type")
                 .withSource(URI.create("/example/source"))

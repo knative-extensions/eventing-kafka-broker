@@ -36,7 +36,7 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
 
     private final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
 
-    private final Lister<EventType> eventTypeLister;
+    private final EventTypeListerFactory eventTypeListerFactory;
 
     private MessageDigest messageDigest;
 
@@ -44,14 +44,11 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
 
     public EventTypeCreatorImpl(
             MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
-            Lister<EventType> eventTypeLister,
+            EventTypeListerFactory eventTypeListerFactory,
             Vertx vertx)
             throws IllegalArgumentException, NoSuchAlgorithmException {
         this.eventTypeClient = eventTypeClient;
-        if (eventTypeLister == null) {
-            throw new IllegalArgumentException("eventTypeLister must be non null");
-        }
-        this.eventTypeLister = eventTypeLister;
+        this.eventTypeListerFactory = eventTypeListerFactory;
         this.executor = vertx.createSharedWorkerExecutor("et-creator-worker", 1);
         this.messageDigest = MessageDigest.getInstance("MD5");
     }
@@ -69,7 +66,7 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
     }
 
     private EventType eventTypeExists(String etName, DataPlaneContract.Reference reference) {
-        return this.eventTypeLister.namespace(reference.getNamespace()).get(etName);
+        return this.eventTypeListerFactory.getForNamespace(reference.getNamespace()).get(etName);
     }
 
     @Override
