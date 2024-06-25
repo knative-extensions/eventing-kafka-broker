@@ -31,7 +31,6 @@ import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
-import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
@@ -55,16 +54,16 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
     ReceiverVerticleFactory(
-      final ReceiverEnv env,
-      final Properties producerConfigs,
-      final MeterRegistry metricsRegistry,
-      final HttpServerOptions httpServerOptions,
-      final HttpServerOptions httpsServerOptions,
-      final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
-      final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
-      final SharedIndexInformer<EventType> eventTypeInformer,
-      Vertx vertx,
-      final OIDCDiscoveryConfig oidcDiscoveryConfig)
+            final ReceiverEnv env,
+            final Properties producerConfigs,
+            final MeterRegistry metricsRegistry,
+            final HttpServerOptions httpServerOptions,
+            final HttpServerOptions httpsServerOptions,
+            final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
+            final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
+            final SharedIndexInformer<EventType> eventTypeInformer,
+            Vertx vertx,
+            final OIDCDiscoveryConfig oidcDiscoveryConfig)
             throws NoSuchAlgorithmException {
         {
             this.env = env;

@@ -34,7 +34,6 @@ import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
-import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
