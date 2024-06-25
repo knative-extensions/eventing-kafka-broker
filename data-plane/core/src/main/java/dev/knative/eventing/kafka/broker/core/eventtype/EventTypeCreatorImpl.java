@@ -22,7 +22,6 @@ import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
@@ -66,7 +65,9 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
     }
 
     private EventType eventTypeExists(String etName, DataPlaneContract.Reference reference) {
-        return this.eventTypeListerFactory.getForNamespace(reference.getNamespace()).get(etName);
+        return this.eventTypeListerFactory
+                .getForNamespace(reference.getNamespace())
+                .get(etName);
     }
 
     @Override
