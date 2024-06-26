@@ -34,7 +34,6 @@ import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
-import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
@@ -135,7 +134,6 @@ public class Main {
         final SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         SharedIndexInformer<EventType> eventTypeInformer = null;
-        Lister<EventType> eventTypeLister = null;
         try {
             eventTypeInformer = sharedInformerFactory.sharedIndexInformerFor(
                     EventType.class, 30 * 1000L); // refresh every 30 seconds
@@ -147,9 +145,6 @@ public class Main {
             logger.warn(
                     "the data-plane does not have sufficient permissions to list/watch eventtypes. This will lead to unnecessary CREATE requests if eventtype-auto-create is enabled",
                     informerException);
-        }
-        if (eventTypeInformer != null) {
-            eventTypeLister = new Lister<>(eventTypeInformer.getIndexer());
         }
 
         // Configure the verticle to deploy and the deployment options
@@ -163,7 +158,7 @@ public class Main {
                     httpsServerOptions,
                     kafkaProducerFactory,
                     eventTypeClient,
-                    eventTypeLister,
+                    eventTypeInformer,
                     vertx,
                     oidcDiscoveryConfig);
             DeploymentOptions deploymentOptions =

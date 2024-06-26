@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.main;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
@@ -29,7 +30,7 @@ import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.informers.cache.Lister;
+import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
@@ -60,7 +61,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final HttpServerOptions httpsServerOptions,
             final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
-            final Lister<EventType> eventTypeLister,
+            final SharedIndexInformer<EventType> eventTypeInformer,
             Vertx vertx,
             final OIDCDiscoveryConfig oidcDiscoveryConfig)
             throws NoSuchAlgorithmException {
@@ -72,7 +73,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             this.ingressRequestHandler = new IngressRequestHandlerImpl(
                     StrictRequestToRecordMapper.getInstance(),
                     metricsRegistry,
-                    new EventTypeCreatorImpl(eventTypeClient, eventTypeLister, vertx));
+                    new EventTypeCreatorImpl(eventTypeClient, new EventTypeListerFactory(eventTypeInformer), vertx));
             this.kafkaProducerFactory = kafkaProducerFactory;
             this.oidcDiscoveryConfig = oidcDiscoveryConfig;
         }

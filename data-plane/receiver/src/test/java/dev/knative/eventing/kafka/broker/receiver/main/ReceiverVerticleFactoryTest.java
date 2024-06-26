@@ -24,7 +24,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.informers.cache.Lister;
+import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
@@ -54,7 +54,7 @@ public class ReceiverVerticleFactoryTest {
                 mock(HttpServerOptions.class),
                 mock(MockReactiveProducerFactory.class),
                 mockClient.resources(EventType.class),
-                mock(Lister.class),
+                mock(SharedIndexInformer.class),
                 vertx,
                 mock(OIDCDiscoveryConfig.class));
 
