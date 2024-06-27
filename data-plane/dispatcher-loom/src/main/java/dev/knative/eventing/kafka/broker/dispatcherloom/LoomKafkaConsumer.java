@@ -44,6 +44,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     private final Consumer<K, V> consumer;
     private final BlockingQueue<Runnable> taskQueue;
     private final AtomicBoolean isClosed;
+    private final AtomicBoolean isFinished;
     private final Thread taskRunnerThread;
     private final Promise<Void> closePromise = Promise.promise();
 
@@ -51,6 +52,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         this.consumer = consumer;
         this.taskQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
+        this.isFinished = new AtomicBoolean(false);
 
         if (Boolean.parseBoolean(System.getenv("ENABLE_VIRTUAL_THREADS"))) {
             this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
@@ -78,6 +80,8 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                 break;
             }
         }
+
+        isFinished.set(true);
     }
 
     @Override
@@ -120,9 +124,18 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                     logger.debug("Queue is not empty {}", keyValue("taskQueue.size", taskQueue.size()));
                     Thread.sleep(2000L);
                 }
-                logger.debug("Queue is empty, interrupting background thread and waiting for it to complete");
+                logger.debug("Queue is empty");
 
-                taskRunnerThread.interrupt();
+                if (!isFinished.get()) {
+                  logger.debug("Background thread not finished yet, waiting for it to complete");
+                  Thread.sleep(2000L);
+
+                  if (!isFinished.get()) {
+                    logger.debug("Background thread still not finished yet, interrupting background thread");
+                    taskRunnerThread.interrupt();
+                  }
+                }
+
                 taskRunnerThread.join();
                 closePromise.tryComplete();
 
