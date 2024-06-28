@@ -301,10 +301,6 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
 	}
 
-	if cg.Spec.Template.Spec.Configs.Configs == nil {
-		return fmt.Errorf("no consumer config supplied, unable to get bootstrap.servers")
-	}
-
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
@@ -598,10 +594,6 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	kafkaSecret, err := r.newAuthSecret(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
-	}
-
-	if cg.Spec.Template.Spec.Configs.Configs == nil {
-		return fmt.Errorf("no consumer config supplied, unable to get bootstrap.servers")
 	}
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
