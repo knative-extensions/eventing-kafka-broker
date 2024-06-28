@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -307,7 +307,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -522,7 +522,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -746,6 +746,18 @@ spec:
                     namespace:
                       description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
                       type: string
+                policies:
+                  description: List of applied EventPolicies
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      apiVersion:
+                        description: The API version of the applied EventPolicy. This indicates, which version of EventPolicy is supported by the resource.
+                        type: string
+                      name:
+                        description: The name of the applied EventPolicy
+                        type: string
                 conditions:
                   description: Conditions the latest available observations of a resource's current state.
                   type: array
@@ -868,7 +880,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1043,7 +1055,7 @@ metadata:
   name: eventpolicies.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1225,7 +1237,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1618,7 +1630,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -1753,7 +1765,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2281,7 +2293,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -2653,7 +2665,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -3037,7 +3049,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -3252,7 +3264,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -3514,7 +3526,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240618-e298f3244"
+    app.kubernetes.io/version: "20240627-a6ac8111e"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
