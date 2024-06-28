@@ -57,6 +57,9 @@ func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError 
 		cts.Spec.Delivery.Validate(specCtx).ViaField("delivery"),
 		cts.Spec.Subscriber.Validate(specCtx).ViaField("subscriber"),
 	)
+	if cts.Spec.Configs.Configs == nil {
+		err = err.Also(apis.ErrMissingField("spec.configs"))
+	}
 	return err
 }
 
