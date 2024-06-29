@@ -29,12 +29,15 @@ public class CeSqlFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
 
+    private int count;
+
     private final Expression expression;
     private final EvaluationRuntime runtime;
 
     public CeSqlFilter(String sqlExpression) {
         this.expression = Parser.parseDefault(sqlExpression);
         this.runtime = EvaluationRuntime.getDefault();
+        this.count = 0;
     }
 
     @Override
@@ -53,5 +56,15 @@ public class CeSqlFilter implements Filter {
                     evaluationException);
             return false;
         }
+    }
+
+    @Override
+    public int getCount() {
+        return this.count;
+    }
+
+    @Override
+    public int incrementCount() {
+        return this.count++;
     }
 }

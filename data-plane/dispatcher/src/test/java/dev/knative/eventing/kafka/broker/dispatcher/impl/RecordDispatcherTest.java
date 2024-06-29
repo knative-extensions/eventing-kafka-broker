@@ -46,6 +46,7 @@ import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpVersion;
 import io.vertx.ext.web.client.impl.HttpResponseImpl;
@@ -64,6 +65,7 @@ import org.mockito.ArgumentCaptor;
 
 @ExtendWith(VertxExtension.class)
 public class RecordDispatcherTest {
+    Vertx vertx = Vertx.vertx();
 
     private static final ConsumerVerticleContext resourceContext = FakeConsumerVerticleContext.get(
             FakeConsumerVerticleContext.get().getResource(),
@@ -91,6 +93,7 @@ public class RecordDispatcherTest {
         final RecordDispatcherListener receiver = offsetManagerMock();
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> false,
                 CloudEventSender.noop("subscriber send called"),
@@ -122,6 +125,7 @@ public class RecordDispatcherTest {
         final RecordDispatcherListener receiver = offsetManagerMock();
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -161,6 +165,7 @@ public class RecordDispatcherTest {
         final RecordDispatcherListener receiver = offsetManagerMock();
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -201,6 +206,7 @@ public class RecordDispatcherTest {
         final RecordDispatcherListener receiver = offsetManagerMock();
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -244,6 +250,7 @@ public class RecordDispatcherTest {
         String errorBody = "{ \"message\": \"bad bad things happened\" }";
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -307,6 +314,7 @@ public class RecordDispatcherTest {
                 MultiMap.caseInsensitiveMultiMap().add(validErrorKey, "hello").add(invalidErrorKey, "nope");
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -369,6 +377,7 @@ public class RecordDispatcherTest {
         String errorBodyTooLarge = errorBody + "QWERTY";
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -440,6 +449,7 @@ public class RecordDispatcherTest {
         final RecordDispatcherListener receiver = offsetManagerMock();
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 value -> true,
                 new CloudEventSenderMock(record -> {
@@ -481,6 +491,7 @@ public class RecordDispatcherTest {
         when(deadLetterSender.close()).thenReturn(Future.succeededFuture());
 
         final RecordDispatcher recordDispatcher = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 Filter.noop(),
                 subscriberSender,
@@ -507,6 +518,7 @@ public class RecordDispatcherTest {
         final RecordDispatcherListener receiver = offsetManagerMock();
 
         final var dispatcherHandler = new RecordDispatcherImpl(
+                vertx,
                 resourceContext,
                 Filter.noop(),
                 CloudEventSender.noop("subscriber send called"),
