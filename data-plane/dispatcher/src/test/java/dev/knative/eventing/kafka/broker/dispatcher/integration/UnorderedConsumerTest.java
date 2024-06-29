@@ -103,7 +103,7 @@ public class UnorderedConsumerTest {
         final var file = Files.createTempFile("fw-", "-fw").toFile();
         final var contractPublisher =
                 new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
-        final var fileWatcher = new FileWatcher(file, () -> contractPublisher.updateContract(file));
+        final var fileWatcher = new FileWatcher(file, contractPublisher::updateContract);
 
         fileWatcher.start();
 
