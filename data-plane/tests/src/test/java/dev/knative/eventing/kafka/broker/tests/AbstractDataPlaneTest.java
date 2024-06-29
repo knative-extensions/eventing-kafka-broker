@@ -396,7 +396,8 @@ public abstract class AbstractDataPlaneTest {
                         Metrics.getRegistry(),
                         (((event, reference) -> null))),
                 SECRET_VOLUME_PATH,
-                null);
+                null,
+                0);
 
         final CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

@@ -53,6 +53,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
 
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
+    private final long terminationGracePeriodMs;
+
     ReceiverVerticleFactory(
             final ReceiverEnv env,
             final Properties producerConfigs,
@@ -63,7 +65,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
             final SharedIndexInformer<EventType> eventTypeInformer,
             Vertx vertx,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig)
+            final OIDCDiscoveryConfig oidcDiscoveryConfig,
+            final long terminationGracePeriodMs)
             throws NoSuchAlgorithmException {
         {
             this.env = env;
@@ -76,6 +79,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                     new EventTypeCreatorImpl(eventTypeClient, new EventTypeListerFactory(eventTypeInformer), vertx));
             this.kafkaProducerFactory = kafkaProducerFactory;
             this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+            this.terminationGracePeriodMs = terminationGracePeriodMs;
         }
     }
 
@@ -91,6 +95,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         properties -> kafkaProducerFactory.create(v, properties)),
                 this.ingressRequestHandler,
                 secretVolumePath,
-                oidcDiscoveryConfig);
+                oidcDiscoveryConfig,
+                terminationGracePeriodMs);
     }
 }

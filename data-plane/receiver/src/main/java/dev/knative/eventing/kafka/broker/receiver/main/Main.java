@@ -67,6 +67,8 @@ public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
+    private static final long receiverGracePeriodMs = 20_000; // 20 seconds, in milliseconds
+
     /**
      * Start receiver.
      *
@@ -160,7 +162,8 @@ public class Main {
                     eventTypeClient,
                     eventTypeInformer,
                     vertx,
-                    oidcDiscoveryConfig);
+                    oidcDiscoveryConfig,
+                    receiverGracePeriodMs);
             DeploymentOptions deploymentOptions =
                     new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
             // Deploy the receiver verticles
