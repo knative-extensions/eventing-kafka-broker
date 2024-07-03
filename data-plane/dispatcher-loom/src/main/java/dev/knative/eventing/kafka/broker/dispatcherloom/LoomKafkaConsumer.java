@@ -127,13 +127,13 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                 logger.debug("Queue is empty");
 
                 if (!isFinished.get()) {
-                  logger.debug("Background thread not finished yet, waiting for it to complete");
-                  Thread.sleep(2000L);
+                    logger.debug("Background thread not finished yet, waiting for it to complete");
+                    Thread.sleep(2000L);
 
-                  if (!isFinished.get()) {
-                    logger.debug("Background thread still not finished yet, interrupting background thread");
-                    taskRunnerThread.interrupt();
-                  }
+                    if (!isFinished.get()) {
+                        logger.debug("Background thread still not finished yet, interrupting background thread");
+                        taskRunnerThread.interrupt();
+                    }
                 }
 
                 taskRunnerThread.join();

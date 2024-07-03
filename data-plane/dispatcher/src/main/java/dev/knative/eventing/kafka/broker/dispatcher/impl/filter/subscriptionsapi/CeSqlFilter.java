@@ -17,11 +17,12 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.sql.EvaluationException;
-import io.cloudevents.sql.EvaluationRuntime;
-import io.cloudevents.sql.Expression;
-import io.cloudevents.sql.Parser;
-import io.cloudevents.sql.Type;
+import io.cloudevents.sql.*;
+import io.cloudevents.sql.impl.ExceptionFactoryImpl;
+import io.cloudevents.sql.impl.runtime.EvaluationContextImpl;
+import io.cloudevents.sql.impl.runtime.EvaluationResult;
+import io.cloudevents.sql.impl.runtime.TypeCastingProvider;
+import org.antlr.v4.runtime.misc.Interval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +31,12 @@ public class CeSqlFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(CeSqlFilter.class);
 
     private final Expression expression;
-    private final EvaluationRuntime runtime;
+    private final EvaluationContext evaluationContext;
 
     public CeSqlFilter(String sqlExpression) {
         this.expression = Parser.parseDefault(sqlExpression);
-        this.runtime = EvaluationRuntime.getDefault();
+        this.evaluationContext = new EvaluationContextImpl(
+                new Interval(0, sqlExpression.length()), sqlExpression, new ExceptionFactoryImpl(true));
     }
 
     @Override
@@ -42,10 +44,14 @@ public class CeSqlFilter implements Filter {
         try {
             logger.debug(
                     "Testing event against CESQL expression. Expression {} - Event {}", this.expression, cloudEvent);
-            Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
+            Object value = this.expression.tryEvaluate(cloudEvent);
             logger.debug(
                     "CESQL evaluation succeeded. Expression {} - Event {} - Result {}", expression, cloudEvent, value);
-            return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
+            Result castedResult =
+                    TypeCastingProvider.cast(this.evaluationContext, new EvaluationResult(value), Type.BOOLEAN);
+            return (Boolean)
+                    castedResult.value(); // value has to be boolean, because otherwise the excpetion factory would have
+            // thrown an exception
         } catch (EvaluationException evaluationException) {
             logger.error(
                     "Exception while evaluating CESQL expression. Test failed. Expression {} - Exception {}",

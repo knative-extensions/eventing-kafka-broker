@@ -51,7 +51,7 @@ public class CeSqlFilterTest {
                 Arguments.of(event, "'TRUE'", true),
                 Arguments.of(event, "'FALSE'", false),
                 Arguments.of(event, "0", false),
-                Arguments.of(event, "1", false),
+                Arguments.of(event, "1", true),
                 Arguments.of(event, "id LIKE '123%'", true),
                 Arguments.of(event, "NOT(id LIKE '123%')", false));
     }
