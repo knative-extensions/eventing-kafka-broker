@@ -337,13 +337,7 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		egress.OidcServiceAccountName = *trigger.Status.Auth.ServiceAccountName
 	}
 
-	newFiltersEnabled := func() bool {
-		r.FlagsLock.RLock()
-		defer r.FlagsLock.RUnlock()
-		return r.Flags.IsEnabled(feature.NewTriggerFilters)
-	}()
-
-	if newFiltersEnabled && len(trigger.Spec.Filters) > 0 {
+	if len(trigger.Spec.Filters) > 0 {
 		dialectedFilters := make([]*contract.DialectedFilter, 0, len(trigger.Spec.Filters))
 		for _, f := range trigger.Spec.Filters {
 			dialectedFilters = append(dialectedFilters, contract.FromSubscriptionFilter(f))
