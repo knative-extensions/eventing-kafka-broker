@@ -17,7 +17,12 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsap
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.sql.*;
+import io.cloudevents.sql.EvaluationContext;
+import io.cloudevents.sql.EvaluationException;
+import io.cloudevents.sql.Expression;
+import io.cloudevents.sql.Parser;
+import io.cloudevents.sql.Result;
+import io.cloudevents.sql.Type;
 import io.cloudevents.sql.impl.ExceptionFactoryImpl;
 import io.cloudevents.sql.impl.runtime.EvaluationContextImpl;
 import io.cloudevents.sql.impl.runtime.EvaluationResult;
@@ -50,7 +55,7 @@ public class CeSqlFilter implements Filter {
             Result castedResult =
                     TypeCastingProvider.cast(this.evaluationContext, new EvaluationResult(value), Type.BOOLEAN);
             return (Boolean)
-                    castedResult.value(); // value has to be boolean, because otherwise the excpetion factory would have
+                    castedResult.value(); // value has to be boolean, because otherwise the exception factory would have
             // thrown an exception
         } catch (EvaluationException evaluationException) {
             logger.error(
