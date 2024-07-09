@@ -49,6 +49,7 @@ type KafkaSourceInterface interface {
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.KafkaSource, err error)
 	GetScale(ctx context.Context, kafkaSourceName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(ctx context.Context, kafkaSourceName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
 	KafkaSourceExpansion
 }
@@ -206,6 +207,21 @@ func (c *kafkaSources) GetScale(ctx context.Context, kafkaSourceName string, opt
 		Name(kafkaSourceName).
 		SubResource("scale").
 		VersionedParams(&options, scheme.ParameterCodec).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *kafkaSources) UpdateScale(ctx context.Context, kafkaSourceName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("kafkasources").
+		Name(kafkaSourceName).
+		SubResource("scale").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(scale).
 		Do(ctx).
 		Into(result)
 	return
