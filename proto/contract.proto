@@ -81,6 +81,9 @@ message EgressConfig {
   // Dead Letter Audience is the OIDC audience of the dead letter
   string deadLetterAudience = 7;
 
+  // format is the format used to deliver the event. Can be one of "json" or "binary"
+  string format = 8;
+
   // retry is the minimum number of retries the sender should attempt when
   // sending an event before moving it to the dead letter sink.
   //
