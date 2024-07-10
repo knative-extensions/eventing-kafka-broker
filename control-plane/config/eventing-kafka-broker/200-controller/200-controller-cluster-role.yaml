@@ -205,6 +205,8 @@ rules:
       - "triggers/status"
       - "kafkasinks"
       - "kafkasinks/status"
+      - "eventpolicies"
+      - "eventpolicies/status"
     verbs:
       - list
       - get
