@@ -63,7 +63,7 @@ func BrokerConfigMapDeletedFirst() *feature.Feature {
 		cmName,
 	))
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(cmName))...))
-	f.Setup("install trigger", trigger.Install(triggerName, brokerName,
+	f.Setup("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sink), "")),
 	)
 

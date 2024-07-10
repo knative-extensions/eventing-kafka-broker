@@ -89,7 +89,7 @@ func SendsEventWithRetries() *feature.Feature {
 
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -150,7 +150,7 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -208,7 +208,7 @@ func SendsEventNoRetries() *feature.Feature {
 
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))

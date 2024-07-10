@@ -88,7 +88,7 @@ func TracingHeadersUsingOrderedDeliveryWithTraceExported() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithAnnotations(map[string]interface{}{
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
@@ -214,7 +214,7 @@ func TracingHeadersUsingUnorderedDelivery() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))
@@ -259,12 +259,12 @@ func TracingHeadersUsingUnorderedDeliveryWithMultipleTriggers() *feature.Feature
 	))
 	f.Setup("install trigger a", trigger.Install(
 		triggerAName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("install trigger b", trigger.Install(
 		triggerBName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("trigger a is ready", trigger.IsReady(triggerAName))
