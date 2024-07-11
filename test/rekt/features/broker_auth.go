@@ -111,7 +111,7 @@ func SetupBrokerAuth(bootstrapServer string, authSecretOptions ...manifest.CfgFn
 	f.Setup("Install sink", eventshub.Install(sinkName,
 		eventshub.StartReceiver))
 
-	f.Setup("Create trigger", trigger.Install(triggerName, brokerName,
+	f.Setup("Create trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(svc.AsKReference(sinkName), "")))
 	f.Setup("Trigger ready", trigger.IsReady(triggerName))
 
@@ -167,7 +167,7 @@ func TriggerUsesConsumerGroupIDTemplate() *feature.Feature {
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
-	f.Requirement("install trigger", trigger.Install(triggerName, brokerName, trigger.WithSubscriber(service.AsKReference(sinkName), "")))
+	f.Requirement("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sinkName), "")))
 	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	// check that the trigger has the correct annotation

@@ -65,7 +65,7 @@ func brokerAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 

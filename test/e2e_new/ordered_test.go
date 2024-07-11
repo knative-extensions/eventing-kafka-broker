@@ -91,7 +91,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithAnnotations(map[string]interface{}{
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
@@ -149,7 +149,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithAnnotations(map[string]interface{}{
 			"kafka.eventing.knative.dev/delivery.order": "ordered",

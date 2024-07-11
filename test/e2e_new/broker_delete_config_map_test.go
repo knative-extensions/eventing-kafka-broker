@@ -76,7 +76,7 @@ func BrokerDeleteContractConfigMap() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 	))
 	f.Setup("trigger is ready", trigger.IsReady(triggerName))

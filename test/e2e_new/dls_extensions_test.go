@@ -89,7 +89,7 @@ func SubscriberUnreachable() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(nil, "http://fake.svc.cluster.local"),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -149,7 +149,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -212,7 +212,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -278,7 +278,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -343,7 +343,7 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
@@ -409,7 +409,7 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 	))
 	f.Setup("install trigger", trigger.Install(
 		triggerName,
-		brokerName,
+		trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))

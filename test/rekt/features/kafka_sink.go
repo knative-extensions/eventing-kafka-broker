@@ -89,14 +89,14 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 		kafkasink.WithReplicationFactor(1)))
 	f.Setup("KafkaSink is ready", kafkasink.IsReady(sink))
 
-	f.Setup("Create trigger 1", trigger.Install(trigger1Name, brokerName,
+	f.Setup("Create trigger 1", trigger.Install(trigger1Name, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(kafkasink.AsKReference(sink, env.Namespace()), ""),
 		trigger.WithFilter(map[string]string{
 			"type": trigger1FilterType,
 		})))
 	f.Setup("Trigger 1 is ready", trigger.IsReady(trigger1Name))
 
-	f.Setup("Create trigger 2", trigger.Install(trigger2Name, brokerName,
+	f.Setup("Create trigger 2", trigger.Install(trigger2Name, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(kafkasink.AsKReference(sink, env.Namespace()), ""),
 		trigger.WithFilter(map[string]string{
 			"type": trigger2FilterType,
