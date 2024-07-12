@@ -9270,6 +9270,25 @@ public final class DataPlaneContract {
 
         /**
          * <pre>
+         * format is the format used to deliver the event. Can be one of "json" or "binary"
+         * </pre>
+         *
+         * <code>string format = 8;</code>
+         * @return The format.
+         */
+        java.lang.String getFormat();
+        /**
+         * <pre>
+         * format is the format used to deliver the event. Can be one of "json" or "binary"
+         * </pre>
+         *
+         * <code>string format = 8;</code>
+         * @return The bytes for format.
+         */
+        com.google.protobuf.ByteString getFormatBytes();
+
+        /**
+         * <pre>
          * retry is the minimum number of retries the sender should attempt when
          * sending an event before moving it to the dead letter sink.
          * Setting retry to 0 means don't retry.
@@ -9336,6 +9355,7 @@ public final class DataPlaneContract {
             deadLetter_ = "";
             deadLetterCACerts_ = "";
             deadLetterAudience_ = "";
+            format_ = "";
             backoffPolicy_ = 0;
         }
 
@@ -9401,6 +9421,12 @@ public final class DataPlaneContract {
                             java.lang.String s = input.readStringRequireUtf8();
 
                             deadLetterAudience_ = s;
+                            break;
+                        }
+                        case 66: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            format_ = s;
                             break;
                         }
                         default: {
@@ -9560,6 +9586,48 @@ public final class DataPlaneContract {
             }
         }
 
+        public static final int FORMAT_FIELD_NUMBER = 8;
+        private volatile java.lang.Object format_;
+        /**
+         * <pre>
+         * format is the format used to deliver the event. Can be one of "json" or "binary"
+         * </pre>
+         *
+         * <code>string format = 8;</code>
+         * @return The format.
+         */
+        @java.lang.Override
+        public java.lang.String getFormat() {
+            java.lang.Object ref = format_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                format_ = s;
+                return s;
+            }
+        }
+        /**
+         * <pre>
+         * format is the format used to deliver the event. Can be one of "json" or "binary"
+         * </pre>
+         *
+         * <code>string format = 8;</code>
+         * @return The bytes for format.
+         */
+        @java.lang.Override
+        public com.google.protobuf.ByteString getFormatBytes() {
+            java.lang.Object ref = format_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                format_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
         public static final int RETRY_FIELD_NUMBER = 2;
         private int retry_;
         /**
@@ -9676,6 +9744,9 @@ public final class DataPlaneContract {
             if (!getDeadLetterAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 7, deadLetterAudience_);
             }
+            if (!getFormatBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 8, format_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -9708,6 +9779,9 @@ public final class DataPlaneContract {
             if (!getDeadLetterAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, deadLetterAudience_);
             }
+            if (!getFormatBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, format_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -9727,6 +9801,7 @@ public final class DataPlaneContract {
             if (!getDeadLetter().equals(other.getDeadLetter())) return false;
             if (!getDeadLetterCACerts().equals(other.getDeadLetterCACerts())) return false;
             if (!getDeadLetterAudience().equals(other.getDeadLetterAudience())) return false;
+            if (!getFormat().equals(other.getFormat())) return false;
             if (getRetry() != other.getRetry()) return false;
             if (backoffPolicy_ != other.backoffPolicy_) return false;
             if (getBackoffDelay() != other.getBackoffDelay()) return false;
@@ -9748,6 +9823,8 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getDeadLetterCACerts().hashCode();
             hash = (37 * hash) + DEADLETTERAUDIENCE_FIELD_NUMBER;
             hash = (53 * hash) + getDeadLetterAudience().hashCode();
+            hash = (37 * hash) + FORMAT_FIELD_NUMBER;
+            hash = (53 * hash) + getFormat().hashCode();
             hash = (37 * hash) + RETRY_FIELD_NUMBER;
             hash = (53 * hash) + getRetry();
             hash = (37 * hash) + BACKOFFPOLICY_FIELD_NUMBER;
@@ -9897,6 +9974,8 @@ public final class DataPlaneContract {
 
                 deadLetterAudience_ = "";
 
+                format_ = "";
+
                 retry_ = 0;
 
                 backoffPolicy_ = 0;
@@ -9936,6 +10015,7 @@ public final class DataPlaneContract {
                 result.deadLetter_ = deadLetter_;
                 result.deadLetterCACerts_ = deadLetterCACerts_;
                 result.deadLetterAudience_ = deadLetterAudience_;
+                result.format_ = format_;
                 result.retry_ = retry_;
                 result.backoffPolicy_ = backoffPolicy_;
                 result.backoffDelay_ = backoffDelay_;
@@ -10000,6 +10080,10 @@ public final class DataPlaneContract {
                 }
                 if (!other.getDeadLetterAudience().isEmpty()) {
                     deadLetterAudience_ = other.deadLetterAudience_;
+                    onChanged();
+                }
+                if (!other.getFormat().isEmpty()) {
+                    format_ = other.format_;
                     onChanged();
                 }
                 if (other.getRetry() != 0) {
@@ -10313,6 +10397,97 @@ public final class DataPlaneContract {
                 checkByteStringIsUtf8(value);
 
                 deadLetterAudience_ = value;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object format_ = "";
+            /**
+             * <pre>
+             * format is the format used to deliver the event. Can be one of "json" or "binary"
+             * </pre>
+             *
+             * <code>string format = 8;</code>
+             * @return The format.
+             */
+            public java.lang.String getFormat() {
+                java.lang.Object ref = format_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    format_ = s;
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+            /**
+             * <pre>
+             * format is the format used to deliver the event. Can be one of "json" or "binary"
+             * </pre>
+             *
+             * <code>string format = 8;</code>
+             * @return The bytes for format.
+             */
+            public com.google.protobuf.ByteString getFormatBytes() {
+                java.lang.Object ref = format_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b =
+                            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                    format_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+            /**
+             * <pre>
+             * format is the format used to deliver the event. Can be one of "json" or "binary"
+             * </pre>
+             *
+             * <code>string format = 8;</code>
+             * @param value The format to set.
+             * @return This builder for chaining.
+             */
+            public Builder setFormat(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+
+                format_ = value;
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * format is the format used to deliver the event. Can be one of "json" or "binary"
+             * </pre>
+             *
+             * <code>string format = 8;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearFormat() {
+
+                format_ = getDefaultInstance().getFormat();
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * format is the format used to deliver the event. Can be one of "json" or "binary"
+             * </pre>
+             *
+             * <code>string format = 8;</code>
+             * @param value The bytes for format to set.
+             * @return This builder for chaining.
+             */
+            public Builder setFormatBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+
+                format_ = value;
                 onChanged();
                 return this;
             }
@@ -28049,67 +28224,68 @@ public final class DataPlaneContract {
                     + "not\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQL"
                     + "H\000B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003"
                     + "(\0132\027.Filter.AttributesEntry\0321\n\017Attribute"
-                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\266"
+                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\306"
                     + "\001\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021d"
                     + "eadLetterCACerts\030\006 \001(\t\022\032\n\022deadLetterAudi"
-                    + "ence\030\007 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPoli"
-                    + "cy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay"
-                    + "\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\302\004\n\006Egress\022\025\n\rco"
-                    + "nsumerGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\032"
-                    + "\n\022destinationCACerts\030\017 \001(\t\022\033\n\023destinatio"
-                    + "nAudience\030\021 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022&\n\024r"
-                    + "eplyToOriginalTopic\030\004 \001(\0132\006.EmptyH\000\022\036\n\014d"
-                    + "iscardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\017replyUrlC"
-                    + "ACerts\030\020 \001(\t\022\030\n\020replyUrlAudience\030\022 \001(\t\022\027"
-                    + "\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014"
-                    + "egressConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdel"
-                    + "iveryOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyT"
-                    + "ype\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n"
-                    + ".Reference\022)\n\017dialectedFilter\030\014 \003(\0132\020.Di"
-                    + "alectedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014feat"
-                    + "ureFlags\030\016 \001(\0132\023.EgressFeatureFlags\022\036\n\026o"
-                    + "idcServiceAccountName\030\023 \001(\tB\017\n\rreplyStra"
-                    + "tegy\"U\n\022EgressFeatureFlags\022\031\n\021enableRate"
-                    + "Limiter\030\001 \001(\010\022$\n\034enableOrderedExecutorMe"
-                    + "trics\030\002 \001(\010\"~\n\007Ingress\022!\n\013contentMode\030\001 "
-                    + "\001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030"
-                    + "\003 \001(\t\022\"\n\032enableAutoCreateEventTypes\030\004 \001("
-                    + "\010\022\020\n\010audience\030\005 \001(\t\"o\n\tReference\022\014\n\004uuid"
-                    + "\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022"
-                    + "\017\n\007version\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n\014groupV"
-                    + "ersion\030\006 \001(\t\"`\n\017SecretReference\022\035\n\trefer"
-                    + "ence\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRefere"
-                    + "nces\030\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyFie"
-                    + "ldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030"
-                    + "\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRefere"
-                    + "nce\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nrefe"
-                    + "rences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Cloud"
-                    + "EventOverrides\0228\n\nextensions\030\001 \003(\0132$.Clo"
-                    + "udEventOverrides.ExtensionsEntry\0321\n\017Exte"
-                    + "nsionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:"
-                    + "\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030"
-                    + "\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingre"
-                    + "ss\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\013"
-                    + "2\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egre"
-                    + "ss\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauth"
-                    + "Secret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthS"
-                    + "ecret\030\t \001(\0132\025.MultiSecretReferenceH\000\0221\n\023"
-                    + "cloudEventOverrides\030\n \001(\0132\024.CloudEventOv"
-                    + "errides\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006"
-                    + "\n\004Auth\"R\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034"
-                    + "\n\tresources\030\002 \003(\0132\t.Resource\022\024\n\014trustBun"
-                    + "dles\030\003 \003(\t*,\n\rBackoffPolicy\022\017\n\013Exponenti"
-                    + "al\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tUNO"
-                    + "RDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006Stri"
-                    + "ng\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArr"
-                    + "ay\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUC"
-                    + "TURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANISM"
-                    + "\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY"
-                    + "\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r"
-                    + "\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL"
-                    + "\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing"
-                    + ".kafka.broker.contractB\021DataPlaneContrac"
-                    + "tZ\032control-plane/pkg/contractb\006proto3"
+                    + "ence\030\007 \001(\t\022\016\n\006format\030\010 \001(\t\022\r\n\005retry\030\002 \001("
+                    + "\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.BackoffPolicy"
+                    + "\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\""
+                    + "\302\004\n\006Egress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013des"
+                    + "tination\030\002 \001(\t\022\032\n\022destinationCACerts\030\017 \001"
+                    + "(\t\022\033\n\023destinationAudience\030\021 \001(\t\022\022\n\010reply"
+                    + "Url\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030\004 \001("
+                    + "\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006.Empt"
+                    + "yH\000\022\027\n\017replyUrlCACerts\030\020 \001(\t\022\030\n\020replyUrl"
+                    + "Audience\030\022 \001(\t\022\027\n\006filter\030\005 \001(\0132\007.Filter\022"
+                    + "\013\n\003uid\030\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.Egr"
+                    + "essConfig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.Deliv"
+                    + "eryOrder\022\031\n\007keyType\030\n \001(\0162\010.KeyType\022\035\n\tr"
+                    + "eference\030\013 \001(\0132\n.Reference\022)\n\017dialectedF"
+                    + "ilter\030\014 \003(\0132\020.DialectedFilter\022\021\n\tvReplic"
+                    + "as\030\r \001(\005\022)\n\014featureFlags\030\016 \001(\0132\023.EgressF"
+                    + "eatureFlags\022\036\n\026oidcServiceAccountName\030\023 "
+                    + "\001(\tB\017\n\rreplyStrategy\"U\n\022EgressFeatureFla"
+                    + "gs\022\031\n\021enableRateLimiter\030\001 \001(\010\022$\n\034enableO"
+                    + "rderedExecutorMetrics\030\002 \001(\010\"~\n\007Ingress\022!"
+                    + "\n\013contentMode\030\001 \001(\0162\014.ContentMode\022\014\n\004pat"
+                    + "h\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\022\"\n\032enableAutoCreat"
+                    + "eEventTypes\030\004 \001(\010\022\020\n\010audience\030\005 \001(\t\"o\n\tR"
+                    + "eference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001("
+                    + "\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\022\014\n\004kind"
+                    + "\030\005 \001(\t\022\024\n\014groupVersion\030\006 \001(\t\"`\n\017SecretRe"
+                    + "ference\022\035\n\treference\030\001 \001(\0132\n.Reference\022."
+                    + "\n\022keyFieldReferences\030\002 \003(\0132\022.KeyFieldRef"
+                    + "erence\"C\n\021KeyFieldReference\022\021\n\tsecretKey"
+                    + "\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretField\"Y\n\024M"
+                    + "ultiSecretReference\022\033\n\010protocol\030\001 \001(\0162\t."
+                    + "Protocol\022$\n\nreferences\030\002 \003(\0132\020.SecretRef"
+                    + "erence\"\202\001\n\023CloudEventOverrides\0228\n\nextens"
+                    + "ions\030\001 \003(\0132$.CloudEventOverrides.Extensi"
+                    + "onsEntry\0321\n\017ExtensionsEntry\022\013\n\003key\030\001 \001(\t"
+                    + "\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030"
+                    + "\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstrapServer"
+                    + "s\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014eg"
+                    + "ressConfig\030\005 \001(\0132\r.EgressConfig\022\031\n\010egres"
+                    + "ses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006"
+                    + ".EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.Reference"
+                    + "H\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.MultiSecre"
+                    + "tReferenceH\000\0221\n\023cloudEventOverrides\030\n \001("
+                    + "\0132\024.CloudEventOverrides\022\035\n\treference\030\013 \001"
+                    + "(\0132\n.ReferenceB\006\n\004Auth\"R\n\010Contract\022\022\n\nge"
+                    + "neration\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Reso"
+                    + "urce\022\024\n\014trustBundles\030\003 \003(\t*,\n\rBackoffPol"
+                    + "icy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001*+\n\rDeli"
+                    + "veryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n"
+                    + "\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Dou"
+                    + "ble\020\002\022\r\n\tByteArray\020\003*)\n\013ContentMode\022\n\n\006B"
+                    + "INARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022"
+                    + "\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_C"
+                    + "RT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD"
+                    + "\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PL"
+                    + "AINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev."
+                    + "knative.eventing.kafka.broker.contractB\021"
+                    + "DataPlaneContractZ\032control-plane/pkg/con"
+                    + "tractb\006proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
@@ -28198,6 +28374,7 @@ public final class DataPlaneContract {
                     "DeadLetter",
                     "DeadLetterCACerts",
                     "DeadLetterAudience",
+                    "Format",
                     "Retry",
                     "BackoffPolicy",
                     "BackoffDelay",
