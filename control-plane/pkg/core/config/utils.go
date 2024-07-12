@@ -106,6 +106,10 @@ func EgressConfigFromDelivery(
 		egressConfig.Timeout = timeout
 	}
 
+	if delivery.Format != nil {
+		egressConfig.Format = string(*delivery.Format)
+	}
+
 	return egressConfig, nil
 }
 
@@ -191,6 +195,7 @@ func MergeEgressConfig(e0, e1 *contract.EgressConfig) *contract.EgressConfig {
 		BackoffPolicy: e0.GetBackoffPolicy(),
 		BackoffDelay:  mergeUint64(e0.GetBackoffDelay(), e1.GetBackoffDelay()),
 		Timeout:       mergeUint64(e0.GetTimeout(), e1.GetTimeout()),
+		Format:        mergeString(e0.GetFormat(), e1.GetFormat()),
 	}
 }
 
