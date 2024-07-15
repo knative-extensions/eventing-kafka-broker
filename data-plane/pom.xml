@@ -49,7 +49,7 @@
     <opentelemetry.version>1.17.0</opentelemetry.version>
     <jackson.version>2.14.1</jackson.version>
     <protobuf.version>3.25.2</protobuf.version>
-    <bucket4j.version>7.6.0</bucket4j.version>
+    <bucket4j.version>8.0.1</bucket4j.version>
     <slf4j.version>2.0.9</slf4j.version>
     <ch.qos.logback.version>1.4.14</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>7.2</net.logstash.logback.encoder.version>
