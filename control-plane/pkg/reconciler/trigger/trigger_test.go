@@ -2304,11 +2304,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 		table[i].Name = table[i].Name + " - " + format
 	}
 
-	if useNewFilters {
-		useTableWithFlags(t, table, &env, map[string]feature.Flag{feature.NewTriggerFilters: feature.Enabled})
-	} else {
-		useTable(t, table, &env)
-	}
+	useTable(t, table, &env)
 }
 
 func withDelivery(trigger *eventing.Trigger) {
