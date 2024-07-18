@@ -46,7 +46,7 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
     }
 
     private void applyKafkaMetadata(CloudEventBuilder builder, Number partition, Number offset) {
-        builder.withExtension("knativekafkapartition", partition);
-        builder.withExtension("knativekafkaoffset", offset);
+        builder.withExtension("knkafkapartition", partition);
+        builder.withExtension("knkafkaoffset", offset);
     }
 }

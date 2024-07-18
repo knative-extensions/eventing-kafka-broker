@@ -38,16 +38,16 @@ import (
 
 func KnativeKafkaCEExtensionsAdded() *feature.FeatureSet {
 	return &feature.FeatureSet{
-		Name: "KnativeKafkaCEExtensionsAdded",
+		Name: "KnKafkaCEExtensionsAdded",
 		Features: []*feature.Feature{
-			brokerAddsKnativeKafkaCEExtensions(),
-			channelAddsKnativeKafkaCEExtensions(),
-			sourceAddsKnativeKafkaCEExtensions(),
+			brokerAddsKnKafkaCEExtensions(),
+			channelAddsKnKafkaCEExtensions(),
+			sourceAddsKnKafkaCEExtensions(),
 		},
 	}
 }
 
-func brokerAddsKnativeKafkaCEExtensions() *feature.Feature {
+func brokerAddsKnKafkaCEExtensions() *feature.Feature {
 	f := feature.NewFeature()
 
 	brokerName := feature.MakeRandomK8sName("broker")
@@ -77,12 +77,12 @@ func brokerAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Alpha("broker").
 		Must("must add Knative Kafka CE extensions", eventasssert.OnStore(sinkName).
-			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset")).
+			MatchEvent(test.ContainsExtensions("knkafkapartition", "knkafkaoffset")).
 			Exact(1))
 	return f
 }
 
-func channelAddsKnativeKafkaCEExtensions() *feature.Feature {
+func channelAddsKnKafkaCEExtensions() *feature.Feature {
 	f := feature.NewFeature()
 
 	channelName := feature.MakeRandomK8sName("channel")
@@ -119,12 +119,12 @@ func channelAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Alpha("channel").
 		Must("add Knative Kafka CE extensions", eventasssert.OnStore(sinkName).
-			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset")).
+			MatchEvent(test.ContainsExtensions("knkafkapartition", "knkafkaoffset")).
 			Exact(1))
 	return f
 }
 
-func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
+func sourceAddsKnKafkaCEExtensions() *feature.Feature {
 	f := feature.NewFeature()
 
 	kafkaSource := feature.MakeRandomK8sName("kafka-source")
@@ -162,7 +162,7 @@ func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Alpha("source").
 		Must("add Knative Kafka CE extensions", eventasssert.OnStore(sinkName).
-			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset")).
+			MatchEvent(test.ContainsExtensions("knkafkapartition", "knkafkaoffset")).
 			Exact(1))
 	return f
 }
