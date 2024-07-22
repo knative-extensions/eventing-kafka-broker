@@ -1,5 +1,5 @@
 
-Lists of 238 third-party dependencies.
+Lists of 237 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.4.14 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.4.14 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.16.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -212,7 +212,6 @@ Lists of 238 third-party dependencies.
      (BSD License 3) Hamcrest (org.hamcrest:hamcrest:2.2 - http://hamcrest.org/JavaHamcrest/)
      (New BSD License) Hamcrest Core (org.hamcrest:hamcrest-core:1.3 - https://github.com/hamcrest/JavaHamcrest/hamcrest-core)
      (BSD-2-Clause) (Public Domain, per Creative Commons CC0) HdrHistogram (org.hdrhistogram:HdrHistogram:2.1.12 - http://hdrhistogram.github.io/HdrHistogram/)
-     (Apache License 2.0) JBoss Logging 3 (org.jboss.logging:jboss-logging:3.5.3.Final - http://www.jboss.org)
      (Apache License, version 2.0) JBoss Logging I18n Annotations (org.jboss.logging:jboss-logging-annotations:2.2.1.Final - http://www.jboss.org/jboss-logging-tools-parent/jboss-logging-annotations)
      (Apache License 2.0) JBoss Threads (org.jboss.threads:jboss-threads:3.5.1.Final - http://www.jboss.org/jboss-threads)
      (Eclipse Public License v2.0) JUnit Jupiter (Aggregator) (org.junit.jupiter:junit-jupiter:5.10.1 - https://junit.org/junit5/)

@@ -110,6 +110,10 @@
           <artifactId>jboss-logging-processor</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.jboss.logmanager</groupId>
           <artifactId>jboss-logmanager</artifactId>
         </exclusion>
