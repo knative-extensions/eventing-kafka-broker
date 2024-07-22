@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Vertx;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -32,8 +33,18 @@ public abstract class FilterBenchmark {
     Filter filter;
     CloudEvent cloudEvent;
 
+    Vertx vertx;
+
+    public static final long FILTER_REORDER_TIME_MILLISECONDS = 10000; // 1 seconds
+
+    @TearDown
+    public void closeVertx() {
+        this.vertx.close();
+    }
+
     @Setup(Level.Trial)
     public void setupFilter() {
+        this.vertx = Vertx.vertx();
         this.filter = createFilter();
     }
 
@@ -42,13 +53,20 @@ public abstract class FilterBenchmark {
         this.cloudEvent = createEvent();
     }
 
+    @TearDown(Level.Trial)
+    public void teardown() {
+        this.filter.close(vertx);
+    }
+
     protected abstract Filter createFilter();
 
     protected abstract CloudEvent createEvent();
 
     @Benchmark
     public void benchmarkFilterCreation(Blackhole bh) {
-        bh.consume(this.createFilter());
+        final var filter = this.createFilter();
+        filter.close(vertx);
+        bh.consume(filter);
     }
 
     @Benchmark

@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Vertx;
 import java.util.function.Predicate;
 
 /**
@@ -29,5 +30,19 @@ public interface Filter extends Predicate<CloudEvent> {
      */
     static Filter noop() {
         return ce -> true;
+    }
+
+    default int getCount() {
+        return 0;
+    }
+    ;
+
+    default int incrementCount() {
+        return 0;
+    }
+    ;
+
+    default void close(Vertx vertx) {
+        return;
     }
 }
