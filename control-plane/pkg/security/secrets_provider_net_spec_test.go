@@ -123,7 +123,11 @@ func TestResolveAuthContextFromNetSpec(t *testing.T) {
 					SaslMechanismKey: SaslScramSha512,
 					SaslUserKey:      "key",
 					SaslPasswordKey:  "key",
-				}},
+				}, ObjectMeta: metav1.ObjectMeta{
+					Name:      "cacertcertkeypasswordtypeuser",
+					Namespace: "nsnsnsnsnsns",
+				},
+				},
 				MultiSecretReference: &contract.MultiSecretReference{
 					Protocol: contract.Protocol_SASL_SSL,
 					References: []*contract.SecretReference{
@@ -249,7 +253,11 @@ func TestResolveAuthContextFromNetSpec(t *testing.T) {
 					SaslMechanismKey: SaslScramSha256,
 					SaslUserKey:      "key",
 					SaslPasswordKey:  "key",
-				}},
+				}, ObjectMeta: metav1.ObjectMeta{
+					Name:      "cacertcertkeypasswordtypeuser",
+					Namespace: "nsnsnsnsnsns",
+				},
+				},
 				MultiSecretReference: &contract.MultiSecretReference{
 					Protocol: contract.Protocol_SASL_SSL,
 					References: []*contract.SecretReference{
@@ -339,6 +347,9 @@ func TestResolveAuthContextFromNetSpec(t *testing.T) {
 					CaCertificateKey: "key",
 					UserCertificate:  "key",
 					UserKey:          "key",
+				}, ObjectMeta: metav1.ObjectMeta{
+					Name:      "cacertcertkey",
+					Namespace: "nsnsns",
 				}},
 				MultiSecretReference: &contract.MultiSecretReference{
 					Protocol: contract.Protocol_SSL,
@@ -400,6 +411,9 @@ func TestResolveAuthContextFromNetSpec(t *testing.T) {
 					ProtocolKey:     ProtocolSSL,
 					UserCertificate: "key",
 					UserKey:         "key",
+				}, ObjectMeta: metav1.ObjectMeta{
+					Name:      "certkey",
+					Namespace: "nsns",
 				}},
 				MultiSecretReference: &contract.MultiSecretReference{
 					Protocol: contract.Protocol_SSL,
@@ -466,6 +480,9 @@ func TestResolveAuthContextFromNetSpec(t *testing.T) {
 					SaslMechanismKey: SaslScramSha256,
 					SaslUserKey:      "key",
 					SaslPasswordKey:  "key",
+				}, ObjectMeta: metav1.ObjectMeta{
+					Name:      "passwordtypeuser",
+					Namespace: "nsnsns",
 				}},
 				MultiSecretReference: &contract.MultiSecretReference{
 					Protocol: contract.Protocol_SASL_PLAINTEXT,
@@ -538,6 +555,9 @@ func TestResolveAuthContextFromNetSpec(t *testing.T) {
 					SaslMechanismKey: SaslScramSha512,
 					SaslUserKey:      "key",
 					SaslPasswordKey:  "key",
+				}, ObjectMeta: metav1.ObjectMeta{
+					Name:      "passwordtypeuser",
+					Namespace: "nsnsns",
 				}},
 				MultiSecretReference: &contract.MultiSecretReference{
 					Protocol: contract.Protocol_SASL_PLAINTEXT,
