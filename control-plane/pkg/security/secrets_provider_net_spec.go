@@ -56,27 +56,21 @@ func ResolveAuthContextFromNetSpec(lister corelisters.SecretLister, namespace st
 			return nil, err
 		}
 	}
-	references, virtualSecretData, virtualSecretName, virtualSecretNamespace := toContract(securityFields)
+	references, virtualSecret := toContract(securityFields)
 	multiSecretReference := &contract.MultiSecretReference{
 		Protocol:   getProtocolContractFromNetSpec(netSpec),
 		References: references,
 	}
-	virtualSecretData[ProtocolKey] = []byte(getProtocolFromNetSpec(netSpec))
+	virtualSecret.Data[ProtocolKey] = []byte(getProtocolFromNetSpec(netSpec))
 
 	authContext := &NetSpecAuthContext{
-		VirtualSecret: &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      virtualSecretName,
-				Namespace: virtualSecretNamespace,
-			},
-			Data: virtualSecretData,
-		},
+		VirtualSecret:        &virtualSecret,
 		MultiSecretReference: multiSecretReference,
 	}
 	return authContext, nil
 }
 
-func toContract(securityFields []*securityField) ([]*contract.SecretReference, map[string][]byte, string, string) {
+func toContract(securityFields []*securityField) ([]*contract.SecretReference, corev1.Secret) {
 	virtualSecretData := make(map[string][]byte)
 	bySecretName := make(map[string][]securityField)
 	for _, f := range securityFields {
@@ -111,7 +105,13 @@ func toContract(securityFields []*securityField) ([]*contract.SecretReference, m
 		names = append(names, any.secret.Name)
 		namespaces = append(namespaces, any.secret.Namespace)
 	}
-	return refs, virtualSecretData, stableConcat(names), stableConcat(namespaces)
+	return refs, corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      stableConcat(names),
+			Namespace: stableConcat(namespaces),
+		},
+		Data: virtualSecretData,
+	}
 }
 
 type securityField struct {
