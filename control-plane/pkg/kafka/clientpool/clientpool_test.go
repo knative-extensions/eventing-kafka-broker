@@ -23,6 +23,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/atomic"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
@@ -123,11 +124,14 @@ func TestClientCloses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Second*1)
+	isClosed := atomic.NewBool(false)
 
 	clients := &ClientPool{
 		cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
-			return &kafkatesting.MockKafkaClient{CloseError: nil}, nil
+			return &kafkatesting.MockKafkaClient{OnClose: func() {
+				isClosed.Toggle()
+			}}, nil
 		},
 		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
 			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}}, nil
@@ -149,7 +153,7 @@ func TestClientCloses(t *testing.T) {
 	assert.NoError(t, err)
 
 	// the client should have been closed successfully now
-	assert.True(t, client1.(*client).client.Closed())
+	assert.True(t, isClosed.Load())
 
 	client2.Close()
 	cancel()
