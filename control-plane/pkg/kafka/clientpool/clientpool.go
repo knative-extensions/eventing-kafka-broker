@@ -127,12 +127,11 @@ func (cp *ClientPool) getClient(ctx context.Context, bootstrapServers []string, 
 }
 
 func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error) {
-	c, err := cp.getClient(ctx, bootstrapServers, secret)
+	c, err := cp.GetClient(ctx, bootstrapServers, secret)
 	if err != nil {
 		return nil, err
 	}
 
-	c.incrementCallers()
 	ca, err := clusterAdminFromClient(c, cp.newClusterAdminFromClient)
 	if err != nil {
 		c.Close()

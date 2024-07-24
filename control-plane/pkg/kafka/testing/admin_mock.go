@@ -58,6 +58,8 @@ type MockKafkaClusterAdmin struct {
 
 	ErrorOnDeleteConsumerGroup error
 
+	OnClose func()
+
 	T *testing.T
 }
 
@@ -301,5 +303,8 @@ func (m *MockKafkaClusterAdmin) RemoveMemberFromConsumerGroup(groupId string, gr
 
 func (m *MockKafkaClusterAdmin) Close() error {
 	m.ExpectedClose = true
+	if m.OnClose != nil {
+		m.OnClose()
+	}
 	return m.ExpectedCloseError
 }
