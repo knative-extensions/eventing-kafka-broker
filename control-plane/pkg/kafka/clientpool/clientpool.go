@@ -117,7 +117,7 @@ func (cp *ClientPool) getClient(ctx context.Context, bootstrapServers []string, 
 
 			logger.Debug("Closing client")
 
-			if err := value.client.Close(); !errors.Is(err, sarama.ErrClosedClient) {
+			if err := value.client.Close(); err != nil && !errors.Is(err, sarama.ErrClosedClient) {
 				logger.Errorw("Failed to close client", zap.Error(err))
 			}
 		}()

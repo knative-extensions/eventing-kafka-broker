@@ -117,6 +117,44 @@ func TestGetClusterAdmin(t *testing.T) {
 	cancel()
 }
 
+func TestClientCloses(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Second*1)
+
+	clients := &ClientPool{
+		cache: cache,
+		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
+			return &kafkatesting.MockKafkaClient{CloseError: nil}, nil
+		},
+		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
+			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}}, nil
+		},
+	}
+
+	client1, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
+	assert.NoError(t, err)
+
+	clusterAdmin, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	assert.NoError(t, err)
+
+	clusterAdmin.Close()
+	client1.Close()
+
+	time.Sleep(time.Second * 2)
+
+	client2, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
+	assert.NoError(t, err)
+
+	// the client should have been closed successfully now
+	assert.True(t, client1.(*client).client.Closed())
+
+	client2.Close()
+	cancel()
+}
+
 func TestMakeClientKey(t *testing.T) {
 	key1 := makeClusterAdminKey([]string{"localhost:9090", "localhost:9091", "localhost:9092"}, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "secret", Namespace: "knative-eventing"}})
 	key2 := makeClusterAdminKey([]string{"localhost:9092", "localhost:9091", "localhost:9090"}, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "secret", Namespace: "knative-eventing"}})
