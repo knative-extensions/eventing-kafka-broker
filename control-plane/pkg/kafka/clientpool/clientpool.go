@@ -66,6 +66,16 @@ type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, sec
 type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error)
 
 func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
+	client, err := cp.getClient(ctx, bootstrapServers, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	client.incrementCallers()
+	return client, nil
+}
+
+func (cp *ClientPool) getClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (*client, error) {
 	// (bootstrapServers, secret) uniquely identifies a sarama client config with the options we allow users to configure
 	key := makeClusterAdminKey(bootstrapServers, secret)
 
@@ -76,7 +86,6 @@ func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, 
 	// if a corresponding connection already exists, lets use it
 	if val, ok := cp.cache.Get(key); ok && val.hasCorrectSecretVersion(secret) {
 		logger.Debug("successfully got a client from the clientpool")
-		val.incrementCallers()
 		return val, nil
 	}
 	logger.Debug("failed to get an existing client, going to create one")
@@ -114,16 +123,16 @@ func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, 
 		}()
 	})
 
-	val.incrementCallers()
 	return val, nil
 }
 
 func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error) {
-	c, err := cp.GetClient(ctx, bootstrapServers, secret)
+	c, err := cp.getClient(ctx, bootstrapServers, secret)
 	if err != nil {
 		return nil, err
 	}
 
+	c.incrementCallers()
 	ca, err := clusterAdminFromClient(c, cp.newClusterAdminFromClient)
 	if err != nil {
 		c.Close()
