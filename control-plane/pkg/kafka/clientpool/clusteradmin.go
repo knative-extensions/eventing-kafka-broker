@@ -46,8 +46,6 @@ func clusterAdminFromClient(saramaClient sarama.Client, makeClusterAdmin kafka.N
 		return nil, err
 	}
 
-	c.incrementCallers()
-
 	return &clusterAdmin{
 		client:       c,
 		clusterAdmin: ca,
