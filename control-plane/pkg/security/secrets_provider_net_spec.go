@@ -19,8 +19,11 @@ package security
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 
@@ -53,21 +56,21 @@ func ResolveAuthContextFromNetSpec(lister corelisters.SecretLister, namespace st
 			return nil, err
 		}
 	}
-	references, virtualSecretData := toContract(securityFields)
+	references, virtualSecret := toContract(securityFields)
 	multiSecretReference := &contract.MultiSecretReference{
 		Protocol:   getProtocolContractFromNetSpec(netSpec),
 		References: references,
 	}
-	virtualSecretData[ProtocolKey] = []byte(getProtocolFromNetSpec(netSpec))
+	virtualSecret.Data[ProtocolKey] = []byte(getProtocolFromNetSpec(netSpec))
 
 	authContext := &NetSpecAuthContext{
-		VirtualSecret:        &corev1.Secret{Data: virtualSecretData},
+		VirtualSecret:        &virtualSecret,
 		MultiSecretReference: multiSecretReference,
 	}
 	return authContext, nil
 }
 
-func toContract(securityFields []*securityField) ([]*contract.SecretReference, map[string][]byte) {
+func toContract(securityFields []*securityField) ([]*contract.SecretReference, corev1.Secret) {
 	virtualSecretData := make(map[string][]byte)
 	bySecretName := make(map[string][]securityField)
 	for _, f := range securityFields {
@@ -79,6 +82,8 @@ func toContract(securityFields []*securityField) ([]*contract.SecretReference, m
 	}
 
 	refs := make([]*contract.SecretReference, 0, 6 /* max number of secrets */)
+	names := make([]string, 0, 6)
+	namespaces := make([]string, 0, 6)
 	for secretName, securityFields := range bySecretName {
 		keyFieldReferences := make([]*contract.KeyFieldReference, 0, len(securityFields))
 		for _, f := range securityFields {
@@ -97,8 +102,16 @@ func toContract(securityFields []*securityField) ([]*contract.SecretReference, m
 			},
 			KeyFieldReferences: keyFieldReferences,
 		})
+		names = append(names, any.secret.Name)
+		namespaces = append(namespaces, any.secret.Namespace)
 	}
-	return refs, virtualSecretData
+	return refs, corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      stableConcat(names),
+			Namespace: stableConcat(namespaces),
+		},
+		Data: virtualSecretData,
+	}
 }
 
 type securityField struct {
@@ -159,4 +172,12 @@ func resolveSecret(lister corelisters.SecretLister, ns string, ref *corev1.Secre
 		return nil, nil, fmt.Errorf("missing secret key or empty secret value (%s/%s.%s)", ns, ref.Name, ref.Key)
 	}
 	return value, secret, nil
+}
+
+func stableConcat(elements []string) string {
+	sort.SliceStable(elements, func(i, j int) bool {
+		return elements[i] < elements[j]
+	})
+
+	return strings.Join(elements, "")
 }
