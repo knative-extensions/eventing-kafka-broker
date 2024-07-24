@@ -124,17 +124,21 @@ func TestClientCloses(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Second*1)
-	isClosed := atomic.NewBool(false)
+	clientClosed := atomic.NewBool(false)
+	adminClosed := atomic.NewBool(false)
 
 	clients := &ClientPool{
 		cache: cache,
 		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
 			return &kafkatesting.MockKafkaClient{OnClose: func() {
-				isClosed.Toggle()
+				clientClosed.Toggle()
 			}}, nil
 		},
-		newClusterAdminFromClient: func(_ sarama.Client) (sarama.ClusterAdmin, error) {
-			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}}, nil
+		newClusterAdminFromClient: func(c sarama.Client) (sarama.ClusterAdmin, error) {
+			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}, OnClose: func() {
+				c.Close()
+				adminClosed.Toggle()
+			}}, nil
 		},
 	}
 
@@ -149,13 +153,10 @@ func TestClientCloses(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	client2, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
-	assert.NoError(t, err)
-
 	// the client should have been closed successfully now
-	assert.True(t, isClosed.Load())
+	assert.True(t, clientClosed.Load())
+	assert.True(t, adminClosed.Load())
 
-	client2.Close()
 	cancel()
 }
 

@@ -289,5 +289,5 @@ func (a *clusterAdmin) RemoveMemberFromConsumerGroup(groupId string, groupInstan
 }
 
 func (a *clusterAdmin) Close() error {
-	return a.client.Close()
+	return a.clusterAdmin.Close()
 }
