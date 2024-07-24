@@ -109,6 +109,9 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{},
+							},
 						},
 					},
 				},
@@ -135,6 +138,9 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Name:       "my-seq",
 									APIVersion: "flows.knative.dev/v1",
 								},
+							},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{},
 							},
 						},
 					},
@@ -191,6 +197,9 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{},
+							},
 						},
 					},
 				},
@@ -214,6 +223,9 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
+							},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{},
 							},
 						},
 					},
@@ -243,6 +255,9 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Host:   "127.0.0.1",
 								},
 							},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{},
+							},
 						},
 					},
 				},
@@ -266,6 +281,9 @@ func TestConsumerGroup_Validate(t *testing.T) {
 									Scheme: "http",
 									Host:   "127.0.0.1",
 								},
+							},
+							Configs: ConsumerConfigs{
+								Configs: map[string]string{},
 							},
 						},
 					},
