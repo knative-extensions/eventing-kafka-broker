@@ -28,6 +28,7 @@ type MockKafkaClient struct {
 	ShouldFailRefreshMetadata bool
 	ShouldFailRefreshBrokers  bool
 	ShouldFailBrokenPipe      bool
+	OnClose                   func()
 }
 
 var _ sarama.Client = &MockKafkaClient{}
@@ -195,6 +196,9 @@ func (m MockKafkaClient) LeastLoadedBroker() *sarama.Broker {
 
 func (m *MockKafkaClient) Close() error {
 	m.IsClosed = true
+	if m.OnClose != nil {
+		m.OnClose()
+	}
 	return m.CloseError
 }
 

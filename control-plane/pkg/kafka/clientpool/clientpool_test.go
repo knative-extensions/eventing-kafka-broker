@@ -23,6 +23,7 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/atomic"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
@@ -113,6 +114,48 @@ func TestGetClusterAdmin(t *testing.T) {
 	topics, err = client3.ListTopics()
 	assert.NoError(t, err)
 	assert.Contains(t, topics, "topic1")
+
+	cancel()
+}
+
+func TestClientCloses(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+	cache := prober.NewLocalExpiringCache[clientKey, *client, struct{}](ctx, time.Second*1)
+	clientClosed := atomic.NewBool(false)
+	adminClosed := atomic.NewBool(false)
+
+	clients := &ClientPool{
+		cache: cache,
+		newSaramaClient: func(_ []string, _ *sarama.Config) (sarama.Client, error) {
+			return &kafkatesting.MockKafkaClient{OnClose: func() {
+				clientClosed.Toggle()
+			}}, nil
+		},
+		newClusterAdminFromClient: func(c sarama.Client) (sarama.ClusterAdmin, error) {
+			return &kafkatesting.MockKafkaClusterAdmin{ExpectedTopics: []string{"topic1"}, OnClose: func() {
+				c.Close()
+				adminClosed.Toggle()
+			}}, nil
+		},
+	}
+
+	client1, err := clients.GetClient(ctx, []string{"localhost:9092"}, nil)
+	assert.NoError(t, err)
+
+	clusterAdmin, err := clients.GetClusterAdmin(ctx, []string{"localhost:9092"}, nil)
+	assert.NoError(t, err)
+
+	clusterAdmin.Close()
+	client1.Close()
+
+	time.Sleep(time.Second * 2)
+
+	// the client should have been closed successfully now
+	assert.True(t, clientClosed.Load())
+	assert.True(t, adminClosed.Load())
 
 	cancel()
 }
