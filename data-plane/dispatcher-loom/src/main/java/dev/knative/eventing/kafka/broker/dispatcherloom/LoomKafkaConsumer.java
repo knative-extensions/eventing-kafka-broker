@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
@@ -44,7 +45,6 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
     private final Consumer<K, V> consumer;
     private final BlockingQueue<Runnable> taskQueue;
     private final AtomicBoolean isClosed;
-    private final AtomicBoolean isFinished;
     private final Thread taskRunnerThread;
     private final Promise<Void> closePromise = Promise.promise();
 
@@ -52,7 +52,6 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         this.consumer = consumer;
         this.taskQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
-        this.isFinished = new AtomicBoolean(false);
 
         if (Boolean.parseBoolean(System.getenv("ENABLE_VIRTUAL_THREADS"))) {
             this.taskRunnerThread = Thread.ofVirtual().start(this::processTaskQueue);
@@ -74,14 +73,15 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         // Process queue elements until this is closed and the tasks queue is empty
         while (!isClosed.get() || !taskQueue.isEmpty()) {
             try {
-                taskQueue.take().run();
+                Runnable task = taskQueue.poll(2000, TimeUnit.MILLISECONDS);
+                if (task != null) {
+                  task.run();
+                }
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for task", e);
                 break;
             }
         }
-
-        isFinished.set(true);
     }
 
     @Override
@@ -125,16 +125,6 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                     Thread.sleep(2000L);
                 }
                 logger.debug("Queue is empty");
-
-                if (!isFinished.get()) {
-                    logger.debug("Background thread not finished yet, waiting for it to complete");
-                    Thread.sleep(2000L);
-
-                    if (!isFinished.get()) {
-                        logger.debug("Background thread still not finished yet, interrupting background thread");
-                        taskRunnerThread.interrupt();
-                    }
-                }
 
                 taskRunnerThread.join();
                 closePromise.tryComplete();
