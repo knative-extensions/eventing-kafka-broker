@@ -56,7 +56,7 @@ func NewAsync(ctx context.Context, client httpClient, port string, IPsLister IPs
 		client:    client,
 		enqueue:   enqueue,
 		logger:    logger,
-		cache:     NewLocalExpiringCache[string, Status, types.NamespacedName](ctx, cacheExpiryTime),
+		cache:     NewLocalExpiringCacheWithDefault[string, Status, types.NamespacedName](ctx, cacheExpiryTime, StatusUnknown),
 		IPsLister: IPsLister,
 		port:      port,
 	}
