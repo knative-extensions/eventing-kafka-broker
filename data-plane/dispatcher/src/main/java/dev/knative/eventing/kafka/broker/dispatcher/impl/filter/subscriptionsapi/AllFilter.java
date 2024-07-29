@@ -26,7 +26,15 @@ public class AllFilter implements Filter {
     private final List<Filter> filters;
     private static final Logger logger = LoggerFactory.getLogger(AllFilter.class);
 
-    public AllFilter(List<Filter> filters) {
+    public static Filter newFilter(List<Filter> filters) {
+        if (filters.size() == 1) {
+            return filters.getFirst();
+        }
+
+        return new AllFilter(filters);
+    }
+
+    private AllFilter(List<Filter> filters) {
         this.filters = filters;
     }
 

@@ -50,7 +50,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter()));
+            return AllFilter.newFilter(List.of(makeExactFilter()));
         }
 
         @Override
@@ -63,7 +63,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
+            return AllFilter.newFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
         }
 
         @Override
@@ -76,7 +76,8 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()));
+            return AllFilter.newFilter(
+                    List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch(), makeExactFilter()));
         }
 
         @Override
@@ -89,7 +90,8 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
+            return AllFilter.newFilter(
+                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
         }
 
         @Override
@@ -102,7 +104,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()));
+            return AllFilter.newFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makePrefixFilter()));
         }
 
         @Override
@@ -115,7 +117,7 @@ public class AllFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AllFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
+            return AllFilter.newFilter(List.of(makePrefixFilterNoMatch(), makeSuffixFilterNoMatch()));
         }
 
         @Override
