@@ -114,21 +114,18 @@ public class Main {
 
         // Setup OIDC discovery config
         OIDCDiscoveryConfig oidcDiscoveryConfig = null;
-        try {
+        if (featuresConfig.isAuthenticationOIDC()) {
+          try {
             oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
-                    .toCompletionStage()
-                    .toCompletableFuture()
-                    .get();
-        } catch (Exception ex) {
-            if (featuresConfig.isAuthenticationOIDC()) {
-                logger.error("Could not load OIDC config while OIDC authentication feature is enabled.");
-                throw ex;
-            } else {
-                logger.warn(
-                        "Could not load OIDC configuration. This will lead to problems, when the {} flag will be enabled later",
-                        FeaturesConfig.KEY_AUTHENTICATION_OIDC);
-            }
+              .toCompletionStage()
+              .toCompletableFuture()
+              .get();
+          } catch (Exception ex) {
+              logger.error("Could not load OIDC config while OIDC authentication feature is enabled.");
+              throw ex;
+          }
         }
+
 
         final var kubernetesClient = new KubernetesClientBuilder().build();
         final SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
