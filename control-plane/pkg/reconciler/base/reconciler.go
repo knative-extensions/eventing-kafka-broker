@@ -19,6 +19,8 @@ package base
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -33,7 +35,6 @@ import (
 	"k8s.io/utils/pointer"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
-	"time"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
