@@ -85,26 +85,27 @@ public class ReceiverDeployer {
         this.eventTypeInformer = eventTypeInformer;
         this.featuresConfig = new FeaturesConfig(env.getConfigFeaturesPath());
         this.openTelemetry = openTelemetry;
-        this.featuresConfigWatcher = new FileWatcher(new File(env.getConfigFeaturesPath() + "/" + FeaturesConfig.KEY_AUTHENTICATION_OIDC), () -> {
-          logger.info("config features updated, reloading");
-            try {
-                this.featuresConfig = new FeaturesConfig(env.getConfigFeaturesPath());
-                if (this.featuresConfig.isAuthenticationOIDC() && this.oidcDiscoveryConfig == null) {
-                  logger.info("building OIDC config");
-                  this.buildOIDCDiscoveryConfig();
-                  logger.info("undeploying verticles");
-                  this.undeploy();
-                  logger.info("deploying verticles again with new oidc config");
-                    this.deploy();
-                }
-            } catch (IOException
-                    | ExecutionException
-                    | InterruptedException
-                    | NoSuchAlgorithmException
-                    | TimeoutException e) {
-                logger.warn("features config file updated but was unable to rebuild the config", e);
-            }
-        });
+        this.featuresConfigWatcher = new FileWatcher(
+                new File(env.getConfigFeaturesPath() + "/" + FeaturesConfig.KEY_AUTHENTICATION_OIDC), () -> {
+                    logger.info("config features updated, reloading");
+                    try {
+                        this.featuresConfig = new FeaturesConfig(env.getConfigFeaturesPath());
+                        if (this.featuresConfig.isAuthenticationOIDC() && this.oidcDiscoveryConfig == null) {
+                            logger.info("building OIDC config");
+                            this.buildOIDCDiscoveryConfig();
+                            logger.info("undeploying verticles");
+                            this.undeploy();
+                            logger.info("deploying verticles again with new oidc config");
+                            this.deploy();
+                        }
+                    } catch (IOException
+                            | ExecutionException
+                            | InterruptedException
+                            | NoSuchAlgorithmException
+                            | TimeoutException e) {
+                        logger.warn("features config file updated but was unable to rebuild the config", e);
+                    }
+                });
         if (this.featuresConfig.isAuthenticationOIDC()) {
             this.buildOIDCDiscoveryConfig();
         }
