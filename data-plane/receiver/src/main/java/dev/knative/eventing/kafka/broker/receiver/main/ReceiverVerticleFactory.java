@@ -19,7 +19,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
-import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -49,7 +49,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final String secretVolumePath = "/etc/receiver-tls-secret";
 
     private final IngressRequestHandler ingressRequestHandler;
-    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
+    private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
 
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
 
@@ -63,7 +63,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
             final SharedIndexInformer<EventType> eventTypeInformer,
             Vertx vertx,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig)
+            final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener)
             throws NoSuchAlgorithmException {
         {
             this.env = env;
@@ -75,7 +75,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                     metricsRegistry,
                     new EventTypeCreatorImpl(eventTypeClient, new EventTypeListerFactory(eventTypeInformer), vertx));
             this.kafkaProducerFactory = kafkaProducerFactory;
-            this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+            this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
         }
     }
 
@@ -91,6 +91,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         properties -> kafkaProducerFactory.create(v, properties)),
                 this.ingressRequestHandler,
                 secretVolumePath,
-                oidcDiscoveryConfig);
+                oidcDiscoveryConfigListener);
     }
 }

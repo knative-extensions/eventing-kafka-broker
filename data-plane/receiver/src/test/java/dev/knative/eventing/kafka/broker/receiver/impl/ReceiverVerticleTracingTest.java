@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
@@ -133,7 +134,7 @@ public abstract class ReceiverVerticleTracingTest {
                 new IngressRequestHandlerImpl(
                         StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry(), ((event, reference) -> null)),
                 SECRET_VOLUME_PATH,
-                null);
+                mock(OIDCDiscoveryConfigListener.class));
 
         vertx.deployVerticle(verticle).toCompletionStage().toCompletableFuture().get();
     }
