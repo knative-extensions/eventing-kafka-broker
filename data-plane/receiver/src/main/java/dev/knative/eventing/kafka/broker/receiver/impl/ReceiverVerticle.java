@@ -183,6 +183,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     }
 
     private void buildAuthHandler(OIDCDiscoveryConfig config) {
+      logger.info("updating auth handler for receiver verticle");
         TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, config);
         this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
     }

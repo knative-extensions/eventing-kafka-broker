@@ -44,11 +44,11 @@ public class OIDCDiscoveryConfigListener implements AutoCloseable {
         this.vertx = vertx;
         this.timeoutSeconds = timeoutSeconds;
 
-        this.oidcDiscoveryConfig = this.buildFeaturesAndOIDCDiscoveryConfig();
+        this.buildFeaturesAndOIDCDiscoveryConfig();
 
-        this.configFeaturesWatcher = new FileWatcher(new File(featuresConfigPath), () -> {
+        this.configFeaturesWatcher = new FileWatcher(new File(featuresConfigPath + "/" + FeaturesConfig.KEY_AUTHENTICATION_OIDC), () -> {
             if (this.oidcDiscoveryConfig == null) {
-                this.oidcDiscoveryConfig = this.buildFeaturesAndOIDCDiscoveryConfig();
+                this.buildFeaturesAndOIDCDiscoveryConfig();
                 if (this.oidcDiscoveryConfig != null && this.callbacks != null) {
                     this.callbacks.stream().filter(Objects::nonNull).forEach(c -> c.accept(this.oidcDiscoveryConfig));
                 }
@@ -68,7 +68,6 @@ public class OIDCDiscoveryConfigListener implements AutoCloseable {
         }
 
         this.callbacks.add(callback);
-
         return this.callbacks.size();
     }
 
@@ -76,22 +75,20 @@ public class OIDCDiscoveryConfigListener implements AutoCloseable {
         this.callbacks.set(callbackId, null);
     }
 
-    private OIDCDiscoveryConfig buildOIDCDiscoveryConfig()
+    private void buildOIDCDiscoveryConfig()
             throws ExecutionException, InterruptedException, TimeoutException {
         this.oidcDiscoveryConfig = OIDCDiscoveryConfig.build(this.vertx)
                 .toCompletionStage()
                 .toCompletableFuture()
                 .get(this.timeoutSeconds, TimeUnit.SECONDS);
-
-        return this.oidcDiscoveryConfig;
     }
 
-    private OIDCDiscoveryConfig buildFeaturesAndOIDCDiscoveryConfig() {
+    private void buildFeaturesAndOIDCDiscoveryConfig() {
         try {
             FeaturesConfig featuresConfig = new FeaturesConfig(featuresConfigPath);
             if (featuresConfig.isAuthenticationOIDC()) {
                 try {
-                    return this.buildOIDCDiscoveryConfig();
+                  this.buildOIDCDiscoveryConfig();
                 } catch (ExecutionException | InterruptedException | TimeoutException e) {
                     logger.error("Unable to build OIDC Discover Config even though OIDC authentication is enabled", e);
                 }
@@ -99,8 +96,6 @@ public class OIDCDiscoveryConfigListener implements AutoCloseable {
         } catch (IOException e) {
             logger.warn("failed to get feature config, skipping building OIDC Discovery Config", e);
         }
-
-        return null;
     }
 
     @Override

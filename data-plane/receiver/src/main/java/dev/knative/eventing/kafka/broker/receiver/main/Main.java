@@ -128,7 +128,7 @@ public class Main {
         }
 
         OIDCDiscoveryConfigListener oidcDiscoveryConfigListener = new OIDCDiscoveryConfigListener(
-                env.getConfigFeaturesPath() + "/" + FeaturesConfig.KEY_AUTHENTICATION_OIDC,
+                env.getConfigFeaturesPath(),
                 vertx,
                 env.getWaitStartupSeconds());
 
