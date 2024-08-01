@@ -21,7 +21,6 @@ import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
-import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
@@ -127,10 +126,8 @@ public class Main {
                     informerException);
         }
 
-        OIDCDiscoveryConfigListener oidcDiscoveryConfigListener = new OIDCDiscoveryConfigListener(
-                env.getConfigFeaturesPath(),
-                vertx,
-                env.getWaitStartupSeconds());
+        OIDCDiscoveryConfigListener oidcDiscoveryConfigListener =
+                new OIDCDiscoveryConfigListener(env.getConfigFeaturesPath(), vertx, env.getWaitStartupSeconds());
 
         try {
             final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
