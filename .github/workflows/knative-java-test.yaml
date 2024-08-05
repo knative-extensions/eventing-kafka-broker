@@ -53,6 +53,9 @@ jobs:
       - name: Java Test
         run: ./hack/run.sh unit-tests-data-plane
 
+      - name: Code Formatting Check
+        run: ./hack/run.sh format-check
+
       - if: steps.codecov-enabled.outputs.files_exists == 'true'
         name: Codecov
         uses: codecov/codecov-action@v1

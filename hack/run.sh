@@ -104,6 +104,9 @@ elif [[ "${action}" == "integration-test" ]]; then
 elif [[ "${action}" == "format-java" ]]; then
 	cd "${ROOT_DIR}/data-plane"
 	./mvnw spotless:apply
+elif [[ "${action}" == "format-check" ]]; then
+	cd "${ROOT_DIR}/data-plane"
+	./mvnw spotless:check
 else
 	echo "Unrecognized action ${action}"
 	usage "$0"
