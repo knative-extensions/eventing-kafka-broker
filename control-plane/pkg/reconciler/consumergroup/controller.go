@@ -27,12 +27,14 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -42,7 +44,7 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -119,13 +121,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	clientPool := clientpool.Get(ctx)
 
+	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
+
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
 		ConsumerLister:                     consumer.Get(ctx).Lister(),
 		InternalsClient:                    internalsclient.Get(ctx).InternalV1alpha1(),
 		SecretLister:                       secretinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapinformer.Get(ctx).Lister(),
-		PodLister:                          podinformer.Get(ctx).Lister(),
+		PodLister:                          dispatcherPodInformer.Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
 		GetKafkaClient:                     clientPool.GetClient,
@@ -194,6 +198,47 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		return cg, ok
 	})
 
+	dispatcherPodInformer.Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
+		pod, ok := obj.(*corev1.Pod)
+		if !ok {
+			return
+		}
+
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetPrefix(pod.Name)
+		if !ok {
+			return
+		}
+
+		cmName, err := eventing.ConfigMapNameFromPod(pod)
+		if err != nil {
+			logger.Warnw("Failed to get ConfigMap name from pod", zap.String("pod", pod.Name), zap.Error(err))
+			return
+		}
+		if err := r.ensureContractConfigMapExists(ctx, pod, cmName); err != nil {
+			logger.Warnw("Failed to ensure ConfigMap for pod exists", zap.String("pod", pod.Name), zap.String("configmap", cmName), zap.Error(err))
+			return
+		}
+
+		impl.FilteredGlobalResync(
+			func(obj interface{}) bool {
+				cg, ok := obj.(*kafkainternals.ConsumerGroup)
+				if !ok {
+					return false
+				}
+
+				uf := cg.GetUserFacingResourceRef()
+				if uf == nil {
+					return false
+				}
+				if strings.EqualFold(kind, uf.Kind) {
+					return true
+				}
+				return false
+			},
+			consumerGroupInformer.Informer(),
+		)
+	}))
+
 	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
@@ -209,7 +254,7 @@ func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(i
 			return
 		}
 
-		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetName(ss.GetName())
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetPrefix(ss.GetName())
 		if !ok {
 			return
 		}
