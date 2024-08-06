@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
@@ -107,7 +108,10 @@ public abstract class ReceiverVerticleTracingTest {
         this.mockProducer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
 
         this.store = new IngressProducerReconcilableStore(
-                AuthProvider.noAuth(), new Properties(), properties -> createKafkaProducer(vertx, mockProducer));
+                AuthProvider.noAuth(),
+                new Properties(),
+                properties -> createKafkaProducer(vertx, mockProducer),
+                mock(EventTypeListerFactory.class));
 
         final var env = mock(ReceiverEnv.class);
         when(env.getLivenessProbePath()).thenReturn("/healthz");
@@ -131,7 +135,9 @@ public abstract class ReceiverVerticleTracingTest {
                 httpsServerOptions,
                 v -> store,
                 new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(), Metrics.getRegistry(), ((event, reference) -> null)),
+                        StrictRequestToRecordMapper.getInstance(),
+                        Metrics.getRegistry(),
+                        ((event, lister, reference) -> null)),
                 SECRET_VOLUME_PATH,
                 null);
 

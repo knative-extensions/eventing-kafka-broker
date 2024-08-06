@@ -169,7 +169,10 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                             .compose((recordMetadata) -> {
                                 if (producer.isEventTypeAutocreateEnabled()) {
                                     return this.eventTypeCreator
-                                            .create(record.value(), producer.getReference())
+                                            .create(
+                                                    record.value(),
+                                                    producer.getEventTypeLister(),
+                                                    producer.getReference())
                                             .compose(
                                                     et -> {
                                                         logger.debug("successfully created eventtype {}", et);
