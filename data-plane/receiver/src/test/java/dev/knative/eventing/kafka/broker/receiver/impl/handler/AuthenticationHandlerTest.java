@@ -21,9 +21,11 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.cloudevents.CloudEvent;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -68,6 +70,11 @@ public class AuthenticationHandlerTest {
                     @Override
                     public DataPlaneContract.Reference getReference() {
                         return null;
+                    }
+
+                    @Override
+                    public Lister<EventType> getEventTypeLister() {
+                        return mock(Lister.class);
                     }
 
                     @Override
@@ -116,6 +123,11 @@ public class AuthenticationHandlerTest {
                     @Override
                     public DataPlaneContract.Reference getReference() {
                         return null;
+                    }
+
+                    @Override
+                    public Lister<EventType> getEventTypeLister() {
+                        return mock(Lister.class);
                     }
 
                     @Override
