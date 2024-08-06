@@ -97,6 +97,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private IngressProducerReconcilableStore ingressProducerStore;
     private FileWatcher secretWatcher;
 
+    private final long terminationGracePeriodMs;
+
     public ReceiverVerticle(
             final ReceiverEnv env,
             final HttpServerOptions httpServerOptions,
@@ -104,7 +106,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
             final String secretVolumePath,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
+            final OIDCDiscoveryConfig oidcDiscoveryConfig,
+            final long terminationGracePeriodMs) {
 
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
@@ -122,6 +125,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
         this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+        this.terminationGracePeriodMs = terminationGracePeriodMs;
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -193,6 +197,20 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     @Override
     public void stop(Promise<Void> stopPromise) throws Exception {
+        if (this.terminationGracePeriodMs < 1) {
+            this.handleStop(stopPromise);
+            return;
+        }
+        this.vertx.setTimer(this.terminationGracePeriodMs, (ignored) -> {
+            try {
+                this.handleStop(stopPromise);
+            } catch (Exception e) {
+                stopPromise.fail(e);
+            }
+        });
+    }
+
+    private void handleStop(Promise<Void> stopPromise) throws Exception {
         CompositeFuture.all(
                         (this.httpServer != null ? this.httpServer.close().mapEmpty() : Future.succeededFuture()),
                         (this.httpsServer != null ? this.httpsServer.close().mapEmpty() : Future.succeededFuture()),
