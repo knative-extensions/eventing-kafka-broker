@@ -28,6 +28,7 @@ rules:
       - "deployments"
     verbs:
       - "delete"
+      - "get"
       - "list"
   # we need to get statefulsets
   - apiGroups:
