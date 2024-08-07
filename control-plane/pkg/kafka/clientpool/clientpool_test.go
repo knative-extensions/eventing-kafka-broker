@@ -26,6 +26,7 @@ import (
 	"go.uber.org/atomic"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
@@ -151,11 +152,9 @@ func TestClientCloses(t *testing.T) {
 	clusterAdmin.Close()
 	client1.Close()
 
-	time.Sleep(time.Second * 2)
-
 	// the client should have been closed successfully now
-	assert.True(t, clientClosed.Load())
-	assert.True(t, adminClosed.Load())
+	assert.Eventuallyf(t, func() bool { return clientClosed.Load() }, 10*time.Second, time.Second, "client not closed")
+	assert.Eventuallyf(t, func() bool { return adminClosed.Load() }, 10*time.Second, time.Second, "admin not closed")
 
 	cancel()
 }

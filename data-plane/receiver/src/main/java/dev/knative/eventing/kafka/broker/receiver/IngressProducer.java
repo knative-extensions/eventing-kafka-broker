@@ -17,7 +17,9 @@ package dev.knative.eventing.kafka.broker.receiver;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import io.cloudevents.CloudEvent;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -57,6 +59,11 @@ public interface IngressProducer {
     default boolean isEventTypeAutocreateEnabled() {
         return false;
     }
+
+    /**
+     * @return the Lister for eventtypes in the correct namespace for this producer
+     */
+    Lister<EventType> getEventTypeLister();
 
     /**
      * @return the OIDC audience for the ingress.

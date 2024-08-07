@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
@@ -30,6 +31,7 @@ import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
@@ -81,7 +83,8 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, statusCode);
 
-        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, reference) -> null));
+        final var handler =
+                new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, lister, reference) -> null));
 
         handler.handle(new RequestContext(request), new IngressProducer() {
             @Override
@@ -97,6 +100,11 @@ public class IngressRequestHandlerImplTest {
             @Override
             public DataPlaneContract.Reference getReference() {
                 return DataPlaneContract.Reference.newBuilder().build();
+            }
+
+            @Override
+            public Lister<EventType> getEventTypeLister() {
+                return mock(Lister.class);
             }
 
             @Override
@@ -117,7 +125,8 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, IngressRequestHandlerImpl.MAPPER_FAILED);
 
-        final var handler = new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, reference) -> null));
+        final var handler =
+                new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, lister, reference) -> null));
 
         handler.handle(new RequestContext(request), new IngressProducer() {
             @Override
@@ -133,6 +142,11 @@ public class IngressRequestHandlerImplTest {
             @Override
             public DataPlaneContract.Reference getReference() {
                 return DataPlaneContract.Reference.newBuilder().build();
+            }
+
+            @Override
+            public Lister<EventType> getEventTypeLister() {
+                return mock(Lister.class);
             }
 
             @Override
