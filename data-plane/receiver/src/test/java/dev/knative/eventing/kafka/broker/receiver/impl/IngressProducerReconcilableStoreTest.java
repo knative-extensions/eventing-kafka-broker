@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -292,10 +293,14 @@ public class IngressProducerReconcilableStoreTest {
 
         final var producerFactoryInvocations = new AtomicInteger(0);
 
-        final var store = new IngressProducerReconcilableStore(AuthProvider.noAuth(), new Properties(), properties -> {
-            producerFactoryInvocations.incrementAndGet();
-            return mockProducer();
-        });
+        final var store = new IngressProducerReconcilableStore(
+                AuthProvider.noAuth(),
+                new Properties(),
+                properties -> {
+                    producerFactoryInvocations.incrementAndGet();
+                    return mockProducer();
+                },
+                mock(EventTypeListerFactory.class));
 
         final var reconciler = ResourcesReconciler.builder().watchIngress(store).build();
 
@@ -381,14 +386,18 @@ public class IngressProducerReconcilableStoreTest {
                 "kafka-3:9092", producer3,
                 "kafka-4:9092", producer4);
 
-        final var store = new IngressProducerReconcilableStore(AuthProvider.noAuth(), new Properties(), properties -> {
-            ReactiveKafkaProducer<String, CloudEvent> producer =
-                    producerMap.get(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
-            if (producer == null) {
-                throw new IllegalStateException("Can't determine what producer to return");
-            }
-            return producer;
-        });
+        final var store = new IngressProducerReconcilableStore(
+                AuthProvider.noAuth(),
+                new Properties(),
+                properties -> {
+                    ReactiveKafkaProducer<String, CloudEvent> producer =
+                            producerMap.get(properties.getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+                    if (producer == null) {
+                        throw new IllegalStateException("Can't determine what producer to return");
+                    }
+                    return producer;
+                },
+                mock(EventTypeListerFactory.class));
 
         final var reconciler = ResourcesReconciler.builder().watchIngress(store).build();
 
@@ -462,7 +471,10 @@ public class IngressProducerReconcilableStoreTest {
                 .build();
 
         final var store = new IngressProducerReconcilableStore(
-                AuthProvider.noAuth(), new Properties(), properties -> mockProducer());
+                AuthProvider.noAuth(),
+                new Properties(),
+                properties -> mockProducer(),
+                mock(EventTypeListerFactory.class));
 
         final var reconciler = ResourcesReconciler.builder().watchIngress(store).build();
 

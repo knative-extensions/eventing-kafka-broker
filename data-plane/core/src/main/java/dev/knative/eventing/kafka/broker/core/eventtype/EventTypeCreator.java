@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.eventtype;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.cloudevents.CloudEvent;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
 
 /**
@@ -25,5 +26,6 @@ import io.vertx.core.Future;
  */
 @FunctionalInterface
 public interface EventTypeCreator {
-    Future<EventType> create(CloudEvent event, DataPlaneContract.Reference reference);
+    Future<EventType> create(
+            CloudEvent event, Lister<EventType> eventTypeLister, DataPlaneContract.Reference reference);
 }
