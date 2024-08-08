@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -143,8 +144,10 @@ public class FileWatcher implements AutoCloseable {
             for (final var event : key.pollEvents()) {
                 final var kind = event.kind();
 
+                logger.debug("Contract update event {}", keyValue("event.kind", event.kind()));
+
                 // We check if the event's context (the file) matches our target file
-                if (kind != OVERFLOW) {
+                if (!kind.equals(OVERFLOW)) {
                     triggerFunction.run();
                     break;
                 }
