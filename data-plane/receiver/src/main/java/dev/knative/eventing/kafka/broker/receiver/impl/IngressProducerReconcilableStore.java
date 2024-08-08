@@ -19,6 +19,8 @@ import com.google.common.base.Strings;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -29,6 +31,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +53,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     private final Properties producerConfigs;
     private final Function<Properties, ReactiveKafkaProducer<String, CloudEvent>> producerFactory;
     private final AuthProvider authProvider;
+    private final EventTypeListerFactory eventTypeListerFactory;
 
     // ingress uuid -> IngressInfo
     // This map is used to resolve the ingress info in the reconciler listener
@@ -67,7 +71,8 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     public IngressProducerReconcilableStore(
             final AuthProvider authProvider,
             final Properties producerConfigs,
-            final Function<Properties, ReactiveKafkaProducer<String, CloudEvent>> producerFactory) {
+            final Function<Properties, ReactiveKafkaProducer<String, CloudEvent>> producerFactory,
+            EventTypeListerFactory eventTypeListerFactory) {
 
         Objects.requireNonNull(producerConfigs, "provide producerConfigs");
         Objects.requireNonNull(producerFactory, "provide producerCreator");
@@ -75,6 +80,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         this.authProvider = authProvider;
         this.producerConfigs = producerConfigs;
         this.producerFactory = producerFactory;
+        this.eventTypeListerFactory = eventTypeListerFactory;
 
         this.ingressInfos = new ConcurrentHashMap<>();
         this.producerReferences = new ConcurrentHashMap<>();
@@ -159,7 +165,9 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                     ingress.getPath(),
                     ingress.getHost(),
                     producerProps,
-                    ingress.getEnableAutoCreateEventTypes());
+                    ingress.getEnableAutoCreateEventTypes(),
+                    this.eventTypeListerFactory.getForNamespace(
+                            resource.getReference().getNamespace()));
 
             if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
                 throw new IllegalArgumentException(
@@ -270,6 +278,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         private final String audience;
 
         private final boolean eventTypeAutocreateEnabled;
+        private final Lister<EventType> eventTypeLister;
 
         IngressProducerImpl(
                 final ReactiveKafkaProducer<String, CloudEvent> producer,
@@ -277,7 +286,8 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                 final String path,
                 final String host,
                 final Properties producerProperties,
-                final boolean eventTypeAutocreateEnabled) {
+                final boolean eventTypeAutocreateEnabled,
+                Lister<EventType> eventTypeLister) {
             this.producer = producer;
             this.topic = resource.getTopics(0);
             this.reference = resource.getReference();
@@ -286,6 +296,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             this.host = host;
             this.producerProperties = producerProperties;
             this.eventTypeAutocreateEnabled = eventTypeAutocreateEnabled;
+            this.eventTypeLister = eventTypeLister;
         }
 
         @Override
@@ -318,6 +329,11 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
 
         Properties getProducerProperties() {
             return producerProperties;
+        }
+
+        @Override
+        public Lister<EventType> getEventTypeLister() {
+            return this.eventTypeLister;
         }
 
         @Override
