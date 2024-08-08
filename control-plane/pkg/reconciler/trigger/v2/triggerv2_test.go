@@ -20,7 +20,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 
@@ -78,6 +80,12 @@ var (
 	}
 
 	exponential = eventingduck.BackoffPolicyExponential
+
+	finalizerUpdatedEvent = Eventf(
+		corev1.EventTypeNormal,
+		"FinalizerUpdate",
+		fmt.Sprintf(`Updated %q finalizers`, TriggerName),
+	)
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -119,6 +127,12 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerReply(ConsumerTopicReply()),
 					)),
 				),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -189,6 +203,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal - Trigger with ordered delivery",
@@ -238,6 +258,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal - Trigger with unordered delivery",
@@ -272,6 +298,12 @@ func TestReconcileKind(t *testing.T) {
 					)),
 				),
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
@@ -304,6 +336,7 @@ func TestReconcileKind(t *testing.T) {
 			Key:     testKey,
 			WantErr: true,
 			WantEvents: []string{
+				finalizerUpdatedEvent,
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
@@ -312,6 +345,9 @@ func TestReconcileKind(t *testing.T) {
 						deliveryOrderAnnotation,
 					),
 				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -384,6 +420,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg with autoscaling annotations",
@@ -448,6 +490,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg with update but not ready",
@@ -505,6 +553,12 @@ func TestReconcileKind(t *testing.T) {
 						withDeadLetterSinkURI(""),
 					),
 				},
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 		},
 		{
@@ -590,6 +644,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg without update",
@@ -639,6 +699,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal - existing cg without update but not ready",
@@ -686,6 +752,12 @@ func TestReconcileKind(t *testing.T) {
 						withDeadLetterSinkURI(""),
 					),
 				},
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 		},
 		{
@@ -736,6 +808,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Reconciled normal with dead letter sink uri",
@@ -784,6 +862,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Broker not found",
@@ -793,6 +877,7 @@ func TestReconcileKind(t *testing.T) {
 			Key:     testKey,
 			WantErr: true,
 			WantEvents: []string{
+				finalizerUpdatedEvent,
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
@@ -809,6 +894,9 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 		},
 		{
@@ -829,6 +917,12 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
 		},
 		{
 			Name: "Broker deleted",
@@ -845,6 +939,12 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 		},
 		{
@@ -865,6 +965,12 @@ func TestReconcileKind(t *testing.T) {
 						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
 				},
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
 			},
 		},
 		{
@@ -926,6 +1032,56 @@ func TestReconcileKind(t *testing.T) {
 					),
 				},
 			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+		},
+		{
+			Name: "Finalized normal",
+			Objects: []runtime.Object{
+				NewBroker(
+					BrokerReady,
+					WithTopicStatusAnnotation(BrokerTopic()),
+					WithBootstrapServerStatusAnnotation(bootstrapServers),
+				),
+				DataPlaneConfigMap(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey,
+					DataPlaneConfigInitialOffset(brokerreconciler.ConsumerConfigKey, sources.OffsetLatest),
+				),
+				newTrigger(func(trigger *eventing.Trigger) {
+					trigger.DeletionTimestamp = &metav1.Time{Time: time.Time{}.AddDate(1999, 1, 3)}
+					trigger.Finalizers = []string{FinalizerName}
+				}),
+				NewConsumerGroup(
+					WithConsumerGroupName(consumerGroupId),
+					WithConsumerGroupNamespace(triggerNamespace),
+					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
+					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
+					WithConsumerGroupLabels(ConsumerTriggerLabel),
+					WithConsumerGroupAnnotations(ConsumerGroupAnnotations),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(BrokerTopics[0]),
+						ConsumerConfigs(
+							ConsumerGroupIdConfig(consumerGroupId),
+							ConsumerBootstrapServersConfig(bootstrapServers),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery(sources.Unordered, ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerFilters(NewConsumerSpecFilters()),
+						ConsumerReply(ConsumerTopicReply()),
+					)),
+					ConsumerGroupReady,
+					ConsumerGroupReplicas(1),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				removeFinalizers(),
+			},
 		},
 	}
 
@@ -951,6 +1107,7 @@ func TestReconcileKind(t *testing.T) {
 			listers.GetTriggerLister(),
 			controller.GetEventRecorder(ctx),
 			reconciler,
+			controller.Options{FinalizerName: FinalizerName},
 		)
 	}))
 }
@@ -996,4 +1153,22 @@ func withTriggerStatusGroupIdAnnotation(groupId string) func(*eventing.Trigger) 
 		}
 		t.Status.Annotations[kafka.GroupIdAnnotation] = groupId
 	}
+}
+
+func patchFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = TriggerName
+	action.Namespace = TriggerNamespace
+	patch := `{"metadata":{"finalizers":["` + FinalizerName + `"],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
+}
+
+func removeFinalizers() clientgotesting.PatchActionImpl {
+	action := clientgotesting.PatchActionImpl{}
+	action.Name = TriggerName
+	action.Namespace = TriggerNamespace
+	patch := `{"metadata":{"finalizers":[],"resourceVersion":""}}`
+	action.Patch = []byte(patch)
+	return action
 }
