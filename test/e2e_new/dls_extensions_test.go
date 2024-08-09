@@ -29,8 +29,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
@@ -41,6 +39,8 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/resources/service"
+
+	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 )
 
 func TestDeadLetterSinkExtensions(t *testing.T) {
@@ -77,7 +77,7 @@ func SubscriberUnreachable() *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -129,7 +129,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 	))
 
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -192,7 +192,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -257,7 +257,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -323,7 +323,7 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
@@ -388,7 +388,7 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithBrokerClass(kafka.BrokerClass),
+		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
