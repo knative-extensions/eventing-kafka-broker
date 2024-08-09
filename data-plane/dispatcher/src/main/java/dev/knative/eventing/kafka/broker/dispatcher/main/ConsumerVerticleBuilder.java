@@ -193,7 +193,7 @@ public class ConsumerVerticleBuilder {
     }
 
     private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
-        return new AllFilter(
+        return AllFilter.newFilter(
                 filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toList()));
     }
 
@@ -203,10 +203,10 @@ public class ConsumerVerticleBuilder {
             case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
             case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
             case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
-            case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
+            case ANY -> AnyFilter.newFilter(filter.getAny().getFiltersList().stream()
                     .map(ConsumerVerticleBuilder::getFilter)
                     .collect(Collectors.toList()));
-            case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
+            case ALL -> AllFilter.newFilter(filter.getAll().getFiltersList().stream()
                     .map(ConsumerVerticleBuilder::getFilter)
                     .collect(Collectors.toList()));
             case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
