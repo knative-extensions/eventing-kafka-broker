@@ -4,5 +4,10 @@ metadata:
   name: config-kafka-features 
   namespace: knative-eventing
 data:
-  controller.autoscaler: "enabled"
+  dispatcher-rate-limiter: "disabled"
+  dispatcher-ordered-executor-metrics: "disabled"
+  controller-autoscaler-keda: "enabled"
+  triggers-consumergroup-template: "knative-trigger-{{ .Namespace }}-{{ .Name }}"
+  brokers-topic-template: "knative-broker-{{ .Namespace }}-{{ .Name }}"
+  channels-topic-template: "knative-messaging-kafka.{{ .Namespace }}.{{ .Name }}"
 

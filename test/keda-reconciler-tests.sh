@@ -35,14 +35,24 @@ wait_until_pods_running knative-eventing || fail_test "Pods in knative-eventing 
 
 kubectl apply -f $(dirname $0)/keda/enable-keda-autoscaling.yaml
 
+kubectl apply -f ./test/e2e_new/config/features.yaml
+
 export_logs_continuously
 
 header "Running tests"
 
-go_test_e2e -timeout=1h -run=KafkaSource ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+if [[ -z "${BROKER_CLASS}" ]]; then
+	fail_test "Broker class is not defined. Specify it with 'BROKER_CLASS' env var."
+else
+	echo "BROKER_CLASS is set to '${BROKER_CLASS}'. Running tests for that broker class."
+fi
+
+go_test_e2e -timeout=1h ./test/e2e_new/... || fail_test "E2E (new) suite failed"
+
+go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
 
 if ! ${LOCAL_DEVELOPMENT}; then
-	go_test_e2e -run=KafkaSource -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E sacura tests failed"
+	go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E sacura tests failed"
 fi
 
 success
