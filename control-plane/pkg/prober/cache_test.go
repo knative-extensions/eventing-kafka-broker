@@ -27,6 +27,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
+func TestInMemoryLocalCacheDefaults(t *testing.T) {
+	d := time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), d*4)
+	defer cancel()
+	c := NewLocalExpiringCacheWithDefault[string, Status, int](ctx, d, StatusUnknown)
+
+	v, ok := c.Get("unknown")
+	require.False(t, ok)
+	require.Equal(t, v, StatusUnknown)
+}
+
 func TestInMemoryLocalCache(t *testing.T) {
 	d := time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), d*4)

@@ -75,6 +75,9 @@ type localExpiringCache[K comparable, V, A interface{}] struct {
 	entries *list.List
 
 	expiration time.Duration
+
+	// defaultValue is the default value returned by Get
+	defaultValue V
 }
 
 type value[K comparable, V, A interface{}] struct {
@@ -86,11 +89,17 @@ type value[K comparable, V, A interface{}] struct {
 }
 
 func NewLocalExpiringCache[K comparable, V, A interface{}](ctx context.Context, expiration time.Duration) Cache[K, V, A] {
+	var defaultValue V
+	return NewLocalExpiringCacheWithDefault[K, V, A](ctx, expiration, defaultValue)
+}
+
+func NewLocalExpiringCacheWithDefault[K comparable, V, A interface{}](ctx context.Context, expiration time.Duration, defaultValue V) Cache[K, V, A] {
 	c := &localExpiringCache[K, V, A]{
-		mu:         sync.RWMutex{},
-		targets:    make(map[K]*list.Element, 64),
-		entries:    list.New().Init(),
-		expiration: expiration,
+		mu:           sync.RWMutex{},
+		targets:      make(map[K]*list.Element, 64),
+		entries:      list.New().Init(),
+		expiration:   expiration,
+		defaultValue: defaultValue,
 	}
 	go func() {
 		for {
@@ -106,8 +115,6 @@ func NewLocalExpiringCache[K comparable, V, A interface{}](ctx context.Context, 
 }
 
 func (c *localExpiringCache[K, V, A]) Get(key K) (V, bool) {
-	var defaultValue V
-
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -117,7 +124,7 @@ func (c *localExpiringCache[K, V, A]) Get(key K) (V, bool) {
 			return value.value, true
 		}
 	}
-	return defaultValue, false
+	return c.defaultValue, false
 
 }
 
