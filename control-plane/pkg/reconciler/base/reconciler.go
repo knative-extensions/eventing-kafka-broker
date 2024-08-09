@@ -19,7 +19,7 @@ package base
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -66,6 +66,9 @@ const (
 
 	// volume generation annotation data plane pods.
 	VolumeGenerationAnnotationKey = "volumeGeneration"
+
+	// config features update time annotation for data plane pods.
+	ConfigFeaturesUpdatedAnnotationKey = "configFeaturesUpdatedAt"
 
 	Protobuf = "protobuf"
 	Json     = "json"
@@ -281,23 +284,31 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 	return nil
 }
 
-func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
+func (r *Reconciler) UpdateDispatcherPodsContractGenerationAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
 	pods, errors := r.PodLister.Pods(r.DataPlaneNamespace).List(r.dispatcherSelector())
 	if errors != nil {
 		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.DataPlaneNamespace, errors)
 	}
-	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", VolumeGenerationAnnotationKey, fmt.Sprint(volumeGeneration), pods)
 }
 
-func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
+func (r *Reconciler) UpdateReceiverPodsContractGenerationAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
 	pods, errors := r.PodLister.Pods(r.DataPlaneNamespace).List(r.ReceiverSelector())
 	if errors != nil {
 		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.DataPlaneNamespace, errors)
 	}
-	return r.UpdatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "receiver", VolumeGenerationAnnotationKey, fmt.Sprint(volumeGeneration), pods)
 }
 
-func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
+func (r *Reconciler) UpdateReceiverConfigFeaturesUpdatedAnnotation(ctx context.Context, logger *zap.Logger) error {
+	pods, err := r.PodLister.Pods(r.DataPlaneNamespace).List(r.ReceiverSelector())
+	if err != nil {
+		return fmt.Errorf("failed to list receiver pods in namespace %s: %s", r.DataPlaneNamespace, err)
+	}
+	return r.UpdatePodsAnnotation(ctx, logger, "receiver", ConfigFeaturesUpdatedAnnotationKey, time.Now().String(), pods)
+}
+
+func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logger, component, annotationKey, annotationValue string, pods []*corev1.Pod) error {
 
 	var errors error
 
@@ -306,7 +317,7 @@ func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logge
 		logger.Debug(
 			"Update "+component+" pod annotation",
 			zap.String("pod", fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)),
-			zap.Uint64("volumeGeneration", volumeGeneration),
+			zap.String(annotationKey, annotationValue),
 		)
 
 		// do not update cache copy
@@ -318,15 +329,15 @@ func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logge
 		}
 
 		// Check whether pod's annotation is the expected one.
-		if v, ok := annotations[VolumeGenerationAnnotationKey]; ok {
-			v, err := strconv.ParseUint(v /* base */, 10 /* bitSize */, 64)
-			if err == nil && v == volumeGeneration {
-				// Volume generation already matches the expected volume generation number.
+		if v, ok := annotations[annotationKey]; ok {
+			if v == annotationValue {
+				logger.Debug(component + " pod annotation already up to date")
+				// annotation is already correct.
 				continue
 			}
 		}
 
-		annotations[VolumeGenerationAnnotationKey] = fmt.Sprint(volumeGeneration)
+		annotations[annotationKey] = annotationValue
 		pod.SetAnnotations(annotations)
 
 		if _, err := r.KubeClient.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{}); err != nil {
