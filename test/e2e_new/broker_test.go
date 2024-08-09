@@ -31,13 +31,14 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
-	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing/test/rekt/features/broker"
 	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
 	"knative.dev/eventing/test/rekt/features/oidc"
 	brokerresources "knative.dev/eventing/test/rekt/resources/broker"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 )
 
 const (
@@ -319,4 +320,21 @@ func TestBrokerDispatcherKedaScaling(t *testing.T) {
 	)
 
 	env.Test(ctx, t, features.TriggerScalesToZeroWithKeda())
+}
+
+func TestPostInstallJobsSucceeded(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		environment.WithNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.ParallelTest(ctx, t, features.JobSucceeded("kafka-controller-post-install"))
+	env.ParallelTest(ctx, t, features.JobSucceeded("knative-kafka-storage-version-migrator"))
 }
