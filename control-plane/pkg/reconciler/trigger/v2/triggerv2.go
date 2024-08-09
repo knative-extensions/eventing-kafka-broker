@@ -134,6 +134,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 	return nil
 }
 
+func (r *Reconciler) FinalizeKind(context.Context, *eventing.Trigger) reconciler.Event {
+	// No-op, left here for backward compatibility.
+	// This configures the knative/pkg base reconciler to remove the finalizer,
+	// for more details, see https://github.com/knative-extensions/eventing-kafka-broker/issues/4034
+	return nil
+}
+
 func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
 	var deliveryOrdering = sources.Unordered
