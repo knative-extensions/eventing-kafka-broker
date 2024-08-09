@@ -136,7 +136,12 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
 
+        // the oidc discovery config is set initially when the listener is started, so we initialize the
+        // auth handler here, ensuring it is never null
         this.buildAuthHandler(oidcDiscoveryConfigListener.getOidcDiscoveryConfig());
+
+        // the oidc config listener runs the callback whenever the config file is updated
+        // so, we can be sure that the auth handler always has the up to date config
         this.oidcDiscoveryCallbackId = this.oidcDiscoveryConfigListener.registerCallback(this::buildAuthHandler);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);

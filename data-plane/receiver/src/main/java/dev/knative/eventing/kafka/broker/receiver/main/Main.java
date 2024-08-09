@@ -141,7 +141,12 @@ public class Main {
 
             // Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(
-                    vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider(), eventTypeListerFactory, oidcDiscoveryConfigListener);
+                    vertx,
+                    publisher,
+                    fileWatcher,
+                    openTelemetry.getSdkTracerProvider(),
+                    eventTypeListerFactory,
+                    oidcDiscoveryConfigListener);
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the receiver", ex);

@@ -64,21 +64,19 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             Vertx vertx,
             final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener,
             final EventTypeListerFactory eventTypeListerFactory)
-            throws NoSuchAlgorithmException
-        {
-            this.env = env;
-            this.producerConfigs = producerConfigs;
-            this.httpServerOptions = httpServerOptions;
-            this.httpsServerOptions = httpsServerOptions;
-            this.ingressRequestHandler = new IngressRequestHandlerImpl(
-                    StrictRequestToRecordMapper.getInstance(),
-                    metricsRegistry,
-                    new EventTypeCreatorImpl(eventTypeClient, vertx));
-            this.kafkaProducerFactory = kafkaProducerFactory;
-            this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
-            this.eventTypeListerFactory = eventTypeListerFactory;
-        }
-
+            throws NoSuchAlgorithmException {
+        this.env = env;
+        this.producerConfigs = producerConfigs;
+        this.httpServerOptions = httpServerOptions;
+        this.httpsServerOptions = httpsServerOptions;
+        this.ingressRequestHandler = new IngressRequestHandlerImpl(
+                StrictRequestToRecordMapper.getInstance(),
+                metricsRegistry,
+                new EventTypeCreatorImpl(eventTypeClient, vertx));
+        this.kafkaProducerFactory = kafkaProducerFactory;
+        this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
+        this.eventTypeListerFactory = eventTypeListerFactory;
+    }
 
     @Override
     public Verticle get() {

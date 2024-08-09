@@ -71,7 +71,7 @@ public class OIDCDiscoveryConfigListener implements AutoCloseable {
         }
 
         this.callbacks.add(callback);
-        return this.callbacks.size();
+        return this.callbacks.size() - 1;
     }
 
     public void deregisterCallback(int callbackId) {
