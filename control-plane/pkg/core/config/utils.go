@@ -20,15 +20,14 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
-	"math"
-	"sort"
-
 	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	duck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/resolver"
+	"math"
+	"sort"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
@@ -104,6 +103,15 @@ func EgressConfigFromDelivery(
 			return nil, fmt.Errorf("failed to parse Spec.Delivery.Timeout: %w", err)
 		}
 		egressConfig.Timeout = timeout
+	}
+
+	if delivery.Format != nil {
+		switch *delivery.Format {
+		case duck.DeliveryFormatBinary:
+			egressConfig.Format = contract.DeliveryFormat_Binary
+		case duck.DeliveryFormatJson:
+			egressConfig.Format = contract.DeliveryFormat_JSON
+		}
 	}
 
 	return egressConfig, nil
@@ -191,6 +199,7 @@ func MergeEgressConfig(e0, e1 *contract.EgressConfig) *contract.EgressConfig {
 		BackoffPolicy: e0.GetBackoffPolicy(),
 		BackoffDelay:  mergeUint64(e0.GetBackoffDelay(), e1.GetBackoffDelay()),
 		Timeout:       mergeUint64(e0.GetTimeout(), e1.GetTimeout()),
+		Format:        e0.GetFormat(),
 	}
 }
 

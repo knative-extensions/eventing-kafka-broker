@@ -71,6 +71,15 @@ enum BackoffPolicy {
   Linear = 1;
 }
 
+// DeliveryFormat is the format used to send events
+enum DeliveryFormat {
+  // Binary event format
+  Binary = 0;
+
+  // JSON structured event format
+  JSON = 1;
+}
+
 message EgressConfig {
   // Dead letter is where the event is sent when something goes wrong
   string deadLetter = 1;
@@ -82,7 +91,7 @@ message EgressConfig {
   string deadLetterAudience = 7;
 
   // format is the format used to deliver the event. Can be one of "json" or "binary"
-  string format = 8;
+  DeliveryFormat format = 8;
 
   // retry is the minimum number of retries the sender should attempt when
   // sending an event before moving it to the dead letter sink.

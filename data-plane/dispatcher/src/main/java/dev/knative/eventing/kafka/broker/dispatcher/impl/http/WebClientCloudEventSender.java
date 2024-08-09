@@ -27,6 +27,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureExceptio
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.rw.CloudEventRWException;
 import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
@@ -64,6 +65,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     private final AtomicInteger inFlightRequests = new AtomicInteger(0);
     private final TokenProvider tokenProvider;
 
+    private final DataPlaneContract.DeliveryFormat deliveryFormat;
+
     /**
      * All args constructor.
      *
@@ -98,6 +101,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         this.consumerVerticleContext = consumerVerticleContext;
         this.retryPolicyFunc = computeRetryPolicy(consumerVerticleContext.getEgressConfig());
         this.tokenProvider = new TokenProvider(vertx);
+        this.deliveryFormat = consumerVerticleContext.getEgressConfig().getFormat();
 
         Metrics.eventDispatchInFlightCount(
                         additionalTags.and(consumerVerticleContext.getTags()), this.inFlightRequests::get)
@@ -220,7 +224,13 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                         req.putHeader("Authorization", "Bearer " + token);
                     }
 
-                    return VertxMessageFactory.createWriter(req).writeBinary(event);
+                    var writer = VertxMessageFactory.createWriter(req);
+
+                    return switch (this.deliveryFormat) {
+                        case JSON -> writer.writeStructured(event, new JsonFormat());
+                        case Binary, UNRECOGNIZED -> writer.writeBinary(event);
+                        case null -> writer.writeBinary(event);
+                    };
                 })
                 .onFailure(ex -> {
                     logError(event, ex);
