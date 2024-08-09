@@ -17,6 +17,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -76,13 +78,14 @@ func IsKnownStatefulSet(name string) bool {
 		name == BrokerStatefulSetName
 }
 
-func GetOwnerKindFromStatefulSetName(name string) (string, bool) {
-	switch name {
-	case SourceStatefulSetName:
+func GetOwnerKindFromStatefulSetPrefix(name string) (string, bool) {
+	if strings.HasPrefix(name, SourceStatefulSetName) {
 		return "KafkaSource", true
-	case ChannelStatefulSetName:
+	}
+	if strings.HasPrefix(name, ChannelStatefulSetName) {
 		return "KafkaChannel", true
-	case BrokerStatefulSetName:
+	}
+	if strings.HasPrefix(name, BrokerStatefulSetName) {
 		return "Trigger", true
 	}
 	return "", false

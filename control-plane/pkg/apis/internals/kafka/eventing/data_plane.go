@@ -27,6 +27,11 @@ const (
 	ConfigMapVolumeName = "kafka-resources"
 
 	DispatcherVolumeName = "contract-resources"
+
+	DataPlanePodKindLabelKey    = "app.kubernetes.io/kind"
+	DispatcherPodKindLabelValue = "kafka-dispatcher"
+
+	DispatcherLabelSelectorStr = DataPlanePodKindLabelKey + "=" + DispatcherPodKindLabelValue
 )
 
 func ConfigMapNameFromPod(p *corev1.Pod) (string, error) {
