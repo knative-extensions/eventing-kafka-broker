@@ -104,8 +104,8 @@ func verifyPostInstall(t *testing.T) {
 			defer testlib.TearDown(client)
 
 			var lastJob *batchv1.Job
-			err := wait.Poll(5*time.Second, 10*time.Minute, func() (done bool, err error) {
-				lastJob, err = client.Kube.
+			err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 10*time.Minute, true, func(ctx context.Context) (bool, error) {
+				lastJob, err := client.Kube.
 					BatchV1().
 					Jobs(system.Namespace()).
 					Get(context.Background(), name, metav1.GetOptions{})
