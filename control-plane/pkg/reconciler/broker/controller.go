@@ -24,6 +24,8 @@ import (
 	"net/http"
 	"strings"
 
+	"knative.dev/eventing/pkg/auth"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -39,6 +41,7 @@ import (
 	"knative.dev/pkg/resolver"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -63,6 +66,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
+	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 	featureFlags := apisconfig.DefaultFeaturesConfig()
 
 	clientPool := clientpool.Get(ctx)
@@ -81,6 +85,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		},
 		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		ConfigMapLister:      configmapInformer.Lister(),
+		EventPolicyLister:    eventPolicyInformer.Lister(),
 		Env:                  env,
 		Counter:              counter.NewExpiringCounter(ctx),
 		KafkaFeatureFlags:    featureFlags,
@@ -186,6 +191,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			DeleteFunc: reconciler.OnDeleteObserver,
 		},
 	})
+
+	brokerGK := eventing.SchemeGroupVersion.WithKind("Broker").GroupKind()
+
+	// Enqueue the Broker, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the Broker
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(brokerInformer.Informer().GetIndexer(), brokerGK, impl.EnqueueKey))
 
 	return impl
 }

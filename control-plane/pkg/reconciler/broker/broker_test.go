@@ -79,6 +79,9 @@ const (
 	externalTopic          = "externalTopic"
 
 	kafkaFeatureFlags = "kafka-feature-flags"
+
+	readyEventPolicyName   = "test-event-policy-ready"
+	unreadyEventPolicyName = "test-event-policy-unready"
 )
 
 const (
@@ -100,6 +103,12 @@ var (
 		Scheme: "http",
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", BrokerNamespace, BrokerName),
+	}
+
+	brokerV1GVK = metav1.GroupVersionKind{
+		Group:   "eventing.knative.dev",
+		Version: "v1",
+		Kind:    "Broker",
 	}
 
 	createTopicError = fmt.Errorf("failed to create topic")
@@ -209,6 +218,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -283,6 +293,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -528,6 +539,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -599,6 +611,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -718,6 +731,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -784,6 +798,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -877,6 +892,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -987,6 +1003,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1083,6 +1100,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1172,6 +1190,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1354,6 +1373,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1448,6 +1468,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1677,6 +1698,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1787,6 +1809,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1865,6 +1888,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1940,6 +1964,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2018,6 +2043,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2079,6 +2105,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2143,6 +2170,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2214,6 +2242,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							URL:  brokerAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2312,6 +2341,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 							Audience: &brokerAudience,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseNoPolicyAndOIDCEnabled(),
 					),
 				},
 			},
@@ -2319,6 +2349,171 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ExpectedTopicDetail: sarama.TopicDetail{
 					NumPartitions:     20,
 					ReplicationFactor: 5,
+				},
+			},
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+		}, {
+			Name: "Should list applying EventPolicies",
+			Objects: []runtime.Object{
+				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(readyEventPolicyName, BrokerNamespace,
+					reconcilertesting.WithReadyEventPolicyCondition,
+					reconcilertesting.WithEventPolicyToRef(brokerV1GVK, BrokerName),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusBrokerTopicReady,
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      brokerAddress,
+								Audience: &brokerAudience,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      brokerAddress,
+							Audience: &brokerAudience,
+						}),
+						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReady(),
+						reconcilertesting.WithBrokerEventPoliciesListed(readyEventPolicyName),
+					),
+				},
+			},
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+		}, {
+			Name: "Should mark as NotReady on unready EventPolicies",
+			Objects: []runtime.Object{
+				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewService(),
+				BrokerReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(unreadyEventPolicyName, BrokerNamespace,
+					reconcilertesting.WithUnreadyEventPolicyCondition("", ""),
+					reconcilertesting.WithEventPolicyToRef(brokerV1GVK, BrokerName),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              BrokerUUID,
+							Topics:           []string{BrokerTopic()},
+							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        BrokerReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				BrokerReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				BrokerDispatcherPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerConfigMapUpdatedReady(&env),
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusBrokerTopicReady,
+						BrokerAddressable(&env),
+						StatusBrokerProbeSucceeded,
+						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
+						WithBrokerAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      brokerAddress,
+								Audience: &brokerAudience,
+							},
+						}),
+						WithBrokerAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      brokerAddress,
+							Audience: &brokerAudience,
+						}),
+						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesNotReady("EventPoliciesNotReady", fmt.Sprintf("event policies %s are not ready", unreadyEventPolicyName)),
+					),
 				},
 			},
 			Ctx: feature.ToContext(context.Background(), feature.Flags{
@@ -2877,6 +3072,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 							Name: pointer.String("http"),
 							URL:  brokerAddress,
 						}),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2944,6 +3140,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 							URL:     httpsURL(BrokerName, BrokerNamespace),
 							CACerts: pointer.String(string(eventingtlstesting.CA)),
 						}),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -3034,6 +3231,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			Prober:            proberMock,
 			Counter:           counter.NewExpiringCounter(ctx),
 			KafkaFeatureFlags: featureFlags,
+			EventPolicyLister: listers.GetEventPolicyLister(),
 		}
 
 		reconciler.Tracker = &FakeTracker{}

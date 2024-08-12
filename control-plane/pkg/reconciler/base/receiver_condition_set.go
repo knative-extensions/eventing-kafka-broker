@@ -42,6 +42,7 @@ const (
 	ConditionConfigParsed            apis.ConditionType = "ConfigParsed"
 	ConditionInitialOffsetsCommitted apis.ConditionType = "InitialOffsetsCommitted"
 	ConditionProbeSucceeded          apis.ConditionType = "ProbeSucceeded"
+	ConditionEventPoliciesReady      apis.ConditionType = "EventPoliciesReady"
 )
 
 var IngressConditionSet = apis.NewLivingConditionSet(
@@ -51,6 +52,7 @@ var IngressConditionSet = apis.NewLivingConditionSet(
 	ConditionConfigMapUpdated,
 	ConditionConfigParsed,
 	ConditionProbeSucceeded,
+	ConditionEventPoliciesReady,
 )
 
 var EgressConditionSet = apis.NewLivingConditionSet(
