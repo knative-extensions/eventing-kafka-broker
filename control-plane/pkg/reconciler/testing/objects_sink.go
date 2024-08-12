@@ -198,3 +198,13 @@ func WithSinkAddessable() KRShapedOption {
 		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(base.ConditionAddressable)
 	}
 }
+func WithSinkEventPolicyConditionAuthZNotSupported() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*eventing.KafkaSink)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrueWithReason(
+			base.ConditionEventPoliciesReady,
+			"AuthzNotSupported",
+			"Authorization not yet supported",
+		)
+	}
+}
