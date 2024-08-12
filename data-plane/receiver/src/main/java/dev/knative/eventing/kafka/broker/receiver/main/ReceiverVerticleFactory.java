@@ -19,7 +19,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
-import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
@@ -48,7 +48,7 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
     private final String secretVolumePath = "/etc/receiver-tls-secret";
 
     private final IngressRequestHandler ingressRequestHandler;
-    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
+    private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
     private final EventTypeListerFactory eventTypeListerFactory;
 
     private ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory;
@@ -62,22 +62,20 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
             final ReactiveProducerFactory<String, CloudEvent> kafkaProducerFactory,
             final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient,
             Vertx vertx,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig,
+            final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener,
             final EventTypeListerFactory eventTypeListerFactory)
             throws NoSuchAlgorithmException {
-        {
-            this.env = env;
-            this.producerConfigs = producerConfigs;
-            this.httpServerOptions = httpServerOptions;
-            this.httpsServerOptions = httpsServerOptions;
-            this.ingressRequestHandler = new IngressRequestHandlerImpl(
-                    StrictRequestToRecordMapper.getInstance(),
-                    metricsRegistry,
-                    new EventTypeCreatorImpl(eventTypeClient, vertx));
-            this.kafkaProducerFactory = kafkaProducerFactory;
-            this.oidcDiscoveryConfig = oidcDiscoveryConfig;
-            this.eventTypeListerFactory = eventTypeListerFactory;
-        }
+        this.env = env;
+        this.producerConfigs = producerConfigs;
+        this.httpServerOptions = httpServerOptions;
+        this.httpsServerOptions = httpsServerOptions;
+        this.ingressRequestHandler = new IngressRequestHandlerImpl(
+                StrictRequestToRecordMapper.getInstance(),
+                metricsRegistry,
+                new EventTypeCreatorImpl(eventTypeClient, vertx));
+        this.kafkaProducerFactory = kafkaProducerFactory;
+        this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
+        this.eventTypeListerFactory = eventTypeListerFactory;
     }
 
     @Override
@@ -93,6 +91,6 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
                         eventTypeListerFactory),
                 this.ingressRequestHandler,
                 secretVolumePath,
-                oidcDiscoveryConfig);
+                oidcDiscoveryConfigListener);
     }
 }

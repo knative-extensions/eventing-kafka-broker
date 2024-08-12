@@ -56,7 +56,7 @@ public class FileWatcher implements AutoCloseable {
     /**
      * All args constructor.
      *
-     * @param contractConsumer updates receiver.
+     * @param triggerFunction is triggered whenever there is a file change.
      * @param file             file to watch
      */
     public FileWatcher(File file, Runnable triggerFunction) {
