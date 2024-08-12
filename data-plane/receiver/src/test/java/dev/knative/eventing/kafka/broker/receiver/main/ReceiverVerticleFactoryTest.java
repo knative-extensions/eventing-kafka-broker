@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -55,7 +55,7 @@ public class ReceiverVerticleFactoryTest {
                 mock(MockReactiveProducerFactory.class),
                 mockClient.resources(EventType.class),
                 vertx,
-                mock(OIDCDiscoveryConfig.class),
+                mock(OIDCDiscoveryConfigListener.class),
                 mock(EventTypeListerFactory.class));
 
         assertThat(supplier.get()).isNotSameAs(supplier.get());
