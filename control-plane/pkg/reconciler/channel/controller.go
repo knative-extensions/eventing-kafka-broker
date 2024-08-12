@@ -89,14 +89,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	logger := logging.FromContext(ctx)
 
-	var globalResync func(obj interface{})
-	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
-		if globalResync != nil {
-			globalResync(nil)
-		}
-	})
-	featureStore.WatchConfigs(watcher)
-
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
@@ -104,6 +96,18 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			zap.Error(err),
 		)
 	}
+
+	var globalResync func(obj interface{})
+	featureStore := feature.NewStore(logger.Named("feature-config-store"), func(name string, value interface{}) {
+		if globalResync != nil {
+			globalResync(nil)
+		}
+		err = reconciler.UpdateReceiverConfigFeaturesUpdatedAnnotation(ctx, logger.Desugar())
+		if err != nil {
+			logger.Warn("config-features updated, but the receiver pods were not successfully annotated. This may lead to features not working as expected.", zap.Error(err))
+		}
+	})
+	featureStore.WatchConfigs(watcher)
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler,
 		func(impl *controller.Impl) controller.Options {
