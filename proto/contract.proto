@@ -61,6 +61,11 @@ message Filter {
   map<string, string> attributes = 1;
 }
 
+message EventPolicy {
+  // Subjects of this EventPolicy
+  repeated string subjects = 1;
+}
+
 // BackoffPolicyType is the type for backoff policies
 enum BackoffPolicy {
 
@@ -217,6 +222,9 @@ message Ingress {
 
   // OIDC audience of this ingress
   string audience = 5;
+
+  // Ready and applying EventPolicies for this ingress
+  repeated EventPolicy eventPolicies = 6;
 }
 
 // Kubernetes resource reference.
