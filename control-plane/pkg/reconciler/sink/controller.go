@@ -86,6 +86,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		if globalResync != nil {
 			globalResync(obj)
 		}
+		err = reconciler.UpdateReceiverConfigFeaturesUpdatedAnnotation(ctx, logger.Desugar())
+		if err != nil {
+			logger.Warn("config-features updated, but the receiver pods were not successfully annotated. This may lead to features not working as expected.", zap.Error(err))
+		}
 	})
 	featureStore.WatchConfigs(watcher)
 

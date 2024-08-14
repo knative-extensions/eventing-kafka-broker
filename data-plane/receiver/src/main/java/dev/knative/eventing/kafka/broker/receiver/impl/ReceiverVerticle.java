@@ -23,6 +23,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
 import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
@@ -34,7 +35,6 @@ import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthenticationHan
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
-import io.fabric8.kubernetes.client.*;
 import io.vertx.core.*;
 import io.vertx.core.buffer.*;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -88,7 +88,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
-    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
+    private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
+    private int oidcDiscoveryCallbackId;
 
     private AuthenticationHandler authenticationHandler;
     private HttpServer httpServer;
@@ -104,7 +105,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
             final IngressRequestHandler ingressRequestHandler,
             final String secretVolumePath,
-            final OIDCDiscoveryConfig oidcDiscoveryConfig) {
+            final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener) {
 
         Objects.requireNonNull(env);
         Objects.requireNonNull(httpServerOptions);
@@ -121,7 +122,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
-        this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+        this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -135,8 +136,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
 
-        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
-        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
+        // the oidc discovery config is set initially when the listener is started, so we initialize the
+        // auth handler here, ensuring it is never null
+        this.buildAuthHandler(oidcDiscoveryConfigListener.getOidcDiscoveryConfig());
+
+        // the oidc config listener runs the callback whenever the config file is updated
+        // so, we can be sure that the auth handler always has the up to date config
+        this.oidcDiscoveryCallbackId = this.oidcDiscoveryConfigListener.registerCallback(this::buildAuthHandler);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
@@ -181,6 +187,11 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         setupSecretWatcher();
     }
 
+    private void buildAuthHandler(OIDCDiscoveryConfig config) {
+        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, config);
+        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
+    }
+
     // Set up the secret watcher
     private void setupSecretWatcher() {
         try {
@@ -199,6 +210,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         (this.messageConsumer != null ? this.messageConsumer.unregister() : Future.succeededFuture()))
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
+
+        this.oidcDiscoveryConfigListener.deregisterCallback(this.oidcDiscoveryCallbackId);
 
         // close the watcher
         if (this.secretWatcher != null) {
