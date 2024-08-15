@@ -9249,6 +9249,49 @@ public final class DataPlaneContract {
          * @return The bytes of the subjects at the given index.
          */
         com.google.protobuf.ByteString getSubjectsBytes(int index);
+
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> getFiltersList();
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index);
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        int getFiltersCount();
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
+                getFiltersOrBuilderList();
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder getFiltersOrBuilder(
+                int index);
     }
     /**
      * Protobuf type {@code EventPolicy}
@@ -9265,6 +9308,7 @@ public final class DataPlaneContract {
 
         private EventPolicy() {
             subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            filters_ = java.util.Collections.emptyList();
         }
 
         @java.lang.Override
@@ -9305,6 +9349,18 @@ public final class DataPlaneContract {
                             subjects_.add(s);
                             break;
                         }
+                        case 18: {
+                            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                                filters_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                                mutable_bitField0_ |= 0x00000002;
+                            }
+                            filters_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
                         default: {
                             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
                                 done = true;
@@ -9320,6 +9376,9 @@ public final class DataPlaneContract {
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) != 0)) {
                     subjects_ = subjects_.getUnmodifiableView();
+                }
+                if (((mutable_bitField0_ & 0x00000002) != 0)) {
+                    filters_ = java.util.Collections.unmodifiableList(filters_);
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -9388,6 +9447,68 @@ public final class DataPlaneContract {
             return subjects_.getByteString(index);
         }
 
+        public static final int FILTERS_FIELD_NUMBER = 2;
+        private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_;
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        @java.lang.Override
+        public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
+                getFiltersList() {
+            return filters_;
+        }
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        @java.lang.Override
+        public java.util.List<
+                        ? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
+                getFiltersOrBuilderList() {
+            return filters_;
+        }
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        @java.lang.Override
+        public int getFiltersCount() {
+            return filters_.size();
+        }
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        @java.lang.Override
+        public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index) {
+            return filters_.get(index);
+        }
+        /**
+         * <pre>
+         * Filters for this EventPolicy
+         * </pre>
+         *
+         * <code>repeated .DialectedFilter filters = 2;</code>
+         */
+        @java.lang.Override
+        public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder
+                getFiltersOrBuilder(int index) {
+            return filters_.get(index);
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -9404,6 +9525,9 @@ public final class DataPlaneContract {
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             for (int i = 0; i < subjects_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subjects_.getRaw(i));
+            }
+            for (int i = 0; i < filters_.size(); i++) {
+                output.writeMessage(2, filters_.get(i));
             }
             unknownFields.writeTo(output);
         }
@@ -9422,6 +9546,9 @@ public final class DataPlaneContract {
                 size += dataSize;
                 size += 1 * getSubjectsList().size();
             }
+            for (int i = 0; i < filters_.size(); i++) {
+                size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, filters_.get(i));
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -9439,6 +9566,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy) obj;
 
             if (!getSubjectsList().equals(other.getSubjectsList())) return false;
+            if (!getFiltersList().equals(other.getFiltersList())) return false;
             if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
@@ -9453,6 +9581,10 @@ public final class DataPlaneContract {
             if (getSubjectsCount() > 0) {
                 hash = (37 * hash) + SUBJECTS_FIELD_NUMBER;
                 hash = (53 * hash) + getSubjectsList().hashCode();
+            }
+            if (getFiltersCount() > 0) {
+                hash = (37 * hash) + FILTERS_FIELD_NUMBER;
+                hash = (53 * hash) + getFiltersList().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -9582,7 +9714,9 @@ public final class DataPlaneContract {
             }
 
             private void maybeForceBuilderInitialization() {
-                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getFiltersFieldBuilder();
+                }
             }
 
             @java.lang.Override
@@ -9590,6 +9724,12 @@ public final class DataPlaneContract {
                 super.clear();
                 subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
                 bitField0_ = (bitField0_ & ~0x00000001);
+                if (filtersBuilder_ == null) {
+                    filters_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000002);
+                } else {
+                    filtersBuilder_.clear();
+                }
                 return this;
             }
 
@@ -9624,6 +9764,15 @@ public final class DataPlaneContract {
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.subjects_ = subjects_;
+                if (filtersBuilder_ == null) {
+                    if (((bitField0_ & 0x00000002) != 0)) {
+                        filters_ = java.util.Collections.unmodifiableList(filters_);
+                        bitField0_ = (bitField0_ & ~0x00000002);
+                    }
+                    result.filters_ = filters_;
+                } else {
+                    result.filters_ = filtersBuilder_.build();
+                }
                 onBuilt();
                 return result;
             }
@@ -9683,6 +9832,32 @@ public final class DataPlaneContract {
                         subjects_.addAll(other.subjects_);
                     }
                     onChanged();
+                }
+                if (filtersBuilder_ == null) {
+                    if (!other.filters_.isEmpty()) {
+                        if (filters_.isEmpty()) {
+                            filters_ = other.filters_;
+                            bitField0_ = (bitField0_ & ~0x00000002);
+                        } else {
+                            ensureFiltersIsMutable();
+                            filters_.addAll(other.filters_);
+                        }
+                        onChanged();
+                    }
+                } else {
+                    if (!other.filters_.isEmpty()) {
+                        if (filtersBuilder_.isEmpty()) {
+                            filtersBuilder_.dispose();
+                            filtersBuilder_ = null;
+                            filters_ = other.filters_;
+                            bitField0_ = (bitField0_ & ~0x00000002);
+                            filtersBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                                    ? getFiltersFieldBuilder()
+                                    : null;
+                        } else {
+                            filtersBuilder_.addAllMessages(other.filters_);
+                        }
+                    }
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -9854,6 +10029,345 @@ public final class DataPlaneContract {
                 subjects_.add(value);
                 onChanged();
                 return this;
+            }
+
+            private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
+                    filters_ = java.util.Collections.emptyList();
+
+            private void ensureFiltersIsMutable() {
+                if (!((bitField0_ & 0x00000002) != 0)) {
+                    filters_ = new java.util.ArrayList<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>(filters_);
+                    bitField0_ |= 0x00000002;
+                }
+            }
+
+            private com.google.protobuf.RepeatedFieldBuilderV3<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
+                    filtersBuilder_;
+
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
+                    getFiltersList() {
+                if (filtersBuilder_ == null) {
+                    return java.util.Collections.unmodifiableList(filters_);
+                } else {
+                    return filtersBuilder_.getMessageList();
+                }
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public int getFiltersCount() {
+                if (filtersBuilder_ == null) {
+                    return filters_.size();
+                } else {
+                    return filtersBuilder_.getCount();
+                }
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter getFilters(int index) {
+                if (filtersBuilder_ == null) {
+                    return filters_.get(index);
+                } else {
+                    return filtersBuilder_.getMessage(index);
+                }
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder setFilters(
+                    int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+                if (filtersBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    ensureFiltersIsMutable();
+                    filters_.set(index, value);
+                    onChanged();
+                } else {
+                    filtersBuilder_.setMessage(index, value);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder setFilters(
+                    int index,
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                            builderForValue) {
+                if (filtersBuilder_ == null) {
+                    ensureFiltersIsMutable();
+                    filters_.set(index, builderForValue.build());
+                    onChanged();
+                } else {
+                    filtersBuilder_.setMessage(index, builderForValue.build());
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder addFilters(
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+                if (filtersBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    ensureFiltersIsMutable();
+                    filters_.add(value);
+                    onChanged();
+                } else {
+                    filtersBuilder_.addMessage(value);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder addFilters(
+                    int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
+                if (filtersBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    ensureFiltersIsMutable();
+                    filters_.add(index, value);
+                    onChanged();
+                } else {
+                    filtersBuilder_.addMessage(index, value);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder addFilters(
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                            builderForValue) {
+                if (filtersBuilder_ == null) {
+                    ensureFiltersIsMutable();
+                    filters_.add(builderForValue.build());
+                    onChanged();
+                } else {
+                    filtersBuilder_.addMessage(builderForValue.build());
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder addFilters(
+                    int index,
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                            builderForValue) {
+                if (filtersBuilder_ == null) {
+                    ensureFiltersIsMutable();
+                    filters_.add(index, builderForValue.build());
+                    onChanged();
+                } else {
+                    filtersBuilder_.addMessage(index, builderForValue.build());
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder addAllFilters(
+                    java.lang.Iterable<
+                                    ? extends
+                                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                                                    .DialectedFilter>
+                            values) {
+                if (filtersBuilder_ == null) {
+                    ensureFiltersIsMutable();
+                    com.google.protobuf.AbstractMessageLite.Builder.addAll(values, filters_);
+                    onChanged();
+                } else {
+                    filtersBuilder_.addAllMessages(values);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder clearFilters() {
+                if (filtersBuilder_ == null) {
+                    filters_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000002);
+                    onChanged();
+                } else {
+                    filtersBuilder_.clear();
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public Builder removeFilters(int index) {
+                if (filtersBuilder_ == null) {
+                    ensureFiltersIsMutable();
+                    filters_.remove(index);
+                    onChanged();
+                } else {
+                    filtersBuilder_.remove(index);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                    getFiltersBuilder(int index) {
+                return getFiltersFieldBuilder().getBuilder(index);
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder
+                    getFiltersOrBuilder(int index) {
+                if (filtersBuilder_ == null) {
+                    return filters_.get(index);
+                } else {
+                    return filtersBuilder_.getMessageOrBuilder(index);
+                }
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public java.util.List<
+                            ? extends
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                                            .DialectedFilterOrBuilder>
+                    getFiltersOrBuilderList() {
+                if (filtersBuilder_ != null) {
+                    return filtersBuilder_.getMessageOrBuilderList();
+                } else {
+                    return java.util.Collections.unmodifiableList(filters_);
+                }
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                    addFiltersBuilder() {
+                return getFiltersFieldBuilder()
+                        .addBuilder(
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                        .getDefaultInstance());
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                    addFiltersBuilder(int index) {
+                return getFiltersFieldBuilder()
+                        .addBuilder(
+                                index,
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                        .getDefaultInstance());
+            }
+            /**
+             * <pre>
+             * Filters for this EventPolicy
+             * </pre>
+             *
+             * <code>repeated .DialectedFilter filters = 2;</code>
+             */
+            public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder>
+                    getFiltersBuilderList() {
+                return getFiltersFieldBuilder().getBuilderList();
+            }
+
+            private com.google.protobuf.RepeatedFieldBuilderV3<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>
+                    getFiltersFieldBuilder() {
+                if (filtersBuilder_ == null) {
+                    filtersBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>(
+                            filters_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+                    filters_ = null;
+                }
+                return filtersBuilder_;
             }
 
             @java.lang.Override
@@ -29438,70 +29952,70 @@ public final class DataPlaneContract {
                     + "not\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQL"
                     + "H\000B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003"
                     + "(\0132\027.Filter.AttributesEntry\0321\n\017Attribute"
-                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\037"
-                    + "\n\013EventPolicy\022\020\n\010subjects\030\001 \003(\t\"\306\001\n\014Egre"
-                    + "ssConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021deadLett"
-                    + "erCACerts\030\006 \001(\t\022\032\n\022deadLetterAudience\030\007 "
-                    + "\001(\t\022\016\n\006format\030\010 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rba"
-                    + "ckoffPolicy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014bac"
-                    + "koffDelay\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\302\004\n\006Egr"
-                    + "ess\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinatio"
-                    + "n\030\002 \001(\t\022\032\n\022destinationCACerts\030\017 \001(\t\022\033\n\023d"
-                    + "estinationAudience\030\021 \001(\t\022\022\n\010replyUrl\030\003 \001"
-                    + "(\tH\000\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006.Emp"
-                    + "tyH\000\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\017"
-                    + "replyUrlCACerts\030\020 \001(\t\022\030\n\020replyUrlAudienc"
-                    + "e\030\022 \001(\t\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030"
-                    + "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf"
-                    + "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde"
-                    + "r\022\031\n\007keyType\030\n \001(\0162\010.KeyType\022\035\n\treferenc"
-                    + "e\030\013 \001(\0132\n.Reference\022)\n\017dialectedFilter\030\014"
-                    + " \003(\0132\020.DialectedFilter\022\021\n\tvReplicas\030\r \001("
-                    + "\005\022)\n\014featureFlags\030\016 \001(\0132\023.EgressFeatureF"
-                    + "lags\022\036\n\026oidcServiceAccountName\030\023 \001(\tB\017\n\r"
-                    + "replyStrategy\"U\n\022EgressFeatureFlags\022\031\n\021e"
-                    + "nableRateLimiter\030\001 \001(\010\022$\n\034enableOrderedE"
-                    + "xecutorMetrics\030\002 \001(\010\"\243\001\n\007Ingress\022!\n\013cont"
-                    + "entMode\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001("
-                    + "\t\022\014\n\004host\030\003 \001(\t\022\"\n\032enableAutoCreateEvent"
-                    + "Types\030\004 \001(\010\022\020\n\010audience\030\005 \001(\t\022#\n\reventPo"
-                    + "licies\030\006 \003(\0132\014.EventPolicy\"o\n\tReference\022"
-                    + "\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name"
-                    + "\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n"
-                    + "\014groupVersion\030\006 \001(\t\"`\n\017SecretReference\022\035"
-                    + "\n\treference\030\001 \001(\0132\n.Reference\022.\n\022keyFiel"
-                    + "dReferences\030\002 \003(\0132\022.KeyFieldReference\"C\n"
-                    + "\021KeyFieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n"
-                    + "\005field\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecre"
-                    + "tReference\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022"
-                    + "$\n\nreferences\030\002 \003(\0132\020.SecretReference\"\202\001"
-                    + "\n\023CloudEventOverrides\0228\n\nextensions\030\001 \003("
-                    + "\0132$.CloudEventOverrides.ExtensionsEntry\032"
-                    + "1\n\017ExtensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-                    + "\030\002 \001(\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006"
-                    + "topics\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031"
-                    + "\n\007ingress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfi"
-                    + "g\030\005 \001(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\013"
-                    + "2\007.Egress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022"
-                    + " \n\nauthSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017mul"
-                    + "tiAuthSecret\030\t \001(\0132\025.MultiSecretReferenc"
-                    + "eH\000\0221\n\023cloudEventOverrides\030\n \001(\0132\024.Cloud"
-                    + "EventOverrides\022\035\n\treference\030\013 \001(\0132\n.Refe"
-                    + "renceB\006\n\004Auth\"R\n\010Contract\022\022\n\ngeneration\030"
-                    + "\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource\022\024\n\014t"
-                    + "rustBundles\030\003 \003(\t*,\n\rBackoffPolicy\022\017\n\013Ex"
-                    + "ponential\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder"
-                    + "\022\r\n\tUNORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022"
-                    + "\n\n\006String\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\t"
-                    + "ByteArray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016"
-                    + "\n\nSTRUCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_ME"
-                    + "CHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010U"
-                    + "SER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Pro"
-                    + "tocol\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001"
-                    + "\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.e"
-                    + "venting.kafka.broker.contractB\021DataPlane"
-                    + "ContractZ\032control-plane/pkg/contractb\006pr"
-                    + "oto3"
+                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"B"
+                    + "\n\013EventPolicy\022\020\n\010subjects\030\001 \003(\t\022!\n\007filte"
+                    + "rs\030\002 \003(\0132\020.DialectedFilter\"\306\001\n\014EgressCon"
+                    + "fig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021deadLetterCAC"
+                    + "erts\030\006 \001(\t\022\032\n\022deadLetterAudience\030\007 \001(\t\022\016"
+                    + "\n\006format\030\010 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoff"
+                    + "Policy\030\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffD"
+                    + "elay\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\"\302\004\n\006Egress\022\025"
+                    + "\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001"
+                    + "(\t\022\032\n\022destinationCACerts\030\017 \001(\t\022\033\n\023destin"
+                    + "ationAudience\030\021 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022"
+                    + "&\n\024replyToOriginalTopic\030\004 \001(\0132\006.EmptyH\000\022"
+                    + "\036\n\014discardReply\030\t \001(\0132\006.EmptyH\000\022\027\n\017reply"
+                    + "UrlCACerts\030\020 \001(\t\022\030\n\020replyUrlAudience\030\022 \001"
+                    + "(\t\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t"
+                    + "\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConfig\022%\n"
+                    + "\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007"
+                    + "keyType\030\n \001(\0162\010.KeyType\022\035\n\treference\030\013 \001"
+                    + "(\0132\n.Reference\022)\n\017dialectedFilter\030\014 \003(\0132"
+                    + "\020.DialectedFilter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014"
+                    + "featureFlags\030\016 \001(\0132\023.EgressFeatureFlags\022"
+                    + "\036\n\026oidcServiceAccountName\030\023 \001(\tB\017\n\rreply"
+                    + "Strategy\"U\n\022EgressFeatureFlags\022\031\n\021enable"
+                    + "RateLimiter\030\001 \001(\010\022$\n\034enableOrderedExecut"
+                    + "orMetrics\030\002 \001(\010\"\243\001\n\007Ingress\022!\n\013contentMo"
+                    + "de\030\001 \001(\0162\014.ContentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004"
+                    + "host\030\003 \001(\t\022\"\n\032enableAutoCreateEventTypes"
+                    + "\030\004 \001(\010\022\020\n\010audience\030\005 \001(\t\022#\n\reventPolicie"
+                    + "s\030\006 \003(\0132\014.EventPolicy\"o\n\tReference\022\014\n\004uu"
+                    + "id\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001("
+                    + "\t\022\017\n\007version\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n\014grou"
+                    + "pVersion\030\006 \001(\t\"`\n\017SecretReference\022\035\n\tref"
+                    + "erence\030\001 \001(\0132\n.Reference\022.\n\022keyFieldRefe"
+                    + "rences\030\002 \003(\0132\022.KeyFieldReference\"C\n\021KeyF"
+                    + "ieldReference\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005fiel"
+                    + "d\030\003 \001(\0162\014.SecretField\"Y\n\024MultiSecretRefe"
+                    + "rence\022\033\n\010protocol\030\001 \001(\0162\t.Protocol\022$\n\nre"
+                    + "ferences\030\002 \003(\0132\020.SecretReference\"\202\001\n\023Clo"
+                    + "udEventOverrides\0228\n\nextensions\030\001 \003(\0132$.C"
+                    + "loudEventOverrides.ExtensionsEntry\0321\n\017Ex"
+                    + "tensionsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001("
+                    + "\t:\0028\001\"\350\002\n\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topic"
+                    + "s\030\002 \003(\t\022\030\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ing"
+                    + "ress\030\004 \001(\0132\010.Ingress\022#\n\014egressConfig\030\005 \001"
+                    + "(\0132\r.EgressConfig\022\031\n\010egresses\030\006 \003(\0132\007.Eg"
+                    + "ress\022\034\n\nabsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nau"
+                    + "thSecret\030\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAut"
+                    + "hSecret\030\t \001(\0132\025.MultiSecretReferenceH\000\0221"
+                    + "\n\023cloudEventOverrides\030\n \001(\0132\024.CloudEvent"
+                    + "Overrides\022\035\n\treference\030\013 \001(\0132\n.Reference"
+                    + "B\006\n\004Auth\"R\n\010Contract\022\022\n\ngeneration\030\001 \001(\004"
+                    + "\022\034\n\tresources\030\002 \003(\0132\t.Resource\022\024\n\014trustB"
+                    + "undles\030\003 \003(\t*,\n\rBackoffPolicy\022\017\n\013Exponen"
+                    + "tial\020\000\022\n\n\006Linear\020\001*+\n\rDeliveryOrder\022\r\n\tU"
+                    + "NORDERED\020\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006St"
+                    + "ring\020\000\022\013\n\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteA"
+                    + "rray\020\003*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTR"
+                    + "UCTURED\020\001*a\n\013SecretField\022\022\n\016SASL_MECHANI"
+                    + "SM\020\000\022\n\n\006CA_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_K"
+                    + "EY\020\003\022\010\n\004USER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol"
+                    + "\022\r\n\tPLAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003S"
+                    + "SL\020\002\022\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventi"
+                    + "ng.kafka.broker.contractB\021DataPlaneContr"
+                    + "actZ\032control-plane/pkg/contractb\006proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
@@ -29587,7 +30101,7 @@ public final class DataPlaneContract {
                 getDescriptor().getMessageTypes().get(10);
         internal_static_EventPolicy_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_EventPolicy_descriptor, new java.lang.String[] {
-                    "Subjects",
+                    "Subjects", "Filters",
                 });
         internal_static_EgressConfig_descriptor =
                 getDescriptor().getMessageTypes().get(11);

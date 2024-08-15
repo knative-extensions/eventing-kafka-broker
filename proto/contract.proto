@@ -64,6 +64,8 @@ message Filter {
 message EventPolicy {
   // Subjects of this EventPolicy
   repeated string subjects = 1;
+  // Filters for this EventPolicy
+  repeated DialectedFilter filters = 2;
 }
 
 // BackoffPolicyType is the type for backoff policies
