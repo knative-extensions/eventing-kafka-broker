@@ -22,10 +22,9 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
-import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
@@ -75,8 +74,6 @@ public class Main {
         OpenTelemetrySdk openTelemetry =
                 TracingConfig.fromDir(env.getConfigTracingPath()).setup();
 
-        FeaturesConfig featuresConfig = new FeaturesConfig(env.getConfigFeaturesPath());
-
         // Read producer properties and override some defaults
         Properties producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
         producerConfigs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -108,29 +105,12 @@ public class Main {
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-        // Setup OIDC discovery config
-        OIDCDiscoveryConfig oidcDiscoveryConfig = null;
-        try {
-            oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
-                    .toCompletionStage()
-                    .toCompletableFuture()
-                    .get();
-        } catch (Exception ex) {
-            if (featuresConfig.isAuthenticationOIDC()) {
-                logger.error("Could not load OIDC config while OIDC authentication feature is enabled.");
-                throw ex;
-            } else {
-                logger.warn(
-                        "Could not load OIDC configuration. This will lead to problems, when the {} flag will be enabled later",
-                        FeaturesConfig.KEY_AUTHENTICATION_OIDC);
-            }
-        }
-
         final var kubernetesClient = new KubernetesClientBuilder().build();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var eventTypeListerFactory = new EventTypeListerFactory(eventTypeClient);
 
-        // Configure the verticle to deploy and the deployment options
+        OIDCDiscoveryConfigListener oidcDiscoveryConfigListener =
+                new OIDCDiscoveryConfigListener(env.getConfigFeaturesPath(), vertx, env.getWaitStartupSeconds());
 
         try {
             final Supplier<Verticle> receiverVerticleFactory = new ReceiverVerticleFactory(
@@ -142,7 +122,7 @@ public class Main {
                     kafkaProducerFactory,
                     eventTypeClient,
                     vertx,
-                    oidcDiscoveryConfig,
+                    oidcDiscoveryConfigListener,
                     eventTypeListerFactory);
             DeploymentOptions deploymentOptions =
                     new DeploymentOptions().setInstances(Runtime.getRuntime().availableProcessors());
@@ -161,7 +141,12 @@ public class Main {
 
             // Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(
-                    vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider(), eventTypeListerFactory);
+                    vertx,
+                    publisher,
+                    fileWatcher,
+                    openTelemetry.getSdkTracerProvider(),
+                    eventTypeListerFactory,
+                    oidcDiscoveryConfigListener);
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the receiver", ex);
