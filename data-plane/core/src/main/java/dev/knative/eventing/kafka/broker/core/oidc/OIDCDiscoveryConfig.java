@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public class OIDCDiscoveryConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(TokenVerifier.class);
+    private static final Logger logger = LoggerFactory.getLogger(OIDCDiscoveryConfig.class);
 
     private static final String OIDC_DISCOVERY_URL = "https://kubernetes.default.svc/.well-known/openid-configuration";
 
