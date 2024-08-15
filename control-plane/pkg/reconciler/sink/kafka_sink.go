@@ -19,6 +19,8 @@ package sink
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -63,7 +65,8 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	ConfigMapLister corelisters.ConfigMapLister
+	ConfigMapLister   corelisters.ConfigMapLister
+	EventPolicyLister eventingv1alpha1listers.EventPolicyLister
 
 	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -178,38 +181,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	)
 
 	// Get sink configuration.
-	sinkConfig := &contract.Resource{
-		Uid:    string(ks.UID),
-		Topics: []string{ks.Spec.Topic},
-		Ingress: &contract.Ingress{
-			Path:                       receiver.PathFromObject(ks),
-			ContentMode:                coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
-			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
-		},
-		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
-		Reference: &contract.Reference{
-			Uuid:         string(ks.GetUID()),
-			Namespace:    ks.GetNamespace(),
-			Name:         ks.GetName(),
-			Kind:         "KafkaSink",
-			GroupVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-		},
+	sinkConfig, err := r.getSinkContractResource(ctx, ks, secret)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
-	if ks.Spec.HasAuthConfig() {
-		sinkConfig.Auth = &contract.Resource_AuthSecret{
-			AuthSecret: &contract.Reference{
-				Uuid:      string(secret.UID),
-				Namespace: secret.Namespace,
-				Name:      secret.Name,
-				Version:   secret.ResourceVersion,
-			},
-		}
-	}
-
-	if ks.Status.Address != nil && ks.Status.Address.Audience != nil {
-		sinkConfig.Ingress.Audience = *ks.Status.Address.Audience
-	}
-
 	statusConditionManager.ConfigResolved()
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)
@@ -438,4 +413,46 @@ func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	}
 	ct.TrustBundles = tb
 	return nil
+}
+
+func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, secret *corev1.Secret) (*contract.Resource, error) {
+	sinkConfig := &contract.Resource{
+		Uid:    string(kafkaSink.UID),
+		Topics: []string{kafkaSink.Spec.Topic},
+		Ingress: &contract.Ingress{
+			Path:                       receiver.PathFromObject(kafkaSink),
+			ContentMode:                coreconfig.ContentModeFromString(*kafkaSink.Spec.ContentMode),
+			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+		},
+		BootstrapServers: kafka.BootstrapServersCommaSeparated(kafkaSink.Spec.BootstrapServers),
+		Reference: &contract.Reference{
+			Uuid:         string(kafkaSink.GetUID()),
+			Namespace:    kafkaSink.GetNamespace(),
+			Name:         kafkaSink.GetName(),
+			Kind:         "KafkaSink",
+			GroupVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+		},
+	}
+	if kafkaSink.Spec.HasAuthConfig() {
+		sinkConfig.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
+		}
+	}
+
+	if kafkaSink.Status.Address != nil && kafkaSink.Status.Address.Audience != nil {
+		sinkConfig.Ingress.Audience = *kafkaSink.Status.Address.Audience
+	}
+
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(kafkaSink.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, kafkaSink.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("could not get eventpolicies from kafkasink status: %w", err)
+	}
+	sinkConfig.Ingress.EventPolicies = eventPolicies
+
+	return sinkConfig, nil
 }
