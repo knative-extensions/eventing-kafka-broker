@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"strconv"
 	"strings"
 	"time"
@@ -109,6 +110,7 @@ type Reconciler struct {
 	ConfigMapLister    corelisters.ConfigMapLister
 	ServiceLister      corelisters.ServiceLister
 	SubscriptionLister messaginglisters.SubscriptionLister
+	EventPolicyLister  eventingv1alpha1listers.EventPolicyLister
 
 	Prober prober.NewProber
 
@@ -121,6 +123,7 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
+	featureFlags := feature.FromContext(ctx)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
@@ -219,8 +222,17 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
+	var audience *string
+	if featureFlags.IsOIDCAuthentication() {
+		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
+		audience = nil
+	}
+
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -273,16 +285,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	if err != nil {
 		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
 		return err
-	}
-
-	featureFlags := feature.FromContext(ctx)
-	var audience *string
-	if featureFlags.IsOIDCAuthentication() {
-		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
-		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
-	} else {
-		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
-		audience = nil
 	}
 
 	var addressableStatus duckv1.AddressStatus
@@ -685,13 +687,15 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig, audience *string) (*contract.Resource, error) {
+	features := feature.FromContext(ctx)
+
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
 			Host:                       receiver.Host(channel.GetNamespace(), channel.GetName()),
-			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+			EnableAutoCreateEventTypes: features.IsEnabled(feature.EvenTypeAutoCreate),
 			Path:                       receiver.Path(channel.GetNamespace(), channel.GetName()),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
@@ -710,9 +714,15 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		}
 	}
 
-	if channel.Status.Address != nil && channel.Status.Address.Audience != nil {
-		resource.Ingress.Audience = *channel.Status.Address.Audience
+	if audience != nil {
+		resource.Ingress.Audience = *audience
 	}
+
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(channel.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, channel.Namespace, features)
+	if err != nil {
+		return nil, fmt.Errorf("could not get eventpolicies from channel status: %w", err)
+	}
+	resource.Ingress.EventPolicies = eventPolicies
 
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
