@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"strconv"
 	"strings"
 	"time"
@@ -109,6 +110,7 @@ type Reconciler struct {
 	ConfigMapLister    corelisters.ConfigMapLister
 	ServiceLister      corelisters.ServiceLister
 	SubscriptionLister messaginglisters.SubscriptionLister
+	EventPolicyLister  eventingv1alpha1listers.EventPolicyLister
 
 	Prober prober.NewProber
 
@@ -713,6 +715,12 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	if channel.Status.Address != nil && channel.Status.Address.Audience != nil {
 		resource.Ingress.Audience = *channel.Status.Address.Audience
 	}
+
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(channel.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, channel.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("could not get eventpolicies from channel status: %w", err)
+	}
+	resource.Ingress.EventPolicies = eventPolicies
 
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {

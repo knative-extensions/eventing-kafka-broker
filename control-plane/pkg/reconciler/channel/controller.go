@@ -19,6 +19,7 @@ package channel
 import (
 	"context"
 	"fmt"
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 	"net"
 	"net/http"
 
@@ -63,6 +64,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	channelInformer := kafkachannelinformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
+	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
 
@@ -85,6 +87,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		ServiceLister:        serviceinformer.Get(ctx).Lister(),
 		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
 		ConsumerGroupLister:  consumerGroupInformer.Lister(),
+		EventPolicyLister:    eventPolicyInformer.Lister(),
 		InternalsClient:      consumergroupclient.Get(ctx),
 		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
 	}

@@ -28,6 +28,7 @@ import (
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription/fake"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
