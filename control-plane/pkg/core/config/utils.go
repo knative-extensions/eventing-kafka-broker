@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"math"
 	"sort"
 
@@ -49,6 +50,24 @@ func ContentModeFromString(mode string) contract.ContentMode {
 			[]string{eventing.ModeStructured, eventing.ModeBinary},
 		))
 	}
+}
+
+// EventPoliciesFromAppliedEventPoliciesStatus resolves a AppliedEventPoliciesStatus into a list of contract.EventPolicy
+func EventPoliciesFromAppliedEventPoliciesStatus(status duck.AppliedEventPoliciesStatus, lister v1alpha1.EventPolicyLister, namespace string) ([]*contract.EventPolicy, error) {
+	eventPolicies := make([]*contract.EventPolicy, 0, len(status.Policies))
+
+	for _, appliedPolicy := range status.Policies {
+		policy, err := lister.EventPolicies(namespace).Get(appliedPolicy.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get eventPolicy %s: %w", appliedPolicy.Name, err)
+		}
+
+		eventPolicies = append(eventPolicies, &contract.EventPolicy{
+			Subjects: policy.Status.From,
+		})
+	}
+
+	return eventPolicies, nil
 }
 
 func EgressConfigFromDelivery(
