@@ -53,5 +53,5 @@ func TestKafkaSinkSupportsOIDC(t *testing.T) {
 	env.Prerequisite(ctx, t, kafkatopic.GoesReady(topic))
 	env.Prerequisite(ctx, t, kafkasink.GoesReady(sink, topic, testpkg.BootstrapServersPlaintextArr))
 
-	env.Test(ctx, t, oidc.AddressableHasAudiencePopulated(kafkasink.GVR(), "KafkaSink", sink, env.Namespace()))
+	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkasink.GVR(), "KafkaSink", sink, env.Namespace()))
 }
