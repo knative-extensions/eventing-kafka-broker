@@ -668,6 +668,12 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	}
 	resource.EgressConfig = egressConfig
 
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(broker.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, broker.Namespace)
+	if err != nil {
+		return nil, fmt.Errorf("could not get eventpolicies from broker status: %w", err)
+	}
+	resource.Ingress.EventPolicies = eventPolicies
+
 	return resource, nil
 }
 
