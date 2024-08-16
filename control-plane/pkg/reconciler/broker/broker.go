@@ -107,14 +107,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	// Get contract config map. Do this in advance, otherwise
+	// Get and create contract config map. Do this in advance, otherwise
 	// the dataplane pods that need volume mounts to the contract configmap
 	// will get stuck and will never be ready.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		return statusConditionManager.FailedToGetConfigMap(err)
 	}
-
 	logger.Debug("Got contract config map")
 
 	if !r.IsReceiverRunning() {
@@ -163,6 +162,62 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	if err != nil {
 		return err
 	}
+
+	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
+
+	features := feature.FromContext(ctx)
+	if features.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
+		broker.Status.Address = &httpAddress
+		broker.Status.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
+	} else if features.IsStrictTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
+		broker.Status.Address = &httpsAddress
+		broker.Status.Addresses = []duckv1.Addressable{httpsAddress}
+	} else {
+		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
+		broker.Status.Address = &httpAddress
+		broker.Status.Addresses = []duckv1.Addressable{httpAddress}
+	}
+
+	if features.IsOIDCAuthentication() {
+		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
+		broker.Status.Address.Audience = &audience
+
+		for i := range broker.Status.Addresses {
+			broker.Status.Addresses[i].Audience = &audience
+		}
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
+		if broker.Status.Address != nil {
+			broker.Status.Address.Audience = nil
+		}
+
+		for i := range broker.Status.Addresses {
+			broker.Status.Addresses[i].Audience = nil
+		}
+	}
+
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
+
+	err = auth.UpdateStatusWithEventPolicies(features, &broker.Status.AppliedEventPoliciesStatus, &broker.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not update broker status with EventPolicies: %v", err)
+	}
+
+	// update contract at end of reconcilation to have updated status fields in contract too
 
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
@@ -233,36 +288,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
-
-	features := feature.FromContext(ctx)
-	var addressableStatus duckv1.AddressStatus
-	if features.IsPermissiveTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
-		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
-	} else if features.IsStrictTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
-		addressableStatus.Address = &httpsAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
-	} else {
-		httpAddress := receiver.HTTPAddress(ingressHost, nil, broker)
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
-	}
+	// do probing after contract got updated and dataplane is aware of changes
 	proberAddressable := prober.ProberAddressable{
-		AddressStatus: &addressableStatus,
+		AddressStatus: &broker.Status.AddressStatus,
 		ResourceKey: types.NamespacedName{
 			Namespace: broker.GetNamespace(),
 			Name:      broker.GetName(),
@@ -274,35 +302,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return nil // Object will get re-queued once probe status changes.
 	}
 	statusConditionManager.ProbesStatusReady()
-
-	broker.Status.Address = addressableStatus.Address
-	broker.Status.Addresses = addressableStatus.Addresses
-
-	if features.IsOIDCAuthentication() {
-		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
-		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
-		broker.Status.Address.Audience = &audience
-
-		for i := range broker.Status.Addresses {
-			broker.Status.Addresses[i].Audience = &audience
-		}
-	} else {
-		logging.FromContext(ctx).Debug("Clearing the brokers audience as OIDC is not enabled")
-		if broker.Status.Address != nil {
-			broker.Status.Address.Audience = nil
-		}
-
-		for i := range broker.Status.Addresses {
-			broker.Status.Addresses[i].Audience = nil
-		}
-	}
-
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
-
-	err = auth.UpdateStatusWithEventPolicies(features, &broker.Status.AppliedEventPoliciesStatus, &broker.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
-	if err != nil {
-		return fmt.Errorf("could not update broker status with EventPolicies: %v", err)
-	}
 
 	return nil
 }

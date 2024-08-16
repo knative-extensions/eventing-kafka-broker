@@ -367,7 +367,7 @@ func NamespacedBrokerAddressable(env *config.Env) func(broker *eventing.Broker) 
 }
 
 func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace string) {
-	broker.Status.Address = &duckv1.Addressable{
+	httpAddress := duckv1.Addressable{
 		Name: pointer.String("http"),
 		URL: &apis.URL{
 			Scheme: "http",
@@ -375,6 +375,9 @@ func brokerAddressable(broker *eventing.Broker, serviceName, serviceNamespace st
 			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 		},
 	}
+
+	broker.Status.Address = &httpAddress
+	broker.Status.Addresses = []duckv1.Addressable{httpAddress}
 
 	broker.GetConditionSet().Manage(&broker.Status).MarkTrue(base.ConditionAddressable)
 }

@@ -402,6 +402,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeFailed(prober.StatusNotReady),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
+						BrokerAddressable(&env),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -465,6 +467,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerProbeFailed(prober.StatusUnknown),
+						BrokerAddressable(&env),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1259,6 +1263,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
+						BrokerAddressable(&env),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -2283,9 +2289,12 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              BrokerUUID,
-							Topics:           []string{BrokerTopic()},
-							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Ingress: &contract.Ingress{
+								Path:     receiver.Path(BrokerNamespace, BrokerName),
+								Audience: brokerAudience,
+							},
 							BootstrapServers: bootstrapServers,
 							Reference:        BrokerReference(),
 							Auth: &contract.Resource_AuthSecret{
@@ -2373,6 +2382,9 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				reconcilertesting.NewEventPolicy(readyEventPolicyName, BrokerNamespace,
 					reconcilertesting.WithReadyEventPolicyCondition,
 					reconcilertesting.WithEventPolicyToRef(brokerV1GVK, BrokerName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub1",
+					}),
 				),
 			},
 			Key: testKey,
@@ -2383,9 +2395,19 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              BrokerUUID,
-							Topics:           []string{BrokerTopic()},
-							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Ingress: &contract.Ingress{
+								Path:     receiver.Path(BrokerNamespace, BrokerName),
+								Audience: brokerAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										Subjects: []string{
+											"sub1",
+										},
+									},
+								},
+							},
 							BootstrapServers: bootstrapServers,
 							Reference:        BrokerReference(),
 						},
@@ -2412,7 +2434,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
-						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
@@ -2466,9 +2487,12 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              BrokerUUID,
-							Topics:           []string{BrokerTopic()},
-							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Ingress: &contract.Ingress{
+								Path:     receiver.Path(BrokerNamespace, BrokerName),
+								Audience: brokerAudience,
+							},
 							BootstrapServers: bootstrapServers,
 							Reference:        BrokerReference(),
 						},
