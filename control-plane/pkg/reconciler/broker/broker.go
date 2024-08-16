@@ -132,12 +132,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	statusConditionManager.ConfigResolved()
+	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
 	if err := r.TrackConfigMap(brokerConfig, broker); err != nil {
 		return fmt.Errorf("failed to track broker config: %w", err)
 	}
-
-	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
 	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig, UseNamespaceInConfigmap: false}, r.SecretProviderFunc())
 	if err != nil {
@@ -236,9 +235,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
 
-	transportEncryptionFlags := feature.FromContext(ctx)
+	features := feature.FromContext(ctx)
 	var addressableStatus duckv1.AddressStatus
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	if features.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
@@ -248,7 +247,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		httpsAddress := receiver.HTTPSAddress(ingressHost, nil, broker, caCerts)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress, httpsAddress}
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	} else if features.IsStrictTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
@@ -279,7 +278,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	broker.Status.Address = addressableStatus.Address
 	broker.Status.Addresses = addressableStatus.Addresses
 
-	if feature.FromContext(ctx).IsOIDCAuthentication() {
+	if features.IsOIDCAuthentication() {
 		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
 		logging.FromContext(ctx).Debugw("Setting the brokers audience", zap.String("audience", audience))
 		broker.Status.Address.Audience = &audience
@@ -300,7 +299,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
 
-	err = auth.UpdateStatusWithEventPolicies(feature.FromContext(ctx), &broker.Status.AppliedEventPoliciesStatus, &broker.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+	err = auth.UpdateStatusWithEventPolicies(features, &broker.Status.AppliedEventPoliciesStatus, &broker.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
 	if err != nil {
 		return fmt.Errorf("could not update broker status with EventPolicies: %v", err)
 	}
