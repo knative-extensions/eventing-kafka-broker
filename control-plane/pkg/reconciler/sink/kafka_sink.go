@@ -163,6 +163,48 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Got contract config map")
 
+	transportEncryptionFlags := feature.FromContext(ctx)
+	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		ks.Status.Address = &httpAddress
+		ks.Status.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
+	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
+
+		ks.Status.Address = &httpsAddress
+		ks.Status.Addresses = []duckv1.Addressable{httpsAddress}
+	} else {
+		// Disabled mode:
+		// Unchange
+		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
+
+		ks.Status.Address = &httpAddress
+		ks.Status.Addresses = []duckv1.Addressable{httpAddress}
+	}
+
+	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
+
+	// update contract at end of reconcilation to have updated status fields in contract too
+
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
 	if err != nil && ct == nil {
@@ -218,47 +260,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Updated receiver pod annotation")
 
-	transportEncryptionFlags := feature.FromContext(ctx)
-	var addressableStatus duckv1.AddressStatus
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
-		// Permissive mode:
-		// - status.address http address with path-based routing
-		// - status.addresses:
-		//   - https address with path-based routing
-		//   - http address with path-based routing
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
-		// Strict mode: (only https addresses)
-		// - status.address https address with path-based routing
-		// - status.addresses:
-		//   - https address with path-based routing
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
-
-		addressableStatus.Address = &httpsAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
-	} else {
-		// Disabled mode:
-		// Unchange
-		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
-
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
-	}
-
+	// do probing after contract got updated and dataplane is aware of changes
 	proberAddressable := prober.ProberAddressable{
-		AddressStatus: &addressableStatus,
+		AddressStatus: &ks.Status.AddressStatus,
 		ResourceKey: types.NamespacedName{
 			Namespace: ks.GetNamespace(),
 			Name:      ks.GetName(),
@@ -271,10 +275,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	statusConditionManager.ProbesStatusReady()
-
-	ks.Status.AddressStatus = addressableStatus
-
-	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }

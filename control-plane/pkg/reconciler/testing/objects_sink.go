@@ -19,9 +19,9 @@ package testing
 import (
 	"context"
 	"fmt"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -118,12 +118,18 @@ func SinkAddressable(configs *config.Env) func(obj duckv1.KRShaped) {
 
 	return func(obj duckv1.KRShaped) {
 		sink := obj.(*eventing.KafkaSink)
-		sink.Status.AddressStatus.Address = &duckv1.Addressable{}
-		sink.Status.AddressStatus.Address.URL = &apis.URL{
-			Scheme: "http",
-			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
-			Path:   fmt.Sprintf("/%s/%s", sink.Namespace, sink.Name),
+
+		httpAddress := &duckv1.Addressable{
+			Name: ptr.To("http"),
+			URL: &apis.URL{
+				Scheme: "http",
+				Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
+				Path:   fmt.Sprintf("/%s/%s", sink.Namespace, sink.Name),
+			},
 		}
+
+		sink.Status.Address = httpAddress
+		sink.Status.Addresses = []duckv1.Addressable{*httpAddress}
 
 		sink.GetConditionSet().Manage(sink.GetStatus()).MarkTrue(base.ConditionAddressable)
 	}
