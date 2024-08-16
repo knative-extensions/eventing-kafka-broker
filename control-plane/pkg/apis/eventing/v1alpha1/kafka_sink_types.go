@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
@@ -127,6 +128,10 @@ type KafkaSinkStatus struct {
 
 	// Kafka Sink is Addressable.
 	duckv1.AddressStatus
+
+	// AppliedEventPoliciesStatus contains the list of EventPolicies which apply to this KafkaSink
+	// +optional
+	eventingduckv1.AppliedEventPoliciesStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
