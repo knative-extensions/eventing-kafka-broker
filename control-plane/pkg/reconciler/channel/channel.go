@@ -210,6 +210,73 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Got contract config map")
 
+	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers, secret)
+	if subscribersError != nil {
+		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
+		return subscribersError
+	}
+	if !allReady { //no need to return error. Not ready because of consumer group status. Will be ok once consumer group is reconciled
+		channel.GetConditionSet().Manage(&channel.Status).MarkUnknown(KafkaChannelConditionSubscribersReady, "all subscribers not ready", "failed to reconcile consumer group")
+	} else {
+		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionSubscribersReady)
+	}
+
+	channelService, err := r.reconcileChannelService(ctx, channel)
+	if err != nil {
+		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
+		return err
+	}
+
+	featureFlags := feature.FromContext(ctx)
+	var audience *string
+	if featureFlags.IsOIDCAuthentication() {
+		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
+		audience = nil
+	}
+
+	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
+	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
+	if featureFlags.IsPermissiveTransportEncryption() {
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
+		// Permissive mode:
+		// - status.address http address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		//   - http address with path-based routing
+		channel.Status.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
+		channel.Status.Address = &httpAddress
+	} else if featureFlags.IsStrictTransportEncryption() {
+		// Strict mode: (only https addresses)
+		// - status.address https address with path-based routing
+		// - status.addresses:
+		//   - https address with path-based routing
+		caCerts, err := r.getCaCerts()
+		if err != nil {
+			return err
+		}
+
+		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
+		channel.Status.Addresses = []duckv1.Addressable{httpsAddress}
+		channel.Status.Address = &httpsAddress
+	} else {
+		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
+		channel.Status.Address = &httpAddress
+		channel.Status.Addresses = []duckv1.Addressable{httpAddress}
+	}
+
+	channel.GetConditionSet().Manage(channel.GetStatus()).MarkTrue(base.ConditionAddressable)
+
+	// update contract at end of reconcilation to have updated status fields in contract too
+
 	// Get data plane config data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
 	if err != nil || ct == nil {
@@ -228,17 +295,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
-
-	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers, secret)
-	if subscribersError != nil {
-		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
-		return subscribersError
-	}
-	if !allReady { //no need to return error. Not ready because of consumer group status. Will be ok once consumer group is reconciled
-		channel.GetConditionSet().Manage(&channel.Status).MarkUnknown(KafkaChannelConditionSubscribersReady, "all subscribers not ready", "failed to reconcile consumer group")
-	} else {
-		channel.GetConditionSet().Manage(&channel.Status).MarkTrue(KafkaChannelConditionSubscribersReady)
-	}
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
@@ -272,61 +328,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Updated receiver pod annotation")
 
-	channelService, err := r.reconcileChannelService(ctx, channel)
-	if err != nil {
-		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
-		return err
-	}
-
-	featureFlags := feature.FromContext(ctx)
-	var audience *string
-	if featureFlags.IsOIDCAuthentication() {
-		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
-		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
-	} else {
-		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
-		audience = nil
-	}
-
-	var addressableStatus duckv1.AddressStatus
-	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
-	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
-	if featureFlags.IsPermissiveTransportEncryption() {
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
-		// Permissive mode:
-		// - status.address http address with path-based routing
-		// - status.addresses:
-		//   - https address with path-based routing
-		//   - http address with path-based routing
-		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
-		addressableStatus.Address = &httpAddress
-	} else if featureFlags.IsStrictTransportEncryption() {
-		// Strict mode: (only https addresses)
-		// - status.address https address with path-based routing
-		// - status.addresses:
-		//   - https address with path-based routing
-		caCerts, err := r.getCaCerts()
-		if err != nil {
-			return err
-		}
-
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
-		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
-		addressableStatus.Address = &httpsAddress
-	} else {
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
-		addressableStatus.Address = &httpAddress
-		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
-	}
-
+	// do probing after contract got updated and dataplane is aware of changes
 	proberAddressable := prober.ProberAddressable{
-		AddressStatus: &addressableStatus,
+		AddressStatus: &channel.Status.AddressStatus,
 		ResourceKey: types.NamespacedName{
 			Namespace: channel.GetNamespace(),
 			Name:      channel.GetName(),
@@ -341,9 +345,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	statusConditionManager.ProbesStatusReady()
-	channel.Status.Address = addressableStatus.Address
-	channel.Status.Addresses = addressableStatus.Addresses
-	channel.GetConditionSet().Manage(channel.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
 }
