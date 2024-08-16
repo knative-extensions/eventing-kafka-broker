@@ -20,10 +20,11 @@
 package e2e_new
 
 import (
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 	"testing"
 	"time"
+
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing/test/rekt/features/oidc"
