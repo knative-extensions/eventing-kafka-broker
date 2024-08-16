@@ -172,3 +172,14 @@ func WithClusterNamespace(namespace string) manifest.CfgFn {
 		cfg["clusterNamespace"] = namespace
 	}
 }
+
+// GoesReady returns a feature that will create a topic of the given
+// name and confirm it becomes ready.
+func GoesReady(name string, cfg ...manifest.CfgFn) *feature.Feature {
+	f := new(feature.Feature)
+
+	f.Setup(fmt.Sprintf("install Topic %q", name), Install(name, cfg...))
+	f.Setup("Topic is ready", IsReady(name))
+
+	return f
+}
