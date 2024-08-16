@@ -19,9 +19,10 @@ package sink
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
-	"time"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"

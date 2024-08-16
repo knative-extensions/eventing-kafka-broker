@@ -20,8 +20,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"knative.dev/eventing/pkg/auth"
 	"testing"
+
+	"knative.dev/eventing/pkg/auth"
 
 	"k8s.io/utils/pointer"
 
