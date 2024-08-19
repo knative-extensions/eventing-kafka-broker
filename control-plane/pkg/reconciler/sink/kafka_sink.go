@@ -19,9 +19,10 @@ package sink
 import (
 	"context"
 	"fmt"
+	"time"
+
 	corev1 "k8s.io/api/core/v1"
 	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-	"time"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"

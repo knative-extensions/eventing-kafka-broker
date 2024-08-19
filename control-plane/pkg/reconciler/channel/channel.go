@@ -20,10 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"strconv"
 	"strings"
 	"time"
+
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/auth"

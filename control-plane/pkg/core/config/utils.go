@@ -20,9 +20,10 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
-	"knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	"math"
 	"sort"
+
+	"knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
 	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
