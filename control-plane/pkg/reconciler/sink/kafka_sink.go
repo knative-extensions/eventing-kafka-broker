@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -246,9 +249,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Updated receiver pod annotation")
 
-	transportEncryptionFlags := feature.FromContext(ctx)
+	features := feature.FromContext(ctx)
 	var addressableStatus duckv1.AddressStatus
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	if features.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
@@ -263,7 +266,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		//   - http address with path-based routing
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	} else if features.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
 		// - status.addresses:
@@ -301,6 +304,25 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	statusConditionManager.ProbesStatusReady()
 
 	ks.Status.AddressStatus = addressableStatus
+
+	if features.IsOIDCAuthentication() {
+		audience := auth.GetAudience(eventing.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta)
+		logging.FromContext(ctx).Debugw("Setting the kafkasinks audience", zap.String("audience", audience))
+		ks.Status.Address.Audience = &audience
+
+		for i := range ks.Status.Addresses {
+			ks.Status.Addresses[i].Audience = &audience
+		}
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the kafkasinks audience as OIDC is not enabled")
+		if ks.Status.Address != nil {
+			ks.Status.Address.Audience = nil
+		}
+
+		for i := range ks.Status.Addresses {
+			ks.Status.Addresses[i].Audience = nil
+		}
+	}
 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
