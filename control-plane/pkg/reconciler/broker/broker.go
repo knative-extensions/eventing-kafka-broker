@@ -19,9 +19,10 @@ package broker
 import (
 	"context"
 	"fmt"
-	"k8s.io/utils/ptr"
 	"strings"
 	"time"
+
+	"k8s.io/utils/ptr"
 
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"

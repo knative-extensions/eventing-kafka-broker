@@ -19,9 +19,10 @@ package sink
 import (
 	"context"
 	"fmt"
-	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 	"net"
 	"net/http"
+
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
