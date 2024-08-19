@@ -89,6 +89,8 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
+	r.markEventPolicyConditionNotYetSupported(ks)
+
 	if !r.IsReceiverRunning() {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
@@ -234,7 +236,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -301,6 +303,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	return nil
 }
 
+func (r *Reconciler) markEventPolicyConditionNotYetSupported(ks *eventing.KafkaSink) {
+	ks.Status.GetConditionSet().Manage(ks.GetStatus()).MarkTrueWithReason(
+		base.ConditionEventPoliciesReady,
+		"AuthzNotSupported",
+		"Authorization not yet supported",
+	)
+}
+
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.finalizeKind(ctx, ks)
@@ -341,7 +351,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 

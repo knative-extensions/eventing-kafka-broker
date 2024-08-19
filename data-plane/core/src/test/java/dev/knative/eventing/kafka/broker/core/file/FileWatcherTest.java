@@ -17,13 +17,17 @@
 package dev.knative.eventing.kafka.broker.core.file;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FileWatcherTest {
 
@@ -45,11 +49,9 @@ public class FileWatcherTest {
     @Test
     public void testFileModification() throws Exception {
         // Set up a counter to track how many times the trigger function is called
-        AtomicInteger counter = new AtomicInteger(0);
+        final AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> {
-            counter.incrementAndGet();
-        });
+        fileWatcher = new FileWatcher(tempFile, counter::incrementAndGet);
         fileWatcher.start().await();
 
         // Modify the file
@@ -59,21 +61,19 @@ public class FileWatcherTest {
 
         // Await until the trigger function is called twice: 1 is for the initial file
         // read, and 1 is for the file modification
-        await().until(() -> counter.get() == 2);
+        await().untilAtomic(counter, is(greaterThanOrEqualTo(2)));
     }
 
     @Test
     public void testFileNoUpdate() throws Exception {
         // Set up a counter to track how many times the trigger function is called
-        AtomicInteger counter = new AtomicInteger(0);
+        final AtomicInteger counter = new AtomicInteger(0);
 
-        fileWatcher = new FileWatcher(tempFile, () -> {
-            counter.incrementAndGet();
-        });
+        fileWatcher = new FileWatcher(tempFile, counter::incrementAndGet);
         fileWatcher.start().await();
 
         // Await until the trigger function is called once: 1 is for the initial file
         // read
-        await().until(() -> counter.get() == 1);
+        await().untilAtomic(counter, is(equalTo(1)));
     }
 }

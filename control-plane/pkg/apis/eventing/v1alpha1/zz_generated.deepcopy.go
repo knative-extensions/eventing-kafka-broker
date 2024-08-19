@@ -153,6 +153,7 @@ func (in *KafkaSinkStatus) DeepCopyInto(out *KafkaSinkStatus) {
 	*out = *in
 	in.Status.DeepCopyInto(&out.Status)
 	in.AddressStatus.DeepCopyInto(&out.AddressStatus)
+	in.AppliedEventPoliciesStatus.DeepCopyInto(&out.AppliedEventPoliciesStatus)
 	return
 }
 

@@ -9331,6 +9331,706 @@ public final class DataPlaneContract {
         }
     }
 
+    public interface EventPolicyOrBuilder
+            extends
+            // @@protoc_insertion_point(interface_extends:EventPolicy)
+            com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @return A list containing the subjects.
+         */
+        java.util.List<java.lang.String> getSubjectsList();
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @return The count of subjects.
+         */
+        int getSubjectsCount();
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @param index The index of the element to return.
+         * @return The subjects at the given index.
+         */
+        java.lang.String getSubjects(int index);
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @param index The index of the value to return.
+         * @return The bytes of the subjects at the given index.
+         */
+        com.google.protobuf.ByteString getSubjectsBytes(int index);
+    }
+    /**
+     * Protobuf type {@code EventPolicy}
+     */
+    public static final class EventPolicy extends com.google.protobuf.GeneratedMessageV3
+            implements
+            // @@protoc_insertion_point(message_implements:EventPolicy)
+            EventPolicyOrBuilder {
+        private static final long serialVersionUID = 0L;
+        // Use EventPolicy.newBuilder() to construct.
+        private EventPolicy(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+            super(builder);
+        }
+
+        private EventPolicy() {
+            subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        }
+
+        @java.lang.Override
+        @SuppressWarnings({"unused"})
+        protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+            return new EventPolicy();
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+            return this.unknownFields;
+        }
+
+        private EventPolicy(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            java.lang.String s = input.readStringRequireUtf8();
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                subjects_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            subjects_.add(s);
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    subjects_ = subjects_.getUnmodifiableView();
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+            return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EventPolicy_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+            return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                    .internal_static_EventPolicy_fieldAccessorTable
+                    .ensureFieldAccessorsInitialized(
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.class,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder.class);
+        }
+
+        public static final int SUBJECTS_FIELD_NUMBER = 1;
+        private com.google.protobuf.LazyStringList subjects_;
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @return A list containing the subjects.
+         */
+        public com.google.protobuf.ProtocolStringList getSubjectsList() {
+            return subjects_;
+        }
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @return The count of subjects.
+         */
+        public int getSubjectsCount() {
+            return subjects_.size();
+        }
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @param index The index of the element to return.
+         * @return The subjects at the given index.
+         */
+        public java.lang.String getSubjects(int index) {
+            return subjects_.get(index);
+        }
+        /**
+         * <pre>
+         * Subjects of this EventPolicy
+         * </pre>
+         *
+         * <code>repeated string subjects = 1;</code>
+         * @param index The index of the value to return.
+         * @return The bytes of the subjects at the given index.
+         */
+        public com.google.protobuf.ByteString getSubjectsBytes(int index) {
+            return subjects_.getByteString(index);
+        }
+
+        private byte memoizedIsInitialized = -1;
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+            byte isInitialized = memoizedIsInitialized;
+            if (isInitialized == 1) return true;
+            if (isInitialized == 0) return false;
+
+            memoizedIsInitialized = 1;
+            return true;
+        }
+
+        @java.lang.Override
+        public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+            for (int i = 0; i < subjects_.size(); i++) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subjects_.getRaw(i));
+            }
+            unknownFields.writeTo(output);
+        }
+
+        @java.lang.Override
+        public int getSerializedSize() {
+            int size = memoizedSize;
+            if (size != -1) return size;
+
+            size = 0;
+            {
+                int dataSize = 0;
+                for (int i = 0; i < subjects_.size(); i++) {
+                    dataSize += computeStringSizeNoTag(subjects_.getRaw(i));
+                }
+                size += dataSize;
+                size += 1 * getSubjectsList().size();
+            }
+            size += unknownFields.getSerializedSize();
+            memoizedSize = size;
+            return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy)) {
+                return super.equals(obj);
+            }
+            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy other =
+                    (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy) obj;
+
+            if (!getSubjectsList().equals(other.getSubjectsList())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
+            return true;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+            if (memoizedHashCode != 0) {
+                return memoizedHashCode;
+            }
+            int hash = 41;
+            hash = (19 * hash) + getDescriptor().hashCode();
+            if (getSubjectsCount() > 0) {
+                hash = (37 * hash) + SUBJECTS_FIELD_NUMBER;
+                hash = (53 * hash) + getSubjectsList().hashCode();
+            }
+            hash = (29 * hash) + unknownFields.hashCode();
+            memoizedHashCode = hash;
+            return hash;
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                com.google.protobuf.ByteString data) throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                com.google.protobuf.ByteString data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(byte[] data)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                java.io.InputStream input) throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseDelimitedFrom(
+                java.io.InputStream input) throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseDelimitedFrom(
+                java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+                    PARSER, input, extensionRegistry);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parseFrom(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        @java.lang.Override
+        public Builder newBuilderForType() {
+            return newBuilder();
+        }
+
+        public static Builder newBuilder() {
+            return DEFAULT_INSTANCE.toBuilder();
+        }
+
+        public static Builder newBuilder(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy prototype) {
+            return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+
+        @java.lang.Override
+        public Builder toBuilder() {
+            return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            Builder builder = new Builder(parent);
+            return builder;
+        }
+        /**
+         * Protobuf type {@code EventPolicy}
+         */
+        public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+                implements
+                // @@protoc_insertion_point(builder_implements:EventPolicy)
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder {
+            public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+                return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                        .internal_static_EventPolicy_descriptor;
+            }
+
+            @java.lang.Override
+            protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+                return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                        .internal_static_EventPolicy_fieldAccessorTable
+                        .ensureFieldAccessorsInitialized(
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.class,
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder.class);
+            }
+
+            // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.newBuilder()
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
+
+            private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+                super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+            }
+
+            @java.lang.Override
+            public Builder clear() {
+                super.clear();
+                subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000001);
+                return this;
+            }
+
+            @java.lang.Override
+            public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+                return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                        .internal_static_EventPolicy_descriptor;
+            }
+
+            @java.lang.Override
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy
+                    getDefaultInstanceForType() {
+                return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.getDefaultInstance();
+            }
+
+            @java.lang.Override
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy build() {
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy result = buildPartial();
+                if (!result.isInitialized()) {
+                    throw newUninitializedMessageException(result);
+                }
+                return result;
+            }
+
+            @java.lang.Override
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy buildPartial() {
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy result =
+                        new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy(this);
+                int from_bitField0_ = bitField0_;
+                if (((bitField0_ & 0x00000001) != 0)) {
+                    subjects_ = subjects_.getUnmodifiableView();
+                    bitField0_ = (bitField0_ & ~0x00000001);
+                }
+                result.subjects_ = subjects_;
+                onBuilt();
+                return result;
+            }
+
+            @java.lang.Override
+            public Builder clone() {
+                return super.clone();
+            }
+
+            @java.lang.Override
+            public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+                return super.setField(field, value);
+            }
+
+            @java.lang.Override
+            public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+                return super.clearField(field);
+            }
+
+            @java.lang.Override
+            public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+                return super.clearOneof(oneof);
+            }
+
+            @java.lang.Override
+            public Builder setRepeatedField(
+                    com.google.protobuf.Descriptors.FieldDescriptor field, int index, java.lang.Object value) {
+                return super.setRepeatedField(field, index, value);
+            }
+
+            @java.lang.Override
+            public Builder addRepeatedField(
+                    com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+                return super.addRepeatedField(field, value);
+            }
+
+            @java.lang.Override
+            public Builder mergeFrom(com.google.protobuf.Message other) {
+                if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy) {
+                    return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy) other);
+                } else {
+                    super.mergeFrom(other);
+                    return this;
+                }
+            }
+
+            public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy other) {
+                if (other
+                        == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy
+                                .getDefaultInstance()) return this;
+                if (!other.subjects_.isEmpty()) {
+                    if (subjects_.isEmpty()) {
+                        subjects_ = other.subjects_;
+                        bitField0_ = (bitField0_ & ~0x00000001);
+                    } else {
+                        ensureSubjectsIsMutable();
+                        subjects_.addAll(other.subjects_);
+                    }
+                    onChanged();
+                }
+                this.mergeUnknownFields(other.unknownFields);
+                onChanged();
+                return this;
+            }
+
+            @java.lang.Override
+            public final boolean isInitialized() {
+                return true;
+            }
+
+            @java.lang.Override
+            public Builder mergeFrom(
+                    com.google.protobuf.CodedInputStream input,
+                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                    throws java.io.IOException {
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parsedMessage = null;
+                try {
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy)
+                            e.getUnfinishedMessage();
+                    throw e.unwrapIOException();
+                } finally {
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
+                return this;
+            }
+
+            private int bitField0_;
+
+            private com.google.protobuf.LazyStringList subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+
+            private void ensureSubjectsIsMutable() {
+                if (!((bitField0_ & 0x00000001) != 0)) {
+                    subjects_ = new com.google.protobuf.LazyStringArrayList(subjects_);
+                    bitField0_ |= 0x00000001;
+                }
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @return A list containing the subjects.
+             */
+            public com.google.protobuf.ProtocolStringList getSubjectsList() {
+                return subjects_.getUnmodifiableView();
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @return The count of subjects.
+             */
+            public int getSubjectsCount() {
+                return subjects_.size();
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @param index The index of the element to return.
+             * @return The subjects at the given index.
+             */
+            public java.lang.String getSubjects(int index) {
+                return subjects_.get(index);
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @param index The index of the value to return.
+             * @return The bytes of the subjects at the given index.
+             */
+            public com.google.protobuf.ByteString getSubjectsBytes(int index) {
+                return subjects_.getByteString(index);
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @param index The index to set the value at.
+             * @param value The subjects to set.
+             * @return This builder for chaining.
+             */
+            public Builder setSubjects(int index, java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureSubjectsIsMutable();
+                subjects_.set(index, value);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @param value The subjects to add.
+             * @return This builder for chaining.
+             */
+            public Builder addSubjects(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureSubjectsIsMutable();
+                subjects_.add(value);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @param values The subjects to add.
+             * @return This builder for chaining.
+             */
+            public Builder addAllSubjects(java.lang.Iterable<java.lang.String> values) {
+                ensureSubjectsIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, subjects_);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearSubjects() {
+                subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000001);
+                onChanged();
+                return this;
+            }
+            /**
+             * <pre>
+             * Subjects of this EventPolicy
+             * </pre>
+             *
+             * <code>repeated string subjects = 1;</code>
+             * @param value The bytes of the subjects to add.
+             * @return This builder for chaining.
+             */
+            public Builder addSubjectsBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                checkByteStringIsUtf8(value);
+                ensureSubjectsIsMutable();
+                subjects_.add(value);
+                onChanged();
+                return this;
+            }
+
+            @java.lang.Override
+            public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.setUnknownFields(unknownFields);
+            }
+
+            @java.lang.Override
+            public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.mergeUnknownFields(unknownFields);
+            }
+
+            // @@protoc_insertion_point(builder_scope:EventPolicy)
+        }
+
+        // @@protoc_insertion_point(class_scope:EventPolicy)
+        private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy DEFAULT_INSTANCE;
+
+        static {
+            DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy();
+        }
+
+        public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy getDefaultInstance() {
+            return DEFAULT_INSTANCE;
+        }
+
+        private static final com.google.protobuf.Parser<EventPolicy> PARSER =
+                new com.google.protobuf.AbstractParser<EventPolicy>() {
+                    @java.lang.Override
+                    public EventPolicy parsePartialFrom(
+                            com.google.protobuf.CodedInputStream input,
+                            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                            throws com.google.protobuf.InvalidProtocolBufferException {
+                        return new EventPolicy(input, extensionRegistry);
+                    }
+                };
+
+        public static com.google.protobuf.Parser<EventPolicy> parser() {
+            return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<EventPolicy> getParserForType() {
+            return PARSER;
+        }
+
+        @java.lang.Override
+        public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy getDefaultInstanceForType() {
+            return DEFAULT_INSTANCE;
+        }
+    }
+
     public interface EgressConfigOrBuilder
             extends
             // @@protoc_insertion_point(interface_extends:EgressConfig)
@@ -16435,6 +17135,49 @@ public final class DataPlaneContract {
          * @return The bytes for audience.
          */
         com.google.protobuf.ByteString getAudienceBytes();
+
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy> getEventPoliciesList();
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy getEventPolicies(int index);
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        int getEventPoliciesCount();
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>
+                getEventPoliciesOrBuilderList();
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder getEventPoliciesOrBuilder(
+                int index);
     }
     /**
      * <pre>
@@ -16464,6 +17207,7 @@ public final class DataPlaneContract {
             path_ = "";
             host_ = "";
             audience_ = "";
+            eventPolicies_ = java.util.Collections.emptyList();
         }
 
         @java.lang.Override
@@ -16484,6 +17228,7 @@ public final class DataPlaneContract {
             if (extensionRegistry == null) {
                 throw new java.lang.NullPointerException();
             }
+            int mutable_bitField0_ = 0;
             com.google.protobuf.UnknownFieldSet.Builder unknownFields =
                     com.google.protobuf.UnknownFieldSet.newBuilder();
             try {
@@ -16522,6 +17267,17 @@ public final class DataPlaneContract {
                             audience_ = s;
                             break;
                         }
+                        case 50: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                eventPolicies_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            eventPolicies_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.parser(),
+                                    extensionRegistry));
+                            break;
+                        }
                         default: {
                             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
                                 done = true;
@@ -16535,6 +17291,9 @@ public final class DataPlaneContract {
             } catch (java.io.IOException e) {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    eventPolicies_ = java.util.Collections.unmodifiableList(eventPolicies_);
+                }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
             }
@@ -16726,6 +17485,68 @@ public final class DataPlaneContract {
             }
         }
 
+        public static final int EVENTPOLICIES_FIELD_NUMBER = 6;
+        private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy> eventPolicies_;
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        @java.lang.Override
+        public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>
+                getEventPoliciesList() {
+            return eventPolicies_;
+        }
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        @java.lang.Override
+        public java.util.List<
+                        ? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>
+                getEventPoliciesOrBuilderList() {
+            return eventPolicies_;
+        }
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        @java.lang.Override
+        public int getEventPoliciesCount() {
+            return eventPolicies_.size();
+        }
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        @java.lang.Override
+        public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy getEventPolicies(int index) {
+            return eventPolicies_.get(index);
+        }
+        /**
+         * <pre>
+         * Ready and applying EventPolicies for this ingress
+         * </pre>
+         *
+         * <code>repeated .EventPolicy eventPolicies = 6;</code>
+         */
+        @java.lang.Override
+        public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder
+                getEventPoliciesOrBuilder(int index) {
+            return eventPolicies_.get(index);
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -16756,6 +17577,9 @@ public final class DataPlaneContract {
             if (!getAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 5, audience_);
             }
+            for (int i = 0; i < eventPolicies_.size(); i++) {
+                output.writeMessage(6, eventPolicies_.get(i));
+            }
             unknownFields.writeTo(output);
         }
 
@@ -16781,6 +17605,9 @@ public final class DataPlaneContract {
             if (!getAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, audience_);
             }
+            for (int i = 0; i < eventPolicies_.size(); i++) {
+                size += com.google.protobuf.CodedOutputStream.computeMessageSize(6, eventPolicies_.get(i));
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -16802,6 +17629,7 @@ public final class DataPlaneContract {
             if (!getHost().equals(other.getHost())) return false;
             if (getEnableAutoCreateEventTypes() != other.getEnableAutoCreateEventTypes()) return false;
             if (!getAudience().equals(other.getAudience())) return false;
+            if (!getEventPoliciesList().equals(other.getEventPoliciesList())) return false;
             if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
@@ -16823,6 +17651,10 @@ public final class DataPlaneContract {
             hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEnableAutoCreateEventTypes());
             hash = (37 * hash) + AUDIENCE_FIELD_NUMBER;
             hash = (53 * hash) + getAudience().hashCode();
+            if (getEventPoliciesCount() > 0) {
+                hash = (37 * hash) + EVENTPOLICIES_FIELD_NUMBER;
+                hash = (53 * hash) + getEventPoliciesList().hashCode();
+            }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
@@ -16960,7 +17792,9 @@ public final class DataPlaneContract {
             }
 
             private void maybeForceBuilderInitialization() {
-                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getEventPoliciesFieldBuilder();
+                }
             }
 
             @java.lang.Override
@@ -16976,6 +17810,12 @@ public final class DataPlaneContract {
 
                 audience_ = "";
 
+                if (eventPoliciesBuilder_ == null) {
+                    eventPolicies_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
+                } else {
+                    eventPoliciesBuilder_.clear();
+                }
                 return this;
             }
 
@@ -17002,11 +17842,21 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress(this);
+                int from_bitField0_ = bitField0_;
                 result.contentMode_ = contentMode_;
                 result.path_ = path_;
                 result.host_ = host_;
                 result.enableAutoCreateEventTypes_ = enableAutoCreateEventTypes_;
                 result.audience_ = audience_;
+                if (eventPoliciesBuilder_ == null) {
+                    if (((bitField0_ & 0x00000001) != 0)) {
+                        eventPolicies_ = java.util.Collections.unmodifiableList(eventPolicies_);
+                        bitField0_ = (bitField0_ & ~0x00000001);
+                    }
+                    result.eventPolicies_ = eventPolicies_;
+                } else {
+                    result.eventPolicies_ = eventPoliciesBuilder_.build();
+                }
                 onBuilt();
                 return result;
             }
@@ -17074,6 +17924,32 @@ public final class DataPlaneContract {
                     audience_ = other.audience_;
                     onChanged();
                 }
+                if (eventPoliciesBuilder_ == null) {
+                    if (!other.eventPolicies_.isEmpty()) {
+                        if (eventPolicies_.isEmpty()) {
+                            eventPolicies_ = other.eventPolicies_;
+                            bitField0_ = (bitField0_ & ~0x00000001);
+                        } else {
+                            ensureEventPoliciesIsMutable();
+                            eventPolicies_.addAll(other.eventPolicies_);
+                        }
+                        onChanged();
+                    }
+                } else {
+                    if (!other.eventPolicies_.isEmpty()) {
+                        if (eventPoliciesBuilder_.isEmpty()) {
+                            eventPoliciesBuilder_.dispose();
+                            eventPoliciesBuilder_ = null;
+                            eventPolicies_ = other.eventPolicies_;
+                            bitField0_ = (bitField0_ & ~0x00000001);
+                            eventPoliciesBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                                    ? getEventPoliciesFieldBuilder()
+                                    : null;
+                        } else {
+                            eventPoliciesBuilder_.addAllMessages(other.eventPolicies_);
+                        }
+                    }
+                }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
@@ -17103,6 +17979,8 @@ public final class DataPlaneContract {
                 }
                 return this;
             }
+
+            private int bitField0_;
 
             private int contentMode_ = 0;
             /**
@@ -17497,6 +18375,339 @@ public final class DataPlaneContract {
                 audience_ = value;
                 onChanged();
                 return this;
+            }
+
+            private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>
+                    eventPolicies_ = java.util.Collections.emptyList();
+
+            private void ensureEventPoliciesIsMutable() {
+                if (!((bitField0_ & 0x00000001) != 0)) {
+                    eventPolicies_ = new java.util.ArrayList<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>(eventPolicies_);
+                    bitField0_ |= 0x00000001;
+                }
+            }
+
+            private com.google.protobuf.RepeatedFieldBuilderV3<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>
+                    eventPoliciesBuilder_;
+
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>
+                    getEventPoliciesList() {
+                if (eventPoliciesBuilder_ == null) {
+                    return java.util.Collections.unmodifiableList(eventPolicies_);
+                } else {
+                    return eventPoliciesBuilder_.getMessageList();
+                }
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public int getEventPoliciesCount() {
+                if (eventPoliciesBuilder_ == null) {
+                    return eventPolicies_.size();
+                } else {
+                    return eventPoliciesBuilder_.getCount();
+                }
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy getEventPolicies(
+                    int index) {
+                if (eventPoliciesBuilder_ == null) {
+                    return eventPolicies_.get(index);
+                } else {
+                    return eventPoliciesBuilder_.getMessage(index);
+                }
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder setEventPolicies(
+                    int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy value) {
+                if (eventPoliciesBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.set(index, value);
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.setMessage(index, value);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder setEventPolicies(
+                    int index,
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder builderForValue) {
+                if (eventPoliciesBuilder_ == null) {
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.set(index, builderForValue.build());
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.setMessage(index, builderForValue.build());
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder addEventPolicies(
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy value) {
+                if (eventPoliciesBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.add(value);
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.addMessage(value);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder addEventPolicies(
+                    int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy value) {
+                if (eventPoliciesBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.add(index, value);
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.addMessage(index, value);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder addEventPolicies(
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder builderForValue) {
+                if (eventPoliciesBuilder_ == null) {
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.add(builderForValue.build());
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.addMessage(builderForValue.build());
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder addEventPolicies(
+                    int index,
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder builderForValue) {
+                if (eventPoliciesBuilder_ == null) {
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.add(index, builderForValue.build());
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.addMessage(index, builderForValue.build());
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder addAllEventPolicies(
+                    java.lang.Iterable<
+                                    ? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>
+                            values) {
+                if (eventPoliciesBuilder_ == null) {
+                    ensureEventPoliciesIsMutable();
+                    com.google.protobuf.AbstractMessageLite.Builder.addAll(values, eventPolicies_);
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.addAllMessages(values);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder clearEventPolicies() {
+                if (eventPoliciesBuilder_ == null) {
+                    eventPolicies_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.clear();
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public Builder removeEventPolicies(int index) {
+                if (eventPoliciesBuilder_ == null) {
+                    ensureEventPoliciesIsMutable();
+                    eventPolicies_.remove(index);
+                    onChanged();
+                } else {
+                    eventPoliciesBuilder_.remove(index);
+                }
+                return this;
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder
+                    getEventPoliciesBuilder(int index) {
+                return getEventPoliciesFieldBuilder().getBuilder(index);
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder
+                    getEventPoliciesOrBuilder(int index) {
+                if (eventPoliciesBuilder_ == null) {
+                    return eventPolicies_.get(index);
+                } else {
+                    return eventPoliciesBuilder_.getMessageOrBuilder(index);
+                }
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public java.util.List<
+                            ? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>
+                    getEventPoliciesOrBuilderList() {
+                if (eventPoliciesBuilder_ != null) {
+                    return eventPoliciesBuilder_.getMessageOrBuilderList();
+                } else {
+                    return java.util.Collections.unmodifiableList(eventPolicies_);
+                }
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder
+                    addEventPoliciesBuilder() {
+                return getEventPoliciesFieldBuilder()
+                        .addBuilder(
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy
+                                        .getDefaultInstance());
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder
+                    addEventPoliciesBuilder(int index) {
+                return getEventPoliciesFieldBuilder()
+                        .addBuilder(
+                                index,
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy
+                                        .getDefaultInstance());
+            }
+            /**
+             * <pre>
+             * Ready and applying EventPolicies for this ingress
+             * </pre>
+             *
+             * <code>repeated .EventPolicy eventPolicies = 6;</code>
+             */
+            public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder>
+                    getEventPoliciesBuilderList() {
+                return getEventPoliciesFieldBuilder().getBuilderList();
+            }
+
+            private com.google.protobuf.RepeatedFieldBuilderV3<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>
+                    getEventPoliciesFieldBuilder() {
+                if (eventPoliciesBuilder_ == null) {
+                    eventPoliciesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder,
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>(
+                            eventPolicies_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
+                    eventPolicies_ = null;
+                }
+                return eventPoliciesBuilder_;
             }
 
             @java.lang.Override
@@ -28263,6 +29474,9 @@ public final class DataPlaneContract {
     private static final com.google.protobuf.Descriptors.Descriptor internal_static_Filter_AttributesEntry_descriptor;
     private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internal_static_Filter_AttributesEntry_fieldAccessorTable;
+    private static final com.google.protobuf.Descriptors.Descriptor internal_static_EventPolicy_descriptor;
+    private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internal_static_EventPolicy_fieldAccessorTable;
     private static final com.google.protobuf.Descriptors.Descriptor internal_static_EgressConfig_descriptor;
     private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internal_static_EgressConfig_fieldAccessorTable;
@@ -28328,69 +29542,71 @@ public final class DataPlaneContract {
                     + "not\030\006 \001(\0132\004.NotH\000\022\027\n\005cesql\030\007 \001(\0132\006.CESQL"
                     + "H\000B\010\n\006filter\"h\n\006Filter\022+\n\nattributes\030\001 \003"
                     + "(\0132\027.Filter.AttributesEntry\0321\n\017Attribute"
-                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\327"
-                    + "\001\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021d"
-                    + "eadLetterCACerts\030\006 \001(\t\022\032\n\022deadLetterAudi"
-                    + "ence\030\007 \001(\t\022\037\n\006format\030\010 \001(\0162\017.DeliveryFor"
-                    + "mat\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001("
-                    + "\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022"
-                    + "\017\n\007timeout\030\005 \001(\004\"\302\004\n\006Egress\022\025\n\rconsumerG"
-                    + "roup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\032\n\022desti"
-                    + "nationCACerts\030\017 \001(\t\022\033\n\023destinationAudien"
-                    + "ce\030\021 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022&\n\024replyToO"
-                    + "riginalTopic\030\004 \001(\0132\006.EmptyH\000\022\036\n\014discardR"
-                    + "eply\030\t \001(\0132\006.EmptyH\000\022\027\n\017replyUrlCACerts\030"
-                    + "\020 \001(\t\022\030\n\020replyUrlAudience\030\022 \001(\t\022\027\n\006filte"
-                    + "r\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egressC"
-                    + "onfig\030\007 \001(\0132\r.EgressConfig\022%\n\rdeliveryOr"
-                    + "der\030\010 \001(\0162\016.DeliveryOrder\022\031\n\007keyType\030\n \001"
-                    + "(\0162\010.KeyType\022\035\n\treference\030\013 \001(\0132\n.Refere"
-                    + "nce\022)\n\017dialectedFilter\030\014 \003(\0132\020.Dialected"
-                    + "Filter\022\021\n\tvReplicas\030\r \001(\005\022)\n\014featureFlag"
-                    + "s\030\016 \001(\0132\023.EgressFeatureFlags\022\036\n\026oidcServ"
-                    + "iceAccountName\030\023 \001(\tB\017\n\rreplyStrategy\"U\n"
-                    + "\022EgressFeatureFlags\022\031\n\021enableRateLimiter"
-                    + "\030\001 \001(\010\022$\n\034enableOrderedExecutorMetrics\030\002"
-                    + " \001(\010\"~\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014.C"
-                    + "ontentMode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\022\""
-                    + "\n\032enableAutoCreateEventTypes\030\004 \001(\010\022\020\n\010au"
-                    + "dience\030\005 \001(\t\"o\n\tReference\022\014\n\004uuid\030\001 \001(\t\022"
-                    + "\021\n\tnamespace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007vers"
-                    + "ion\030\004 \001(\t\022\014\n\004kind\030\005 \001(\t\022\024\n\014groupVersion\030"
-                    + "\006 \001(\t\"`\n\017SecretReference\022\035\n\treference\030\001 "
-                    + "\001(\0132\n.Reference\022.\n\022keyFieldReferences\030\002 "
-                    + "\003(\0132\022.KeyFieldReference\"C\n\021KeyFieldRefer"
-                    + "ence\022\021\n\tsecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014"
-                    + ".SecretField\"Y\n\024MultiSecretReference\022\033\n\010"
-                    + "protocol\030\001 \001(\0162\t.Protocol\022$\n\nreferences\030"
-                    + "\002 \003(\0132\020.SecretReference\"\202\001\n\023CloudEventOv"
-                    + "errides\0228\n\nextensions\030\001 \003(\0132$.CloudEvent"
-                    + "Overrides.ExtensionsEntry\0321\n\017ExtensionsE"
-                    + "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n"
-                    + "\010Resource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030"
-                    + "\n\020bootstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001("
-                    + "\0132\010.Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.Egre"
-                    + "ssConfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\na"
-                    + "bsentAuth\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030"
-                    + "\010 \001(\0132\n.ReferenceH\000\0220\n\017multiAuthSecret\030\t"
-                    + " \001(\0132\025.MultiSecretReferenceH\000\0221\n\023cloudEv"
-                    + "entOverrides\030\n \001(\0132\024.CloudEventOverrides"
-                    + "\022\035\n\treference\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\""
-                    + "R\n\010Contract\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresou"
-                    + "rces\030\002 \003(\0132\t.Resource\022\024\n\014trustBundles\030\003 "
-                    + "\003(\t*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n"
-                    + "\006Linear\020\001*&\n\016DeliveryFormat\022\n\n\006Binary\020\000\022"
-                    + "\010\n\004JSON\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020"
-                    + "\000\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n"
-                    + "\007Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n"
-                    + "\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001"
-                    + "*a\n\013SecretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006C"
-                    + "A_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004U"
-                    + "SER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAIN"
-                    + "TEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010S"
-                    + "ASL_SSL\020\003B[\n*dev.knative.eventing.kafka."
-                    + "broker.contractB\021DataPlaneContractZ\032cont"
-                    + "rol-plane/pkg/contractb\006proto3"
+                    + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\037"
+                    + "\n\013EventPolicy\022\020\n\010subjects\030\001 \003(\t\"\327\001\n\014Egre"
+                    + "ssConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\031\n\021deadLett"
+                    + "erCACerts\030\006 \001(\t\022\032\n\022deadLetterAudience\030\007 "
+                    + "\001(\t\022\037\n\006format\030\010 \001(\0162\017.DeliveryFormat\022\r\n\005"
+                    + "retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Bac"
+                    + "koffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007time"
+                    + "out\030\005 \001(\004\"\302\004\n\006Egress\022\025\n\rconsumerGroup\030\001 "
+                    + "\001(\t\022\023\n\013destination\030\002 \001(\t\022\032\n\022destinationC"
+                    + "ACerts\030\017 \001(\t\022\033\n\023destinationAudience\030\021 \001("
+                    + "\t\022\022\n\010replyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginal"
+                    + "Topic\030\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t "
+                    + "\001(\0132\006.EmptyH\000\022\027\n\017replyUrlCACerts\030\020 \001(\t\022\030"
+                    + "\n\020replyUrlAudience\030\022 \001(\t\022\027\n\006filter\030\005 \001(\013"
+                    + "2\007.Filter\022\013\n\003uid\030\006 \001(\t\022#\n\014egressConfig\030\007"
+                    + " \001(\0132\r.EgressConfig\022%\n\rdeliveryOrder\030\010 \001"
+                    + "(\0162\016.DeliveryOrder\022\031\n\007keyType\030\n \001(\0162\010.Ke"
+                    + "yType\022\035\n\treference\030\013 \001(\0132\n.Reference\022)\n\017"
+                    + "dialectedFilter\030\014 \003(\0132\020.DialectedFilter\022"
+                    + "\021\n\tvReplicas\030\r \001(\005\022)\n\014featureFlags\030\016 \001(\013"
+                    + "2\023.EgressFeatureFlags\022\036\n\026oidcServiceAcco"
+                    + "untName\030\023 \001(\tB\017\n\rreplyStrategy\"U\n\022Egress"
+                    + "FeatureFlags\022\031\n\021enableRateLimiter\030\001 \001(\010\022"
+                    + "$\n\034enableOrderedExecutorMetrics\030\002 \001(\010\"\243\001"
+                    + "\n\007Ingress\022!\n\013contentMode\030\001 \001(\0162\014.Content"
+                    + "Mode\022\014\n\004path\030\002 \001(\t\022\014\n\004host\030\003 \001(\t\022\"\n\032enab"
+                    + "leAutoCreateEventTypes\030\004 \001(\010\022\020\n\010audience"
+                    + "\030\005 \001(\t\022#\n\reventPolicies\030\006 \003(\0132\014.EventPol"
+                    + "icy\"o\n\tReference\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamesp"
+                    + "ace\030\002 \001(\t\022\014\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t"
+                    + "\022\014\n\004kind\030\005 \001(\t\022\024\n\014groupVersion\030\006 \001(\t\"`\n\017"
+                    + "SecretReference\022\035\n\treference\030\001 \001(\0132\n.Ref"
+                    + "erence\022.\n\022keyFieldReferences\030\002 \003(\0132\022.Key"
+                    + "FieldReference\"C\n\021KeyFieldReference\022\021\n\ts"
+                    + "ecretKey\030\002 \001(\t\022\033\n\005field\030\003 \001(\0162\014.SecretFi"
+                    + "eld\"Y\n\024MultiSecretReference\022\033\n\010protocol\030"
+                    + "\001 \001(\0162\t.Protocol\022$\n\nreferences\030\002 \003(\0132\020.S"
+                    + "ecretReference\"\202\001\n\023CloudEventOverrides\0228"
+                    + "\n\nextensions\030\001 \003(\0132$.CloudEventOverrides"
+                    + ".ExtensionsEntry\0321\n\017ExtensionsEntry\022\013\n\003k"
+                    + "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\350\002\n\010Resource"
+                    + "\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootstr"
+                    + "apServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingre"
+                    + "ss\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig\022"
+                    + "\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAuth"
+                    + "\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n.R"
+                    + "eferenceH\000\0220\n\017multiAuthSecret\030\t \001(\0132\025.Mu"
+                    + "ltiSecretReferenceH\000\0221\n\023cloudEventOverri"
+                    + "des\030\n \001(\0132\024.CloudEventOverrides\022\035\n\trefer"
+                    + "ence\030\013 \001(\0132\n.ReferenceB\006\n\004Auth\"R\n\010Contra"
+                    + "ct\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003("
+                    + "\0132\t.Resource\022\024\n\014trustBundles\030\003 \003(\t*,\n\rBa"
+                    + "ckoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Linear\020\001"
+                    + "*&\n\016DeliveryFormat\022\n\n\006Binary\020\000\022\010\n\004JSON\020\001"
+                    + "*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013\n\007ORDE"
+                    + "RED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007Integer\020"
+                    + "\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013ContentM"
+                    + "ode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*a\n\013Secre"
+                    + "tField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA_CRT\020\001\022\014"
+                    + "\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004USER\020\004\022\014\n\010"
+                    + "PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINTEXT\020\000\022\022\n"
+                    + "\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SASL_SSL\020\003"
+                    + "B[\n*dev.knative.eventing.kafka.broker.co"
+                    + "ntractB\021DataPlaneContractZ\032control-plane"
+                    + "/pkg/contractb\006proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
@@ -28472,8 +29688,14 @@ public final class DataPlaneContract {
                         internal_static_Filter_AttributesEntry_descriptor, new java.lang.String[] {
                             "Key", "Value",
                         });
-        internal_static_EgressConfig_descriptor =
+        internal_static_EventPolicy_descriptor =
                 getDescriptor().getMessageTypes().get(10);
+        internal_static_EventPolicy_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+                internal_static_EventPolicy_descriptor, new java.lang.String[] {
+                    "Subjects",
+                });
+        internal_static_EgressConfig_descriptor =
+                getDescriptor().getMessageTypes().get(11);
         internal_static_EgressConfig_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_EgressConfig_descriptor, new java.lang.String[] {
                     "DeadLetter",
@@ -28485,7 +29707,7 @@ public final class DataPlaneContract {
                     "BackoffDelay",
                     "Timeout",
                 });
-        internal_static_Egress_descriptor = getDescriptor().getMessageTypes().get(11);
+        internal_static_Egress_descriptor = getDescriptor().getMessageTypes().get(12);
         internal_static_Egress_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Egress_descriptor, new java.lang.String[] {
                     "ConsumerGroup",
@@ -28510,45 +29732,45 @@ public final class DataPlaneContract {
                     "ReplyStrategy",
                 });
         internal_static_EgressFeatureFlags_descriptor =
-                getDescriptor().getMessageTypes().get(12);
+                getDescriptor().getMessageTypes().get(13);
         internal_static_EgressFeatureFlags_fieldAccessorTable =
                 new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                         internal_static_EgressFeatureFlags_descriptor, new java.lang.String[] {
                             "EnableRateLimiter", "EnableOrderedExecutorMetrics",
                         });
-        internal_static_Ingress_descriptor = getDescriptor().getMessageTypes().get(13);
+        internal_static_Ingress_descriptor = getDescriptor().getMessageTypes().get(14);
         internal_static_Ingress_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Ingress_descriptor, new java.lang.String[] {
-                    "ContentMode", "Path", "Host", "EnableAutoCreateEventTypes", "Audience",
+                    "ContentMode", "Path", "Host", "EnableAutoCreateEventTypes", "Audience", "EventPolicies",
                 });
-        internal_static_Reference_descriptor = getDescriptor().getMessageTypes().get(14);
+        internal_static_Reference_descriptor = getDescriptor().getMessageTypes().get(15);
         internal_static_Reference_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Reference_descriptor, new java.lang.String[] {
                     "Uuid", "Namespace", "Name", "Version", "Kind", "GroupVersion",
                 });
         internal_static_SecretReference_descriptor =
-                getDescriptor().getMessageTypes().get(15);
+                getDescriptor().getMessageTypes().get(16);
         internal_static_SecretReference_fieldAccessorTable =
                 new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                         internal_static_SecretReference_descriptor, new java.lang.String[] {
                             "Reference", "KeyFieldReferences",
                         });
         internal_static_KeyFieldReference_descriptor =
-                getDescriptor().getMessageTypes().get(16);
+                getDescriptor().getMessageTypes().get(17);
         internal_static_KeyFieldReference_fieldAccessorTable =
                 new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                         internal_static_KeyFieldReference_descriptor, new java.lang.String[] {
                             "SecretKey", "Field",
                         });
         internal_static_MultiSecretReference_descriptor =
-                getDescriptor().getMessageTypes().get(17);
+                getDescriptor().getMessageTypes().get(18);
         internal_static_MultiSecretReference_fieldAccessorTable =
                 new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                         internal_static_MultiSecretReference_descriptor, new java.lang.String[] {
                             "Protocol", "References",
                         });
         internal_static_CloudEventOverrides_descriptor =
-                getDescriptor().getMessageTypes().get(18);
+                getDescriptor().getMessageTypes().get(19);
         internal_static_CloudEventOverrides_fieldAccessorTable =
                 new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                         internal_static_CloudEventOverrides_descriptor, new java.lang.String[] {
@@ -28561,7 +29783,7 @@ public final class DataPlaneContract {
                         internal_static_CloudEventOverrides_ExtensionsEntry_descriptor, new java.lang.String[] {
                             "Key", "Value",
                         });
-        internal_static_Resource_descriptor = getDescriptor().getMessageTypes().get(19);
+        internal_static_Resource_descriptor = getDescriptor().getMessageTypes().get(20);
         internal_static_Resource_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Resource_descriptor, new java.lang.String[] {
                     "Uid",
@@ -28577,7 +29799,7 @@ public final class DataPlaneContract {
                     "Reference",
                     "Auth",
                 });
-        internal_static_Contract_descriptor = getDescriptor().getMessageTypes().get(20);
+        internal_static_Contract_descriptor = getDescriptor().getMessageTypes().get(21);
         internal_static_Contract_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_Contract_descriptor, new java.lang.String[] {
                     "Generation", "Resources", "TrustBundles",

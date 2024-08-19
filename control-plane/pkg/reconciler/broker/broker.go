@@ -53,6 +53,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 )
 
 const (
@@ -86,6 +87,8 @@ type Reconciler struct {
 	Prober            prober.NewProber
 	Counter           *counter.Counter
 	KafkaFeatureFlags *apisconfig.KafkaFeatureFlags
+
+	EventPolicyLister eventingv1alpha1listers.EventPolicyLister
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -207,7 +210,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -217,7 +220,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	logger.Debug("Updated receiver pod annotation")
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Broker
 		// ready. So, log out the error and move on to the next step.
@@ -296,6 +299,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionAddressable)
+
+	err = auth.UpdateStatusWithEventPolicies(feature.FromContext(ctx), &broker.Status.AppliedEventPoliciesStatus, &broker.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not update broker status with EventPolicies: %v", err)
+	}
 
 	return nil
 }
@@ -496,11 +504,11 @@ func (r *Reconciler) deleteResourceFromContractConfigMap(ctx context.Context, lo
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 

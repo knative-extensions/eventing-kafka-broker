@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -307,7 +307,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -522,7 +522,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -880,7 +880,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1055,7 +1055,7 @@ metadata:
   name: eventpolicies.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1148,6 +1148,43 @@ spec:
                             description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
+                filters:
+                  description: 'Filters is an array of SubscriptionsAPIFilters that evaluate to true or false. If any filter expression in the array evaluates to false, the event will not continue pass the ingress of the target resources of the policy'
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      all:
+                        description: 'All evaluates to true if all the nested expressions evaluate to true. It must contain at least one filter expression'
+                        type: array
+                        items:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                      any:
+                        description: 'Any evaluates to true if any of the nested expressions evaluate to true. It must contain at least one filter expression'
+                        type: array
+                        items:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                      cesql:
+                        description: 'CESQL is a CloudEvents SQL v1 expression that will evaluate to true or false for each CloudEvent.'
+                        type: string
+                      exact:
+                        description: 'Exact evaluates to true if the values of the matching CloudEvents attributes all exactly match with the associated value string specified (case sensitive)'
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      not:
+                        description: 'Not evaluates to true if the nested expression evaluates to false.'
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      prefix:
+                        description: 'Prefix evaluates to true if the values of the matching CloudEvents attributes all start with the associated value string specified (case sensitive)'
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      suffix:
+                        description: 'Exact evaluates to true if the values of the matching CloudEvents attributes all end with the associated value string specified (case sensitive)'
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
             status:
               description: Status represents the current state of the EventPolicy. This data may be out of date.
               type: object
@@ -1237,7 +1274,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1337,10 +1374,10 @@ spec:
       additionalPrinterColumns:
         - name: Type
           type: string
-          jsonPath: ".spec.attributes[?(@.name='type')].value"
+          jsonPath: ".spec.attributes[?(@.name=='type')].value"
         - name: Source
           type: string
-          jsonPath: ".spec.attributes[?(@.name='source')].value"
+          jsonPath: ".spec.attributes[?(@.name=='source')].value"
         - name: Reference Name
           type: string
           jsonPath: ".spec.reference.name"
@@ -1630,7 +1667,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -1777,7 +1814,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2305,7 +2342,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -2677,7 +2714,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -3061,7 +3098,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -3276,7 +3313,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -3538,7 +3575,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240711-ea08684ba"
+    app.kubernetes.io/version: "20240818-bf945f909"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev

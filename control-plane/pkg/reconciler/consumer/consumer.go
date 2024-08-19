@@ -34,8 +34,6 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
-	"knative.dev/eventing/pkg/apis/feature"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -174,7 +172,7 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		}
 	}
 
-	filter, filters := reconcileFilters(ctx, c)
+	filter, filters := reconcileFilters(c)
 
 	egress := &contract.Egress{
 		ConsumerGroup:   c.Spec.Configs.Configs["group.id"],
@@ -343,7 +341,7 @@ func (r *Reconciler) reconcileReplyStrategy(ctx context.Context, c *kafkainterna
 	return nil
 }
 
-func reconcileFilters(ctx context.Context, c *kafkainternals.Consumer) (*contract.Filter, []*contract.DialectedFilter) {
+func reconcileFilters(c *kafkainternals.Consumer) (*contract.Filter, []*contract.DialectedFilter) {
 	if c.Spec.Filters == nil {
 		return nil, nil
 	}
@@ -355,7 +353,7 @@ func reconcileFilters(ctx context.Context, c *kafkainternals.Consumer) (*contrac
 		filter = &contract.Filter{Attributes: c.Spec.Filters.Filter.Attributes}
 	}
 
-	if feature.FromContext(ctx).IsEnabled(feature.NewTriggerFilters) && c.Spec.Filters.Filters != nil {
+	if c.Spec.Filters.Filters != nil {
 		for _, f := range c.Spec.Filters.Filters {
 			filters = append(filters, contract.FromSubscriptionFilter(f))
 		}
@@ -437,7 +435,7 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 		return false, err
 	}
 
-	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, ct.Generation, []*corev1.Pod{p})
+	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, base.VolumeGenerationAnnotationKey, fmt.Sprint(ct.Generation), []*corev1.Pod{p})
 }
 
 func (r *Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconciler {

@@ -31,7 +31,9 @@ import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
@@ -389,14 +391,16 @@ public abstract class AbstractDataPlaneTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> new IngressProducerReconcilableStore(
-                        AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveProducerFactory()
-                                .create(v, properties)),
+                        AuthProvider.noAuth(),
+                        producerConfigs(),
+                        properties -> getReactiveProducerFactory().create(v, properties),
+                        mock(EventTypeListerFactory.class)),
                 new IngressRequestHandlerImpl(
                         StrictRequestToRecordMapper.getInstance(),
                         Metrics.getRegistry(),
-                        (((event, reference) -> null))),
+                        (((event, lister, reference) -> null))),
                 SECRET_VOLUME_PATH,
-                null);
+                mock(OIDCDiscoveryConfigListener.class));
 
         final CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

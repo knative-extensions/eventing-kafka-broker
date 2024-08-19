@@ -198,7 +198,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	}
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
 		// ready. So, log out the error and move on to the next step.
@@ -289,7 +289,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	logger.Debug("Updated data plane config map", zap.String("configmap", r.Env.DataPlaneConfigMapAsString()))
 
 	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateDispatcherPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
 		// The delete trigger will eventually be seen by the data plane pods, so log out the error and move on to the
 		// next step.
@@ -337,13 +337,7 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		egress.OidcServiceAccountName = *trigger.Status.Auth.ServiceAccountName
 	}
 
-	newFiltersEnabled := func() bool {
-		r.FlagsLock.RLock()
-		defer r.FlagsLock.RUnlock()
-		return r.Flags.IsEnabled(feature.NewTriggerFilters)
-	}()
-
-	if newFiltersEnabled && len(trigger.Spec.Filters) > 0 {
+	if len(trigger.Spec.Filters) > 0 {
 		dialectedFilters := make([]*contract.DialectedFilter, 0, len(trigger.Spec.Filters))
 		for _, f := range trigger.Spec.Filters {
 			dialectedFilters = append(dialectedFilters, contract.FromSubscriptionFilter(f))

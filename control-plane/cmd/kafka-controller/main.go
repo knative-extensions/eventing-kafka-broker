@@ -30,6 +30,7 @@ import (
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/eventing/pkg/eventingtls"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -67,6 +68,7 @@ func main() {
 	ctx = filteredFactory.WithSelectors(ctx,
 		eventingtls.TrustBundleLabelSelector,
 		auth.OIDCLabelSelector,
+		eventing.DispatcherLabelSelectorStr,
 	)
 	ctx = clientpool.WithKafkaClientPool(ctx)
 

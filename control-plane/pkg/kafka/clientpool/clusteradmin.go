@@ -46,8 +46,6 @@ func clusterAdminFromClient(saramaClient sarama.Client, makeClusterAdmin kafka.N
 		return nil, err
 	}
 
-	c.incrementCallers()
-
 	return &clusterAdmin{
 		client:       c,
 		clusterAdmin: ca,
@@ -291,5 +289,5 @@ func (a *clusterAdmin) RemoveMemberFromConsumerGroup(groupId string, groupInstan
 }
 
 func (a *clusterAdmin) Close() error {
-	return a.client.Close()
+	return a.clusterAdmin.Close()
 }

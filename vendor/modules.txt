@@ -1142,7 +1142,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.41.1-0.20240711105056-bb2e0a30ff68
+# knative.dev/eventing v0.42.0
 ## explicit; go 1.22
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1220,6 +1220,7 @@ knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy
+knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy/fake
 knative.dev/eventing/pkg/client/injection/informers/factory
 knative.dev/eventing/pkg/client/injection/informers/factory/fake
 knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription
@@ -1324,7 +1325,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/sender
 # knative.dev/hack v0.0.0-20240704013904-b9799599afcf
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20240708181110-b4e5f07a2c37
+# knative.dev/pkg v0.0.0-20240716082220-4355f0c73608
 ## explicit; go 1.22
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1357,6 +1358,8 @@ knative.dev/pkg/client/injection/kube/informers/core/v1/node
 knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/pod
 knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake
+knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered
+knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/secret
 knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/service
@@ -1438,7 +1441,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20240709054012-21d1de3d90a8
+# knative.dev/reconciler-test v0.0.0-20240716134925-00d94f40c470
 ## explicit; go 1.22
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment

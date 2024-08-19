@@ -230,7 +230,7 @@ func TestUpdateReceiverPodAnnotation(t *testing.T) {
 		ReceiverLabel: base.SinkReceiverLabel,
 	}
 
-	err := r.UpdateReceiverPodsAnnotation(ctx, logging.FromContext(ctx).Desugar(), 1)
+	err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logging.FromContext(ctx).Desugar(), 1)
 	require.Nil(t, err)
 }
 
@@ -247,7 +247,7 @@ func TestUpdateDispatcherPodAnnotation(t *testing.T) {
 		DispatcherLabel: label,
 	}
 
-	err := r.UpdateDispatcherPodsAnnotation(ctx, logging.FromContext(ctx).Desugar(), 1)
+	err := r.UpdateDispatcherPodsContractGenerationAnnotation(ctx, logging.FromContext(ctx).Desugar(), 1)
 	require.Nil(t, err)
 }
 
