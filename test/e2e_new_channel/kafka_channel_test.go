@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"knative.dev/eventing/test/experimental/features/eventtype_autocreate"
 	"knative.dev/eventing/test/rekt/features/channel"
 	"knative.dev/eventing/test/rekt/features/oidc"
 
@@ -163,4 +164,18 @@ func TestKafkaChannelKedaScaling(t *testing.T) {
 	)
 
 	env.Test(ctx, t, features.ChannelScalesToZeroWithKeda())
+}
+
+func TestChannelSubscriptionEventTypeAutoCreate(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, eventtype_autocreate.AutoCreateEventTypesOnSubscription())
 }
