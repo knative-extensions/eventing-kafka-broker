@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"knative.dev/eventing/pkg/apis/feature"
 	"strings"
 
 	"go.uber.org/zap"
@@ -137,6 +138,9 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 		Auth:                nil, // Auth will be added by reconcileAuth
 		CloudEventOverrides: reconcileCEOverrides(c),
 		Reference:           userFacingResourceRef,
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+		},
 	}
 
 	if err := r.reconcileAuth(ctx, c, resource); err != nil {
