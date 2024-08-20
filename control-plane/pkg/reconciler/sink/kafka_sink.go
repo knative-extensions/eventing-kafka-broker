@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
@@ -196,7 +198,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	// Get sink configuration.
-	sinkConfig, err := r.getSinkContractResource(ctx, ks, secret, audience)
+	sinkConfig, err := r.getSinkContractResource(ctx, ks, secret, audience, ks.Status.AppliedEventPoliciesStatus)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -429,7 +431,7 @@ func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	return nil
 }
 
-func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, secret *corev1.Secret, audience *string) (*contract.Resource, error) {
+func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, secret *corev1.Secret, audience *string, appliedEventPoliciesStatus eventingduck.AppliedEventPoliciesStatus) (*contract.Resource, error) {
 	features := feature.FromContext(ctx)
 	sinkConfig := &contract.Resource{
 		Uid:    string(kafkaSink.UID),
@@ -463,7 +465,7 @@ func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eve
 		sinkConfig.Ingress.Audience = *audience
 	}
 
-	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(kafkaSink.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, kafkaSink.Namespace, features)
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(appliedEventPoliciesStatus, r.EventPolicyLister, kafkaSink.Namespace, features)
 	if err != nil {
 		return nil, fmt.Errorf("could not get eventpolicies from kafkasink status: %w", err)
 	}

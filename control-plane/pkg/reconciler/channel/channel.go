@@ -233,7 +233,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience, channel.Status.AppliedEventPoliciesStatus)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -688,7 +688,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig, audience *string) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig, audience *string, appliedEventPoliciesStatus v1.AppliedEventPoliciesStatus) (*contract.Resource, error) {
 	features := feature.FromContext(ctx)
 
 	resource := &contract.Resource{
@@ -719,7 +719,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		resource.Ingress.Audience = *audience
 	}
 
-	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(channel.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, channel.Namespace, features)
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(appliedEventPoliciesStatus, r.EventPolicyLister, channel.Namespace, features)
 	if err != nil {
 		return nil, fmt.Errorf("could not get eventpolicies from channel status: %w", err)
 	}

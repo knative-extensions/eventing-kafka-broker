@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+
 	"k8s.io/utils/ptr"
 
 	"knative.dev/eventing/pkg/auth"
@@ -195,7 +197,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 
 	// Get resource configuration.
-	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig, audience)
+	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig, audience, broker.Status.AppliedEventPoliciesStatus)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -621,7 +623,7 @@ func rebuildCMFromStatusAnnotations(br *eventing.Broker) *corev1.ConfigMap {
 	return cm
 }
 
-func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig, audience *string) (*contract.Resource, error) {
+func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig, audience *string, appliedEventPoliciesStatus eventingduck.AppliedEventPoliciesStatus) (*contract.Resource, error) {
 	features := feature.FromContext(ctx)
 
 	resource := &contract.Resource{
@@ -662,7 +664,7 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	}
 	resource.EgressConfig = egressConfig
 
-	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(broker.Status.AppliedEventPoliciesStatus, r.EventPolicyLister, broker.Namespace, features)
+	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(appliedEventPoliciesStatus, r.EventPolicyLister, broker.Namespace, features)
 	if err != nil {
 		return nil, fmt.Errorf("could not get eventpolicies from broker status: %w", err)
 	}
