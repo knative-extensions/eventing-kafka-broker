@@ -1352,6 +1352,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
+							FeatureFlags:     FeatureFlagsETAutocreate(false),
 						},
 					},
 					Generation: 1,
