@@ -22,6 +22,8 @@ import (
 	"net"
 	"net/http"
 
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,6 +55,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	logger := logging.FromContext(ctx)
 
 	configmapInformer := configmapinformer.Get(ctx)
+	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
 	clientPool := clientpool.Get(ctx)
 
@@ -68,6 +71,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
 		ConfigMapLister:      configmapInformer.Lister(),
+		EventPolicyLister:    eventPolicyInformer.Lister(),
 		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		Env:                  configs,
 	}

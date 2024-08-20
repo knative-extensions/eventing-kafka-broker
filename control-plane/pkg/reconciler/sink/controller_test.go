@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
+	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy/fake"
 	_ "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
