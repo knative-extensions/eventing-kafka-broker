@@ -227,7 +227,7 @@ public class ConsumerVerticleBuilder {
 
     private ResponseHandler createResponseHandler(final Vertx vertx) {
         if (consumerVerticleContext.getEgress().hasReplyUrl()) {
-            return new ResponseToHttpEndpointHandler(new WebClientCloudEventSender(
+            var handler = new ResponseToHttpEndpointHandler(new WebClientCloudEventSender(
                     vertx,
                     WebClient.create(
                             vertx,
@@ -240,6 +240,14 @@ public class ConsumerVerticleBuilder {
                             consumerVerticleContext.getEgress().getOidcServiceAccountName()),
                     consumerVerticleContext,
                     Metrics.Tags.senderContext("reply")));
+            if (consumerVerticleContext.getResource().hasFeatureFlags()
+                    && consumerVerticleContext.getResource().getFeatureFlags().getEnableEventTypeAutocreate()) {
+                return handler.withEventTypeAutocreate(
+                        consumerVerticleContext.getEventTypeCreator(),
+                        consumerVerticleContext.getEventTypeLister(),
+                        consumerVerticleContext.getEgress().getReference());
+            }
+            return handler;
         }
 
         if (consumerVerticleContext.getEgress().hasDiscardReply()) {
@@ -251,8 +259,16 @@ public class ConsumerVerticleBuilder {
 
         final ReactiveKafkaProducer<String, CloudEvent> producer =
                 this.consumerVerticleContext.getProducerFactory().create(vertx, producerConfigs);
-        return new ResponseToKafkaTopicHandler(
+        var handler = new ResponseToKafkaTopicHandler(
                 producer, consumerVerticleContext.getResource().getTopics(0));
+        if (consumerVerticleContext.getResource().hasFeatureFlags()
+                && consumerVerticleContext.getResource().getFeatureFlags().getEnableEventTypeAutocreate()) {
+            return handler.withEventTypeAutocreate(
+                    consumerVerticleContext.getEventTypeCreator(),
+                    consumerVerticleContext.getEventTypeLister(),
+                    consumerVerticleContext.getEgress().getReference());
+        }
+        return handler;
     }
 
     private CloudEventSender createConsumerRecordSender(final Vertx vertx) {
