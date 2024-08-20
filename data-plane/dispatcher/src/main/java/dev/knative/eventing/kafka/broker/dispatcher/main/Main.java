@@ -21,6 +21,10 @@ import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
@@ -34,6 +38,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserialize
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.NullCloudEventInterceptor;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -43,6 +48,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -109,6 +115,17 @@ public class Main {
         // Register Contract message codec
         ContractMessageCodec.register(vertx.eventBus());
 
+        final var kubernetesClient = new KubernetesClientBuilder().build();
+        final var eventTypeClient = kubernetesClient.resources(EventType.class);
+        EventTypeCreator eventTypeCreator;
+        try {
+            eventTypeCreator = new EventTypeCreatorImpl(eventTypeClient, vertx);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        final var eventTypeListerFactory = new EventTypeListerFactory(eventTypeClient);
+
         try {
             // Create the consumer deployer
             ConsumerDeployerVerticle consumerDeployerVerticle = new ConsumerDeployerVerticle(
@@ -119,7 +136,9 @@ public class Main {
                             AuthProvider.kubernetes(vertx),
                             Metrics.getRegistry(),
                             reactiveConsumerFactory,
-                            reactiveProducerFactory),
+                            reactiveProducerFactory,
+                            eventTypeCreator,
+                            eventTypeListerFactory),
                     env.getEgressesInitialCapacity());
 
             // Deploy the consumer deployer
@@ -138,7 +157,8 @@ public class Main {
             fileWatcher.start();
 
             //     Register shutdown hook for graceful shutdown.
-            Shutdown.registerHook(vertx, publisher, fileWatcher, openTelemetry.getSdkTracerProvider());
+            Shutdown.registerHook(
+                    vertx, publisher, fileWatcher, eventTypeListerFactory, openTelemetry.getSdkTracerProvider());
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the dispatcher", ex);

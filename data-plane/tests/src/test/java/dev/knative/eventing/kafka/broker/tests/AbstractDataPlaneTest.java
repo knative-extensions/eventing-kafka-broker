@@ -31,6 +31,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
@@ -361,7 +362,9 @@ public abstract class AbstractDataPlaneTest {
                 AuthProvider.noAuth(),
                 Metrics.getRegistry(),
                 getReactiveConsumerFactory(),
-                getReactiveProducerFactory());
+                getReactiveProducerFactory(),
+                mock(EventTypeCreator.class),
+                mock(EventTypeListerFactory.class));
 
         final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 
