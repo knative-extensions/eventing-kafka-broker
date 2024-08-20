@@ -1355,7 +1355,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
 					),
 				},
 			},
