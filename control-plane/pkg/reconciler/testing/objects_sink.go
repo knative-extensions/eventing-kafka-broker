@@ -139,6 +139,12 @@ func SinkReference() *contract.Reference {
 	}
 }
 
+func FeatureFlagsETAutocreate(enabled bool) *contract.FeatureFlags {
+	return &contract.FeatureFlags{
+		EnableEventTypeAutocreate: enabled,
+	}
+}
+
 func SinkReceiverPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

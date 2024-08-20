@@ -264,6 +264,7 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 								Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 								BootstrapServers: bootstrapServers,
 								Reference:        BrokerReference(),
+								FeatureFlags:     FeatureFlagsETAutocreate(false),
 							},
 						},
 						Generation: 1,
