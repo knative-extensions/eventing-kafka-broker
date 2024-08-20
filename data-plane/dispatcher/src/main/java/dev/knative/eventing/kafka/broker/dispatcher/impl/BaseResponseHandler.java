@@ -52,6 +52,7 @@ public abstract class BaseResponseHandler implements ResponseHandler {
         this.eventTypeLister = eventTypeLister;
         this.reference = reference;
         this.isEventTypeAutocreateEnabled = true;
+        return this;
     }
 
     /**
