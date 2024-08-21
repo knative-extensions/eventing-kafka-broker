@@ -22,10 +22,10 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfig;
-import dev.knative.eventing.kafka.broker.core.oidc.OIDCDiscoveryConfigListener;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifierImpl;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;

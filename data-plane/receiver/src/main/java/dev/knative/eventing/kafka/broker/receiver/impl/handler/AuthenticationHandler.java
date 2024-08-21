@@ -17,7 +17,7 @@ package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-import dev.knative.eventing.kafka.broker.core.oidc.TokenVerifier;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;

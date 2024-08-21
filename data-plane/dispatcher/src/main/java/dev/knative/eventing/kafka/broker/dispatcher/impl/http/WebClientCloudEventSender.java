@@ -20,7 +20,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.oidc.TokenProvider;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.auth.TokenProvider;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
