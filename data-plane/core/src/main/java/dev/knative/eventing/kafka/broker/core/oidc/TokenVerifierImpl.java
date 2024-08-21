@@ -40,7 +40,7 @@ public class TokenVerifierImpl implements TokenVerifier {
         this.oidcDiscoveryConfig = oidcDiscoveryConfig;
     }
 
-    public Future<JwtClaims> verify(String token, String expectedAudience) {
+    private Future<JwtClaims> verify(String token, String expectedAudience) {
         return this.vertx.<JwtClaims>executeBlocking(
                 promise -> {
                     // execute blocking, as jose .process() is blocking

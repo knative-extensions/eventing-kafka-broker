@@ -42,11 +42,6 @@ public class AuthenticationHandlerTest {
 
         TokenVerifier tokenVerifier = new TokenVerifier() {
             @Override
-            public Future<JwtClaims> verify(String token, String expectedAudience) {
-                return Future.failedFuture("JWT validation failed");
-            }
-
-            @Override
             public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
                 return Future.failedFuture("JWT validation failed");
             }
@@ -94,11 +89,6 @@ public class AuthenticationHandlerTest {
         final var next = mock(Handler.class); // mockHandler(request);
 
         TokenVerifier tokenVerifier = new TokenVerifier() {
-            @Override
-            public Future<JwtClaims> verify(String token, String expectedAudience) {
-                return Future.succeededFuture(new JwtClaims());
-            }
-
             @Override
             public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
                 return Future.succeededFuture(new JwtClaims());
