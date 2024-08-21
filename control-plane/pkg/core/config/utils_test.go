@@ -23,6 +23,11 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/protobuf/encoding/protojson"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
+	reconcilertesting "knative.dev/pkg/reconciler/testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/runtime/protoimpl"
@@ -41,6 +46,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	eventpolicyinformerfake "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy/fake"
 )
 
 func TestContentModeFromString(t *testing.T) {
@@ -502,5 +508,230 @@ func TestMergeEgressConfig(t *testing.T) {
 				t.Errorf("(-want, +got) %s", diff)
 			}
 		})
+	}
+}
+
+func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
+
+	tests := []struct {
+		name                     string
+		applyingPolicies         []string
+		existingEventPolicies    []*eventingv1alpha1.EventPolicy
+		namespace                string
+		defaultAuthorizationMode feature.Flag
+		expected                 []*contract.EventPolicy
+		wantErr                  bool
+	}{
+		{
+			name: "Exact match",
+			applyingPolicies: []string{
+				"policy-1",
+			},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-1",
+						},
+					},
+				},
+			},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationDenyAll,
+			expected: []*contract.EventPolicy{
+				{
+					TokenMatchers: []*contract.TokenMatcher{
+						exactTokenMatcher("from-1"),
+					},
+				},
+			},
+		}, {
+			name: "Prefix match",
+			applyingPolicies: []string{
+				"policy-1",
+			},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-*",
+						},
+					},
+				},
+			},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationDenyAll,
+			expected: []*contract.EventPolicy{
+				{
+					TokenMatchers: []*contract.TokenMatcher{
+						prefixTokenMatcher("from-"),
+					},
+				},
+			},
+		}, {
+			name: "Multiple policies",
+			applyingPolicies: []string{
+				"policy-1",
+				"policy-2",
+			},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-1",
+						},
+					},
+				}, {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-2",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-2-*",
+						},
+					},
+				},
+			},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationDenyAll,
+			expected: []*contract.EventPolicy{
+				{
+					TokenMatchers: []*contract.TokenMatcher{
+						exactTokenMatcher("from-1"),
+					},
+				}, {
+					TokenMatchers: []*contract.TokenMatcher{
+						prefixTokenMatcher("from-2-"),
+					},
+				},
+			},
+		}, {
+			name:                     "No applying policies - allow-same-namespace default mode",
+			applyingPolicies:         []string{},
+			existingEventPolicies:    []*eventingv1alpha1.EventPolicy{},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationAllowSameNamespace,
+			expected: []*contract.EventPolicy{
+				{
+					TokenMatchers: []*contract.TokenMatcher{
+						prefixTokenMatcher("system:serviceaccount:my-ns:"),
+					},
+				},
+			},
+		}, {
+			name:                     "No applying policies - allow-all default mode",
+			applyingPolicies:         []string{},
+			existingEventPolicies:    []*eventingv1alpha1.EventPolicy{},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationAllowAll,
+			expected: []*contract.EventPolicy{
+				{
+					TokenMatchers: []*contract.TokenMatcher{
+						prefixTokenMatcher(""),
+					},
+				},
+			},
+		}, {
+			name:                     "No applying policies - deny-all default mode",
+			applyingPolicies:         []string{},
+			existingEventPolicies:    []*eventingv1alpha1.EventPolicy{},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationDenyAll,
+			expected:                 []*contract.EventPolicy{},
+		}, {
+			name: "Applying policy does not exist",
+			applyingPolicies: []string{
+				"not-found",
+			},
+			existingEventPolicies:    []*eventingv1alpha1.EventPolicy{},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationAllowSameNamespace,
+			expected:                 []*contract.EventPolicy{},
+			wantErr:                  true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			ctx, _ := reconcilertesting.SetupFakeContext(t)
+			features := feature.Flags{
+				feature.AuthorizationDefaultMode: tt.defaultAuthorizationMode,
+			}
+
+			for _, ep := range tt.existingEventPolicies {
+				err := eventpolicyinformerfake.Get(ctx).Informer().GetStore().Add(ep)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			applyingPoliciesStatus := eventingduck.AppliedEventPoliciesStatus{}
+			for _, ep := range tt.applyingPolicies {
+				applyingPoliciesStatus.Policies = append(applyingPoliciesStatus.Policies, eventingduck.AppliedEventPolicyRef{
+					Name:       ep,
+					APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+				})
+			}
+
+			got, err := EventPoliciesFromAppliedEventPoliciesStatus(applyingPoliciesStatus, eventpolicyinformerfake.Get(ctx).Lister(), tt.namespace, features)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EventPoliciesFromAppliedEventPoliciesStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			expectedJSON, err := protojson.Marshal(&contract.Ingress{
+				EventPolicies: tt.expected,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			gotJSON, err := protojson.Marshal(&contract.Ingress{
+				EventPolicies: got,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(expectedJSON, gotJSON); diff != "" {
+				t.Errorf("(-want, +got) %s", diff)
+			}
+		})
+	}
+}
+
+func exactTokenMatcher(sub string) *contract.TokenMatcher {
+	return &contract.TokenMatcher{
+		Matcher: &contract.TokenMatcher_Exact{
+			Exact: &contract.Exact{
+				Attributes: map[string]string{
+					"sub": sub,
+				},
+			},
+		},
+	}
+}
+
+func prefixTokenMatcher(sub string) *contract.TokenMatcher {
+	return &contract.TokenMatcher{
+		Matcher: &contract.TokenMatcher_Prefix{
+			Prefix: &contract.Prefix{
+				Attributes: map[string]string{
+					"sub": sub,
+				},
+			},
+		},
 	}
 }

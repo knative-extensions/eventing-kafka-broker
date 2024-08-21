@@ -402,6 +402,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 						StatusBrokerProbeFailed(prober.StatusNotReady),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
@@ -466,6 +467,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerProbeFailed(prober.StatusUnknown),
@@ -1270,6 +1272,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigNotParsed("failed to resolve Spec.Delivery.DeadLetterSink: destination missing Ref and URI, expected at least one"),
 						StatusBrokerTopicReady,
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
 					),
@@ -2307,9 +2310,27 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              BrokerUUID,
-							Topics:           []string{BrokerTopic()},
-							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Ingress: &contract.Ingress{
+								Path:     receiver.Path(BrokerNamespace, BrokerName),
+								Audience: brokerAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Prefix{
+													Prefix: &contract.Prefix{
+														Attributes: map[string]string{
+															"sub": "system:serviceaccount:" + BrokerNamespace + ":",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							BootstrapServers: bootstrapServers,
 							Reference:        BrokerReference(),
 							Auth: &contract.Resource_AuthSecret{
@@ -2398,6 +2419,9 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				reconcilertesting.NewEventPolicy(readyEventPolicyName, BrokerNamespace,
 					reconcilertesting.WithReadyEventPolicyCondition,
 					reconcilertesting.WithEventPolicyToRef(brokerV1GVK, BrokerName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub",
+					}),
 				),
 			},
 			Key: testKey,
@@ -2408,9 +2432,26 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              BrokerUUID,
-							Topics:           []string{BrokerTopic()},
-							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Ingress: &contract.Ingress{
+								Path:     receiver.Path(BrokerNamespace, BrokerName),
+								Audience: brokerAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Exact{
+													Exact: &contract.Exact{
+														Attributes: map[string]string{
+															"sub": "sub",
+														},
+													},
+												},
+											},
+										},
+									},
+								}},
 							BootstrapServers: bootstrapServers,
 							Reference:        BrokerReference(),
 							FeatureFlags:     FeatureFlagsETAutocreate(false),
@@ -2482,6 +2523,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				reconcilertesting.NewEventPolicy(unreadyEventPolicyName, BrokerNamespace,
 					reconcilertesting.WithUnreadyEventPolicyCondition("", ""),
 					reconcilertesting.WithEventPolicyToRef(brokerV1GVK, BrokerName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{"sub"}),
 				),
 			},
 			Key: testKey,
@@ -2492,9 +2534,27 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              BrokerUUID,
-							Topics:           []string{BrokerTopic()},
-							Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
+							Uid:    BrokerUUID,
+							Topics: []string{BrokerTopic()},
+							Ingress: &contract.Ingress{
+								Path:     receiver.Path(BrokerNamespace, BrokerName),
+								Audience: brokerAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Prefix{
+													Prefix: &contract.Prefix{
+														Attributes: map[string]string{
+															"sub": "system:serviceaccount:" + BrokerNamespace + ":",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							BootstrapServers: bootstrapServers,
 							Reference:        BrokerReference(),
 							FeatureFlags:     FeatureFlagsETAutocreate(false),
@@ -2544,7 +2604,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			Ctx: feature.ToContext(context.Background(), feature.Flags{
-				feature.OIDCAuthentication: feature.Enabled,
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
 			}),
 		},
 	}

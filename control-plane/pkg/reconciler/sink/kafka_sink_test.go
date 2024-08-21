@@ -1347,9 +1347,13 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
 					Resources: []*contract.Resource{
 						{
-							Uid:              SinkUUID,
-							Topics:           []string{SinkTopic()},
-							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
+							Uid:    SinkUUID,
+							Topics: []string{SinkTopic()},
+							Ingress: &contract.Ingress{
+								ContentMode: contract.ContentMode_BINARY,
+								Path:        receiver.Path(SinkNamespace, SinkName),
+								Audience:    sinkAudience,
+							},
 							BootstrapServers: bootstrapServers,
 							Reference:        SinkReference(),
 							FeatureFlags:     FeatureFlagsETAutocreate(false),
@@ -1772,7 +1776,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				DataPlaneNamespace:          env.SystemNamespace,
 				ReceiverLabel:               base.SinkReceiverLabel,
 			},
-			ConfigMapLister: listers.GetConfigMapLister(),
+			ConfigMapLister:   listers.GetConfigMapLister(),
+			EventPolicyLister: listers.GetEventPolicyLister(),
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
