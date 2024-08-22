@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"knative.dev/eventing/pkg/apis/feature"
 	"strings"
+
+	"knative.dev/eventing/pkg/apis/feature"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -293,9 +294,11 @@ func (r *Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) 
 
 	userFacingResource := cg.GetUserFacingResourceRef()
 	ref := &contract.Reference{
-		Uuid:      string(userFacingResource.UID),
-		Namespace: c.GetNamespace(),
-		Name:      userFacingResource.Name,
+		Uuid:         string(userFacingResource.UID),
+		Namespace:    c.GetNamespace(),
+		Name:         userFacingResource.Name,
+		Kind:         userFacingResource.Kind,
+		GroupVersion: userFacingResource.APIVersion,
 	}
 	return ref, nil
 }

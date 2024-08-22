@@ -48,6 +48,7 @@ public abstract class BaseResponseHandler implements ResponseHandler {
             EventTypeCreator eventTypeCreator,
             Lister<EventType> eventTypeLister,
             DataPlaneContract.Reference reference) {
+        logger.info("cali0707: enabling eventtype autocreate");
         this.eventTypeCreator = eventTypeCreator;
         this.eventTypeLister = eventTypeLister;
         this.reference = reference;
@@ -101,7 +102,17 @@ public abstract class BaseResponseHandler implements ResponseHandler {
         TracingSpan.decorateCurrentWithEvent(event);
 
         if (this.isEventTypeAutocreateEnabled) {
-            this.eventTypeCreator.create(event, this.eventTypeLister, this.reference);
+            return this.doHandleEvent(event).compose((ignored) -> this.eventTypeCreator
+                    .create(event, this.eventTypeLister, this.reference)
+                    .compose(
+                            eventType -> {
+                                logger.debug("successfully created eventtype {}", eventType);
+                                return Future.succeededFuture();
+                            },
+                            cause -> {
+                                logger.warn("failed to create eventtype", cause);
+                                return Future.failedFuture(cause);
+                            }));
         }
         return this.doHandleEvent(event);
     }
