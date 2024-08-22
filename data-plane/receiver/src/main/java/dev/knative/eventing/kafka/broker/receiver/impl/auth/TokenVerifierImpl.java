@@ -16,14 +16,14 @@
 package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
 import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
+import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.jose4j.jwt.JwtClaims;
-import org.jose4j.jwt.consumer.InvalidJwtException;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
-import org.jose4j.jwt.consumer.JwtContext;
+import org.jose4j.jwt.consumer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class TokenVerifierImpl implements TokenVerifier {
         this.oidcDiscoveryConfig = oidcDiscoveryConfig;
     }
 
-    private Future<JwtClaims> verify(String token, String expectedAudience) {
+    private Future<JwtClaims> verifyAuthN(String token, IngressProducer ingressInfo) {
         return this.vertx.<JwtClaims>executeBlocking(
                 promise -> {
                     // execute blocking, as jose .process() is blocking
@@ -54,7 +54,7 @@ public class TokenVerifierImpl implements TokenVerifier {
 
                     JwtConsumer jwtConsumer = new JwtConsumerBuilder()
                             .setVerificationKeyResolver(this.oidcDiscoveryConfig.getJwksVerificationKeyResolver())
-                            .setExpectedAudience(expectedAudience)
+                            .setExpectedAudience(ingressInfo.getAudience())
                             .setExpectedIssuer(this.oidcDiscoveryConfig.getIssuer())
                             .build();
 
@@ -63,25 +63,46 @@ public class TokenVerifierImpl implements TokenVerifier {
 
                         promise.complete(jwtContext.getJwtClaims());
                     } catch (InvalidJwtException e) {
-                        promise.fail(e);
+                        promise.fail(new AuthenticationException(e));
                     }
                 },
                 false);
     }
 
-    public Future<JwtClaims> verify(final HttpServerRequest request, String expectedAudience) {
+    private Future<JwtClaims> verifyAuthN(final HttpServerRequest request, IngressProducer ingressInfo) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || authHeader.isEmpty()) {
-            return Future.failedFuture("Request didn't contain Authorization header");
+            return Future.failedFuture(new AuthenticationException("Request didn't contain Authorization header"));
         }
 
         if (!authHeader.startsWith("Bearer ") && authHeader.length() <= "Bearer ".length()) {
-            return Future.failedFuture("Authorization header didn't contain Bearer token");
+            return Future.failedFuture(new AuthenticationException("Authorization header didn't contain Bearer token"));
         }
 
         String token = authHeader.substring("Bearer ".length());
 
         request.pause();
-        return verify(token, expectedAudience).onSuccess(v -> request.resume());
+        return verifyAuthN(token, ingressInfo).onSuccess(v -> request.resume());
+    }
+
+    private Future<Void> verifyAuthZ(JwtClaims claims, IngressProducer ingressInfo) {
+        // claims from Map<String, List<Object>> to Map<String, List<String>>
+        var convertedClaims = claims.flattenClaims().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        v -> v.getValue().stream().map(Object::toString).toList()));
+
+        for (EventPolicy ep : ingressInfo.getEventPolicies()) {
+            if (ep.isAuthorized(convertedClaims)) {
+                // as soon as one policy allows it, we're good
+                return Future.succeededFuture();
+            }
+        }
+
+        return Future.failedFuture(new AuthorizationException("Not authorized by any EventPolicy"));
+    }
+
+    public Future<Void> verify(final HttpServerRequest request, IngressProducer ingressInfo) {
+        return verifyAuthN(request, ingressInfo).compose(jwtClaims -> verifyAuthZ(jwtClaims, ingressInfo));
     }
 }

@@ -22,8 +22,11 @@ import static org.mockito.Mockito.when;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthenticationException;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthorizationException;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -31,7 +34,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import org.jose4j.jwt.JwtClaims;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 public class AuthenticationHandlerTest {
@@ -42,8 +45,8 @@ public class AuthenticationHandlerTest {
 
         TokenVerifier tokenVerifier = new TokenVerifier() {
             @Override
-            public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
-                return Future.failedFuture("JWT validation failed");
+            public Future<Void> verify(HttpServerRequest request, IngressProducer ingressInfo) {
+                return Future.failedFuture(new AuthenticationException("JWT validation failed"));
             }
         };
 
@@ -76,10 +79,68 @@ public class AuthenticationHandlerTest {
                     public String getAudience() {
                         return "some-required-audience";
                     }
+
+                    @Override
+                    public List<EventPolicy> getEventPolicies() {
+                        return null;
+                    }
                 },
                 mock(Handler.class));
 
         verify(response, times(1)).setStatusCode(HttpResponseStatus.UNAUTHORIZED.code());
+        verify(response, times(1)).end();
+    }
+
+    @Test
+    public void shouldReturnForbiddenWhenAuthorizationFails() {
+        final HttpServerRequest request = mock(HttpServerRequest.class);
+        final var response = mockResponse(request, HttpResponseStatus.FORBIDDEN.code());
+
+        TokenVerifier tokenVerifier = new TokenVerifier() {
+            @Override
+            public Future<Void> verify(HttpServerRequest request, IngressProducer ingressInfo) {
+                return Future.failedFuture(new AuthorizationException("AuthZ failed"));
+            }
+        };
+
+        final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
+
+        authHandler.handle(
+                request,
+                new IngressProducer() {
+                    @Override
+                    public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getTopic() {
+                        return null;
+                    }
+
+                    @Override
+                    public DataPlaneContract.Reference getReference() {
+                        return null;
+                    }
+
+                    @Override
+                    public Lister<EventType> getEventTypeLister() {
+                        return mock(Lister.class);
+                    }
+
+                    @Override
+                    public String getAudience() {
+                        return "some-required-audience";
+                    }
+
+                    @Override
+                    public List<EventPolicy> getEventPolicies() {
+                        return null;
+                    }
+                },
+                mock(Handler.class));
+
+        verify(response, times(1)).setStatusCode(HttpResponseStatus.FORBIDDEN.code());
         verify(response, times(1)).end();
     }
 
@@ -90,8 +151,8 @@ public class AuthenticationHandlerTest {
 
         TokenVerifier tokenVerifier = new TokenVerifier() {
             @Override
-            public Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience) {
-                return Future.succeededFuture(new JwtClaims());
+            public Future<Void> verify(HttpServerRequest request, IngressProducer ingressInfo) {
+                return Future.succeededFuture();
             }
         };
 
@@ -123,6 +184,11 @@ public class AuthenticationHandlerTest {
                     @Override
                     public String getAudience() {
                         return "some-required-audience";
+                    }
+
+                    @Override
+                    public List<EventPolicy> getEventPolicies() {
+                        return null;
                     }
                 },
                 next);

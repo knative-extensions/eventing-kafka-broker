@@ -15,10 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
-import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
-import io.vertx.core.Future;
-import io.vertx.core.http.HttpServerRequest;
+public class AuthorizationException extends Exception {
 
-public interface TokenVerifier {
-    Future<Void> verify(HttpServerRequest request, IngressProducer ingressInfo);
+    public AuthorizationException(String message) {
+        super(message);
+    }
+
+    public AuthorizationException(Exception e) {
+        super(e);
+    }
 }

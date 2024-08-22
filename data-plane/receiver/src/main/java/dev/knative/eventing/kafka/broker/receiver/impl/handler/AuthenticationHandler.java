@@ -17,8 +17,10 @@ package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthenticationException;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthorizationException;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
@@ -46,15 +48,31 @@ public class AuthenticationHandler {
         }
 
         tokenVerifier
-                .verify(request, ingressInfo.getAudience())
+                .verify(request, ingressInfo)
                 .onFailure(e -> {
-                    logger.debug("Failed to verify authentication of request: {}", keyValue("error", e.getMessage()));
-                    request.response()
-                            .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
-                            .end();
+                    if (e instanceof AuthenticationException) {
+                        logger.debug(
+                                "Failed to verify authentication of request: {}", keyValue("error", e.getMessage()));
+                        request.response()
+                                .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
+                                .end();
+                    } else if (e instanceof AuthorizationException) {
+                        logger.debug(
+                                "Failed to verify authorization of request: {}", keyValue("error", e.getMessage()));
+                        request.response()
+                                .setStatusCode(HttpResponseStatus.FORBIDDEN.code())
+                                .end();
+                    } else {
+                        logger.debug(
+                                "Got unexpected exception on verifying auth of request: {}",
+                                keyValue("error", e.getMessage()));
+                        request.response()
+                                .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
+                                .end();
+                    }
                 })
-                .onSuccess(jwtClaims -> {
-                    logger.debug("Request contained valid JWT. Continuing...");
+                .onSuccess(v -> {
+                    logger.debug("Request was authenticated and authorized. Continuing...");
                     next.handle(request);
                 });
     }
