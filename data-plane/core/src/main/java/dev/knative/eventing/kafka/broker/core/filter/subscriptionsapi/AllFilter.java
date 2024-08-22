@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
+package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import io.cloudevents.CloudEvent;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NotFilter implements Filter {
+public class AllFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(NotFilter.class);
+    private final List<Filter> filters;
+    private static final Logger logger = LoggerFactory.getLogger(AllFilter.class);
 
-    private final Filter filter;
-
-    public NotFilter(Filter filter) {
-        this.filter = filter;
+    public AllFilter(List<Filter> filters) {
+        this.filters = filters;
     }
 
     @Override
     public boolean test(CloudEvent cloudEvent) {
-        logger.debug("Testing NOT filter. Event {}", cloudEvent);
-        boolean passed = !filter.test(cloudEvent);
-        String result = passed ? "Succeeded" : "Failed";
-        logger.debug("{}: Filter {} - Event {}", result, this.filter, cloudEvent);
-        return passed;
+        logger.debug("Testing event against ALL filters. Event {}", cloudEvent);
+        for (Filter filter : filters) {
+            if (!filter.test(cloudEvent)) {
+                logger.debug("Test failed. Filter {} Event {}", filter, cloudEvent);
+                return false;
+            }
+        }
+        logger.debug("Test ALL filters succeeded. Event {}", cloudEvent);
+        return true;
     }
 }

@@ -32,7 +32,7 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;

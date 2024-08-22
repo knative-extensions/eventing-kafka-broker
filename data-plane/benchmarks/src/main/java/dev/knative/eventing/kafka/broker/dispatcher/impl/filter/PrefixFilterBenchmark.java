@@ -16,8 +16,8 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.PrefixFilter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventV1;
 import java.util.Map;

@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
+package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.CeSqlFilter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class AllFilterTest {
+public class CeSqlFilterTest {
 
     static final CloudEvent event = CloudEventBuilder.v1()
             .withId("123-42")
@@ -45,31 +42,18 @@ public class AllFilterTest {
 
     @ParameterizedTest
     @MethodSource(value = {"testCases"})
-    public void match(CloudEvent event, Filter filter, boolean shouldMatch) {
+    public void match(CloudEvent event, String expression, boolean shouldMatch) {
+        var filter = new CeSqlFilter(expression);
         assertThat(filter.test(event)).isEqualTo(shouldMatch);
     }
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AllFilter(List.of(new ExactFilter(Map.of("id", "123-42")))), true),
-                Arguments.of(
-                        event,
-                        new AllFilter(List.of(
-                                new ExactFilter(Map.of("id", "123-42")),
-                                new ExactFilter(Map.of("source", "/api/some-source")))),
-                        true),
-                Arguments.of(
-                        event,
-                        new AllFilter(List.of(
-                                new ExactFilter(Map.of("id", "123")),
-                                new ExactFilter(Map.of("source", "/api/some-source")))),
-                        false),
-                Arguments.of(
-                        event,
-                        new AllFilter(List.of(
-                                new ExactFilter(Map.of("id", "123-42")),
-                                new ExactFilter(Map.of("source", "/api/something-else")))),
-                        false),
-                Arguments.of(event, new AllFilter(Collections.emptyList()), true));
+                Arguments.of(event, "'TRUE'", true),
+                Arguments.of(event, "'FALSE'", false),
+                Arguments.of(event, "0", false),
+                Arguments.of(event, "1", true),
+                Arguments.of(event, "id LIKE '123%'", true),
+                Arguments.of(event, "NOT(id LIKE '123%')", false));
     }
 }

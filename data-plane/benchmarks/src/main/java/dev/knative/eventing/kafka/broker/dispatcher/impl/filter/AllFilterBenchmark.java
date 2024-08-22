@@ -16,11 +16,11 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.ExactFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.AllFilter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.ExactFilter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.PrefixFilter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.SuffixFilter;
 import io.cloudevents.CloudEvent;
 import java.util.List;
 import java.util.Map;

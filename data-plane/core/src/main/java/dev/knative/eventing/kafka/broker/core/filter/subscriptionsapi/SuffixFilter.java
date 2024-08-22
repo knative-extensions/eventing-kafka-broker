@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
+package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import dev.knative.eventing.kafka.broker.core.filter.AttributesFilter;
+
 import java.util.Map;
 
-public class PrefixFilter extends AttributesFilter {
+public class SuffixFilter extends AttributesFilter {
 
-    public PrefixFilter(Map<String, String> attributes) {
+    public SuffixFilter(Map<String, String> attributes) {
         super(attributes);
     }
 
     @Override
     public boolean match(String given, String wanted) {
-        return given.startsWith(wanted);
+        return given.endsWith(wanted);
     }
 }

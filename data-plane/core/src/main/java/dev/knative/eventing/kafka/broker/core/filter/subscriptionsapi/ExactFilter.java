@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
+package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import dev.knative.eventing.kafka.broker.core.filter.AttributesFilter;
 import java.util.Map;
 
 public class ExactFilter extends AttributesFilter {
