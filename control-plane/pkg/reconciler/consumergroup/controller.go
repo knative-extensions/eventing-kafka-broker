@@ -44,7 +44,8 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	podinformerfiltered "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -121,7 +122,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	clientPool := clientpool.Get(ctx)
 
-	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
+	dispatcherPodInformer := podinformerfiltered.Get(ctx, eventing.DispatcherLabelSelectorStr)
 
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
@@ -378,6 +379,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		VPodLister:           lister,
 		NodeLister:           nodeinformer.Get(ctx).Lister(),
+		PodLister:            podinformer.Get(ctx).Lister().Pods(system.Namespace()),
 	})
 
 	return Scheduler{
