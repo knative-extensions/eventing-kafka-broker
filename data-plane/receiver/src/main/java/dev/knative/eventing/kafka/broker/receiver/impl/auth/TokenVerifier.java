@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.oidc;
+package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
+import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
-import org.jose4j.jwt.JwtClaims;
 
 public interface TokenVerifier {
-    Future<JwtClaims> verify(String token, String expectedAudience);
-
-    Future<JwtClaims> verify(HttpServerRequest request, String expectedAudience);
+    Future<Void> verify(HttpServerRequest request, IngressProducer ingressInfo);
 }

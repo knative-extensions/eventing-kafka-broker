@@ -13,33 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.oidc;
+package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.net.URL;
+public class AuthorizationException extends Exception {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-class OIDCInfo {
-
-    private String issuer;
-
-    @JsonProperty("jwks_uri")
-    private URL jwks;
-
-    public String getIssuer() {
-        return issuer;
+    public AuthorizationException(String message) {
+        super(message);
     }
 
-    public void setIssuer(String issuer) {
-        this.issuer = issuer;
-    }
-
-    public URL getJwks() {
-        return jwks;
-    }
-
-    public void setJwks(URL jwks) {
-        this.jwks = jwks;
+    public AuthorizationException(Exception e) {
+        super(e);
     }
 }

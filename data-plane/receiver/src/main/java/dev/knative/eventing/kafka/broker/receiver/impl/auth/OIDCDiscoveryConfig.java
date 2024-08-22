@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.oidc;
+package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public class OIDCDiscoveryConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(TokenVerifier.class);
+    private static final Logger logger = LoggerFactory.getLogger(OIDCDiscoveryConfig.class);
 
     private static final String OIDC_DISCOVERY_URL = "https://kubernetes.default.svc/.well-known/openid-configuration";
 
