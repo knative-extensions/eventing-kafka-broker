@@ -27,12 +27,14 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.utils.ReferenceCounter;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.Encoding;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -167,7 +169,8 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                     producerProps,
                     ingress.getEnableAutoCreateEventTypes(),
                     this.eventTypeListerFactory.getForNamespace(
-                            resource.getReference().getNamespace()));
+                            resource.getReference().getNamespace()),
+                    EventPolicy.fromContract(ingress.getEventPoliciesList()));
 
             if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
                 throw new IllegalArgumentException(
@@ -276,6 +279,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         private final Properties producerProperties;
         private final DataPlaneContract.Reference reference;
         private final String audience;
+        private final List<EventPolicy> eventPolicies;
 
         private final boolean eventTypeAutocreateEnabled;
         private final Lister<EventType> eventTypeLister;
@@ -287,7 +291,8 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                 final String host,
                 final Properties producerProperties,
                 final boolean eventTypeAutocreateEnabled,
-                Lister<EventType> eventTypeLister) {
+                Lister<EventType> eventTypeLister,
+                final List<EventPolicy> eventPolicies) {
             this.producer = producer;
             this.topic = resource.getTopics(0);
             this.reference = resource.getReference();
@@ -297,6 +302,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             this.producerProperties = producerProperties;
             this.eventTypeAutocreateEnabled = eventTypeAutocreateEnabled;
             this.eventTypeLister = eventTypeLister;
+            this.eventPolicies = eventPolicies;
         }
 
         @Override
@@ -312,6 +318,11 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
         @Override
         public String getAudience() {
             return audience;
+        }
+
+        @Override
+        public List<EventPolicy> getEventPolicies() {
+            return eventPolicies;
         }
 
         @Override

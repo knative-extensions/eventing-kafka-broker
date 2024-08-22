@@ -18,9 +18,11 @@ package dev.knative.eventing.kafka.broker.receiver;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
+import java.util.List;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -69,4 +71,9 @@ public interface IngressProducer {
      * @return the OIDC audience for the ingress.
      */
     String getAudience();
+
+    /**
+     * @return the applying EventPolicies for the ingress.
+     */
+    List<EventPolicy> getEventPolicies();
 }

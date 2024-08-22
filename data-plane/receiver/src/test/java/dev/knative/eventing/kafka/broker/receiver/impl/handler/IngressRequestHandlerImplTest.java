@@ -30,6 +30,7 @@ import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.prometheus.PrometheusConfig;
@@ -41,6 +42,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.util.List;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -111,6 +113,11 @@ public class IngressRequestHandlerImplTest {
             public String getAudience() {
                 return "";
             }
+
+            @Override
+            public List<EventPolicy> getEventPolicies() {
+                return null;
+            }
         });
 
         verifySetStatusCodeAndTerminateResponse(statusCode, response);
@@ -152,6 +159,11 @@ public class IngressRequestHandlerImplTest {
             @Override
             public String getAudience() {
                 return "";
+            }
+
+            @Override
+            public List<EventPolicy> getEventPolicies() {
+                return null;
             }
         });
 
