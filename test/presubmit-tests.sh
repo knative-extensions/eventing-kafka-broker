@@ -34,6 +34,8 @@ function fail_test() {
 
 function build_tests() {
   header "Running control plane build tests"
+  cd $(dirname "$0")/../control-plane
+	./mvnw spotless:check || fail_test "Control plane formatting check failed"
   default_build_test_runner || fail_test "Control plane build tests failed"
 }
 
