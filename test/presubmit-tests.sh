@@ -37,8 +37,10 @@ function build_tests() {
   default_build_test_runner || fail_test "Control plane build tests failed"
 
   header "Running data plane formatting tests"
-  cd $(dirname "$0")/../data-plane
+  
+  cd $(dirname "$0")/../data-plane || fail_test "Failed to change to the data plane directory"
 	./mvnw spotless:check || fail_test "data plane formatting check failed"
+  cd - || fail_test "Failed to return to the original directory"
 }
 
 function unit_tests() {
