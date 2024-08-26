@@ -100,8 +100,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
-	r.markEventPolicyConditionNotYetSupported(ks)
-
 	if !r.IsReceiverRunning() {
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
@@ -169,6 +167,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	logger.Debug("Got contract config map")
+
+	err = auth.UpdateStatusWithEventPolicies(feature.FromContext(ctx), &ks.Status.AppliedEventPoliciesStatus, &ks.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not update KafkaSinks status with EventPolicies: %v", err)
+	}
 
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
@@ -292,14 +295,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(base.ConditionAddressable)
 
 	return nil
-}
-
-func (r *Reconciler) markEventPolicyConditionNotYetSupported(ks *eventing.KafkaSink) {
-	ks.Status.GetConditionSet().Manage(ks.GetStatus()).MarkTrueWithReason(
-		base.ConditionEventPoliciesReady,
-		"AuthzNotSupported",
-		"Authorization not yet supported",
-	)
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {

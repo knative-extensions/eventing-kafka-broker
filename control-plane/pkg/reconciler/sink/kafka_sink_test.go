@@ -22,6 +22,8 @@ import (
 	"io"
 	"testing"
 
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
 	"knative.dev/eventing/pkg/auth"
 
 	"k8s.io/utils/pointer"
@@ -81,6 +83,9 @@ const (
 	testProber                     = "testProber"
 
 	TopicPrefix = "knative-sink-"
+
+	readyEventPolicyName   = "test-event-policy-ready"
+	unreadyEventPolicyName = "test-event-policy-unready"
 )
 
 var (
@@ -102,6 +107,12 @@ var (
 		Name:      SinkName,
 		Namespace: SinkNamespace,
 	})
+
+	sinkGVK = metav1.GroupVersionKind{
+		Group:   "eventing.knative.dev",
+		Version: "v1alpha1",
+		Kind:    "KafkaSink",
+	}
 
 	errCreateTopic = fmt.Errorf("failed to create topic")
 
@@ -195,7 +206,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -262,7 +273,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -339,7 +350,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -418,7 +429,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -466,7 +477,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusTopicNotPresentErr(SinkTopic(), io.EOF),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
 					),
 				},
 			},
@@ -545,7 +555,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -584,7 +594,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusDataPlaneAvailable,
 						BootstrapServers(bootstrapServersArr),
 						StatusFailedToCreateTopic(SinkTopic()),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
 					),
 				},
 			},
@@ -660,7 +669,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -723,7 +732,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -809,7 +818,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -895,7 +904,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -923,7 +932,6 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					Object: NewSink(
 						InitSinkConditions,
 						StatusDataPlaneNotAvailable,
-						WithSinkEventPolicyConditionAuthZNotSupported(),
 					),
 				},
 			},
@@ -991,7 +999,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1064,7 +1072,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1117,7 +1125,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						StatusProbeFailed(prober.StatusNotReady),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1173,7 +1181,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 						StatusConfigMapUpdatedReady(&env),
 						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
 						StatusProbeFailed(prober.StatusUnknown),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1250,7 +1258,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1321,14 +1329,15 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
 		}, {
 			Name: "Reconciled normal - OIDC enabled - should provision audience",
 			Ctx: feature.ToContext(context.Background(), feature.Flags{
-				feature.OIDCAuthentication: feature.Enabled,
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationDenyAll,
 			}),
 			Objects: []runtime.Object{
 				NewSink(
@@ -1394,7 +1403,198 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 							},
 						}),
 						WithSinkAddessable(),
-						WithSinkEventPolicyConditionAuthZNotSupported(),
+						WithSinkEventPoliciesReadyBecauseNoPolicyAndOIDCEnabled(feature.AuthorizationDenyAll),
+					),
+				},
+			},
+		}, {
+			Name: "Should list applying EventPolicies",
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(readyEventPolicyName, SinkNamespace,
+					reconcilertesting.WithReadyEventPolicyCondition,
+					reconcilertesting.WithEventPolicyToRef(sinkGVK, SinkName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub",
+					}),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    SinkUUID,
+							Topics: []string{SinkTopic()},
+							Ingress: &contract.Ingress{
+								ContentMode: contract.ContentMode_BINARY,
+								Path:        receiver.Path(SinkNamespace, SinkName),
+								Audience:    sinkAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Exact{
+													Exact: &contract.Exact{
+														Attributes: map[string]string{
+															"sub": "sub",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							BootstrapServers: bootstrapServers,
+							Reference:        SinkReference(),
+							FeatureFlags:     FeatureFlagsETAutocreate(false),
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&env),
+						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      sinkAddress,
+							Audience: &sinkAudience,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      sinkAddress,
+								Audience: &sinkAudience,
+							},
+						}),
+						WithSinkAddessable(),
+						WithSinkEventPoliciesReady(),
+						WithSinkEventPoliciesListed(readyEventPolicyName),
+					),
+				},
+			},
+		}, {
+			Name: "Should mark as NotReady on unready EventPolicies",
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(unreadyEventPolicyName, SinkNamespace,
+					reconcilertesting.WithUnreadyEventPolicyCondition("", ""),
+					reconcilertesting.WithEventPolicyToRef(sinkGVK, SinkName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{"sub"}),
+				),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:    SinkUUID,
+							Topics: []string{SinkTopic()},
+							Ingress: &contract.Ingress{
+								ContentMode: contract.ContentMode_BINARY,
+								Path:        receiver.Path(SinkNamespace, SinkName),
+								Audience:    sinkAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Prefix{
+													Prefix: &contract.Prefix{
+														Attributes: map[string]string{
+															"sub": "system:serviceaccount:" + SinkNamespace + ":",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							BootstrapServers: bootstrapServers,
+							Reference:        SinkReference(),
+							FeatureFlags:     FeatureFlagsETAutocreate(false),
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&env),
+						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      sinkAddress,
+							Audience: &sinkAudience,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      sinkAddress,
+								Audience: &sinkAudience,
+							},
+						}),
+						WithSinkAddessable(),
+						WithSinkEventPoliciesNotReady("EventPoliciesNotReady", fmt.Sprintf("event policies %s are not ready", unreadyEventPolicyName)),
 					),
 				},
 			},
