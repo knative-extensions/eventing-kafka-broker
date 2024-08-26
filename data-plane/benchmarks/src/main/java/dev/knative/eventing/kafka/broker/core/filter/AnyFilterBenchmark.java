@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.core.filter;
 
 import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.AnyFilter;
 import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.ExactFilter;
 import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.PrefixFilter;
 import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.SuffixFilter;
-import dev.knative.eventing.kafka.broker.core.filter.Filter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.*;
 import io.cloudevents.CloudEvent;
 import java.util.List;
 import java.util.Map;

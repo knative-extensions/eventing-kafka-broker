@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.core.filter;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;

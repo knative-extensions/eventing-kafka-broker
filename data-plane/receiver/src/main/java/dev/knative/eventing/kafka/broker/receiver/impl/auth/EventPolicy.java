@@ -16,29 +16,39 @@
 package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import io.cloudevents.CloudEvent;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class EventPolicy {
     private final List<TokenMatcher> tokenMatchers;
+    private final Filter filter;
 
     public static EventPolicy fromContract(DataPlaneContract.EventPolicy contractEventPolicy) {
-        return new EventPolicy(TokenMatcher.fromContract(contractEventPolicy.getTokenMatchersList()));
+        var tokenMatchers = TokenMatcher.fromContract(contractEventPolicy.getTokenMatchersList());
+        var filter = Filter.fromContract(contractEventPolicy.getFiltersList());
+
+        return new EventPolicy(tokenMatchers, filter);
     }
 
     public static List<EventPolicy> fromContract(List<DataPlaneContract.EventPolicy> contractEventPolicies) {
         return contractEventPolicies.stream().map(EventPolicy::fromContract).collect(Collectors.toList());
     }
 
-    public EventPolicy(List<TokenMatcher> tokenMatchers) {
-        this.tokenMatchers = tokenMatchers;
+    public EventPolicy(List<TokenMatcher> tokenMatchers, Filter filter) {
+      this.tokenMatchers = tokenMatchers;
+      this.filter = filter;
     }
 
-    public boolean isAuthorized(Map<String, List<String>> claims) {
-        for (TokenMatcher matcher : tokenMatchers) {
-            if (matcher.match(claims)) {
-                return true;
+    public boolean isAuthorized(CloudEvent cloudEvent, Map<String, List<String>> claims) {
+        if (filter.test(cloudEvent)) {
+            for (TokenMatcher matcher : tokenMatchers) {
+                if (matcher.match(claims)) {
+                   return true;
+                }
             }
         }
 
