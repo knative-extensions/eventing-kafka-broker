@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.core.filter;
 
-import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import io.cloudevents.CloudEvent;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;

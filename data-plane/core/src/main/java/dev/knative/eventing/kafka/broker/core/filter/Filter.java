@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core.filter;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.*;
 import io.cloudevents.CloudEvent;
-
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -37,24 +36,23 @@ public interface Filter extends Predicate<CloudEvent> {
     }
 
     static Filter fromContract(DataPlaneContract.DialectedFilter filter) {
-    return switch (filter.getFilterCase()) {
-      case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
-      case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
-      case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
-      case NOT -> new NotFilter(fromContract(filter.getNot().getFilter()));
-      case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
-        .map(Filter::fromContract)
-        .collect(Collectors.toList()));
-      case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
-        .map(Filter::fromContract)
-        .collect(Collectors.toList()));
-      case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
-      default -> Filter.noop();
-    };
-  }
+        return switch (filter.getFilterCase()) {
+            case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
+            case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
+            case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
+            case NOT -> new NotFilter(fromContract(filter.getNot().getFilter()));
+            case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
+                    .map(Filter::fromContract)
+                    .collect(Collectors.toList()));
+            case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
+                    .map(Filter::fromContract)
+                    .collect(Collectors.toList()));
+            case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
+            default -> Filter.noop();
+        };
+    }
 
-  static Filter fromContract(List<DataPlaneContract.DialectedFilter> filters) {
-    return new AllFilter(
-      filters.stream().map(Filter::fromContract).collect(Collectors.toList()));
-  }
+    static Filter fromContract(List<DataPlaneContract.DialectedFilter> filters) {
+        return new AllFilter(filters.stream().map(Filter::fromContract).collect(Collectors.toList()));
+    }
 }

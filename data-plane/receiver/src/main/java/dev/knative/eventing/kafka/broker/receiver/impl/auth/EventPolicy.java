@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import io.cloudevents.CloudEvent;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,15 +38,15 @@ public class EventPolicy {
     }
 
     public EventPolicy(List<TokenMatcher> tokenMatchers, Filter filter) {
-      this.tokenMatchers = tokenMatchers;
-      this.filter = filter;
+        this.tokenMatchers = tokenMatchers;
+        this.filter = filter;
     }
 
     public boolean isAuthorized(CloudEvent cloudEvent, Map<String, List<String>> claims) {
         if (filter.test(cloudEvent)) {
             for (TokenMatcher matcher : tokenMatchers) {
                 if (matcher.match(claims)) {
-                   return true;
+                    return true;
                 }
             }
         }

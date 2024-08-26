@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
 import dev.knative.eventing.kafka.broker.core.filter.AttributesFilter;
-
 import java.util.Map;
 
 public class SuffixFilter extends AttributesFilter {

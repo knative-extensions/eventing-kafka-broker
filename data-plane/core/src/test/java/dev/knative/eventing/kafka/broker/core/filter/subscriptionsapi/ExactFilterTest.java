@@ -17,7 +17,6 @@ package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.ExactFilter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.v03.CloudEventV03;
