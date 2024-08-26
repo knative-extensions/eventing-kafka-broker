@@ -37,7 +37,7 @@ import io.vertx.core.http.HttpServerResponse;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class AuthenticationHandlerTest {
+public class AuthHandlerTest {
     @Test
     public void shouldReturnUnauthorizedWhenJWTValidationFails() {
         final HttpServerRequest request = mock(HttpServerRequest.class);
@@ -50,7 +50,7 @@ public class AuthenticationHandlerTest {
             }
         };
 
-        final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
+        final AuthHandler authHandler = new AuthHandler(tokenVerifier);
 
         authHandler.handle(
                 request,
@@ -103,7 +103,7 @@ public class AuthenticationHandlerTest {
             }
         };
 
-        final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
+        final AuthHandler authHandler = new AuthHandler(tokenVerifier);
 
         authHandler.handle(
                 request,
@@ -156,7 +156,7 @@ public class AuthenticationHandlerTest {
             }
         };
 
-        final AuthenticationHandler authHandler = new AuthenticationHandler(tokenVerifier);
+        final AuthHandler authHandler = new AuthHandler(tokenVerifier);
 
         authHandler.handle(
                 request,

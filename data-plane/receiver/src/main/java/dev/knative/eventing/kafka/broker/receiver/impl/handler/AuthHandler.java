@@ -28,14 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handler checking that the provided request contained a valid JWT.
+ * Handler checking that the provided request is authenticated and authorized.
  */
-public class AuthenticationHandler {
+public class AuthHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticationHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthHandler.class);
     private final TokenVerifier tokenVerifier;
 
-    public AuthenticationHandler(final TokenVerifier tokenVerifier) {
+    public AuthHandler(final TokenVerifier tokenVerifier) {
         this.tokenVerifier = tokenVerifier;
     }
 

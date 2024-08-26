@@ -31,7 +31,7 @@ import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifierImpl;
-import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthenticationHandler;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -91,7 +91,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
     private int oidcDiscoveryCallbackId;
 
-    private AuthenticationHandler authenticationHandler;
+    private AuthHandler authHandler;
     private HttpServer httpServer;
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
@@ -189,7 +189,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     private void buildAuthHandler(OIDCDiscoveryConfig config) {
         TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, config);
-        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
+        this.authHandler = new AuthHandler(tokenVerifier);
     }
 
     // Set up the secret watcher
@@ -245,7 +245,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             return;
         }
 
-        this.authenticationHandler.handle(request, producer, req -> {
+        this.authHandler.handle(request, producer, req -> {
             // Invoke the ingress request handler
             final var requestContext = new RequestContext(req);
             this.ingressRequestHandler.handle(requestContext, producer);
