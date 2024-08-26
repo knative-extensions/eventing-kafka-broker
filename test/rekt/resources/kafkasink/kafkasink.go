@@ -116,3 +116,14 @@ func ValidateAddress(name string, validate addressable.ValidateAddressFn, timing
 		}
 	}
 }
+
+// GoesReady returns a feature that will create a KafkaSink of the given
+// name and topic, and confirm it becomes ready.
+func GoesReady(name, topic string, bootstrapServers []string, cfg ...manifest.CfgFn) *feature.Feature {
+	f := new(feature.Feature)
+
+	f.Setup(fmt.Sprintf("install KafkaSink %q", name), Install(name, topic, bootstrapServers, cfg...))
+	f.Setup("KafkaSink is ready", IsReady(name))
+
+	return f
+}
