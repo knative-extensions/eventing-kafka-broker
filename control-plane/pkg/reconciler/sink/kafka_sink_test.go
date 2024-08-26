@@ -22,6 +22,8 @@ import (
 	"io"
 	"testing"
 
+	"knative.dev/eventing/pkg/auth"
+
 	"k8s.io/utils/pointer"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -49,6 +51,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
@@ -94,6 +97,11 @@ var (
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", SinkNamespace, SinkName),
 	}
+
+	sinkAudience = auth.GetAudience(kafkaeventing.SchemeGroupVersion.WithKind("KafkaSink"), metav1.ObjectMeta{
+		Name:      SinkName,
+		Namespace: SinkNamespace,
+	})
 
 	errCreateTopic = fmt.Errorf("failed to create topic")
 
@@ -1277,6 +1285,73 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 								Name:    pointer.String("https"),
 								URL:     httpsURL(SinkName, SinkNamespace),
 								CACerts: pointer.String(string(eventingtlstesting.CA)),
+							},
+						}),
+						WithSinkAddessable(),
+					),
+				},
+			},
+		}, {
+			Name: "Reconciled normal - OIDC enabled - should provision audience",
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication: feature.Enabled,
+			}),
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+				),
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				SinkReceiverPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key: testKey,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Resources: []*contract.Resource{
+						{
+							Uid:              SinkUUID,
+							Topics:           []string{SinkTopic()},
+							Ingress:          &contract.Ingress{ContentMode: contract.ContentMode_BINARY, Path: receiver.Path(SinkNamespace, SinkName)},
+							BootstrapServers: bootstrapServers,
+							Reference:        SinkReference(),
+						},
+					},
+					Generation: 1,
+				}),
+				SinkReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "1",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						StatusConfigParsed,
+						BootstrapServers(bootstrapServersArr),
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithOwner(SinkTopic(), sink.ControllerTopicOwner),
+						SinkAddressable(&env),
+						StatusProbeSucceeded,
+						WithSinkAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      sinkAddress,
+							Audience: &sinkAudience,
+						}),
+						WithSinkAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      sinkAddress,
+								Audience: &sinkAudience,
 							},
 						}),
 						WithSinkAddessable(),
