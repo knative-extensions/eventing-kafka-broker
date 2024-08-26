@@ -161,13 +161,18 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                     });
             rc.increment();
 
+            var enableEventTypeAutocreate = false;
+            if (resource.hasFeatureFlags()) {
+                enableEventTypeAutocreate = resource.getFeatureFlags().getEnableEventTypeAutocreate();
+            }
+
             final var ingressInfo = new IngressProducerImpl(
                     rc.getValue().getProducer(),
                     resource,
                     ingress.getPath(),
                     ingress.getHost(),
                     producerProps,
-                    ingress.getEnableAutoCreateEventTypes(),
+                    enableEventTypeAutocreate,
                     this.eventTypeListerFactory.getForNamespace(
                             resource.getReference().getNamespace()),
                     EventPolicy.fromContract(ingress.getEventPoliciesList()));

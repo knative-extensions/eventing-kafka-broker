@@ -227,9 +227,6 @@ message Ingress {
   // host header to match
   string host = 3;
 
-  // whether to autocreate event types
-  bool enableAutoCreateEventTypes = 4;
-
   // OIDC audience of this ingress
   string audience = 5;
 
@@ -303,6 +300,10 @@ message MultiSecretReference {
 // CloudEvent overrides.
 message CloudEventOverrides {
   map<string, string> extensions = 1;
+}
+
+message FeatureFlags {
+  bool enableEventTypeAutocreate = 1;
 }
 
 message Resource {
@@ -379,6 +380,9 @@ message Resource {
   // - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
   // - tagging metrics
   Reference reference = 11;
+
+  // Feature flags for the resource
+  FeatureFlags featureFlags = 12;
 }
 
 message Contract {

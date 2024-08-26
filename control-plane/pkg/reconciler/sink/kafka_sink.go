@@ -439,7 +439,9 @@ func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eve
 		Ingress: &contract.Ingress{
 			Path:                       receiver.PathFromObject(kafkaSink),
 			ContentMode:                coreconfig.ContentModeFromString(*kafkaSink.Spec.ContentMode),
-			EnableAutoCreateEventTypes: features.IsEnabled(feature.EvenTypeAutoCreate),
+		},
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate),
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(kafkaSink.Spec.BootstrapServers),
 		Reference: &contract.Reference{

@@ -695,9 +695,11 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Host:                       receiver.Host(channel.GetNamespace(), channel.GetName()),
-			EnableAutoCreateEventTypes: features.IsEnabled(feature.EvenTypeAutoCreate),
-			Path:                       receiver.Path(channel.GetNamespace(), channel.GetName()),
+			Host: receiver.Host(channel.GetNamespace(), channel.GetName()),
+			Path: receiver.Path(channel.GetNamespace(), channel.GetName()),
+		},
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate) && !ownedByBroker(channel),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
@@ -861,4 +863,14 @@ func mergeDeliverySpecs(d1, d2 *v1.DeliverySpec) *v1.DeliverySpec {
 	}
 
 	return d
+}
+
+func ownedByBroker(channel *messagingv1beta1.KafkaChannel) bool {
+	for _, ref := range channel.OwnerReferences {
+		if strings.EqualFold(ref.Kind, "broker") {
+			return true
+		}
+	}
+
+	return false
 }

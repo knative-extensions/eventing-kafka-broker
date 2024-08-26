@@ -29,10 +29,14 @@ import io.vertx.core.WorkerExecutor;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EventTypeCreatorImpl implements EventTypeCreator {
 
     private static final Integer DNS1123_SUBDOMAIN_MAX_LENGTH = 253;
+
+    private static final Logger logger = LoggerFactory.getLogger(EventTypeCreatorImpl.class);
 
     private final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
 
@@ -66,8 +70,10 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
             CloudEvent event, Lister<EventType> eventTypeLister, DataPlaneContract.Reference ownerReference) {
         return this.executor.executeBlocking(() -> {
             final var name = this.getName(event, ownerReference);
+            logger.debug("attempting to autocreate eventtype {} for {}", name, ownerReference);
             final var eventType = eventTypeLister.get(name);
             if (eventType != null) {
+                logger.debug("eventtype already exists");
                 return eventType;
             }
 

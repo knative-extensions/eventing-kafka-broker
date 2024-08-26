@@ -28,6 +28,8 @@ import static org.mockito.Mockito.mock;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -75,7 +77,9 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory<>());
+                new dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory<>(),
+                mock(EventTypeCreator.class),
+                mock(EventTypeListerFactory.class));
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
@@ -120,7 +124,9 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new MockReactiveProducerFactory<>());
+                new MockReactiveProducerFactory<>(),
+                mock(EventTypeCreator.class),
+                mock(EventTypeListerFactory.class));
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
@@ -169,7 +175,9 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new MockReactiveProducerFactory<>());
+                new MockReactiveProducerFactory<>(),
+                mock(EventTypeCreator.class),
+                mock(EventTypeListerFactory.class));
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")

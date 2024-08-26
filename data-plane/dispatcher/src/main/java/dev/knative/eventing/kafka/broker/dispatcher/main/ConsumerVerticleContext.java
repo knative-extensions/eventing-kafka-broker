@@ -20,6 +20,9 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -27,6 +30,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEv
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
@@ -60,6 +64,9 @@ public class ConsumerVerticleContext {
 
     private ReactiveConsumerFactory<Object, CloudEvent> consumerFactory;
     private ReactiveProducerFactory<String, CloudEvent> producerFactory;
+
+    private EventTypeListerFactory eventTypeListerFactory;
+    private EventTypeCreator eventTypeCreator;
 
     private Integer maxPollRecords;
     private static final int DEFAULT_MAX_POLL_RECORDS = 50;
@@ -163,6 +170,16 @@ public class ConsumerVerticleContext {
         return this;
     }
 
+    public ConsumerVerticleContext withEventTypeListerFactory(EventTypeListerFactory eventTypeListerFactory) {
+        this.eventTypeListerFactory = eventTypeListerFactory;
+        return this;
+    }
+
+    public ConsumerVerticleContext withEventTypeCreator(EventTypeCreator eventTypeCreator) {
+        this.eventTypeCreator = eventTypeCreator;
+        return this;
+    }
+
     public DataPlaneContract.Resource getResource() {
         return resource;
     }
@@ -228,6 +245,15 @@ public class ConsumerVerticleContext {
 
     public ReactiveProducerFactory<String, CloudEvent> getProducerFactory() {
         return this.producerFactory;
+    }
+
+    public EventTypeCreator getEventTypeCreator() {
+        return this.eventTypeCreator;
+    }
+
+    public Lister<EventType> getEventTypeLister() {
+        return this.eventTypeListerFactory.getForNamespace(
+                this.resource.getReference().getNamespace());
     }
 
     public Tags getTags() {

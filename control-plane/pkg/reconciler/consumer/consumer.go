@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/eventing/pkg/apis/feature"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -137,6 +139,9 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 		Auth:                nil, // Auth will be added by reconcileAuth
 		CloudEventOverrides: reconcileCEOverrides(c),
 		Reference:           userFacingResourceRef,
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+		},
 	}
 
 	if err := r.reconcileAuth(ctx, c, resource); err != nil {
@@ -289,9 +294,11 @@ func (r *Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) 
 
 	userFacingResource := cg.GetUserFacingResourceRef()
 	ref := &contract.Reference{
-		Uuid:      string(userFacingResource.UID),
-		Namespace: c.GetNamespace(),
-		Name:      userFacingResource.Name,
+		Uuid:         string(userFacingResource.UID),
+		Namespace:    c.GetNamespace(),
+		Name:         userFacingResource.Name,
+		Kind:         userFacingResource.Kind,
+		GroupVersion: userFacingResource.APIVersion,
 	}
 	return ref, nil
 }
