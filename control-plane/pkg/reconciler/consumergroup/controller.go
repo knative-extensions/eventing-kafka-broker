@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	v1 "k8s.io/client-go/informers/core/v1"
+
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -113,15 +115,15 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
 	}
 
+	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
+
 	schedulers := map[string]Scheduler{
-		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName),
-		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName),
-		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName),
+		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName, dispatcherPodInformer),
+		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName, dispatcherPodInformer),
+		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName, dispatcherPodInformer),
 	}
 
 	clientPool := clientpool.Get(ctx)
-
-	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
 
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
@@ -320,7 +322,7 @@ func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) f
 	}
 }
 
-func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string) Scheduler {
+func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string, dispatcherPodInformer v1.PodInformer) Scheduler {
 	lister := consumergroup.Get(ctx).Lister()
 	return createStatefulSetScheduler(
 		ctx,
@@ -342,6 +344,7 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string)
 			}
 			return vpods, nil
 		},
+		dispatcherPodInformer,
 	)
 }
 
@@ -365,7 +368,7 @@ func getSelectorLabel(ssName string) map[string]string {
 	return selectorLabel
 }
 
-func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) Scheduler {
+func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister, dispatcherPodInformer v1.PodInformer) Scheduler {
 	ss, _ := statefulsetscheduler.New(ctx, &statefulsetscheduler.Config{
 		StatefulSetNamespace: system.Namespace(),
 		StatefulSetName:      c.StatefulSetName,
@@ -378,6 +381,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		VPodLister:           lister,
 		NodeLister:           nodeinformer.Get(ctx).Lister(),
+		PodLister:            dispatcherPodInformer.Lister().Pods(system.Namespace()),
 	})
 
 	return Scheduler{
