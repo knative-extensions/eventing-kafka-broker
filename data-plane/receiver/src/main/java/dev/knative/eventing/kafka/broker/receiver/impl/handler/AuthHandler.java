@@ -49,8 +49,8 @@ public class AuthHandler {
             // get CloudEvent from request and pass to ingress handler
             VertxMessageFactory.createReader(requestContext.getRequest())
                     .map(MessageReader::toEvent)
-                    .onSuccess(event -> {
-                        next.handle(requestContext, event, ingressInfo);
+                    .onComplete(event -> {
+                        next.handle(requestContext, event.result(), ingressInfo);
                     });
             return;
         }
