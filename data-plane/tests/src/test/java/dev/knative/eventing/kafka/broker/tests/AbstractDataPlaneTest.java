@@ -44,7 +44,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticl
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -398,10 +397,7 @@ public abstract class AbstractDataPlaneTest {
                         producerConfigs(),
                         properties -> getReactiveProducerFactory().create(v, properties),
                         mock(EventTypeListerFactory.class)),
-                new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(),
-                        Metrics.getRegistry(),
-                        (((event, lister, reference) -> null))),
+                new IngressRequestHandlerImpl(Metrics.getRegistry(), (((event, lister, reference) -> null))),
                 SECRET_VOLUME_PATH,
                 mock(OIDCDiscoveryConfigListener.class));
 

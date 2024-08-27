@@ -42,15 +42,17 @@ public class EventPolicy {
         this.filter = filter;
     }
 
-    public boolean isAuthorized(CloudEvent cloudEvent, Map<String, List<String>> claims) {
-        if (filter.test(cloudEvent)) {
-            for (TokenMatcher matcher : tokenMatchers) {
-                if (matcher.match(claims)) {
-                    return true;
-                }
+    public boolean matchesClaims(Map<String, List<String>> claims) {
+        for (TokenMatcher matcher : tokenMatchers) {
+            if (matcher.match(claims)) {
+                return true;
             }
         }
 
         return false;
+    }
+
+    public boolean matchesCloudEvent(CloudEvent cloudEvent) {
+        return filter.test(cloudEvent);
     }
 }

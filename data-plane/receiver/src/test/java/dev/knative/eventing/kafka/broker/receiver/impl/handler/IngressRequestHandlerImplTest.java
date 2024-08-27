@@ -29,7 +29,6 @@ import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
-import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
@@ -44,7 +43,6 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import java.util.List;
 import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
@@ -68,10 +66,7 @@ public class IngressRequestHandlerImplTest {
     }
 
     private static void shouldSendRecord(boolean failedToSend, int statusCode) {
-        final var record = new ProducerRecord<>("topic", 10, "key", CoreObjects.event());
-
-        final RequestToRecordMapper mapper = (request, topic) -> Future.succeededFuture(record);
-
+        final var cloudEvent = CoreObjects.event();
         final ReactiveKafkaProducer<String, CloudEvent> producer = mockProducer();
 
         when(producer.send(any())).thenAnswer(invocationOnMock -> {
@@ -85,10 +80,9 @@ public class IngressRequestHandlerImplTest {
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, statusCode);
 
-        final var handler =
-                new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, lister, reference) -> null));
+        final var handler = new IngressRequestHandlerImpl(Metrics.getRegistry(), ((event, lister, reference) -> null));
 
-        handler.handle(new RequestContext(request), new IngressProducer() {
+        handler.handle(new RequestContext(request), cloudEvent, new IngressProducer() {
             @Override
             public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
                 return producer;
@@ -124,18 +118,15 @@ public class IngressRequestHandlerImplTest {
     }
 
     @Test
-    public void shouldReturnBadRequestIfNoRecordCanBeCreated() {
+    public void shouldReturnBadRequestIfNoCloudEvent() {
         final var producer = mockProducer();
-
-        final RequestToRecordMapper mapper = (request, topic) -> Future.failedFuture("");
 
         final HttpServerRequest request = mockHttpServerRequest("/hello");
         final var response = mockResponse(request, IngressRequestHandlerImpl.MAPPER_FAILED);
 
-        final var handler =
-                new IngressRequestHandlerImpl(mapper, Metrics.getRegistry(), ((event, lister, reference) -> null));
+        final var handler = new IngressRequestHandlerImpl(Metrics.getRegistry(), ((event, lister, reference) -> null));
 
-        handler.handle(new RequestContext(request), new IngressProducer() {
+        handler.handle(new RequestContext(request), null, new IngressProducer() {
             @Override
             public ReactiveKafkaProducer<String, CloudEvent> getKafkaProducer() {
                 return producer;

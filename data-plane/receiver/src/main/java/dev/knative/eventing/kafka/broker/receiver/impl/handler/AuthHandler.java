@@ -18,12 +18,12 @@ package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.*;
+import io.cloudevents.core.message.MessageReader;
+import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,40 +41,54 @@ public class AuthHandler {
     }
 
     public void handle(
-            final HttpServerRequest request, final IngressProducer ingressInfo, final Handler<HttpServerRequest> next) {
+            final RequestContext requestContext, final IngressProducer ingressInfo, final IngressRequestHandler next) {
+
         if (ingressInfo.getAudience().isEmpty()) {
             logger.debug("No audience for ingress set. Continue without authentication check...");
-            next.handle(request);
+
+            // get CloudEvent from request and pass to ingress handler
+            VertxMessageFactory.createReader(requestContext.getRequest())
+                    .map(MessageReader::toEvent)
+                    .onSuccess(event -> {
+                        next.handle(requestContext, event, ingressInfo);
+                    });
             return;
         }
 
         tokenVerifier
-                .verify(request, ingressInfo)
+                .verify(requestContext.getRequest(), ingressInfo)
                 .onFailure(e -> {
                     if (e instanceof AuthenticationException) {
                         logger.debug(
                                 "Failed to verify authentication of request: {}", keyValue("error", e.getMessage()));
-                        request.response()
+                        requestContext
+                                .getRequest()
+                                .response()
                                 .setStatusCode(HttpResponseStatus.UNAUTHORIZED.code())
                                 .end();
                     } else if (e instanceof AuthorizationException) {
                         logger.debug(
                                 "Failed to verify authorization of request: {}", keyValue("error", e.getMessage()));
-                        request.response()
+                        requestContext
+                                .getRequest()
+                                .response()
                                 .setStatusCode(HttpResponseStatus.FORBIDDEN.code())
                                 .end();
                     } else {
                         logger.debug(
                                 "Got unexpected exception on verifying auth of request: {}",
                                 keyValue("error", e.getMessage()));
-                        request.response()
+                        requestContext
+                                .getRequest()
+                                .response()
                                 .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                                 .end();
                     }
                 })
-                .onSuccess(v -> {
+                .onSuccess(cloudEvent -> {
                     logger.debug("Request was authenticated and authorized. Continuing...");
-                    next.handle(request);
+
+                    next.handle(requestContext, cloudEvent, ingressInfo);
                 });
     }
 }

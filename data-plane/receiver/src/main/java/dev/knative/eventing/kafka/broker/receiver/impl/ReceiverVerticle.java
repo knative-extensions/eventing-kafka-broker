@@ -27,9 +27,7 @@ import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfig;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifierImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
@@ -237,11 +235,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             return;
         }
 
-        this.authHandler.handle(request, producer, req -> {
-            // Invoke the ingress request handler
-            final var requestContext = new RequestContext(req);
-            this.ingressRequestHandler.handle(requestContext, producer);
-        });
+        RequestContext requestContext = new RequestContext(request);
+        this.authHandler.handle(requestContext, producer, this.ingressRequestHandler);
     }
 
     public void updateServerConfig() {

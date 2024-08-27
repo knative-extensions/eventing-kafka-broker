@@ -17,10 +17,13 @@ package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
 import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.message.MessageReader;
+import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.jose4j.jwt.JwtClaims;
@@ -101,24 +104,42 @@ public class TokenVerifierImpl implements TokenVerifier {
         return verifyAuthN(token, ingressInfo).onSuccess(v -> request.resume());
     }
 
-    private Future<Void> verifyAuthZ(JwtClaims claims, IngressProducer ingressInfo) {
+    private Future<CloudEvent> verifyAuthZ(HttpServerRequest request, JwtClaims claims, IngressProducer ingressInfo) {
         // claims from Map<String, List<Object>> to Map<String, List<String>>
         var convertedClaims = claims.flattenClaims().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         v -> v.getValue().stream().map(Object::toString).toList()));
 
+        // first we check, if we have EventPolicies, which matches on the claims
+        final var claimMatchingPolicies = new ArrayList<EventPolicy>(0);
         for (EventPolicy ep : ingressInfo.getEventPolicies()) {
-            if (ep.isAuthorized(null, convertedClaims)) {
-                // as soon as one policy allows it, we're good
-                return Future.succeededFuture();
+            if (ep.matchesClaims(convertedClaims)) {
+                claimMatchingPolicies.add(ep);
             }
         }
 
-        return Future.failedFuture(new AuthorizationException("Not authorized by any EventPolicy"));
+        if (claimMatchingPolicies.isEmpty()) {
+            return Future.failedFuture(new AuthorizationException("Not authorized by any EventPolicy"));
+        }
+
+        // in case we have Policies which matches on the claims, we check on the filters too,
+        // so we need to read the cloudevent from the request only, when the "basic" authz check succeeded.
+        return VertxMessageFactory.createReader(request)
+                .map(MessageReader::toEvent)
+                .compose(cloudEvent -> {
+                    for (EventPolicy ep : claimMatchingPolicies) {
+                        if (ep.matchesCloudEvent(cloudEvent)) {
+                            // as soon as one policy matches, we're good
+                            return Future.succeededFuture(cloudEvent);
+                        }
+                    }
+
+                    return Future.failedFuture(new AuthorizationException("Not authorized by any EventPolicy"));
+                });
     }
 
-    public Future<Void> verify(final HttpServerRequest request, IngressProducer ingressInfo) {
-        return verifyAuthN(request, ingressInfo).compose(jwtClaims -> verifyAuthZ(jwtClaims, ingressInfo));
+    public Future<CloudEvent> verify(final HttpServerRequest request, IngressProducer ingressInfo) {
+        return verifyAuthN(request, ingressInfo).compose(jwtClaims -> verifyAuthZ(request, jwtClaims, ingressInfo));
     }
 }

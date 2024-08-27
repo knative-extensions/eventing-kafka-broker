@@ -16,9 +16,10 @@
 package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
+import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 
 public interface TokenVerifier {
-    Future<Void> verify(HttpServerRequest request, IngressProducer ingressInfo);
+    Future<CloudEvent> verify(HttpServerRequest request, IngressProducer ingressInfo);
 }
