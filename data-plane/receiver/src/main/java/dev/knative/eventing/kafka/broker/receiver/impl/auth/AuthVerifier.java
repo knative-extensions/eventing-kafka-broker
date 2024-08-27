@@ -20,6 +20,6 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 
-public interface TokenVerifier {
+public interface AuthVerifier {
     Future<CloudEvent> verify(HttpServerRequest request, IngressProducer ingressInfo);
 }

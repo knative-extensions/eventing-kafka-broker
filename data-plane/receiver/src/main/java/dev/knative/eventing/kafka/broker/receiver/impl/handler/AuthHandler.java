@@ -34,10 +34,10 @@ public class AuthHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthHandler.class);
 
-    private final TokenVerifier tokenVerifier;
+    private final AuthVerifier authVerifier;
 
-    public AuthHandler(TokenVerifier tokenVerifier) {
-        this.tokenVerifier = tokenVerifier;
+    public AuthHandler(AuthVerifier authVerifier) {
+        this.authVerifier = authVerifier;
     }
 
     public void handle(
@@ -55,7 +55,7 @@ public class AuthHandler {
             return;
         }
 
-        tokenVerifier
+        authVerifier
                 .verify(requestContext.getRequest(), ingressInfo)
                 .onFailure(e -> {
                     if (e instanceof AuthenticationException) {

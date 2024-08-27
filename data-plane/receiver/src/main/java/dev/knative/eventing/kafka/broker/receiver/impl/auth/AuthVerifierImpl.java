@@ -31,9 +31,9 @@ import org.jose4j.jwt.consumer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TokenVerifierImpl implements TokenVerifier {
+public class AuthVerifierImpl implements AuthVerifier {
 
-    private static final Logger logger = LoggerFactory.getLogger(TokenVerifierImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthVerifierImpl.class);
 
     private Vertx vertx;
     private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
@@ -41,7 +41,7 @@ public class TokenVerifierImpl implements TokenVerifier {
     private OIDCDiscoveryConfig oidcDiscoveryConfig;
     private int callbackId;
 
-    public TokenVerifierImpl(OIDCDiscoveryConfigListener oidcDiscoveryConfigListener) {
+    public AuthVerifierImpl(OIDCDiscoveryConfigListener oidcDiscoveryConfigListener) {
         this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
     }
 

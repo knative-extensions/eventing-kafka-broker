@@ -26,10 +26,10 @@ import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthVerifier;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthenticationException;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthorizationException;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -45,14 +45,14 @@ public class AuthHandlerTest {
         final HttpServerRequest request = mock(HttpServerRequest.class);
         final var response = mockResponse(request, HttpResponseStatus.UNAUTHORIZED.code());
 
-        TokenVerifier tokenVerifier = new TokenVerifier() {
+        AuthVerifier authVerifier = new AuthVerifier() {
             @Override
             public Future<CloudEvent> verify(HttpServerRequest request, IngressProducer ingressInfo) {
                 return Future.failedFuture(new AuthenticationException("JWT validation failed"));
             }
         };
 
-        final AuthHandler authHandler = new AuthHandler(tokenVerifier);
+        final AuthHandler authHandler = new AuthHandler(authVerifier);
 
         authHandler.handle(
                 new RequestContext(request),
@@ -98,14 +98,14 @@ public class AuthHandlerTest {
         final HttpServerRequest request = mock(HttpServerRequest.class);
         final var response = mockResponse(request, HttpResponseStatus.FORBIDDEN.code());
 
-        TokenVerifier tokenVerifier = new TokenVerifier() {
+        AuthVerifier authVerifier = new AuthVerifier() {
             @Override
             public Future<CloudEvent> verify(HttpServerRequest request, IngressProducer ingressInfo) {
                 return Future.failedFuture(new AuthorizationException("AuthZ failed"));
             }
         };
 
-        final AuthHandler authHandler = new AuthHandler(tokenVerifier);
+        final AuthHandler authHandler = new AuthHandler(authVerifier);
 
         authHandler.handle(
                 new RequestContext(request),
@@ -152,7 +152,7 @@ public class AuthHandlerTest {
         final var next = mock(IngressRequestHandler.class);
         final var cloudEvent = CoreObjects.event();
 
-        TokenVerifier tokenVerifier = new TokenVerifier() {
+        AuthVerifier authVerifier = new AuthVerifier() {
             @Override
             public Future<CloudEvent> verify(HttpServerRequest request, IngressProducer ingressInfo) {
                 return Future.succeededFuture(cloudEvent);
@@ -191,7 +191,7 @@ public class AuthHandlerTest {
             }
         };
 
-        final AuthHandler authHandler = new AuthHandler(tokenVerifier);
+        final AuthHandler authHandler = new AuthHandler(authVerifier);
 
         authHandler.handle(requestContext, ingressProducer, next);
 

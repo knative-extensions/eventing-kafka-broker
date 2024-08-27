@@ -28,7 +28,7 @@ import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifierImpl;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthVerifierImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
@@ -95,7 +95,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private IngressProducerReconcilableStore ingressProducerStore;
     private FileWatcher secretWatcher;
 
-    private final TokenVerifierImpl tokenVerifier;
+    private final AuthVerifierImpl authVerifier;
 
     public ReceiverVerticle(
             final ReceiverEnv env,
@@ -122,8 +122,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
 
-        this.tokenVerifier = new TokenVerifierImpl(oidcDiscoveryConfigListener);
-        this.authHandler = new AuthHandler(this.tokenVerifier);
+        this.authVerifier = new AuthVerifierImpl(oidcDiscoveryConfigListener);
+        this.authHandler = new AuthHandler(this.authVerifier);
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -153,7 +153,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             }
         }
 
-        tokenVerifier.start(vertx);
+        authVerifier.start(vertx);
 
         final var handler = new ProbeHandler(
                 env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
@@ -201,7 +201,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
 
-        this.tokenVerifier.stop();
+        this.authVerifier.stop();
 
         // close the watcher
         if (this.secretWatcher != null) {
