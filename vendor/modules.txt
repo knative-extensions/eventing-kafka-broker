@@ -1302,6 +1302,7 @@ knative.dev/eventing/test/lib/recordevents/sender
 knative.dev/eventing/test/lib/resources
 knative.dev/eventing/test/lib/sender
 knative.dev/eventing/test/rekt/features
+knative.dev/eventing/test/rekt/features/authz
 knative.dev/eventing/test/rekt/features/broker
 knative.dev/eventing/test/rekt/features/channel
 knative.dev/eventing/test/rekt/features/featureflags
@@ -1317,6 +1318,7 @@ knative.dev/eventing/test/rekt/resources/channel
 knative.dev/eventing/test/rekt/resources/channel_impl
 knative.dev/eventing/test/rekt/resources/containersource
 knative.dev/eventing/test/rekt/resources/delivery
+knative.dev/eventing/test/rekt/resources/eventpolicy
 knative.dev/eventing/test/rekt/resources/eventtype
 knative.dev/eventing/test/rekt/resources/pingsource
 knative.dev/eventing/test/rekt/resources/subscription
