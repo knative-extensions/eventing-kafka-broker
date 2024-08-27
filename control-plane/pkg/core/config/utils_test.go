@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing/pkg/apis/feature"
@@ -615,6 +617,80 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 				}, {
 					TokenMatchers: []*contract.TokenMatcher{
 						prefixTokenMatcher("from-2-"),
+					},
+				},
+			},
+		}, {
+			name: "Multiple policies with filters",
+			applyingPolicies: []string{
+				"policy-1",
+				"policy-2",
+			},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Spec: eventingv1alpha1.EventPolicySpec{
+						Filters: []eventingv1.SubscriptionsAPIFilter{
+							{
+								CESQL: "true",
+							},
+						},
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-1",
+						},
+					},
+				}, {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-2",
+						Namespace: "my-ns",
+					},
+					Spec: eventingv1alpha1.EventPolicySpec{
+						Filters: []eventingv1.SubscriptionsAPIFilter{
+							{
+								CESQL: "false",
+							},
+						},
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-2-*",
+						},
+					},
+				},
+			},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationDenyAll,
+			expected: []*contract.EventPolicy{
+				{
+					TokenMatchers: []*contract.TokenMatcher{
+						exactTokenMatcher("from-1"),
+					},
+					Filters: []*contract.DialectedFilter{
+						{
+							Filter: &contract.DialectedFilter_Cesql{
+								Cesql: &contract.CESQL{
+									Expression: "true",
+								},
+							},
+						},
+					},
+				}, {
+					TokenMatchers: []*contract.TokenMatcher{
+						prefixTokenMatcher("from-2-"),
+					},
+					Filters: []*contract.DialectedFilter{
+						{
+							Filter: &contract.DialectedFilter_Cesql{
+								Cesql: &contract.CESQL{
+									Expression: "false",
+								},
+							},
+						},
 					},
 				},
 			},
