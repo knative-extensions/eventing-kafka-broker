@@ -437,8 +437,8 @@ func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eve
 		Uid:    string(kafkaSink.UID),
 		Topics: []string{kafkaSink.Spec.Topic},
 		Ingress: &contract.Ingress{
-			Path:                       receiver.PathFromObject(kafkaSink),
-			ContentMode:                coreconfig.ContentModeFromString(*kafkaSink.Spec.ContentMode),
+			Path:        receiver.PathFromObject(kafkaSink),
+			ContentMode: coreconfig.ContentModeFromString(*kafkaSink.Spec.ContentMode),
 		},
 		FeatureFlags: &contract.FeatureFlags{
 			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate),
