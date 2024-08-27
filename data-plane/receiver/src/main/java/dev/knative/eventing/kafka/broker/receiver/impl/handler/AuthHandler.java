@@ -18,11 +18,11 @@ package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthenticationException;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthorizationException;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.*;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +33,10 @@ import org.slf4j.LoggerFactory;
 public class AuthHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthHandler.class);
+
     private final TokenVerifier tokenVerifier;
 
-    public AuthHandler(final TokenVerifier tokenVerifier) {
+    public AuthHandler(TokenVerifier tokenVerifier) {
         this.tokenVerifier = tokenVerifier;
     }
 

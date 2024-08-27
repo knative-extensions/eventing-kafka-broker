@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 import dev.knative.eventing.kafka.broker.core.features.FeaturesConfig;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import java.util.Map;
@@ -31,13 +32,28 @@ public class TokenVerifierImpl implements TokenVerifier {
 
     private static final Logger logger = LoggerFactory.getLogger(TokenVerifierImpl.class);
 
-    private final Vertx vertx;
+    private Vertx vertx;
+    private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
 
-    private final OIDCDiscoveryConfig oidcDiscoveryConfig;
+    private OIDCDiscoveryConfig oidcDiscoveryConfig;
+    private int callbackId;
 
-    public TokenVerifierImpl(Vertx vertx, OIDCDiscoveryConfig oidcDiscoveryConfig) {
+    public TokenVerifierImpl(OIDCDiscoveryConfigListener oidcDiscoveryConfigListener) {
+        this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
+    }
+
+    public void start(Vertx vertx) {
         this.vertx = vertx;
-        this.oidcDiscoveryConfig = oidcDiscoveryConfig;
+
+        oidcDiscoveryConfig = oidcDiscoveryConfigListener.getOidcDiscoveryConfig();
+
+        callbackId = oidcDiscoveryConfigListener.registerCallback(config -> {
+            this.oidcDiscoveryConfig = config;
+        });
+    }
+
+    public void stop() {
+        oidcDiscoveryConfigListener.deregisterCallback(callbackId);
     }
 
     private Future<JwtClaims> verifyAuthN(String token, IngressProducer ingressInfo) {
@@ -93,7 +109,7 @@ public class TokenVerifierImpl implements TokenVerifier {
                         v -> v.getValue().stream().map(Object::toString).toList()));
 
         for (EventPolicy ep : ingressInfo.getEventPolicies()) {
-            if (ep.isAuthorized(convertedClaims)) {
+            if (ep.isAuthorized(null, convertedClaims)) {
                 // as soon as one policy allows it, we're good
                 return Future.succeededFuture();
             }

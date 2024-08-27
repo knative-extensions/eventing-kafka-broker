@@ -88,7 +88,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
-    private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
     private int oidcDiscoveryCallbackId;
 
     private AuthHandler authHandler;
@@ -97,6 +96,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
     private FileWatcher secretWatcher;
+
+    private final TokenVerifierImpl tokenVerifier;
 
     public ReceiverVerticle(
             final ReceiverEnv env,
@@ -122,7 +123,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
-        this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
+
+        this.tokenVerifier = new TokenVerifierImpl(oidcDiscoveryConfigListener);
+        this.authHandler = new AuthHandler(this.tokenVerifier);
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -135,14 +138,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
-
-        // the oidc discovery config is set initially when the listener is started, so we initialize the
-        // auth handler here, ensuring it is never null
-        this.buildAuthHandler(oidcDiscoveryConfigListener.getOidcDiscoveryConfig());
-
-        // the oidc config listener runs the callback whenever the config file is updated
-        // so, we can be sure that the auth handler always has the up to date config
-        this.oidcDiscoveryCallbackId = this.oidcDiscoveryConfigListener.registerCallback(this::buildAuthHandler);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
@@ -159,6 +154,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
             }
         }
+
+        tokenVerifier.start(vertx);
 
         final var handler = new ProbeHandler(
                 env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
@@ -187,11 +184,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         setupSecretWatcher();
     }
 
-    private void buildAuthHandler(OIDCDiscoveryConfig config) {
-        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, config);
-        this.authHandler = new AuthHandler(tokenVerifier);
-    }
-
     // Set up the secret watcher
     private void setupSecretWatcher() {
         try {
@@ -211,7 +203,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
 
-        this.oidcDiscoveryConfigListener.deregisterCallback(this.oidcDiscoveryCallbackId);
+        this.tokenVerifier.stop();
 
         // close the watcher
         if (this.secretWatcher != null) {
