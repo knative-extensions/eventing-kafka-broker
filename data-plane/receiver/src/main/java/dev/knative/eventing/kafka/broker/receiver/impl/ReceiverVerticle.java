@@ -27,11 +27,9 @@ import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfig;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.AuthVerifierImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifier;
-import dev.knative.eventing.kafka.broker.receiver.impl.auth.TokenVerifierImpl;
-import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthenticationHandler;
+import dev.knative.eventing.kafka.broker.receiver.impl.handler.AuthHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -88,15 +86,16 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
-    private final OIDCDiscoveryConfigListener oidcDiscoveryConfigListener;
     private int oidcDiscoveryCallbackId;
 
-    private AuthenticationHandler authenticationHandler;
+    private AuthHandler authHandler;
     private HttpServer httpServer;
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
     private IngressProducerReconcilableStore ingressProducerStore;
     private FileWatcher secretWatcher;
+
+    private final AuthVerifierImpl authVerifier;
 
     public ReceiverVerticle(
             final ReceiverEnv env,
@@ -122,7 +121,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolume = new File(secretVolumePath);
         this.tlsKeyFile = new File(secretVolumePath + "/tls.key");
         this.tlsCrtFile = new File(secretVolumePath + "/tls.crt");
-        this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
+
+        this.authVerifier = new AuthVerifierImpl(oidcDiscoveryConfigListener);
+        this.authHandler = new AuthHandler(this.authVerifier);
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -135,14 +136,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
-
-        // the oidc discovery config is set initially when the listener is started, so we initialize the
-        // auth handler here, ensuring it is never null
-        this.buildAuthHandler(oidcDiscoveryConfigListener.getOidcDiscoveryConfig());
-
-        // the oidc config listener runs the callback whenever the config file is updated
-        // so, we can be sure that the auth handler always has the up to date config
-        this.oidcDiscoveryCallbackId = this.oidcDiscoveryConfigListener.registerCallback(this::buildAuthHandler);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
@@ -159,6 +152,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
             }
         }
+
+        authVerifier.start(vertx);
 
         final var handler = new ProbeHandler(
                 env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
@@ -187,11 +182,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         setupSecretWatcher();
     }
 
-    private void buildAuthHandler(OIDCDiscoveryConfig config) {
-        TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, config);
-        this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
-    }
-
     // Set up the secret watcher
     private void setupSecretWatcher() {
         try {
@@ -211,7 +201,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                 .<Void>mapEmpty()
                 .onComplete(stopPromise);
 
-        this.oidcDiscoveryConfigListener.deregisterCallback(this.oidcDiscoveryCallbackId);
+        this.authVerifier.stop();
 
         // close the watcher
         if (this.secretWatcher != null) {
@@ -245,11 +235,8 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             return;
         }
 
-        this.authenticationHandler.handle(request, producer, req -> {
-            // Invoke the ingress request handler
-            final var requestContext = new RequestContext(req);
-            this.ingressRequestHandler.handle(requestContext, producer);
-        });
+        RequestContext requestContext = new RequestContext(request);
+        this.authHandler.handle(requestContext, producer, this.ingressRequestHandler);
     }
 
     public void updateServerConfig() {

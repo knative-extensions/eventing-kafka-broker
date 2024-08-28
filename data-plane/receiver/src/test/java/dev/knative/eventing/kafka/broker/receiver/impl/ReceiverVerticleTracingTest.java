@@ -135,10 +135,7 @@ public abstract class ReceiverVerticleTracingTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-                new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(),
-                        Metrics.getRegistry(),
-                        ((event, lister, reference) -> null)),
+                new IngressRequestHandlerImpl(Metrics.getRegistry(), ((event, lister, reference) -> null)),
                 SECRET_VOLUME_PATH,
                 mock(OIDCDiscoveryConfigListener.class));
 

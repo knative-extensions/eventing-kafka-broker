@@ -36,11 +36,6 @@
     </dependency>
 
     <dependency>
-      <groupId>io.cloudevents</groupId>
-      <artifactId>cloudevents-sql</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.github.vladimir-bukhtoyarov</groupId>
       <artifactId>bucket4j-core</artifactId>
     </dependency>

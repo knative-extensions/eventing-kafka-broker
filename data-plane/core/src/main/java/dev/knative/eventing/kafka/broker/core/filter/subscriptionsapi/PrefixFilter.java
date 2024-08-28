@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
-import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
-import io.cloudevents.CloudEvent;
+import dev.knative.eventing.kafka.broker.core.filter.AttributesFilter;
+import java.util.Map;
 
-/**
- * This class handles incoming ingress requests.
- */
-public interface IngressRequestHandler extends IngressReconcilerListener {
+public class PrefixFilter extends AttributesFilter {
 
-    void handle(RequestContext request, CloudEvent cloudEvent, IngressProducer producer);
+    public PrefixFilter(Map<String, String> attributes) {
+        super(attributes);
+    }
+
+    @Override
+    public boolean match(String given, String wanted) {
+        return given.startsWith(wanted);
+    }
 }

@@ -21,13 +21,14 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.core.filter.Filter;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.ExactFilter;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
 import dev.knative.eventing.kafka.broker.core.tracing.kafka.ConsumerTracer;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
-import dev.knative.eventing.kafka.broker.dispatcher.Filter;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
@@ -40,13 +41,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.PartitionRevokedHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AllFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.AnyFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.CeSqlFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.ExactFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.NotFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.PrefixFilter;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.SuffixFilter;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
@@ -62,7 +56,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.common.TopicPartition;
@@ -184,34 +177,12 @@ public class ConsumerVerticleBuilder {
     private Filter getFilter() {
         // Dialected filters should override the attributes filter
         if (consumerVerticleContext.getEgress().getDialectedFilterCount() > 0) {
-            return getFilter(consumerVerticleContext.getEgress().getDialectedFilterList());
+            return Filter.fromContract(consumerVerticleContext.getEgress().getDialectedFilterList());
         } else if (consumerVerticleContext.getEgress().hasFilter()) {
             return new ExactFilter(
                     consumerVerticleContext.getEgress().getFilter().getAttributesMap());
         }
         return Filter.noop();
-    }
-
-    private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
-        return new AllFilter(
-                filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toList()));
-    }
-
-    private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
-        return switch (filter.getFilterCase()) {
-            case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
-            case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
-            case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
-            case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
-            case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
-                    .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toList()));
-            case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
-                    .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toList()));
-            case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
-            default -> Filter.noop();
-        };
     }
 
     private WebClientOptions createWebClientOptionsFromCACerts(final String caCerts) {

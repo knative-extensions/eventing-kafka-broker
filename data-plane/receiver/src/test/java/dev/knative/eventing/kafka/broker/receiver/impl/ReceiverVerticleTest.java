@@ -151,8 +151,7 @@ public class ReceiverVerticleTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-                new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(), registry, ((event, lister, reference) -> null)),
+                new IngressRequestHandlerImpl(registry, ((event, lister, reference) -> null)),
                 SECRET_VOLUME_PATH,
                 mock(OIDCDiscoveryConfigListener.class));
         vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));

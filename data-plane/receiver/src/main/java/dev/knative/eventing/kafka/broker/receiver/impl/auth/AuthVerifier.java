@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.receiver;
+package dev.knative.eventing.kafka.broker.receiver.impl.auth;
 
-import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
+import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import io.cloudevents.CloudEvent;
+import io.vertx.core.Future;
+import io.vertx.core.http.HttpServerRequest;
 
-/**
- * This class handles incoming ingress requests.
- */
-public interface IngressRequestHandler extends IngressReconcilerListener {
-
-    void handle(RequestContext request, CloudEvent cloudEvent, IngressProducer producer);
+public interface AuthVerifier {
+    Future<CloudEvent> verify(HttpServerRequest request, IngressProducer ingressInfo);
 }

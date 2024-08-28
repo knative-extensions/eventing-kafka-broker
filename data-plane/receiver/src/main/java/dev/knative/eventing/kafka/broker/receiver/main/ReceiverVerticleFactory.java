@@ -23,7 +23,6 @@ import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import io.cloudevents.CloudEvent;
@@ -69,10 +68,8 @@ class ReceiverVerticleFactory implements Supplier<Verticle> {
         this.producerConfigs = producerConfigs;
         this.httpServerOptions = httpServerOptions;
         this.httpsServerOptions = httpsServerOptions;
-        this.ingressRequestHandler = new IngressRequestHandlerImpl(
-                StrictRequestToRecordMapper.getInstance(),
-                metricsRegistry,
-                new EventTypeCreatorImpl(eventTypeClient, vertx));
+        this.ingressRequestHandler =
+                new IngressRequestHandlerImpl(metricsRegistry, new EventTypeCreatorImpl(eventTypeClient, vertx));
         this.kafkaProducerFactory = kafkaProducerFactory;
         this.oidcDiscoveryConfigListener = oidcDiscoveryConfigListener;
         this.eventTypeListerFactory = eventTypeListerFactory;

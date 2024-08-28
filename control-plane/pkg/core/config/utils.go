@@ -90,6 +90,10 @@ func EventPoliciesFromAppliedEventPoliciesStatus(status duck.AppliedEventPolicie
 			}
 		}
 
+		for _, filter := range policy.Spec.Filters {
+			contractPolicy.Filters = append(contractPolicy.Filters, contract.FromSubscriptionFilter(filter))
+		}
+
 		eventPolicies = append(eventPolicies, contractPolicy)
 	}
 
