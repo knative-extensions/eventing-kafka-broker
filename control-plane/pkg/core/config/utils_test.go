@@ -802,6 +802,36 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 			namespace:                "my-ns",
 			defaultAuthorizationMode: feature.AuthorizationDenyAll,
 			expected:                 []*contract.EventPolicy{},
+		}, {
+			name:         "No policy when OIDC is disabled",
+			oidcDisabled: true,
+			applyingPolicies: []string{
+				"policy-1",
+			},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-1",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionFalse, // is false, as OIDC is disabled
+								},
+							},
+						},
+					},
+				},
+			},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationAllowSameNamespace,
+			expected:                 []*contract.EventPolicy{},
 		},
 	}
 	for _, tt := range tests {

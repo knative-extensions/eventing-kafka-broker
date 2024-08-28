@@ -97,7 +97,7 @@ func ContractEventPoliciesEventPolicies(applyingEventPolicies []*eventingv1alpha
 		eventPolicies = append(eventPolicies, contractPolicy)
 	}
 
-	if len(eventPolicies) == 0 {
+	if len(eventPolicies) == 0 && features.IsOIDCAuthentication() {
 		if features.IsAuthorizationDefaultModeAllowAll() {
 			// add event policy to match all subs
 			eventPolicies = append(eventPolicies, &contract.EventPolicy{
