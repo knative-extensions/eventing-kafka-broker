@@ -201,10 +201,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	}
 
 	// Get sink configuration.
-	sinkConfig, err := r.getSinkContractResource(ctx, ks, secret, audience, applyingEventPolicies)
-	if err != nil {
-		return statusConditionManager.FailedToResolveConfig(err)
-	}
+	sinkConfig := r.getSinkContractResource(ctx, ks, secret, audience, applyingEventPolicies)
 	statusConditionManager.ConfigResolved()
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)
@@ -431,7 +428,7 @@ func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	return nil
 }
 
-func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, secret *corev1.Secret, audience *string, applyingEventPolicies []*v1alpha1.EventPolicy) (*contract.Resource, error) {
+func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, secret *corev1.Secret, audience *string, applyingEventPolicies []*v1alpha1.EventPolicy) *contract.Resource {
 	features := feature.FromContext(ctx)
 	sinkConfig := &contract.Resource{
 		Uid:    string(kafkaSink.UID),
@@ -468,5 +465,5 @@ func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eve
 		sinkConfig.Ingress.Audience = *audience
 	}
 
-	return sinkConfig, nil
+	return sinkConfig
 }
