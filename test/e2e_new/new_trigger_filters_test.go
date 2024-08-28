@@ -29,10 +29,10 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	newfilters "knative.dev/eventing/test/rekt/features/new_trigger_filters"
 	"knative.dev/eventing/test/rekt/resources/broker"
+
+	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 )
 
 func TestNewTriggerFilters(t *testing.T) {
@@ -55,7 +55,7 @@ func InstallKafkaBrokerStepFn(brokerName string) feature.StepFn {
 		install(ctx, t)
 		broker.Install(
 			brokerName,
-			broker.WithBrokerClass(kafka.BrokerClass),
+			broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 			broker.WithConfig(cmName),
 		)(ctx, t)
 	}
