@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 
 	"k8s.io/utils/ptr"
 
@@ -191,13 +191,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		audience = nil
 	}
 
-	err = auth.UpdateStatusWithEventPolicies(features, &broker.Status.AppliedEventPoliciesStatus, &broker.Status, r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
+	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("Broker"), broker.ObjectMeta)
 	if err != nil {
-		return fmt.Errorf("could not update broker status with EventPolicies: %v", err)
+		return fmt.Errorf("could not get applying eventpolicies for broker: %v", err)
 	}
 
 	// Get resource configuration.
-	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig, audience, broker.Status.AppliedEventPoliciesStatus)
+	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig, audience, applyingEventPolicies)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -251,6 +251,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
 	} else {
 		logger.Debug("Updated dispatcher pod annotation")
+	}
+
+	err = auth.UpdateStatusWithProvidedEventPolicies(features, &broker.Status.AppliedEventPoliciesStatus, &broker.Status, applyingEventPolicies)
+	if err != nil {
+		return fmt.Errorf("could not update Broker status with EventPolicies: %v", err)
 	}
 
 	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
@@ -623,14 +628,15 @@ func rebuildCMFromStatusAnnotations(br *eventing.Broker) *corev1.ConfigMap {
 	return cm
 }
 
-func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig, audience *string, appliedEventPoliciesStatus eventingduck.AppliedEventPoliciesStatus) (*contract.Resource, error) {
+func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig, audience *string, applyingEventPolicies []*eventingv1alpha1.EventPolicy) (*contract.Resource, error) {
 	features := feature.FromContext(ctx)
 
 	resource := &contract.Resource{
 		Uid:    string(broker.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Path: receiver.PathFromObject(broker),
+			Path:          receiver.PathFromObject(broker),
+			EventPolicies: coreconfig.ContractEventPoliciesEventPolicies(applyingEventPolicies, broker.Namespace, features),
 		},
 		FeatureFlags: &contract.FeatureFlags{
 			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate),
@@ -665,12 +671,6 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		return nil, err
 	}
 	resource.EgressConfig = egressConfig
-
-	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(appliedEventPoliciesStatus, r.EventPolicyLister, broker.Namespace, features)
-	if err != nil {
-		return nil, fmt.Errorf("could not get eventpolicies from broker status: %w", err)
-	}
-	resource.Ingress.EventPolicies = eventPolicies
 
 	return resource, nil
 }
