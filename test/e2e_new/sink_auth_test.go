@@ -34,6 +34,8 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
+
+	"knative.dev/eventing/test/rekt/features/authz"
 )
 
 func TestKafkaSinkSupportsOIDC(t *testing.T) {
@@ -55,4 +57,24 @@ func TestKafkaSinkSupportsOIDC(t *testing.T) {
 	env.Prerequisite(ctx, t, kafkasink.GoesReady(sink, topic, testpkg.BootstrapServersPlaintextArr))
 
 	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkasink.GVR(), "KafkaSink", sink, env.Namespace()))
+}
+
+func TestKafkaSinkSupportsAuthZ(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	topic := feature.MakeRandomK8sName("topic")
+	sink := feature.MakeRandomK8sName("kafkasink")
+	env.Prerequisite(ctx, t, kafkatopic.GoesReady(topic))
+	env.Prerequisite(ctx, t, kafkasink.GoesReady(sink, topic, testpkg.BootstrapServersPlaintextArr))
+
+	env.TestSet(ctx, t, authz.AddressableAuthZConformance(kafkasink.GVR(), "KafkaSink", sink))
 }
