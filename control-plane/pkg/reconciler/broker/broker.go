@@ -636,7 +636,7 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
 			Path:          receiver.PathFromObject(broker),
-			EventPolicies: coreconfig.ContractEventPoliciesEventPolicies(applyingEventPolicies, broker.Namespace, features),
+			EventPolicies: coreconfig.ContractEventPoliciesFromEventPolicies(applyingEventPolicies, broker.Namespace, features),
 		},
 		FeatureFlags: &contract.FeatureFlags{
 			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate),

@@ -55,8 +55,8 @@ func ContentModeFromString(mode string) contract.ContentMode {
 	}
 }
 
-// ContractEventPoliciesEventPolicies resolves a list of v1alpha1.EventPolicy into a list of contract.EventPolicy
-func ContractEventPoliciesEventPolicies(applyingEventPolicies []*eventingv1alpha1.EventPolicy, namespace string, features feature.Flags) []*contract.EventPolicy {
+// ContractEventPoliciesFromEventPolicies resolves a list of v1alpha1.EventPolicy into a list of contract.EventPolicy
+func ContractEventPoliciesFromEventPolicies(applyingEventPolicies []*eventingv1alpha1.EventPolicy, namespace string, features feature.Flags) []*contract.EventPolicy {
 	if !features.IsOIDCAuthentication() {
 		return nil
 	}

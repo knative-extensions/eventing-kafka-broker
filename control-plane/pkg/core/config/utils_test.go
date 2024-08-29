@@ -511,7 +511,7 @@ func TestMergeEgressConfig(t *testing.T) {
 	}
 }
 
-func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
+func TestContractEventPoliciesEventPolicies(t *testing.T) {
 
 	tests := []struct {
 		name                     string
@@ -855,7 +855,7 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 				}
 			}
 
-			got := ContractEventPoliciesEventPolicies(applyingPolicies, tt.namespace, features)
+			got := ContractEventPoliciesFromEventPolicies(applyingPolicies, tt.namespace, features)
 			expectedJSON, err := protojson.Marshal(&contract.Ingress{
 				EventPolicies: tt.expected,
 			})

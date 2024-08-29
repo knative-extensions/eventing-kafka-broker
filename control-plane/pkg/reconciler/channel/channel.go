@@ -699,7 +699,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Ingress: &contract.Ingress{
 			Host:          receiver.Host(channel.GetNamespace(), channel.GetName()),
 			Path:          receiver.Path(channel.GetNamespace(), channel.GetName()),
-			EventPolicies: coreconfig.ContractEventPoliciesEventPolicies(applyingEventPolicies, channel.Namespace, features),
+			EventPolicies: coreconfig.ContractEventPoliciesFromEventPolicies(applyingEventPolicies, channel.Namespace, features),
 		},
 		FeatureFlags: &contract.FeatureFlags{
 			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate) && !ownedByBroker(channel),
