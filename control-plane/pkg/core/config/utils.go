@@ -57,6 +57,10 @@ func ContentModeFromString(mode string) contract.ContentMode {
 
 // ContractEventPoliciesEventPolicies resolves a list of v1alpha1.EventPolicy into a list of contract.EventPolicy
 func ContractEventPoliciesEventPolicies(applyingEventPolicies []*eventingv1alpha1.EventPolicy, namespace string, features feature.Flags) []*contract.EventPolicy {
+	if !features.IsOIDCAuthentication() {
+		return nil
+	}
+
 	eventPolicies := make([]*contract.EventPolicy, 0, len(applyingEventPolicies))
 
 	for _, policy := range applyingEventPolicies {
@@ -97,7 +101,7 @@ func ContractEventPoliciesEventPolicies(applyingEventPolicies []*eventingv1alpha
 		eventPolicies = append(eventPolicies, contractPolicy)
 	}
 
-	if len(eventPolicies) == 0 && features.IsOIDCAuthentication() {
+	if len(eventPolicies) == 0 {
 		if features.IsAuthorizationDefaultModeAllowAll() {
 			// add event policy to match all subs
 			eventPolicies = append(eventPolicies, &contract.EventPolicy{
