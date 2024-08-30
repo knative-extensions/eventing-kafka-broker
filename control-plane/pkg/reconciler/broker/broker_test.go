@@ -1272,7 +1272,6 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigNotParsed("failed to resolve Spec.Delivery.DeadLetterSink: destination missing Ref and URI, expected at least one"),
 						StatusBrokerTopicReady,
-						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 						BrokerConfigMapAnnotations(),
 						WithTopicStatusAnnotation(BrokerTopic()),
 					),

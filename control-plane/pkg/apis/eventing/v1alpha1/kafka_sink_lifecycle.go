@@ -22,7 +22,8 @@ import (
 )
 
 const (
-	ConditionAddressable apis.ConditionType = "Addressable"
+	ConditionAddressable        apis.ConditionType = "Addressable"
+	ConditionEventPoliciesReady apis.ConditionType = "EventPoliciesReady"
 )
 
 var conditionSet apis.ConditionSet
@@ -53,4 +54,20 @@ func (ks *KafkaSinkStatus) SetAddress(addr *duckv1.Addressable) {
 // InitializeConditions sets relevant unset conditions to Unknown state.
 func (kss *KafkaSinkStatus) InitializeConditions() {
 	kss.GetConditionSet().Manage(kss).InitializeConditions()
+}
+
+func (kss *KafkaSinkStatus) MarkEventPoliciesTrue() {
+	kss.GetConditionSet().Manage(kss).MarkTrue(ConditionEventPoliciesReady)
+}
+
+func (kss *KafkaSinkStatus) MarkEventPoliciesTrueWithReason(reason, messageFormat string, messageA ...interface{}) {
+	kss.GetConditionSet().Manage(kss).MarkTrueWithReason(ConditionEventPoliciesReady, reason, messageFormat, messageA...)
+}
+
+func (kss *KafkaSinkStatus) MarkEventPoliciesFailed(reason, messageFormat string, messageA ...interface{}) {
+	kss.GetConditionSet().Manage(kss).MarkFalse(ConditionEventPoliciesReady, reason, messageFormat, messageA...)
+}
+
+func (kss *KafkaSinkStatus) MarkEventPoliciesUnknown(reason, messageFormat string, messageA ...interface{}) {
+	kss.GetConditionSet().Manage(kss).MarkUnknown(ConditionEventPoliciesReady, reason, messageFormat, messageA...)
 }

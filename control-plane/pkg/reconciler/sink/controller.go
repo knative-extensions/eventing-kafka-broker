@@ -22,6 +22,8 @@ import (
 	"net"
 	"net/http"
 
+	"knative.dev/eventing/pkg/auth"
+
 	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 
 	"go.uber.org/zap"
@@ -160,6 +162,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,
 	})
+
+	sinkGK := eventing.SchemeGroupVersion.WithKind("KafkaSink").GroupKind()
+
+	// Enqueue the KafkaSink, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the KafkaSink
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(sinkInformer.Informer().GetIndexer(), sinkGK, impl.EnqueueKey))
 
 	return impl
 }
