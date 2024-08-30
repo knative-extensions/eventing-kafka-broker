@@ -54,12 +54,12 @@ import (
 	"knative.dev/eventing/pkg/scheduler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
-	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
-	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
+	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -301,8 +301,11 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
 	}
 
-	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
+	if cg.Spec.Template.Spec.Configs.Configs == nil {
+		return fmt.Errorf("unexpected empty configurations")
+	}
 
+	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
@@ -777,7 +780,7 @@ func (r *Reconciler) ensureContractConfigmapsExist(ctx context.Context, schedule
 	sort.Slice(pods, func(i, j int) bool { return pods[i].Name < pods[j].Name })
 
 	for _, p := range pods {
-		cmName, err := eventing.ConfigMapNameFromPod(p)
+		cmName, err := internalsapi.ConfigMapNameFromPod(p)
 		if err != nil {
 			return err
 		}

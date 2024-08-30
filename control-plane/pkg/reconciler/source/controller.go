@@ -27,8 +27,8 @@ import (
 	"knative.dev/pkg/controller"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup"
 
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 

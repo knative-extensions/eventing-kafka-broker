@@ -37,7 +37,7 @@ import (
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
@@ -50,7 +50,7 @@ import (
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	eventingkafkasourcereconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
 
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 

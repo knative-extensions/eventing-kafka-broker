@@ -28,7 +28,7 @@ import (
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 )
 
 // DispatcherPodsDefaulting returns the defaulting Callback for dispatcher pods
@@ -57,7 +57,7 @@ func podDefaultingCallback(generator generatorFunc) defaulting.CallbackFunc {
 		}
 
 		volume := &corev1.Volume{
-			Name: eventing.DispatcherVolumeName,
+			Name: kafkainternals.DispatcherVolumeName,
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{Name: cmName},

@@ -19,6 +19,7 @@ set -o nounset
 set -o pipefail
 
 source "$(dirname $0)"/../vendor/knative.dev/hack/codegen-library.sh
+source "${CODEGEN_PKG}/kube_codegen.sh"
 
 export PATH="$GOBIN:$PATH"
 
@@ -32,36 +33,23 @@ cp -R "${REPO_ROOT_DIR}/vendor/github.com/kedacore/keda/v2/apis/keda/v1alpha1" $
 
 group "Kubernetes Codegen"
 
-# generate the code with:
-# --output-base    because this script should also be able to run inside the vendor dir of
-#                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir
-#                  instead of the $GOPATH directly. For normal projects this can be dropped.
-"${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
-  knative.dev/eventing-kafka-broker/control-plane/pkg/client knative.dev/eventing-kafka-broker/control-plane/pkg/apis \
-  "eventing:v1alpha1 messaging:v1beta1 sources:v1beta1 bindings:v1beta1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+kube::codegen::gen_helpers \
+  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  "${REPO_ROOT_DIR}/control-plane/pkg/apis"
 
-"${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
-  knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka \
-  "eventing:v1alpha1" \
-  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
-
-"${CODEGEN_PKG}"/generate-groups.sh "client,informer,lister" \
-  knative.dev/eventing-kafka-broker/third_party/pkg/client knative.dev/eventing-kafka-broker/third_party/pkg/apis \
-  "keda:v1alpha1" \
-  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
+kube::codegen::gen_client \
+  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --output-dir "${REPO_ROOT_DIR}/control-plane/pkg/client" \
+  --output-pkg "knative.dev/eventing-kafka-broker/control-plane/pkg/client" \
+  --with-watch \
+  "${REPO_ROOT_DIR}/control-plane/pkg/apis"
 
 group "Knative Codegen"
 
 # Knative Injection
 "${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
   knative.dev/eventing-kafka-broker/control-plane/pkg/client knative.dev/eventing-kafka-broker/control-plane/pkg/apis \
-  "eventing:v1alpha1 messaging:v1beta1 sources:v1beta1 bindings:v1beta1" \
-  --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
-
-"${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
-  knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka \
-  "eventing:v1alpha1" \
+  "eventing:v1alpha1 messaging:v1beta1 sources:v1beta1 bindings:v1beta1 internalskafkaeventing:v1alpha1" \
   --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
 "${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
