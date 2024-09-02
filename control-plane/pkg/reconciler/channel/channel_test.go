@@ -66,6 +66,7 @@ import (
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
 	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
 const (
@@ -75,6 +76,9 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+
+	readyEventPolicyName   = "test-event-policy-ready"
+	unreadyEventPolicyName = "test-event-policy-unready"
 
 	kafkaFeatureFlags = "kafka-feature-flags"
 )
@@ -98,6 +102,12 @@ var DefaultEnv = &config.Env{
 
 var (
 	testCaCerts = string(eventingtlstesting.CA)
+
+	channelGVK = metav1.GroupVersionKind{
+		Group:   "messaging.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaChannel",
+	}
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -2050,6 +2060,211 @@ func TestReconcileKind(t *testing.T) {
 						}),
 						WithChannelAddessable(),
 						WithChannelEventPoliciesReadyBecauseNoPolicyAndOIDCEnabled(feature.AuthorizationDenyAll),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Should list applying EventPolicies",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(readyEventPolicyName, ChannelNamespace,
+					reconcilertesting.WithReadyEventPolicyCondition,
+					reconcilertesting.WithEventPolicyToRef(channelGVK, ChannelName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub",
+					}),
+				),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host:     receiver.Host(ChannelNamespace, ChannelName),
+								Path:     receiver.Path(ChannelNamespace, ChannelName),
+								Audience: ChannelAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Exact{
+													Exact: &contract.Exact{
+														Attributes: map[string]string{
+															"sub": "sub",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      ChannelAddress(),
+								Audience: pointer.String(ChannelAudience),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      ChannelAddress(),
+							Audience: pointer.String(ChannelAudience),
+						}),
+						WithChannelAddessable(),
+						WithChannelEventPoliciesReady(),
+						WithChannelEventPoliciesListed(readyEventPolicyName),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		}, {
+			Name: "Should mark as NotReady on unready EventPolicies",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(unreadyEventPolicyName, ChannelNamespace,
+					reconcilertesting.WithUnreadyEventPolicyCondition("", ""),
+					reconcilertesting.WithEventPolicyToRef(channelGVK, ChannelName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub",
+					}),
+				),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host:     receiver.Host(ChannelNamespace, ChannelName),
+								Path:     receiver.Path(ChannelNamespace, ChannelName),
+								Audience: ChannelAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Prefix{
+													Prefix: &contract.Prefix{
+														Attributes: map[string]string{
+															"sub": "system:serviceaccount:" + ChannelNamespace + ":",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      ChannelAddress(),
+								Audience: pointer.String(ChannelAudience),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      ChannelAddress(),
+							Audience: pointer.String(ChannelAudience),
+						}),
+						WithChannelAddessable(),
+						WithChannelEventPoliciesReady(),
+						WithChannelEventPoliciesNotReady("EventPoliciesNotReady", fmt.Sprintf("event policies %s are not ready", unreadyEventPolicyName)),
 					),
 				},
 			},
