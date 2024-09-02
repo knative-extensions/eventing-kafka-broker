@@ -52,7 +52,6 @@ const (
 	// is ready. Because this uses ExternalName, there are no endpoints to check.
 	KafkaChannelConditionChannelServiceReady apis.ConditionType = "ChannelServiceReady"
 
-	ConditionAddressable        apis.ConditionType = "Addressable"
 	ConditionEventPoliciesReady apis.ConditionType = "EventPoliciesReady"
 )
 
