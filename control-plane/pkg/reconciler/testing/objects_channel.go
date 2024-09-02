@@ -43,6 +43,8 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
 	subscriptionv1 "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
@@ -444,5 +446,45 @@ func ChannelAddress() *apis.URL {
 	return &apis.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s.%s.svc.%s", ChannelServiceName, ChannelNamespace, network.GetClusterDomainName()),
+	}
+}
+
+func WithChannelEventPoliciesReady() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*messagingv1beta1.KafkaChannel)
+		ks.Status.MarkEventPoliciesTrue()
+	}
+}
+
+func WithChannelEventPoliciesNotReady(reason, message string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*messagingv1beta1.KafkaChannel)
+		ks.Status.MarkEventPoliciesFailed(reason, message)
+	}
+}
+
+func WithChannelEventPoliciesListed(policyNames ...string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*messagingv1beta1.KafkaChannel)
+		for _, name := range policyNames {
+			ks.Status.Policies = append(ks.Status.Policies, eventingduckv1.AppliedEventPolicyRef{
+				APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+				Name:       name,
+			})
+		}
+	}
+}
+
+func WithChannelEventPoliciesReadyBecauseOIDCDisabled() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*messagingv1beta1.KafkaChannel)
+		ks.Status.MarkEventPoliciesTrueWithReason("OIDCDisabled", "Feature %q must be enabled to support Authorization", feature.OIDCAuthentication)
+	}
+}
+
+func WithChannelEventPoliciesReadyBecauseNoPolicyAndOIDCEnabled(authzMode feature.Flag) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*messagingv1beta1.KafkaChannel)
+		ks.Status.MarkEventPoliciesTrueWithReason("DefaultAuthorizationMode", "Default authz mode is %q", authzMode)
 	}
 }
