@@ -234,8 +234,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		audience = nil
 	}
 
+	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not get applying eventpolicies for kafkaChannel: %v", err)
+	}
+
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience, nil)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience, applyingEventPolicies)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -264,6 +269,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Contract config map updated")
 	statusConditionManager.ConfigMapUpdated()
+
+	err = auth.UpdateStatusWithProvidedEventPolicies(featureFlags, &channel.Status.AppliedEventPoliciesStatus, &channel.Status, applyingEventPolicies)
+	if err != nil {
+		return fmt.Errorf("could not update KafkaChannel status with EventPolicies: %v", err)
+	}
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
