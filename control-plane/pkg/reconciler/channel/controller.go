@@ -58,6 +58,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
+	"knative.dev/eventing/pkg/auth"
 )
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
@@ -176,5 +177,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkachannel", impl.EnqueueKey)),
 	})
 
+	channelGK := messagingv1beta.SchemeGroupVersion.WithKind("KafkaChannel").GroupKind()
+	// Enqueue KafkaChannel, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the KafkaSink
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(channelInformer.Informer().GetIndexer(), channelGK, impl.EnqueueKey))
 	return impl
 }
