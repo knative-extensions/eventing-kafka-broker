@@ -28,8 +28,8 @@ echo "=== Update Codegen for $MODULE_NAME"
 # Compute _example hash for all configmaps.
 group "Generating checksums for configmap _example keys"
 
-${REPO_ROOT_DIR}/hack/update-checksums.sh
-cp -R "${REPO_ROOT_DIR}/vendor/github.com/kedacore/keda/v2/apis/keda/v1alpha1" ${REPO_ROOT_DIR}/third_party/pkg/apis/keda/
+"${REPO_ROOT_DIR}"/hack/update-checksums.sh
+cp -R "${REPO_ROOT_DIR}/vendor/github.com/kedacore/keda/v2/apis/keda/v1alpha1" "${REPO_ROOT_DIR}"/third_party/pkg/apis/keda/
 
 group "Kubernetes Codegen"
 
@@ -43,6 +43,13 @@ kube::codegen::gen_client \
   --output-pkg "knative.dev/eventing-kafka-broker/control-plane/pkg/client" \
   --with-watch \
   "${REPO_ROOT_DIR}/control-plane/pkg/apis"
+
+kube::codegen::gen_client \
+  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --output-dir "${REPO_ROOT_DIR}/third_party/pkg/client" \
+  --output-pkg "knative.dev/eventing-kafka-broker/third_party/pkg/client" \
+  --with-watch \
+  "${REPO_ROOT_DIR}/third_party/pkg/apis"
 
 group "Knative Codegen"
 
