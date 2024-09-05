@@ -681,6 +681,7 @@ function start_knative_eventing_extension() {
 # Parameters: $1 - tool package for go run.
 #             $2..$n - parameters passed to the tool.
 function go_run() {
+  set -x
   local package
   package="$1"
   if [[ "$package" != *@* ]]; then
