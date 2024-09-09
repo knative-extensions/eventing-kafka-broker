@@ -26,6 +26,7 @@ import io.vertx.core.tracing.TracingPolicy;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -84,7 +85,11 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         // Process queue elements until this is closed and the tasks queue is empty
         while (!isClosed.get() || !eventQueue.isEmpty()) {
             try {
-                final var recordPromise = eventQueue.take();
+                final var recordPromise = eventQueue.poll(2000, TimeUnit.MILLISECONDS);
+                if (recordPromise == null) {
+                    continue;
+                }
+
                 final var startedSpan = this.tracer == null
                         ? null
                         : this.tracer.prepareSendMessage(recordPromise.getContext(), recordPromise.getRecord());
@@ -140,8 +145,6 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
                     logger.debug("Waiting for the eventQueue to become empty");
                     Thread.sleep(2000L);
                 }
-                logger.debug("Interrupting sendFromQueueThread thread");
-                sendFromQueueThread.interrupt();
                 logger.debug("Waiting for sendFromQueueThread thread to complete");
                 sendFromQueueThread.join();
                 logger.debug("Closing the producer");
