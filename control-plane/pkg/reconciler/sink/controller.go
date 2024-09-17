@@ -59,8 +59,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -72,10 +70,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister:      configmapInformer.Lister(),
-		EventPolicyLister:    eventPolicyInformer.Lister(),
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		Env:                  configs,
+		ConfigMapLister:   configmapInformer.Lister(),
+		EventPolicyLister: eventPolicyInformer.Lister(),
+		Env:               configs,
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
