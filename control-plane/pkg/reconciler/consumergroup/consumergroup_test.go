@@ -173,8 +173,8 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Consumers in multiple pods, with pods pending and unknown phase",
 			Objects: []runtime.Object{
 				NewService(),
-				NewDispatcherPod("p1", PodLabel(kafkainternals.SourceStatefulSetName), PodPending()),
-				NewDispatcherPod("p2", PodLabel(kafkainternals.SourceStatefulSetName)),
+				NewDispatcherPod("p1", PodLabel("app", kafkainternals.SourceStatefulSetName), DispatcherLabel(), PodPending()),
+				NewDispatcherPod("p2", PodLabel("app", kafkainternals.SourceStatefulSetName), DispatcherLabel()),
 				NewConsumerGroup(
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
@@ -1721,6 +1721,10 @@ func TestReconcileKind(t *testing.T) {
 		)
 	}))
 
+}
+
+func DispatcherLabel() PodOption {
+	return PodLabel("app.kubernetes.io/kind", "kafka-dispatcher")
 }
 
 func TestReconcileKindNoAutoscaler(t *testing.T) {
