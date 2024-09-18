@@ -23,13 +23,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -215,7 +216,8 @@ func SourceDispatcherPod(namespace string, annotations map[string]string) runtim
 			Namespace:   namespace,
 			Annotations: annotations,
 			Labels: map[string]string{
-				"app": base.SourceDispatcherLabel,
+				"app":                    base.SourceDispatcherLabel,
+				"app.kubernetes.io/kind": "kafka-dispatcher",
 			},
 		},
 		Status: corev1.PodStatus{

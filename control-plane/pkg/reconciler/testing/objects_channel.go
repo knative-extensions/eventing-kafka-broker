@@ -191,7 +191,8 @@ func ChannelDispatcherPod(namespace string, annotations map[string]string) runti
 			Namespace:   namespace,
 			Annotations: annotations,
 			Labels: map[string]string{
-				"app": base.ChannelDispatcherLabel,
+				"app":                    base.ChannelDispatcherLabel,
+				"app.kubernetes.io/kind": "kafka-dispatcher",
 			},
 		},
 		Status: corev1.PodStatus{
