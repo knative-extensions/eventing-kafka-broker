@@ -766,7 +766,10 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 }
 
 func (r *Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
-	selector := labels.SelectorFromSet(map[string]string{"app": scheduler.StatefulSetName})
+	selector := labels.SelectorFromSet(map[string]string{
+		"app":                    scheduler.StatefulSetName,
+		"app.kubernetes.io/kind": "kafka-dispatcher",
+	})
 	pods, err := r.PodLister.
 		Pods(r.SystemNamespace).
 		List(selector)
