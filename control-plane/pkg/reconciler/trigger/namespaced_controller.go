@@ -62,8 +62,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 	triggerLister := triggerInformer.Lister()
 	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -85,10 +83,17 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, con
 		ServiceAccountLister: serviceaccountInformer.Lister(),
 		EventingClient:       eventingclient.Get(ctx),
 		Env:                  configs,
-		GetKafkaClient:       clientPool.GetClient,
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
 		InitOffsetsFunc:      offset.InitOffsets,
 		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+		reconciler.GetKafkaClient = clientpool.DisabledGetClient
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
+		reconciler.GetKafkaClient = clientPool.GetClient
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {
