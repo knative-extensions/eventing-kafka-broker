@@ -85,8 +85,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 
 	clientPool := clientpool.Get(ctx)
 	if clientPool == nil {
+		reconciler.GetKafkaClient = clientpool.DisabledGetClient
 		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
 	} else {
+		reconciler.GetKafkaClient = clientPool.GetClient
 		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
