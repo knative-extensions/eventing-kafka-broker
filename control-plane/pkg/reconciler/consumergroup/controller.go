@@ -119,8 +119,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName),
 	}
 
-	clientPool := clientpool.Get(ctx)
-
 	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
 
 	r := &Reconciler{
@@ -132,15 +130,22 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		PodLister:                          dispatcherPodInformer.Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
-		GetKafkaClient:                     clientPool.GetClient,
 		InitOffsetsFunc:                    offset.InitOffsets,
 		SystemNamespace:                    system.Namespace(),
-		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, 20*time.Minute),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		r.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+		r.GetKafkaClient = clientpool.DisabledGetClient
+	} else {
+		r.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
+		r.GetKafkaClient = clientPool.GetClient
 	}
 
 	consumerInformer := consumer.Get(ctx)
