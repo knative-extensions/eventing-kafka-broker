@@ -55,11 +55,12 @@ import (
 
 	"knative.dev/pkg/controller"
 
+	"knative.dev/eventing/pkg/auth"
+
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
-	"knative.dev/eventing/pkg/auth"
 )
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
@@ -70,8 +71,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
-
-	clientPool := clientpool.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -84,15 +83,21 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		Env:                  configs,
-		ConfigMapLister:      configmapInformer.Lister(),
-		ServiceLister:        serviceinformer.Get(ctx).Lister(),
-		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
-		ConsumerGroupLister:  consumerGroupInformer.Lister(),
-		EventPolicyLister:    eventPolicyInformer.Lister(),
-		InternalsClient:      consumergroupclient.Get(ctx),
-		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
+		Env:                 configs,
+		ConfigMapLister:     configmapInformer.Lister(),
+		ServiceLister:       serviceinformer.Get(ctx).Lister(),
+		SubscriptionLister:  subscriptioninformer.Get(ctx).Lister(),
+		ConsumerGroupLister: consumerGroupInformer.Lister(),
+		EventPolicyLister:   eventPolicyInformer.Lister(),
+		InternalsClient:     consumergroupclient.Get(ctx),
+		KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	logger := logging.FromContext(ctx)
