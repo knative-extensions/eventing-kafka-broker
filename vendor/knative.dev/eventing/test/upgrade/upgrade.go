@@ -23,7 +23,10 @@ import (
 	"sync"
 	"testing"
 
+	"knative.dev/eventing/pkg/apis/eventing"
+	brokerfeatures "knative.dev/eventing/test/rekt/features/broker"
 	"knative.dev/eventing/test/rekt/features/channel"
+	brokerresources "knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/channel_impl"
 	"knative.dev/eventing/test/rekt/resources/subscription"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -37,7 +40,16 @@ import (
 	"knative.dev/reconciler-test/pkg/manifest"
 )
 
-var channelConfigMux = &sync.Mutex{}
+var (
+	channelConfigMux = &sync.Mutex{}
+	brokerConfigMux  = &sync.Mutex{}
+	opts             = []environment.EnvOpts{
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+	}
+)
 
 // RunMainTest expects flags to be already initialized.
 // This function needs to be exposed, so that test cases in other repositories can call the upgrade
@@ -291,16 +303,28 @@ func InMemoryChannelFeature(glob environment.GlobalEnvironment) *DurableFeature 
 	sink, ch := channel.ChannelChainSetup(setupF, 1, createSubscriberFn)
 
 	verifyF := func() *feature.Feature {
-		f := feature.NewFeature()
+		f := feature.NewFeatureNamed(setupF.Name)
 		channel.ChannelChainAssert(f, sink, ch)
 		return f
 	}
 
-	opts := []environment.EnvOpts{
-		knative.WithKnativeNamespace(system.Namespace()),
-		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
-		k8s.WithEventListener,
+	return &DurableFeature{SetupF: setupF, VerifyF: verifyF, Global: glob, EnvOpts: opts}
+}
+
+func BrokerEventTransformationForTrigger(glob environment.GlobalEnvironment,
+) *DurableFeature {
+	// Prevent race conditions on EnvCfg.BrokerClass when running tests in parallel.
+	brokerConfigMux.Lock()
+	defer brokerConfigMux.Unlock()
+	brokerresources.EnvCfg.BrokerClass = eventing.MTChannelBrokerClassValue
+
+	setupF := feature.NewFeature()
+	cfg := brokerfeatures.BrokerEventTransformationForTriggerSetup(setupF)
+
+	verifyF := func() *feature.Feature {
+		f := feature.NewFeatureNamed(setupF.Name)
+		brokerfeatures.BrokerEventTransformationForTriggerAssert(f, cfg)
+		return f
 	}
 
 	return &DurableFeature{SetupF: setupF, VerifyF: verifyF, Global: glob, EnvOpts: opts}
