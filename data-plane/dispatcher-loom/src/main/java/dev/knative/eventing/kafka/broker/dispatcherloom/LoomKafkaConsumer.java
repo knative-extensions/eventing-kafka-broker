@@ -75,7 +75,7 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
             try {
                 Runnable task = taskQueue.poll(2000, TimeUnit.MILLISECONDS);
                 if (task != null) {
-                  task.run();
+                    task.run();
                 }
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for task", e);
