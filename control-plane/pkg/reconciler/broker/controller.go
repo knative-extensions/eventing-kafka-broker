@@ -65,8 +65,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 	configmapInformer := configmapinformer.Get(ctx)
 	featureFlags := apisconfig.DefaultFeaturesConfig()
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -79,11 +77,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		ConfigMapLister:      configmapInformer.Lister(),
-		Env:                  env,
-		Counter:              counter.NewExpiringCounter(ctx),
-		KafkaFeatureFlags:    featureFlags,
+		ConfigMapLister:   configmapInformer.Lister(),
+		Env:               env,
+		Counter:           counter.NewExpiringCounter(ctx),
+		KafkaFeatureFlags: featureFlags,
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	logger := logging.FromContext(ctx)
