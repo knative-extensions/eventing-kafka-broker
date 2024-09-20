@@ -67,8 +67,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	triggerLister := triggerInformer.Lister()
 	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -92,10 +90,17 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		BrokerClass:               kafka.BrokerClass,
 		DataPlaneConfigMapLabeler: base.NoopConfigmapOption,
 		KafkaFeatureFlags:         apisconfig.DefaultFeaturesConfig(),
-		GetKafkaClient:            clientPool.GetClient,
-		GetKafkaClusterAdmin:      clientPool.GetClusterAdmin,
 		InitOffsetsFunc:           offset.InitOffsets,
 		ServiceAccountLister:      serviceaccountInformer.Lister(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+		reconciler.GetKafkaClient = clientpool.DisabledGetClient
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
+		reconciler.GetKafkaClient = clientPool.GetClient
 	}
 
 	impl := triggerreconciler.NewImpl(ctx, reconciler, func(impl *controller.Impl) controller.Options {

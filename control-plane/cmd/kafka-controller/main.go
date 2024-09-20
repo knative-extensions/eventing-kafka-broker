@@ -19,7 +19,10 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"strings"
 
+	"github.com/IBM/sarama"
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -70,7 +73,16 @@ func main() {
 		auth.OIDCLabelSelector,
 		eventing.DispatcherLabelSelectorStr,
 	)
-	ctx = clientpool.WithKafkaClientPool(ctx)
+
+	if v := os.Getenv("ENABLE_SARAMA_LOGGER"); strings.EqualFold(v, "true") {
+		sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags|log.Llongfile)
+	}
+	if v := os.Getenv("ENABLE_SARAMA_DEBUG_LOGGER"); strings.EqualFold(v, "true") {
+		sarama.DebugLogger = log.New(os.Stdout, "[sarama][debug] ", log.LstdFlags|log.Llongfile)
+	}
+	if v := os.Getenv("ENABLE_SARAMA_CLIENT_POOL"); v == "" || strings.EqualFold(v, "true") {
+		ctx = clientpool.WithKafkaClientPool(ctx)
+	}
 
 	sharedmain.MainNamed(ctx, component,
 

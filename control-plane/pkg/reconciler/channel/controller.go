@@ -31,19 +31,19 @@ import (
 	"knative.dev/eventing/pkg/apis/feature"
 	subscriptioninformer "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription"
 
-	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
-	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
-	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
-
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	serviceinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
+
+	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	kafkachannelinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
+	kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -63,8 +63,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	serviceInformer := serviceinformer.Get(ctx)
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -77,14 +75,21 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
-		GetKafkaClient:       clientPool.GetClient,
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		InitOffsetsFunc:      offset.InitOffsets,
-		Env:                  configs,
-		ConfigMapLister:      configmapInformer.Lister(),
-		ServiceLister:        serviceInformer.Lister(),
-		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
+		Env:                configs,
+		InitOffsetsFunc:    offset.InitOffsets,
+		ConfigMapLister:    configmapInformer.Lister(),
+		ServiceLister:      serviceinformer.Get(ctx).Lister(),
+		SubscriptionLister: subscriptioninformer.Get(ctx).Lister(),
+		KafkaFeatureFlags:  apisconfig.DefaultFeaturesConfig(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClient = clientpool.DisabledGetClient
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClient = clientPool.GetClient
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	logger := logging.FromContext(ctx)

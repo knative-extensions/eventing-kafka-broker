@@ -88,8 +88,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		logger.Fatal("unable to create Manifestival client-go client", zap.Error(err))
 	}
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                   kubeclient.Get(ctx),
@@ -103,7 +101,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			DispatcherLabel:              base.BrokerDispatcherLabel,
 			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
-		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		NamespaceLister:                    namespaceinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapInformer.Lister(),
 		ServiceAccountLister:               serviceaccountinformer.Get(ctx).Lister(),
@@ -117,6 +114,13 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		ManifestivalClient:                 mfc,
 		DataplaneLifecycleLocksByNamespace: util.NewExpiringLockMap[string](ctx, time.Minute*30),
 		KafkaFeatureFlags:                  apisconfig.DefaultFeaturesConfig(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {
