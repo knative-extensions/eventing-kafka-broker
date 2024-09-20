@@ -27,10 +27,11 @@ import (
 	"go.uber.org/zap"
 
 	corev1 "k8s.io/api/core/v1"
+	"knative.dev/pkg/logging"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	"knative.dev/pkg/logging"
 )
 
 type KafkaClientKey struct{}
@@ -63,7 +64,20 @@ type ClientPool struct {
 }
 
 type GetKafkaClientFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error)
+
 type GetKafkaClusterAdminFunc func(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error)
+
+func DisabledGetKafkaClusterAdminFunc(_ context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.ClusterAdmin, error) {
+	c, err := makeSaramaClient(bootstrapServers, secret, sarama.NewClient)
+	if err != nil {
+		return nil, err
+	}
+	return sarama.NewClusterAdminFromClient(c)
+}
+
+func DisabledGetClient(_ context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
+	return makeSaramaClient(bootstrapServers, secret, sarama.NewClient)
+}
 
 func (cp *ClientPool) GetClient(ctx context.Context, bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
 	client, err := cp.getClient(ctx, bootstrapServers, secret)
@@ -141,7 +155,11 @@ func (cp *ClientPool) GetClusterAdmin(ctx context.Context, bootstrapServers []st
 }
 
 func Get(ctx context.Context) *ClientPool {
-	return ctx.Value(ctxKey).(*ClientPool)
+	v := ctx.Value(ctxKey)
+	if v == nil {
+		return nil
+	}
+	return v.(*ClientPool)
 }
 
 func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clientKey {
@@ -162,6 +180,10 @@ func makeClusterAdminKey(bootstrapServers []string, secret *corev1.Secret) clien
 }
 
 func (cp *ClientPool) makeSaramaClient(bootstrapServers []string, secret *corev1.Secret) (sarama.Client, error) {
+	return makeSaramaClient(bootstrapServers, secret, cp.newSaramaClient)
+}
+
+func makeSaramaClient(bootstrapServers []string, secret *corev1.Secret, newSaramaClient kafka.NewClientFunc) (sarama.Client, error) {
 	secretOpt, err := security.NewSaramaSecurityOptionFromSecret(secret)
 	if err != nil {
 		return nil, err
@@ -172,7 +194,7 @@ func (cp *ClientPool) makeSaramaClient(bootstrapServers []string, secret *corev1
 		return nil, err
 	}
 
-	saramaClient, err := cp.newSaramaClient(bootstrapServers, config)
+	saramaClient, err := newSaramaClient(bootstrapServers, config)
 	if err != nil {
 		return nil, err
 	}

@@ -173,6 +173,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: ENABLE_SARAMA_LOGGER
+              value: "false"
+            - name: ENABLE_SARAMA_DEBUG_LOGGER
+              value: "false"
+            - name: ENABLE_SARAMA_CLIENT_POOL
+              value: "true"
 
           ports:
             - containerPort: 9090

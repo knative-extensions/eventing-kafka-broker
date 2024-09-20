@@ -616,12 +616,12 @@ func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 	return p
 }
 
-func PodLabel(value string) PodOption {
+func PodLabel(key, value string) PodOption {
 	return func(pod *corev1.Pod) {
 		if pod.Labels == nil {
 			pod.Labels = make(map[string]string, 2)
 		}
-		pod.Labels["app"] = value
+		pod.Labels[key] = value
 	}
 }
 

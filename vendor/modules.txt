@@ -445,8 +445,8 @@ go.uber.org/zap/zaptest
 ## explicit; go 1.20
 golang.org/x/crypto/md4
 golang.org/x/crypto/pbkdf2
-# golang.org/x/mod v0.20.0
-## explicit; go 1.18
+# golang.org/x/mod v0.21.0
+## explicit; go 1.22.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
@@ -486,8 +486,8 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.6.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# golang.org/x/tools v0.24.0
-## explicit; go 1.19
+# golang.org/x/tools v0.25.0
+## explicit; go 1.22.0
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/packages
@@ -520,7 +520,7 @@ google.golang.org/genproto/googleapis/api/httpbody
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20240808171019-573a1156607a
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.65.0
+# google.golang.org/grpc v1.66.2
 ## explicit; go 1.21
 google.golang.org/grpc
 google.golang.org/grpc/attributes
@@ -538,7 +538,9 @@ google.golang.org/grpc/credentials
 google.golang.org/grpc/credentials/insecure
 google.golang.org/grpc/encoding
 google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/experimental/stats
 google.golang.org/grpc/grpclog
+google.golang.org/grpc/grpclog/internal
 google.golang.org/grpc/health/grpc_health_v1
 google.golang.org/grpc/internal
 google.golang.org/grpc/internal/backoff
@@ -561,11 +563,13 @@ google.golang.org/grpc/internal/resolver/dns/internal
 google.golang.org/grpc/internal/resolver/passthrough
 google.golang.org/grpc/internal/resolver/unix
 google.golang.org/grpc/internal/serviceconfig
+google.golang.org/grpc/internal/stats
 google.golang.org/grpc/internal/status
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/internal/transport/networktype
 google.golang.org/grpc/keepalive
+google.golang.org/grpc/mem
 google.golang.org/grpc/metadata
 google.golang.org/grpc/peer
 google.golang.org/grpc/resolver
@@ -1156,7 +1160,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.42.1-0.20240827090532-ecae8953ff0c
+# knative.dev/eventing v0.42.1-0.20240918141338-17088813b4e0
 ## explicit; go 1.22.0
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1341,10 +1345,10 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20240814130635-06f7aff93954
+# knative.dev/hack v0.0.0-20240909014011-fc6a8452af6d
 ## explicit; go 1.21
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20240815051656-89743d9bbf7c
+# knative.dev/pkg v0.0.0-20240917091217-aaab500c26c4
 ## explicit; go 1.22.0
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1460,7 +1464,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20240820100420-036ce14b8617
+# knative.dev/reconciler-test v0.0.0-20240919063827-0cb8938be2e4
 ## explicit; go 1.22.0
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
