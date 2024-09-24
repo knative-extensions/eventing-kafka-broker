@@ -194,6 +194,22 @@ func TestSSL(t *testing.T) {
 	assert.NotNil(t, config.Net.TLS.Config.RootCAs)
 }
 
+func TestSSLPKCS1(t *testing.T) {
+	ca, userKey, userCert := loadPKCS1Certs(t)
+
+	secret := map[string][]byte{
+		"protocol": []byte("SSL"),
+		"user.key": userKey,
+		"user.crt": userCert,
+		"ca.crt":   ca,
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+}
+
 func TestSSLNoUserKey(t *testing.T) {
 	ca, _, userCert := loadCerts(t)
 
@@ -377,6 +393,19 @@ func loadCerts(t *testing.T) (ca, userKey, userCert []byte) {
 	assert.Nil(t, err)
 
 	userKey, err = os.ReadFile("testdata/user.key")
+	assert.Nil(t, err)
+
+	userCert, err = os.ReadFile("testdata/user.crt")
+	assert.Nil(t, err)
+
+	return ca, userKey, userCert
+}
+
+func loadPKCS1Certs(t *testing.T) (ca, userKey, userCert []byte) {
+	ca, err := os.ReadFile("testdata/ca.crt")
+	assert.Nil(t, err)
+
+	userKey, err = os.ReadFile("testdata/pkcs1_user.key")
 	assert.Nil(t, err)
 
 	userCert, err = os.ReadFile("testdata/user.crt")
