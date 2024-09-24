@@ -19,8 +19,10 @@ package security
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/IBM/sarama"
 
@@ -193,6 +195,10 @@ func sslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 				if err != nil {
 					return fmt.Errorf("[protocol %s] failed to load x.509 key pair: %w", protocol, err)
 				}
+				// Java Kafka clients don't support PKCS #1 format for the private key
+				if isPrivateKeyPKCS1Format(userKeyCert) {
+					return fmt.Errorf("[protocol %s] unsupported user key format in %s, 'PKCS #1' format is not supported, convert private key to 'PKCS #8'", protocol, UserKey)
+				}
 				tlsCerts = []tls.Certificate{tlsCert}
 			}
 		}
@@ -219,4 +225,20 @@ func skipClientAuthCheck(data map[string][]byte) (bool, error) {
 		return false, fmt.Errorf("failed to parse client auth flag (key: %s): %w", UserSkip, err)
 	}
 	return enabled, nil
+}
+
+func isPrivateKeyPKCS1Format(keyPEMBlock []byte) bool {
+	var keyDERBlock *pem.Block
+	for {
+		keyDERBlock, keyPEMBlock = pem.Decode(keyPEMBlock)
+		if keyDERBlock == nil {
+			return false
+		}
+		if keyDERBlock.Type == "PRIVATE KEY" || strings.HasSuffix(keyDERBlock.Type, " PRIVATE KEY") {
+			break
+		}
+	}
+
+	_, err := x509.ParsePKCS1PrivateKey(keyDERBlock.Bytes)
+	return err == nil
 }
