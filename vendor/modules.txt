@@ -1142,7 +1142,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.42.0
+# knative.dev/eventing v0.42.2-0.20240923151015-7fedbd08af70
 ## explicit; go 1.22
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
