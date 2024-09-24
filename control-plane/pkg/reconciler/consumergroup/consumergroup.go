@@ -446,7 +446,7 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
 
-	placements, err := statefulSetScheduler.Schedule(cg)
+	placements, err := statefulSetScheduler.Schedule(ctx, cg)
 	if err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
