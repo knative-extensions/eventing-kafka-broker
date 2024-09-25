@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -108,6 +109,10 @@ type ConsumerGroupSpec struct {
 	// OIDCServiceAccountName is the name of service account used for this components
 	// OIDC authentication.
 	OIDCServiceAccountName *string `json:"oidcServiceAccountName,omitempty"`
+
+	// TopLevelResourceRef is a reference to a top level resource.
+	// For a ConsumerGroup associated with a Trigger, a Broker reference will be set.
+	TopLevelResourceRef *corev1.ObjectReference `json:"topLevelResourceRef,omitempty"`
 }
 
 type ConsumerGroupStatus struct {
@@ -208,6 +213,13 @@ func (cg *ConsumerGroup) GetUserFacingResourceRef() *metav1.OwnerReference {
 		}
 	}
 	return nil
+}
+
+// GetTopLevelUserFacingResourceRef gets the top level resource reference to the user-facing resources
+// that are backed by this ConsumerGroup using the OwnerReference list.
+// For example, for a Trigger, it will return a Broker reference.
+func (cg *ConsumerGroup) GetTopLevelUserFacingResourceRef() *corev1.ObjectReference {
+	return cg.Spec.TopLevelResourceRef
 }
 
 func (cg *ConsumerGroup) IsNotScheduled() bool {
