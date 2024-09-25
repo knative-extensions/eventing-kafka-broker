@@ -1336,6 +1336,7 @@ knative.dev/eventing/test/test_images/wathola-fetcher
 knative.dev/eventing/test/test_images/wathola-forwarder
 knative.dev/eventing/test/test_images/wathola-receiver
 knative.dev/eventing/test/test_images/wathola-sender
+knative.dev/eventing/test/upgrade
 knative.dev/eventing/test/upgrade/prober
 knative.dev/eventing/test/upgrade/prober/sut
 knative.dev/eventing/test/upgrade/prober/wathola/client
@@ -1444,6 +1445,7 @@ knative.dev/pkg/test/helpers
 knative.dev/pkg/test/ingress
 knative.dev/pkg/test/logging
 knative.dev/pkg/test/logstream/v2
+knative.dev/pkg/test/migrate
 knative.dev/pkg/test/monitoring
 knative.dev/pkg/test/prow
 knative.dev/pkg/test/security
