@@ -42,12 +42,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
@@ -602,6 +603,13 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
+			TopLevelResourceRef: &corev1.ObjectReference{
+				APIVersion: messagingv1beta1.SchemeGroupVersion.String(),
+				Kind:       "KafkaChannel",
+				Name:       channel.Name,
+				Namespace:  channel.Namespace,
+				UID:        channel.UID,
+			},
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
