@@ -28,6 +28,7 @@ spec:
       labels:
         app: "knative-kafka-storage-version-migrator"
         app.kubernetes.io/version: devel
+        sidecar.istio.io/inject: "false"
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
