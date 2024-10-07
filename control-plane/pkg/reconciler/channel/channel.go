@@ -736,6 +736,15 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		resource.Auth = &contract.Resource_MultiAuthSecret{
 			MultiAuthSecret: auth.MultiSecretReference,
 		}
+	} else if auth != nil && auth.VirtualSecret != nil {
+		resource.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(auth.VirtualSecret.UID),
+				Namespace: auth.VirtualSecret.Namespace,
+				Name:      auth.VirtualSecret.Name,
+				Version:   auth.VirtualSecret.ResourceVersion,
+			},
+		}
 	}
 
 	if audience != nil {
