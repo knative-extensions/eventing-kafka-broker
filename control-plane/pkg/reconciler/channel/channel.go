@@ -603,6 +603,15 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 			Namespace: channel.GetNamespace(),
 			Name:      subscriptionName,
 		}
+	} else if auth != nil && auth.VirtualSecret != nil {
+		resource.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(auth.VirtualSecret.UID),
+				Namespace: auth.VirtualSecret.Namespace,
+				Name:      auth.VirtualSecret.Name,
+				Version:   auth.VirtualSecret.ResourceVersion,
+			},
+		}
 	}
 
 	if subscriber.ReplyURI != nil {

@@ -29,6 +29,12 @@ func ResolveAuthContextFromLegacySecret(s *corev1.Secret) (*NetSpecAuthContext, 
 		return &NetSpecAuthContext{}, nil
 	}
 
+	// Check if the secret is a legacy secret format without the explicit `protocol` key
+	if v, ok := s.Data[ProtocolKey]; ok && len(v) > 0 {
+		// The secret is explicitly using `protocol` configuration, no need to guess it.
+		return &NetSpecAuthContext{VirtualSecret: s}, nil
+	}
+
 	protocolStr, protocolContract := getProtocolFromLegacyChannelSecret(s)
 
 	virtualSecret := s.DeepCopy()
