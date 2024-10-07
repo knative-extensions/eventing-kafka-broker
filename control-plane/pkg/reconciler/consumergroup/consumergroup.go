@@ -296,14 +296,14 @@ func (r *Reconciler) reconcileStatusSelector(cg *kafkainternals.ConsumerGroup) {
 }
 
 func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
-	kafakSecret, err := r.newAuthSecret(ctx, cg)
+	kafkaSecret, err := r.newAuthSecret(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
 	}
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
-	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
+	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}

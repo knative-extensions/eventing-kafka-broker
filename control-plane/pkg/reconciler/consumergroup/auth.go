@@ -27,32 +27,27 @@ import (
 )
 
 func (r *Reconciler) newAuthSecret(ctx context.Context, cg *kafkainternals.ConsumerGroup) (*corev1.Secret, error) {
-	var secret *corev1.Secret
-
 	if hasSecretSpecConfig(cg.Spec.Template.Spec.Auth) {
 		secret, err := security.Secret(ctx, &SecretSpecSecretLocator{cg}, security.DefaultSecretProviderFunc(r.SecretLister, r.KubeClient))
 		if err != nil {
 			return nil, err
 		}
+		return secret, nil
+	}
 
-		authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-		if err != nil {
-			return nil, err
-		}
-		return authContext.VirtualSecret, nil
-
-	} else if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
+	if hasNetSpecAuthConfig(cg.Spec.Template.Spec.Auth) {
 		auth, err := security.ResolveAuthContextFromNetSpec(r.SecretLister, cg.GetNamespace(), *cg.Spec.Template.Spec.Auth.NetSpec)
 		if err != nil {
 			return nil, err
 		}
-		secret, err = security.Secret(ctx, &NetSpecSecretLocator{cg}, security.NetSpecSecretProviderFunc(auth))
+		secret, err := security.Secret(ctx, &NetSpecSecretLocator{cg}, security.NetSpecSecretProviderFunc(auth))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get secret: %w", err)
 		}
+		return secret, nil
 	}
 
-	return secret, nil
+	return nil, nil
 }
 
 type NetSpecSecretLocator struct {
