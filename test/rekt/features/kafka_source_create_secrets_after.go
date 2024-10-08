@@ -48,7 +48,7 @@ func CreateSecretsAfterKafkaSource() *feature.Feature {
 		kafkasource.WithSASLEnabled(),
 		kafkasource.WithSASLUser(saslSecretName, "user"),
 		kafkasource.WithSASLPassword(saslSecretName, "password"),
-		kafkasource.WithSASLType(saslSecretName, "saslType"),
+		kafkasource.WithSASLType(saslSecretName, "sasl.mechanism"),
 		kafkasource.WithTLSEnabled(),
 		kafkasource.WithTLSCACert(tlsSecretName, "ca.crt"),
 	))
