@@ -44,10 +44,11 @@ import (
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
 
+	"knative.dev/eventing/test/rekt/features/source"
+
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/featuressteps"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
-	"knative.dev/eventing/test/rekt/features/source"
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
@@ -338,7 +339,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 			kafkasource.WithSASLEnabled(),
 			kafkasource.WithSASLUser(secretName, "user"),
 			kafkasource.WithSASLPassword(secretName, "password"),
-			kafkasource.WithSASLType(secretName, "saslType"),
+			kafkasource.WithSASLType(secretName, "sasl.mechanism"),
 			kafkasource.WithTLSEnabled(),
 			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 		)
