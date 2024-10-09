@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
@@ -24,12 +25,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.vertx.core.Future;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 
@@ -73,5 +76,23 @@ public class RecordDispatcherMutatorChainTest {
 
         assertThat(succeeded.succeeded()).isTrue();
         verify(next, times(1)).close();
+    }
+
+    @Test
+    public void shouldNotThrowOnInvalidCloudEvent() {
+        final var next = mock(RecordDispatcher.class);
+
+        final var called = new AtomicInteger(0);
+        final var given = new InvalidCloudEvent(null);
+        final var chain = new RecordDispatcherMutatorChain(next, in -> {
+            assertThat(in.value()).isSameAs(given);
+            called.incrementAndGet();
+            return given;
+        });
+
+        final var givenRecord = new ConsumerRecord<>("t1", 0, 0, (Object) "abc", (CloudEvent) given);
+
+        assertThatCode(() -> chain.dispatch(givenRecord)).doesNotThrowAnyException();
+        assertThat(called.get()).isEqualTo(1);
     }
 }
