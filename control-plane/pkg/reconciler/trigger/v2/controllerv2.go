@@ -43,8 +43,8 @@ import (
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"

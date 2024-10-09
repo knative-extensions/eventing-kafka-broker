@@ -28,7 +28,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 )

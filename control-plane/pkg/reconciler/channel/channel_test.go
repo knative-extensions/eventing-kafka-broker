@@ -62,12 +62,13 @@ import (
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
+
 	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
 const (

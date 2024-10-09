@@ -41,13 +41,13 @@ import (
 	eventingkafkachannelslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1beta1"
 	eventingkafkasourceslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1beta1"
 
-	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 
 	eventingkafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkabrokerclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
-	fakekafkainternalsclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/fake"
-	consumerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	fakekafkainternalsclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
 	eventingkafkabrokerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
+	consumerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{

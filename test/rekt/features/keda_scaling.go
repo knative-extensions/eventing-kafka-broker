@@ -31,16 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
-	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkafeatureflags"
-	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
-	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
-	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	subscriptionresources "knative.dev/eventing/test/rekt/resources/subscription"
@@ -51,6 +41,17 @@ import (
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
+
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
+	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkafeatureflags"
+	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
+	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
 )
 
 func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {

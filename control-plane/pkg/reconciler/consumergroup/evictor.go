@@ -32,8 +32,8 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/logging"
 
-	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
-	kafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
+	kafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 )
 
 type evictor struct {

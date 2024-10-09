@@ -43,7 +43,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/core"
 	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 )
 
 const (

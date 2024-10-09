@@ -36,7 +36,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -58,11 +58,11 @@ import (
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
-	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumer"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup"
+	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
@@ -115,7 +115,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
 	}
 
-	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
+	dispatcherPodInformer := podinformer.Get(ctx, internalsapi.DispatcherLabelSelectorStr)
 
 	schedulers := map[string]Scheduler{
 		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName, dispatcherPodInformer),
@@ -216,7 +216,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 			return
 		}
 
-		cmName, err := eventing.ConfigMapNameFromPod(pod)
+		cmName, err := internalsapi.ConfigMapNameFromPod(pod)
 		if err != nil {
 			logger.Warnw("Failed to get ConfigMap name from pod", zap.String("pod", pod.Name), zap.Error(err))
 			return

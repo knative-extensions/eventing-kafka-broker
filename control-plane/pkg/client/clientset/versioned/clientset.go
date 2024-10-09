@@ -27,6 +27,7 @@ import (
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
 )
@@ -35,6 +36,7 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface
 	EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface
+	InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface
 	MessagingV1beta1() messagingv1beta1.MessagingV1beta1Interface
 	SourcesV1beta1() sourcesv1beta1.SourcesV1beta1Interface
 }
@@ -44,6 +46,7 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	bindingsV1beta1  *bindingsv1beta1.BindingsV1beta1Client
 	eventingV1alpha1 *eventingv1alpha1.EventingV1alpha1Client
+	internalV1alpha1 *internalv1alpha1.InternalV1alpha1Client
 	messagingV1beta1 *messagingv1beta1.MessagingV1beta1Client
 	sourcesV1beta1   *sourcesv1beta1.SourcesV1beta1Client
 }
@@ -56,6 +59,11 @@ func (c *Clientset) BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface {
 // EventingV1alpha1 retrieves the EventingV1alpha1Client
 func (c *Clientset) EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface {
 	return c.eventingV1alpha1
+}
+
+// InternalV1alpha1 retrieves the InternalV1alpha1Client
+func (c *Clientset) InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface {
+	return c.internalV1alpha1
 }
 
 // MessagingV1beta1 retrieves the MessagingV1beta1Client
@@ -120,6 +128,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.internalV1alpha1, err = internalv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.messagingV1beta1, err = messagingv1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -151,6 +163,7 @@ func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.bindingsV1beta1 = bindingsv1beta1.New(c)
 	cs.eventingV1alpha1 = eventingv1alpha1.New(c)
+	cs.internalV1alpha1 = internalv1alpha1.New(c)
 	cs.messagingV1beta1 = messagingv1beta1.New(c)
 	cs.sourcesV1beta1 = sourcesv1beta1.New(c)
 

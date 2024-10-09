@@ -29,6 +29,8 @@ import (
 	fakebindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1/fake"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	fakeeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
+	fakeinternalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1/fake"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
 	fakemessagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1/fake"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
@@ -93,6 +95,11 @@ func (c *Clientset) BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface {
 // EventingV1alpha1 retrieves the EventingV1alpha1Client
 func (c *Clientset) EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface {
 	return &fakeeventingv1alpha1.FakeEventingV1alpha1{Fake: &c.Fake}
+}
+
+// InternalV1alpha1 retrieves the InternalV1alpha1Client
+func (c *Clientset) InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface {
+	return &fakeinternalv1alpha1.FakeInternalV1alpha1{Fake: &c.Fake}
 }
 
 // MessagingV1beta1 retrieves the MessagingV1beta1Client
