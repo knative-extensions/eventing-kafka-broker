@@ -16,8 +16,10 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -54,6 +56,30 @@ public class CloudEventOverridesMutatorTest {
         final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
 
         assertThat(got).isEqualTo(expected.build());
+    }
+
+    @Test
+    public void shouldNotThrowOnInvalidCloudEvent() {
+        final var extensions = Map.of(
+                "a", "foo",
+                "b", "bar");
+        final var ceOverrides = DataPlaneContract.CloudEventOverrides.newBuilder()
+                .putAllExtensions(extensions)
+                .build();
+
+        final var mutator = new CloudEventOverridesMutator(ceOverrides);
+
+        final var given = new InvalidCloudEvent(null);
+
+        CloudEvent ce = null;
+        assertThatCode(() -> {
+                    mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
+                })
+                .doesNotThrowAnyException();
+
+        final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
+
+        assertThat(got).isSameAs(given);
     }
 
     @Test
