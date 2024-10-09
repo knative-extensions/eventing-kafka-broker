@@ -29,66 +29,12 @@ import (
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/pkg/system"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
-	"knative.dev/reconciler-test/pkg/environment"
-
-	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_sink"
 )
 
-// BrokerPostUpgradeTest tests channel operations after upgrade.
-func BrokerPostUpgradeTest() pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("BrokerPostUpgradeTest", func(c pkgupgrade.Context) {
-		c.T.Parallel()
-		c.T.Run("Verify post-install", func(t *testing.T) {
-			verifyPostInstall(t)
-		})
-		c.T.Run("tests", func(t *testing.T) {
-			runBrokerSmokeTest(t, kafka.BrokerClass)
-		})
+func VerifyPostInstallTest() pkgupgrade.Operation {
+	return pkgupgrade.NewOperation("VerifyPostInstallTest", func(c pkgupgrade.Context) {
+		verifyPostInstall(c.T)
 	})
-}
-
-// NamespacedBrokerPostUpgradeTest tests channel operations after upgrade.
-func NamespacedBrokerPostUpgradeTest() pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("NamespacedBrokerPostUpgradeTest", func(c pkgupgrade.Context) {
-		c.T.Parallel()
-		c.T.Run("Verify post-install", func(t *testing.T) {
-			verifyPostInstall(t)
-		})
-		c.T.Run("tests", func(t *testing.T) {
-			runBrokerSmokeTest(t, kafka.NamespacedBrokerClass)
-		})
-	})
-}
-
-// ChannelPostUpgradeTest tests channel operations after upgrade.
-func ChannelPostUpgradeTest() pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("ChannelPostUpgradeTest",
-		func(c pkgupgrade.Context) {
-			runChannelSmokeTest(c.T)
-		})
-}
-
-// SinkPostUpgradeTest tests sink basic operations post upgrade.
-func SinkPostUpgradeTest() pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("SinkPostUpgradeTest", func(c pkgupgrade.Context) {
-		c.T.Parallel()
-		c.T.Run("Verify post-install", func(t *testing.T) {
-			verifyPostInstall(t)
-		})
-		c.T.Run("tests", func(t *testing.T) {
-			e2e_sink.RunTestKafkaSink(t, eventing.ModeBinary, nil)
-		})
-	})
-}
-
-// SourcePostUpgradeTest tests source operations after upgrade.
-func SourcePostUpgradeTest(glob environment.GlobalEnvironment) pkgupgrade.Operation {
-	return pkgupgrade.NewOperation("SourcePostUpgradeTest",
-		func(c pkgupgrade.Context) {
-			runSourceSmokeTest(glob, c.T)
-		})
 }
 
 func verifyPostInstall(t *testing.T) {

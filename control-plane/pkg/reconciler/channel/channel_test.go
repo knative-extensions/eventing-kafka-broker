@@ -62,10 +62,13 @@ import (
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
+
+	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
-	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 )
 
 const (
@@ -75,6 +78,9 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+
+	readyEventPolicyName   = "test-event-policy-ready"
+	unreadyEventPolicyName = "test-event-policy-unready"
 
 	kafkaFeatureFlags = "kafka-feature-flags"
 )
@@ -98,6 +104,12 @@ var DefaultEnv = &config.Env{
 
 var (
 	testCaCerts = string(eventingtlstesting.CA)
+
+	channelGVK = metav1.GroupVersionKind{
+		Group:   "messaging.knative.dev",
+		Version: "v1beta1",
+		Kind:    "KafkaChannel",
+	}
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -240,6 +252,7 @@ func TestReconcileKind(t *testing.T) {
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -315,6 +328,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
 						WithChannelDeadLetterSinkURI(ServiceURL),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -367,6 +381,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusProbeFailed(prober.StatusNotReady),
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -422,6 +437,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(ChannelTopic()),
 						StatusProbeFailed(prober.StatusUnknown),
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -464,6 +480,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -497,6 +514,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -536,6 +554,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -570,6 +589,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -609,6 +629,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -642,6 +663,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -667,6 +689,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -708,6 +731,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 						)),
 						ConsumerGroupReady,
+						withChannelTopLevelResourceRef(),
 					),
 				},
 			},
@@ -724,6 +748,7 @@ func TestReconcileKind(t *testing.T) {
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
 						StatusChannelSubscribers(),
 						StatusProbeSucceeded,
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -761,6 +786,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -779,6 +805,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnreadySubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -839,6 +866,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription2UUID),
@@ -856,6 +884,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 						ConsumerReply(ConsumerNoReply()),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -890,6 +919,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber), Subscriber2(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -926,6 +956,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -947,6 +978,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -980,6 +1012,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1148,6 +1181,7 @@ func TestReconcileKind(t *testing.T) {
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1196,6 +1230,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1251,6 +1286,7 @@ func TestReconcileKind(t *testing.T) {
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1301,6 +1337,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1356,6 +1393,7 @@ func TestReconcileKind(t *testing.T) {
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1405,6 +1443,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1457,6 +1496,7 @@ func TestReconcileKind(t *testing.T) {
 						WithSubscribers(Subscriber1(WithFreshSubscriber)),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1503,6 +1543,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1536,6 +1577,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						WithSubscribers(Subscriber1(WithUnknownSubscriber)),
 						StatusChannelSubscribersUnknown(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1589,6 +1631,7 @@ func TestReconcileKind(t *testing.T) {
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1641,6 +1684,7 @@ func TestReconcileKind(t *testing.T) {
 						ChannelAddressable(&env),
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1754,6 +1798,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusProbeSucceeded,
 						StatusChannelSubscribers(),
 						WithChannelDeadLetterSinkURI(ServiceURL),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1856,6 +1901,7 @@ func TestReconcileKind(t *testing.T) {
 							URL:  ChannelAddress(),
 						}),
 						WithChannelAddessable(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1948,6 +1994,7 @@ func TestReconcileKind(t *testing.T) {
 							CACerts: pointer.String(testCaCerts),
 						}),
 						WithChannelAddessable(),
+						WithChannelEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -1973,7 +2020,8 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: testKey,
 			Ctx: feature.ToContext(context.Background(), feature.Flags{
-				feature.OIDCAuthentication: feature.Enabled,
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationDenyAll,
 			}),
 			WantUpdates: []clientgotesting.UpdateActionImpl{
 				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
@@ -2027,6 +2075,212 @@ func TestReconcileKind(t *testing.T) {
 							Audience: pointer.String(ChannelAudience),
 						}),
 						WithChannelAddessable(),
+						WithChannelEventPoliciesReadyBecauseNoPolicyAndOIDCEnabled(feature.AuthorizationDenyAll),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Should list applying EventPolicies",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(readyEventPolicyName, ChannelNamespace,
+					reconcilertesting.WithReadyEventPolicyCondition,
+					reconcilertesting.WithEventPolicyToRef(channelGVK, ChannelName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub",
+					}),
+				),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host:     receiver.Host(ChannelNamespace, ChannelName),
+								Path:     receiver.Path(ChannelNamespace, ChannelName),
+								Audience: ChannelAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Exact{
+													Exact: &contract.Exact{
+														Attributes: map[string]string{
+															"sub": "sub",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      ChannelAddress(),
+								Audience: pointer.String(ChannelAudience),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      ChannelAddress(),
+							Audience: pointer.String(ChannelAudience),
+						}),
+						WithChannelAddessable(),
+						WithChannelEventPoliciesReady(),
+						WithChannelEventPoliciesListed(readyEventPolicyName),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+			},
+		}, {
+			Name: "Should mark as NotReady on unready EventPolicies",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+				ChannelReceiverPod(env.SystemNamespace, map[string]string{
+					base.VolumeGenerationAnnotationKey: "0",
+					"annotation_to_preserve":           "value_to_preserve",
+				}),
+				reconcilertesting.NewEventPolicy(unreadyEventPolicyName, ChannelNamespace,
+					reconcilertesting.WithUnreadyEventPolicyCondition("", ""),
+					reconcilertesting.WithEventPolicyToRef(channelGVK, ChannelName),
+					reconcilertesting.WithEventPolicyStatusFromSub([]string{
+						"sub",
+					}),
+				),
+			},
+			Key: testKey,
+			Ctx: feature.ToContext(context.Background(), feature.Flags{
+				feature.OIDCAuthentication:       feature.Enabled,
+				feature.AuthorizationDefaultMode: feature.AuthorizationAllowSameNamespace,
+			}),
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, env.ContractConfigMapFormat, &contract.Contract{
+					Generation: 1,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ChannelUUID,
+							Topics:           []string{ChannelTopic()},
+							BootstrapServers: ChannelBootstrapServers,
+							Reference:        ChannelReference(),
+							Ingress: &contract.Ingress{
+								Host:     receiver.Host(ChannelNamespace, ChannelName),
+								Path:     receiver.Path(ChannelNamespace, ChannelName),
+								Audience: ChannelAudience,
+								EventPolicies: []*contract.EventPolicy{
+									{
+										TokenMatchers: []*contract.TokenMatcher{
+											{
+												Matcher: &contract.TokenMatcher_Prefix{
+													Prefix: &contract.Prefix{
+														Attributes: map[string]string{
+															"sub": "system:serviceaccount:" + ChannelNamespace + ":",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
+						},
+					},
+				}),
+				ChannelReceiverPodUpdate(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve":           "value_to_preserve",
+					base.VolumeGenerationAnnotationKey: "1",
+				}),
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the channel namespace with configmap namespace, so skip it
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+				NewPerChannelService(&env),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						StatusConfigMapUpdatedReady(&env),
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
+						StatusTopicReadyWithName(ChannelTopic()),
+						ChannelAddressable(&env),
+						StatusProbeSucceeded,
+						StatusChannelSubscribers(),
+						WithChannelAddresses([]duckv1.Addressable{
+							{
+								Name:     pointer.String("http"),
+								URL:      ChannelAddress(),
+								Audience: pointer.String(ChannelAudience),
+							},
+						}),
+						WithChannelAddress(duckv1.Addressable{
+							Name:     pointer.String("http"),
+							URL:      ChannelAddress(),
+							Audience: pointer.String(ChannelAudience),
+						}),
+						WithChannelAddessable(),
+						WithChannelEventPoliciesReady(),
+						WithChannelEventPoliciesNotReady("EventPoliciesNotReady", fmt.Sprintf("event policies %s are not ready", unreadyEventPolicyName)),
 					),
 				},
 			},
@@ -2191,4 +2445,14 @@ func httpsURL(name string, namespace string) *apis.URL {
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", namespace, name),
 	}
+}
+
+func withChannelTopLevelResourceRef() ConsumerGroupOption {
+	return WithTopLevelResourceRef(&corev1.ObjectReference{
+		APIVersion: messagingv1beta.SchemeGroupVersion.String(),
+		Kind:       "KafkaChannel",
+		Namespace:  ChannelNamespace,
+		Name:       ChannelName,
+		UID:        ChannelUUID,
+	})
 }

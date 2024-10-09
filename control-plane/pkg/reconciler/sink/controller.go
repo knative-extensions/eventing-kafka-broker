@@ -22,6 +22,8 @@ import (
 	"net"
 	"net/http"
 
+	"knative.dev/eventing/pkg/auth"
+
 	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 
 	"go.uber.org/zap"
@@ -57,8 +59,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
-	clientPool := clientpool.Get(ctx)
-
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
 			KubeClient:                  kubeclient.Get(ctx),
@@ -70,10 +70,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister:      configmapInformer.Lister(),
-		EventPolicyLister:    eventPolicyInformer.Lister(),
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		Env:                  configs,
+		ConfigMapLister:   configmapInformer.Lister(),
+		EventPolicyLister: eventPolicyInformer.Lister(),
+		Env:               configs,
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
@@ -160,6 +166,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,
 	})
+
+	sinkGK := eventing.SchemeGroupVersion.WithKind("KafkaSink").GroupKind()
+
+	// Enqueue the KafkaSink, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the KafkaSink
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(sinkInformer.Informer().GetIndexer(), sinkGK, impl.EnqueueKey))
 
 	return impl
 }

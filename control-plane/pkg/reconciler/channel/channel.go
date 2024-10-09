@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+
 	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
 	"k8s.io/utils/pointer"
@@ -40,12 +42,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
@@ -232,8 +235,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		audience = nil
 	}
 
+	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not get applying eventpolicies for kafkaChannel: %v", err)
+	}
+
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience, channel.Status.AppliedEventPoliciesStatus)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience, applyingEventPolicies)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -262,6 +270,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("Contract config map updated")
 	statusConditionManager.ConfigMapUpdated()
+
+	err = auth.UpdateStatusWithProvidedEventPolicies(featureFlags, &channel.Status.AppliedEventPoliciesStatus, &channel.Status, applyingEventPolicies)
+	if err != nil {
+		return fmt.Errorf("could not update KafkaChannel status with EventPolicies: %v", err)
+	}
 
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
@@ -590,6 +603,13 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
+			TopLevelResourceRef: &corev1.ObjectReference{
+				APIVersion: messagingv1beta1.SchemeGroupVersion.String(),
+				Kind:       "KafkaChannel",
+				Name:       channel.Name,
+				Namespace:  channel.Namespace,
+				UID:        channel.UID,
+			},
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -688,15 +708,16 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig, audience *string, appliedEventPoliciesStatus v1.AppliedEventPoliciesStatus) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig, audience *string, applyingEventPolicies []*v1alpha1.EventPolicy) (*contract.Resource, error) {
 	features := feature.FromContext(ctx)
 
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Host: receiver.Host(channel.GetNamespace(), channel.GetName()),
-			Path: receiver.Path(channel.GetNamespace(), channel.GetName()),
+			Host:          receiver.Host(channel.GetNamespace(), channel.GetName()),
+			Path:          receiver.Path(channel.GetNamespace(), channel.GetName()),
+			EventPolicies: coreconfig.ContractEventPoliciesFromEventPolicies(applyingEventPolicies, channel.Namespace, features),
 		},
 		FeatureFlags: &contract.FeatureFlags{
 			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate) && !ownedByBroker(channel),
@@ -720,12 +741,6 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	if audience != nil {
 		resource.Ingress.Audience = *audience
 	}
-
-	eventPolicies, err := coreconfig.EventPoliciesFromAppliedEventPoliciesStatus(appliedEventPoliciesStatus, r.EventPolicyLister, channel.Namespace, features)
-	if err != nil {
-		return nil, fmt.Errorf("could not get eventpolicies from channel status: %w", err)
-	}
-	resource.Ingress.EventPolicies = eventPolicies
 
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {

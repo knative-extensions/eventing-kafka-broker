@@ -332,7 +332,6 @@ func TestBrokerSupportsAuthZ(t *testing.T) {
 		knative.WithLoggingConfig,
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
-		environment.WithPollTimings(4*time.Second, 12*time.Minute),
 		environment.Managed(t),
 		eventshub.WithTLS(t),
 	)

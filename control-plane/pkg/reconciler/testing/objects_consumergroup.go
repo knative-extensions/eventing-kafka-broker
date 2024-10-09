@@ -248,3 +248,9 @@ func WithConfigmapOwnerRef(ownerref *metav1.OwnerReference) reconcilertesting.Co
 		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
 	}
 }
+
+func WithTopLevelResourceRef(ref *corev1.ObjectReference) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Spec.TopLevelResourceRef = ref
+	}
+}

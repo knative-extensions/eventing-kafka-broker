@@ -17,6 +17,9 @@
 package upgrade
 
 import (
+	"slices"
+
+	"knative.dev/eventing/test/upgrade"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 	"knative.dev/reconciler-test/pkg/environment"
 
@@ -25,30 +28,43 @@ import (
 
 // Suite defines the whole upgrade test suite for Eventing Kafka.
 func Suite(glob environment.GlobalEnvironment) pkgupgrade.Suite {
+	g := upgrade.FeatureGroupWithUpgradeTests{
+		// Features that will run the same test post-upgrade and post-downgrade.
+		upgrade.NewFeatureSmoke(KafkaSinkSourceBinaryEventFeature(glob)),
+		upgrade.NewFeatureSmoke(KafkaSinkSourceStructuredEventFeature(glob)),
+		upgrade.NewFeatureSmoke(BrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureSmoke(NamespacedBrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureSmoke(KafkaChannelFeature(glob)),
+		// Features that will be created pre-upgrade and verified/removed post-upgrade.
+		upgrade.NewFeatureOnlyUpgrade(KafkaSinkSourceBinaryEventFeature(glob)),
+		upgrade.NewFeatureOnlyUpgrade(KafkaSinkSourceStructuredEventFeature(glob)),
+		upgrade.NewFeatureOnlyUpgrade(BrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureOnlyUpgrade(NamespacedBrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureOnlyUpgrade(KafkaChannelFeature(glob)),
+		// Features that will be created pre-upgrade, verified post-upgrade, verified and removed post-downgrade.
+		upgrade.NewFeatureUpgradeDowngrade(KafkaSinkSourceBinaryEventFeature(glob)),
+		upgrade.NewFeatureUpgradeDowngrade(KafkaSinkSourceStructuredEventFeature(glob)),
+		upgrade.NewFeatureUpgradeDowngrade(BrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureUpgradeDowngrade(NamespacedBrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureUpgradeDowngrade(KafkaChannelFeature(glob)),
+		// Features that will be created post-upgrade, verified and removed post-downgrade.
+		upgrade.NewFeatureOnlyDowngrade(KafkaSinkSourceBinaryEventFeature(glob)),
+		upgrade.NewFeatureOnlyDowngrade(KafkaSinkSourceStructuredEventFeature(glob)),
+		upgrade.NewFeatureOnlyDowngrade(BrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureOnlyDowngrade(NamespacedBrokerEventTransformationForTrigger(glob)),
+		upgrade.NewFeatureOnlyDowngrade(KafkaChannelFeature(glob)),
+	}
 	return pkgupgrade.Suite{
 		Tests: pkgupgrade.Tests{
-			PreUpgrade: []pkgupgrade.Operation{
-				BrokerPreUpgradeTest(),
-				NamespacedBrokerPreUpgradeTest(),
-				ChannelPreUpgradeTest(),
-				SinkPreUpgradeTest(),
-				SourcePreUpgradeTest(glob),
-			},
-			PostUpgrade: []pkgupgrade.Operation{
-				BrokerPostUpgradeTest(),
-				NamespacedBrokerPostUpgradeTest(),
-				ChannelPostUpgradeTest(),
-				SinkPostUpgradeTest(),
-				SourcePostUpgradeTest(glob),
-			},
-			PostDowngrade: []pkgupgrade.Operation{
-				BrokerPostDowngradeTest(),
-				NamespacedBrokerPostDowngradeTest(),
-				ChannelPostDowngradeTest(),
-				SinkPostDowngradeTest(),
-				SourcePostDowngradeTest(glob),
-			},
-			Continual: ContinualTests(),
+			PreUpgrade: g.PreUpgradeTests(),
+			PostUpgrade: slices.Concat(
+				[]pkgupgrade.Operation{
+					VerifyPostInstallTest(),
+				},
+				g.PostUpgradeTests(),
+			),
+			PostDowngrade: g.PostDowngradeTests(),
+			Continual:     ContinualTests(),
 		},
 		Installations: pkgupgrade.Installations{
 			Base: []pkgupgrade.Operation{

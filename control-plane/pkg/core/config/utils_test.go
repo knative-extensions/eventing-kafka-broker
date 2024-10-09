@@ -23,21 +23,20 @@ import (
 	"testing"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
-
-	"google.golang.org/protobuf/encoding/protojson"
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-	"knative.dev/eventing/pkg/apis/feature"
-	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/runtime/protoimpl"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/client/injection/ducks/duck/v1/addressable"
@@ -48,7 +47,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	eventpolicyinformerfake "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy/fake"
 )
 
 func TestContentModeFromString(t *testing.T) {
@@ -513,7 +511,7 @@ func TestMergeEgressConfig(t *testing.T) {
 	}
 }
 
-func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
+func TestContractEventPoliciesEventPolicies(t *testing.T) {
 
 	tests := []struct {
 		name                     string
@@ -522,7 +520,7 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 		namespace                string
 		defaultAuthorizationMode feature.Flag
 		expected                 []*contract.EventPolicy
-		wantErr                  bool
+		oidcDisabled             bool
 	}{
 		{
 			name: "Exact match",
@@ -538,6 +536,14 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 					Status: eventingv1alpha1.EventPolicyStatus{
 						From: []string{
 							"from-1",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionTrue,
+								},
+							},
 						},
 					},
 				},
@@ -565,6 +571,14 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 					Status: eventingv1alpha1.EventPolicyStatus{
 						From: []string{
 							"from-*",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionTrue,
+								},
+							},
 						},
 					},
 				},
@@ -594,6 +608,14 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 						From: []string{
 							"from-1",
 						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionTrue,
+								},
+							},
+						},
 					},
 				}, {
 					ObjectMeta: metav1.ObjectMeta{
@@ -603,6 +625,14 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 					Status: eventingv1alpha1.EventPolicyStatus{
 						From: []string{
 							"from-2-*",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionTrue,
+								},
+							},
 						},
 					},
 				},
@@ -643,6 +673,14 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 						From: []string{
 							"from-1",
 						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionTrue,
+								},
+							},
+						},
 					},
 				}, {
 					ObjectMeta: metav1.ObjectMeta{
@@ -659,6 +697,14 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 					Status: eventingv1alpha1.EventPolicyStatus{
 						From: []string{
 							"from-2-*",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionTrue,
+								},
+							},
 						},
 					},
 				},
@@ -728,46 +774,88 @@ func TestEventPoliciesFromAppliedEventPoliciesStatus(t *testing.T) {
 			defaultAuthorizationMode: feature.AuthorizationDenyAll,
 			expected:                 []*contract.EventPolicy{},
 		}, {
-			name: "Applying policy does not exist",
+			name: "Applying policy not ready",
 			applyingPolicies: []string{
-				"not-found",
+				"policy-1",
 			},
-			existingEventPolicies:    []*eventingv1alpha1.EventPolicy{},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-*",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionFalse,
+								},
+							},
+						},
+					},
+				},
+			},
+			namespace:                "my-ns",
+			defaultAuthorizationMode: feature.AuthorizationDenyAll,
+			expected:                 []*contract.EventPolicy{},
+		}, {
+			name:         "No policy when OIDC is disabled",
+			oidcDisabled: true,
+			applyingPolicies: []string{
+				"policy-1",
+			},
+			existingEventPolicies: []*eventingv1alpha1.EventPolicy{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "policy-1",
+						Namespace: "my-ns",
+					},
+					Status: eventingv1alpha1.EventPolicyStatus{
+						From: []string{
+							"from-1",
+						},
+						Status: duckv1.Status{
+							Conditions: duckv1.Conditions{
+								{
+									Type:   eventingv1alpha1.EventPolicyConditionReady,
+									Status: corev1.ConditionFalse, // is false, as OIDC is disabled
+								},
+							},
+						},
+					},
+				},
+			},
 			namespace:                "my-ns",
 			defaultAuthorizationMode: feature.AuthorizationAllowSameNamespace,
 			expected:                 []*contract.EventPolicy{},
-			wantErr:                  true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			ctx, _ := reconcilertesting.SetupFakeContext(t)
 			features := feature.Flags{
 				feature.AuthorizationDefaultMode: tt.defaultAuthorizationMode,
+				feature.OIDCAuthentication:       feature.Enabled,
 			}
 
-			for _, ep := range tt.existingEventPolicies {
-				err := eventpolicyinformerfake.Get(ctx).Informer().GetStore().Add(ep)
-				if err != nil {
-					t.Fatal(err)
+			if tt.oidcDisabled {
+				features[feature.OIDCAuthentication] = feature.Disabled
+			}
+
+			applyingPolicies := []*eventingv1alpha1.EventPolicy{}
+			for _, applyingPolicyName := range tt.applyingPolicies {
+				for _, existingPolicy := range tt.existingEventPolicies {
+					if applyingPolicyName == existingPolicy.Name {
+						applyingPolicies = append(applyingPolicies, existingPolicy)
+					}
 				}
 			}
 
-			applyingPoliciesStatus := eventingduck.AppliedEventPoliciesStatus{}
-			for _, ep := range tt.applyingPolicies {
-				applyingPoliciesStatus.Policies = append(applyingPoliciesStatus.Policies, eventingduck.AppliedEventPolicyRef{
-					Name:       ep,
-					APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-				})
-			}
-
-			got, err := EventPoliciesFromAppliedEventPoliciesStatus(applyingPoliciesStatus, eventpolicyinformerfake.Get(ctx).Lister(), tt.namespace, features)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("EventPoliciesFromAppliedEventPoliciesStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
+			got := ContractEventPoliciesFromEventPolicies(applyingPolicies, tt.namespace, features)
 			expectedJSON, err := protojson.Marshal(&contract.Ingress{
 				EventPolicies: tt.expected,
 			})

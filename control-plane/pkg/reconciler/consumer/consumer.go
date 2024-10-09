@@ -131,6 +131,14 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 		egress.VReplicas = 1
 	}
 
+	topLevelUserFacingResourceRef, err := r.reconcileTopLevelUserFacingResourceRef(c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reconcile top-level user facing resource reference: %w", err)
+	}
+	if topLevelUserFacingResourceRef == nil {
+		topLevelUserFacingResourceRef = userFacingResourceRef
+	}
+
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),
 		Topics:              c.Spec.Topics,
@@ -138,7 +146,7 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 		Egresses:            []*contract.Egress{egress},
 		Auth:                nil, // Auth will be added by reconcileAuth
 		CloudEventOverrides: reconcileCEOverrides(c),
-		Reference:           userFacingResourceRef,
+		Reference:           topLevelUserFacingResourceRef,
 		FeatureFlags: &contract.FeatureFlags{
 			EnableEventTypeAutocreate: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
 		},
@@ -293,6 +301,31 @@ func (r *Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) 
 	}
 
 	userFacingResource := cg.GetUserFacingResourceRef()
+	ref := &contract.Reference{
+		Uuid:         string(userFacingResource.UID),
+		Namespace:    c.GetNamespace(),
+		Name:         userFacingResource.Name,
+		Kind:         userFacingResource.Kind,
+		GroupVersion: userFacingResource.APIVersion,
+	}
+	return ref, nil
+}
+
+func (r *Reconciler) reconcileTopLevelUserFacingResourceRef(c *kafkainternals.Consumer) (*contract.Reference, error) {
+
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(c.GetConsumerGroup().Name)
+	if apierrors.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get %s: %w", kafkainternals.ConsumerGroupGroupVersionKind.Kind, err)
+	}
+
+	userFacingResource := cg.GetTopLevelUserFacingResourceRef()
+	if userFacingResource == nil {
+		return nil, nil
+	}
+
 	ref := &contract.Reference{
 		Uuid:         string(userFacingResource.UID),
 		Namespace:    c.GetNamespace(),

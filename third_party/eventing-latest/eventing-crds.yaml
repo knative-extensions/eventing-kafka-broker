@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -307,7 +307,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -522,7 +522,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -880,7 +880,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1055,7 +1055,7 @@ metadata:
   name: eventpolicies.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1274,7 +1274,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1667,7 +1667,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -1769,6 +1769,10 @@ spec:
                       type:
                         description: 'Type of condition.'
                         type: string
+                observedGeneration:
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
+                  type: integer
+                  format: int64
       additionalPrinterColumns:
         - name: URL
           type: string
@@ -1814,7 +1818,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2342,7 +2346,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -2714,7 +2718,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -3098,7 +3102,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -3313,7 +3317,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -3575,7 +3579,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240818-bf945f909"
+    app.kubernetes.io/version: "20240929-e7fca7646"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -3674,6 +3678,9 @@ spec:
                       description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
                       type: integer
                       format: int32
+                    format:
+                      description: Format is the format used to serialize the event into a http request when delivering the event. It can be json (for structured events), binary (for binary events), or unset.
+                      type: string
                 filter:
                   description: 'Filter is the filter to apply against all events from the Broker. Only events that pass this filter will be sent to the Subscriber. If not specified, will default to allowing all events.'
                   type: object

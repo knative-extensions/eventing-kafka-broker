@@ -681,7 +681,6 @@ function start_knative_eventing_extension() {
 # Parameters: $1 - tool package for go run.
 #             $2..$n - parameters passed to the tool.
 function go_run() {
-  set -x
   local package
   package="$1"
   if [[ "$package" != *@* ]]; then
@@ -775,7 +774,7 @@ function go_update_deps() {
 function __clean_goworksum_if_exists() {
   if [ -f "$REPO_ROOT_DIR/go.work.sum" ]; then
     log.step 'Cleaning the go.work.sum file'
-    truncate --size 0 "$REPO_ROOT_DIR/go.work.sum"
+    truncate -s 0 "$REPO_ROOT_DIR/go.work.sum"
   fi
 }
 

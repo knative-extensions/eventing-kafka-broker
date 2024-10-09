@@ -24,13 +24,13 @@ import (
 	"sort"
 	"strings"
 
-	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 
 	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	duck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/resolver"
 
@@ -55,14 +55,18 @@ func ContentModeFromString(mode string) contract.ContentMode {
 	}
 }
 
-// EventPoliciesFromAppliedEventPoliciesStatus resolves a AppliedEventPoliciesStatus into a list of contract.EventPolicy
-func EventPoliciesFromAppliedEventPoliciesStatus(status duck.AppliedEventPoliciesStatus, lister v1alpha1.EventPolicyLister, namespace string, features feature.Flags) ([]*contract.EventPolicy, error) {
-	eventPolicies := make([]*contract.EventPolicy, 0, len(status.Policies))
+// ContractEventPoliciesFromEventPolicies resolves a list of v1alpha1.EventPolicy into a list of contract.EventPolicy
+func ContractEventPoliciesFromEventPolicies(applyingEventPolicies []*eventingv1alpha1.EventPolicy, namespace string, features feature.Flags) []*contract.EventPolicy {
+	if !features.IsOIDCAuthentication() {
+		return nil
+	}
 
-	for _, appliedPolicy := range status.Policies {
-		policy, err := lister.EventPolicies(namespace).Get(appliedPolicy.Name)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get eventPolicy %s: %w", appliedPolicy.Name, err)
+	eventPolicies := make([]*contract.EventPolicy, 0, len(applyingEventPolicies))
+
+	for _, policy := range applyingEventPolicies {
+		if !policy.Status.IsReady() {
+			// only add ready eventpolicies to the contract
+			continue
 		}
 
 		contractPolicy := &contract.EventPolicy{}
@@ -132,7 +136,7 @@ func EventPoliciesFromAppliedEventPoliciesStatus(status duck.AppliedEventPolicie
 		// else: deny all -> add no additional policy
 	}
 
-	return eventPolicies, nil
+	return eventPolicies
 }
 
 func EgressConfigFromDelivery(

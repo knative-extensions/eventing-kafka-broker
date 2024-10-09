@@ -51,6 +51,8 @@ const (
 	// KafkaChannelConditionChannelServiceReady has status True when the K8S Service representing the channel
 	// is ready. Because this uses ExternalName, there are no endpoints to check.
 	KafkaChannelConditionChannelServiceReady apis.ConditionType = "ChannelServiceReady"
+
+	ConditionEventPoliciesReady apis.ConditionType = "EventPoliciesReady"
 )
 
 // RegisterAlternateKafkaChannelConditionSet register a different apis.ConditionSet.
@@ -128,4 +130,20 @@ func (kcs *KafkaChannelStatus) MarkChannelServiceFailed(reason, messageFormat st
 
 func (kcs *KafkaChannelStatus) MarkChannelServiceTrue() {
 	kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionChannelServiceReady)
+}
+
+func (kcs *KafkaChannelStatus) MarkEventPoliciesTrue() {
+	kcs.GetConditionSet().Manage(kcs).MarkTrue(ConditionEventPoliciesReady)
+}
+
+func (kcs *KafkaChannelStatus) MarkEventPoliciesTrueWithReason(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkTrueWithReason(ConditionEventPoliciesReady, reason, messageFormat, messageA...)
+}
+
+func (kcs *KafkaChannelStatus) MarkEventPoliciesFailed(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkFalse(ConditionEventPoliciesReady, reason, messageFormat, messageA...)
+}
+
+func (kcs *KafkaChannelStatus) MarkEventPoliciesUnknown(reason, messageFormat string, messageA ...interface{}) {
+	kcs.GetConditionSet().Manage(kcs).MarkUnknown(ConditionEventPoliciesReady, reason, messageFormat, messageA...)
 }
