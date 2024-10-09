@@ -23,9 +23,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 )
 
 func TestKafka_Validate(t *testing.T) {
@@ -44,7 +45,7 @@ func TestKafka_Validate(t *testing.T) {
 			ks: &KafkaSource{
 				Spec: KafkaSourceSpec{
 					Topics:        []string{"test-topic"},
-					KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{},
+					KafkaAuthSpec: bindingsv1.KafkaAuthSpec{},
 					ConsumerGroup: "ks-group",
 					SourceSpec: duckv1.SourceSpec{
 						Sink: NewSourceSinkReference(),
@@ -58,7 +59,7 @@ func TestKafka_Validate(t *testing.T) {
 			name: "no topics",
 			ks: &KafkaSource{
 				Spec: KafkaSourceSpec{
-					KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
+					KafkaAuthSpec: bindingsv1.KafkaAuthSpec{
 						BootstrapServers: []string{"kafka:9092"},
 					},
 					ConsumerGroup: "ks-group",
@@ -75,7 +76,7 @@ func TestKafka_Validate(t *testing.T) {
 			ks: &KafkaSource{
 				Spec: KafkaSourceSpec{
 					Topics: []string{"test-topic"},
-					KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
+					KafkaAuthSpec: bindingsv1.KafkaAuthSpec{
 						BootstrapServers: []string{"kafka:9092"},
 					},
 					Ordering:      &badOrdering,
@@ -93,7 +94,7 @@ func TestKafka_Validate(t *testing.T) {
 			ks: &KafkaSource{
 				Spec: KafkaSourceSpec{
 					Topics: []string{"test-topic"},
-					KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
+					KafkaAuthSpec: bindingsv1.KafkaAuthSpec{
 						BootstrapServers: []string{"kafka:9092"},
 					},
 					Ordering:      &validOrdering,
@@ -111,7 +112,7 @@ func TestKafka_Validate(t *testing.T) {
 			ks: &KafkaSource{
 				Spec: KafkaSourceSpec{
 					Topics: []string{"test-topic"},
-					KafkaAuthSpec: bindingsv1beta1.KafkaAuthSpec{
+					KafkaAuthSpec: bindingsv1.KafkaAuthSpec{
 						BootstrapServers: []string{"kafka:9092"},
 					},
 					InitialOffset: badInitialOffset,
