@@ -35,6 +35,9 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
 
     @Override
     public CloudEvent apply(ConsumerRecord<Object, CloudEvent> record) {
+        if (record.value() instanceof InvalidCloudEvent) {
+            return record.value();
+        }
         final var builder = CloudEventBuilder.from(record.value());
         applyKafkaMetadata(builder, record.partition(), record.offset());
         applyCloudEventOverrides(builder);
