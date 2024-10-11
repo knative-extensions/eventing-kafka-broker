@@ -430,6 +430,10 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.8.0</version>
+        </plugin>
+        <plugin>
           <groupId>com.google.cloud.tools</groupId>
           <artifactId>jib-maven-plugin</artifactId>
           <version>${jib.version}</version>
