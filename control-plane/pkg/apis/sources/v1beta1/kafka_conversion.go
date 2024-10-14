@@ -21,14 +21,67 @@ import (
 	"fmt"
 
 	"knative.dev/pkg/apis"
+
+	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )
 
 // ConvertTo implements apis.Convertible
-func (source *KafkaSource) ConvertTo(ctx context.Context, sink apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", sink)
+func (source *KafkaSource) ConvertTo(ctx context.Context, to apis.Convertible) error {
+	switch sink := to.(type) {
+	case *v1.KafkaSource:
+		source.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		sink.Spec = v1.KafkaSourceSpec{
+			Consumers:     source.Spec.Consumers,
+			KafkaAuthSpec: *source.Spec.KafkaAuthSpec.ConvertToV1(ctx),
+			Topics:        source.Spec.Topics,
+			ConsumerGroup: source.Spec.ConsumerGroup,
+			InitialOffset: v1.Offset(source.Spec.InitialOffset),
+			Delivery:      source.Spec.Delivery,
+			Ordering:      (*v1.DeliveryOrdering)(source.Spec.Ordering),
+			SourceSpec:    source.Spec.SourceSpec,
+		}
+		sink.Status = v1.KafkaSourceStatus{
+			SourceStatus: *source.Status.SourceStatus.DeepCopy(),
+			Consumers:    source.Status.Consumers,
+			Selector:     source.Status.Selector,
+			Claims:       source.Status.Claims,
+			Placeable:    source.Status.Placeable,
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown version, got: %T", sink)
+	}
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaSource) ConvertFrom(ctx context.Context, source apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", source)
+func (sink *KafkaSource) ConvertFrom(ctx context.Context, from apis.Convertible) error {
+
+	switch source := from.(type) {
+	case *v1.KafkaSource:
+		source.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		authSpec := bindingsv1beta1.KafkaAuthSpec{}
+		authSpec.ConvertFromV1(&source.Spec.KafkaAuthSpec)
+		sink.Spec = KafkaSourceSpec{
+			Consumers:     source.Spec.Consumers,
+			KafkaAuthSpec: authSpec,
+			Topics:        source.Spec.Topics,
+			ConsumerGroup: source.Spec.ConsumerGroup,
+			InitialOffset: Offset(source.Spec.InitialOffset),
+			Delivery:      source.Spec.Delivery,
+			Ordering:      (*DeliveryOrdering)(source.Spec.Ordering),
+			SourceSpec:    source.Spec.SourceSpec,
+		}
+		sink.Status = KafkaSourceStatus{
+			SourceStatus: source.Status.SourceStatus,
+			Consumers:    source.Status.Consumers,
+			Selector:     source.Status.Selector,
+			Claims:       source.Status.Claims,
+			Placeable:    source.Status.Placeable,
+		}
+
+		return nil
+	default:
+		return fmt.Errorf("unknown version, got: %T", source)
+	}
 }

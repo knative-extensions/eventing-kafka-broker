@@ -108,3 +108,9 @@ rules:
     verbs:
       - get
       - list
+
+  # Necessary for conversion webhook.
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "create", "update", "patch", "watch"]
+
