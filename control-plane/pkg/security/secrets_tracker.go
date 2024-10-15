@@ -18,8 +18,9 @@ package security
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	"knative.dev/pkg/tracker"
+
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 )
 
 // TrackNetSpecSecrets tracks all secrets referenced by a provided bindings.KafkaNetSpec.

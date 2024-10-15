@@ -39,7 +39,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"

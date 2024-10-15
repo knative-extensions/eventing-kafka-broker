@@ -24,9 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 
-	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	channelsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	kafkaclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 )
 
@@ -66,14 +65,14 @@ func GetKafkaChannelV1Beta1OrFail(c *testlib.Client, kafkaChannel string) *chann
 	return kcObj
 }
 
-func CreateKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource *sourcesv1beta1.KafkaSource) {
+func CreateKafkaSourceOrFail(c *testlib.Client, kafkaSource *sources.KafkaSource) {
 	client, err := kafkaclientset.NewForConfig(c.Config)
 	if err != nil {
-		c.T.Fatalf("Failed to create v1beta1 KafkaSource client: %v", err)
+		c.T.Fatalf("Failed to create KafkaSource client: %v", err)
 	}
 
 	err = c.RetryWebhookErrors(func(i int) error {
-		createdKafkaSource, err := client.SourcesV1beta1().KafkaSources(c.Namespace).Create(context.Background(), kafkaSource, metav1.CreateOptions{})
+		createdKafkaSource, err := client.SourcesV1().KafkaSources(c.Namespace).Create(context.Background(), kafkaSource, metav1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -85,15 +84,15 @@ func CreateKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource *sourcesv1bet
 	}
 }
 
-func GetKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource string) *sourcesv1beta1.KafkaSource {
+func GetKafkaSourceOrFail(c *testlib.Client, kafkaSource string) *sources.KafkaSource {
 	client, err := kafkaclientset.NewForConfig(c.Config)
 	if err != nil {
 		c.T.Fatalf("Failed to create v1beta1 KafkaSource client: %v", err)
 	}
 
-	var ksObj *sourcesv1beta1.KafkaSource
+	var ksObj *sources.KafkaSource
 	err = c.RetryWebhookErrors(func(i int) error {
-		ksObj, err = client.SourcesV1beta1().KafkaSources(c.Namespace).Get(context.Background(), kafkaSource, metav1.GetOptions{})
+		ksObj, err = client.SourcesV1().KafkaSources(c.Namespace).Get(context.Background(), kafkaSource, metav1.GetOptions{})
 		return err
 	})
 	if err != nil {
@@ -102,36 +101,22 @@ func GetKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource string) *sources
 	return ksObj
 }
 
-func UpdateKafkaSourceV1Beta1OrFail(c *testlib.Client, kafkaSource *sourcesv1beta1.KafkaSource) {
+func UpdateKafkaSourceOrFail(c *testlib.Client, kafkaSource *sources.KafkaSource) {
 	err := c.RetryWebhookErrors(func(i int) error {
 		return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			latestKafkaSource := GetKafkaSourceV1Beta1OrFail(c, kafkaSource.Name)
+			latestKafkaSource := GetKafkaSourceOrFail(c, kafkaSource.Name)
 			kafkaSource.Spec.DeepCopyInto(&latestKafkaSource.Spec)
 			kafkaSourceClientSet, err := kafkaclientset.NewForConfig(c.Config)
 			if err != nil {
 				c.T.Fatalf("Failed to create v1beta1 KafkaSource client: %v", err)
 			}
 
-			kSources := kafkaSourceClientSet.SourcesV1beta1().KafkaSources(c.Namespace)
+			kSources := kafkaSourceClientSet.SourcesV1().KafkaSources(c.Namespace)
 			_, err = kSources.Update(context.Background(), latestKafkaSource, metav1.UpdateOptions{})
 			return err
 		})
 	})
 	if err != nil {
 		c.T.Fatalf("Failed to update v1beta1 KafkaSource %q: %v", kafkaSource.Name, err)
-	}
-}
-
-func CreateKafkaBindingV1Beta1OrFail(c *testlib.Client, kafkaBinding *bindingsv1beta1.KafkaBinding) {
-	kafkaBindingClientSet, err := kafkaclientset.NewForConfig(c.Config)
-	if err != nil {
-		c.T.Fatalf("Failed to create v1beta1 KafkaBinding client: %v", err)
-	}
-
-	kBindings := kafkaBindingClientSet.BindingsV1beta1().KafkaBindings(c.Namespace)
-	if createdKafkaBinding, err := kBindings.Create(context.Background(), kafkaBinding, metav1.CreateOptions{}); err != nil {
-		c.T.Fatalf("Failed to create v1beta1 KafkaBinding %q: %v", kafkaBinding.Name, err)
-	} else {
-		c.Tracker.AddObj(createdKafkaBinding)
 	}
 }

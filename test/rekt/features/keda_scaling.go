@@ -219,7 +219,7 @@ func getKafkaSourceCg(source string) getCgName {
 		ns := environment.FromContext(ctx).Namespace()
 
 		ks, err := sourcesclient.Get(ctx).
-			SourcesV1beta1().
+			SourcesV1().
 			KafkaSources(ns).
 			Get(ctx, source, metav1.GetOptions{})
 		if err != nil {

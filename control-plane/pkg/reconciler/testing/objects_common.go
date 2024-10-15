@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
