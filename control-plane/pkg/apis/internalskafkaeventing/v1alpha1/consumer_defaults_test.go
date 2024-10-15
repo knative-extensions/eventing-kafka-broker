@@ -21,7 +21,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )
 
 func TestConsumerSetDefaults(t *testing.T) {

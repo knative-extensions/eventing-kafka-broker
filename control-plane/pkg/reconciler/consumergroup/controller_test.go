@@ -38,7 +38,7 @@ import (
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1/kafkasource/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"

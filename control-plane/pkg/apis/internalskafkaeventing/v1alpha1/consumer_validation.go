@@ -20,8 +20,9 @@ import (
 	"context"
 	"fmt"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
+
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )
 
 func (c *Consumer) Validate(ctx context.Context) *apis.FieldError {
@@ -72,14 +73,14 @@ func (cc *ConsumerConfigs) Validate(ctx context.Context) *apis.FieldError {
 
 	if cc.KeyType != nil {
 		found := false
-		for _, allowed := range v1beta1.KafkaKeyTypeAllowed {
+		for _, allowed := range sources.KafkaKeyTypeAllowed {
 			if allowed == *cc.KeyType {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return apis.ErrInvalidValue(*cc.KeyType, "keyType", fmt.Sprintf("allowed values: %v", v1beta1.KafkaKeyTypeAllowed))
+			return apis.ErrInvalidValue(*cc.KeyType, "keyType", fmt.Sprintf("allowed values: %v", sources.KafkaKeyTypeAllowed))
 		}
 	}
 

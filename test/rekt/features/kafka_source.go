@@ -51,8 +51,7 @@ import (
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
@@ -116,7 +115,7 @@ func deletedKafkaSourcesAreNotPresentInContractConfigMaps(prefix string) feature
 
 		namespace := environment.FromContext(ctx).Namespace()
 
-		kss, err := kafkaclient.Get(ctx).SourcesV1beta1().
+		kss, err := kafkaclient.Get(ctx).SourcesV1().
 			KafkaSources(namespace).
 			List(ctx, metav1.ListOptions{
 				Limit: 2000,
@@ -589,7 +588,7 @@ func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
 			authMech:   TLSMech,
 			topic:      topic,
 			sourceName: kafkaSource,
-			opts:       []manifest.CfgFn{kafkasource.WithOrdering(string(sourcesv1beta1.Ordered))},
+			opts:       []manifest.CfgFn{kafkasource.WithOrdering(string(sources.Ordered))},
 		},
 		kafkaSinkConfig{
 			sinkName: kafkaSink,
@@ -754,7 +753,7 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 		// Keep the original topic.
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
-		kafkasource.WithOrdering(string(sourcesv1beta1.Unordered)),
+		kafkasource.WithOrdering(string(sources.Unordered)),
 		kafkasource.WithTLSDisabled(),
 		kafkasource.WithSASLDisabled(),
 	}
