@@ -344,7 +344,7 @@ func kafkaSourceFeature(name string,
 			kafkasource.WithSASLEnabled(),
 			kafkasource.WithSASLUser(secretName, "user"),
 			kafkasource.WithSASLPassword(secretName, "password"),
-			kafkasource.WithSASLType(secretName, "saslType"),
+			kafkasource.WithSASLType(secretName, "sasl.mechanism"),
 			kafkasource.WithTLSEnabled(),
 			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 		)

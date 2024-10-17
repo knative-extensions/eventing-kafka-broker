@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
+
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
