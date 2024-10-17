@@ -22,9 +22,9 @@
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	apisduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -37,7 +37,7 @@ func (in *Auth) DeepCopyInto(out *Auth) {
 	*out = *in
 	if in.NetSpec != nil {
 		in, out := &in.NetSpec, &out.NetSpec
-		*out = new(v1beta1.KafkaNetSpec)
+		*out = new(v1.KafkaNetSpec)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.AuthSpec != nil {
@@ -229,7 +229,7 @@ func (in *ConsumerGroupSpec) DeepCopyInto(out *ConsumerGroupSpec) {
 	}
 	if in.TopLevelResourceRef != nil {
 		in, out := &in.TopLevelResourceRef, &out.TopLevelResourceRef
-		*out = new(v1.ObjectReference)
+		*out = new(corev1.ObjectReference)
 		**out = **in
 	}
 	return

@@ -33,8 +33,7 @@ import (
 	cm "knative.dev/pkg/configmap/testing"
 	"knative.dev/pkg/kmeta"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
@@ -46,9 +45,9 @@ import (
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
-	eventingkafkasourcereconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1beta1/kafkasource"
+	eventingkafkasourcereconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1/kafkasource"
 
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 
@@ -401,9 +400,9 @@ func TestReconcileKind(t *testing.T) {
 						UID:       SourceUUID,
 					},
 					Spec: sources.KafkaSourceSpec{
-						KafkaAuthSpec: v1beta1.KafkaAuthSpec{
+						KafkaAuthSpec: bindings.KafkaAuthSpec{
 							BootstrapServers: []string{SourceBootstrapServers},
-							Net: v1beta1.KafkaNetSpec{
+							Net: bindings.KafkaNetSpec{
 								SASL: bindings.KafkaSASLSpec{
 									Enable: true,
 									User: bindings.SecretValueFromSource{
@@ -538,9 +537,9 @@ func TestReconcileKind(t *testing.T) {
 						UID:       SourceUUID,
 					},
 					Spec: sources.KafkaSourceSpec{
-						KafkaAuthSpec: v1beta1.KafkaAuthSpec{
+						KafkaAuthSpec: bindings.KafkaAuthSpec{
 							BootstrapServers: []string{SourceBootstrapServers},
-							Net: v1beta1.KafkaNetSpec{
+							Net: bindings.KafkaNetSpec{
 								SASL: bindings.KafkaSASLSpec{
 									Enable: true,
 									User: bindings.SecretValueFromSource{
