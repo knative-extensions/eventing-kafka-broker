@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 
@@ -130,7 +130,7 @@ func WithKafkaChannelEndpointsReady() KafkaChannelOption {
 func WithKafkaChannelAddress(a string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
 		nc.Status.SetAddress(&duckv1.Addressable{
-			Name: pointer.String("http"),
+			Name: ptr.To("http"),
 			URL:  apis.HTTP(a),
 		})
 	}
