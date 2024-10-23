@@ -61,6 +61,8 @@ public class ConsumerVerticleContext {
     private ReactiveConsumerFactory<Object, CloudEvent> consumerFactory;
     private ReactiveProducerFactory<String, CloudEvent> producerFactory;
 
+    private String ceMetadataExtensionPrefix;
+
     private Integer maxPollRecords;
     private static final int DEFAULT_MAX_POLL_RECORDS = 50;
 
@@ -163,6 +165,12 @@ public class ConsumerVerticleContext {
         return this;
     }
 
+    public ConsumerVerticleContext withCeMetadataExtensionPrefix(
+            final String ceMetadataExtensionPrefix) {
+        this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
+        return this;
+    }
+
     public DataPlaneContract.Resource getResource() {
         return resource;
     }
@@ -228,6 +236,10 @@ public class ConsumerVerticleContext {
 
     public ReactiveProducerFactory<String, CloudEvent> getProducerFactory() {
         return this.producerFactory;
+    }
+
+    public String getCeMetadataExtensionPrefix() {
+        return this.ceMetadataExtensionPrefix;
     }
 
     public Tags getTags() {
