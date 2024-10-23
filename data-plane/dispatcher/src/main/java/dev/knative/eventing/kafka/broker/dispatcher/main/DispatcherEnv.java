@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import java.util.function.Function;
@@ -31,12 +32,16 @@ public class DispatcherEnv extends BaseEnv {
     public static final String EGRESSES_INITIAL_CAPACITY = "EGRESSES_INITIAL_CAPACITY";
     private final int egressesInitialCapacity;
 
+    public static final String CE_METADATA_EXTENSION_PREFIX = "CE_METADATA_EXTENSION_PREFIX";
+    private final String ceMetadataExtensionPrefix;
+  
     public DispatcherEnv(Function<String, String> envProvider) {
         super(envProvider);
 
         this.consumerConfigFilePath = requireNonNull(envProvider.apply(CONSUMER_CONFIG_FILE_PATH));
         this.webClientConfigFilePath = requireNonNull(envProvider.apply(WEBCLIENT_CONFIG_FILE_PATH));
         this.egressesInitialCapacity = Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
+        this.ceMetadataExtensionPrefix = requireNonNullElse(envProvider.apply(CE_METADATA_EXTENSION_PREFIX), "knativekafka");
     }
 
     public String getConsumerConfigFilePath() {
@@ -49,6 +54,10 @@ public class DispatcherEnv extends BaseEnv {
 
     public int getEgressesInitialCapacity() {
         return egressesInitialCapacity;
+    }
+
+    public String getCeMetadataExtensionPrefix() {
+        return ceMetadataExtensionPrefix;
     }
 
     @Override

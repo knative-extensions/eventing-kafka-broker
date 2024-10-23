@@ -39,6 +39,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     private final MeterRegistry metricsRegistry;
     private final ReactiveConsumerFactory reactiveConsumerFactory;
     private final ReactiveProducerFactory reactiveProducerFactory;
+    private final String ceMetadataExtensionPrefix;
 
     /**
      * All args constructor.
@@ -56,7 +57,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
             final AuthProvider authProvider,
             final MeterRegistry metricsRegistry,
             final ReactiveConsumerFactory reactiveConsumerFactory,
-            final ReactiveProducerFactory reactiveProducerFactory) {
+            final ReactiveProducerFactory reactiveProducerFactory,
+            final String ceMetadataExtensionPrefix) {
 
         Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
         Objects.requireNonNull(webClientOptions, "provide webClientOptions");
@@ -75,6 +77,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         this.metricsRegistry = metricsRegistry;
         this.reactiveConsumerFactory = reactiveConsumerFactory;
         this.reactiveProducerFactory = reactiveProducerFactory;
+        this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
     }
 
     /**
@@ -93,7 +96,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                         .withMeterRegistry(metricsRegistry)
                         .withResource(egressContext)
                         .withConsumerFactory(reactiveConsumerFactory)
-                        .withProducerFactory(reactiveProducerFactory))
+                        .withProducerFactory(reactiveProducerFactory)
+                        .withCeMetadataExtensionPrefix(ceMetadataExtensionPrefix))
                 .build();
     }
 }
