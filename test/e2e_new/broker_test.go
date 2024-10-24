@@ -34,6 +34,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/test/rekt/features/authz"
 	"knative.dev/eventing/test/rekt/features/broker"
 	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
@@ -271,6 +272,28 @@ func TestTriggerEventTypeAutoCreate(t *testing.T) {
 
 	env.Prerequisite(ctx, t, InstallBroker(brokerName))
 	env.Test(ctx, t, eventtype_autocreate.AutoCreateEventTypesOnTrigger(brokerName))
+}
+
+func TestMTChannelBasedBrokerEventTypeAutoCreate(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	configName := feature.MakeRandomK8sName("kafka-broker-config")
+	env.Prerequisite(ctx, t, features.BrokerCreateConfigMap(configName))
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	env.Prerequisite(ctx, t, broker.GoesReady(brokerName,
+		brokerresources.WithConfig(configName),
+		brokerresources.WithBrokerClass(eventing.MTChannelBrokerClassValue)))
+
+	env.Test(ctx, t, eventtype_autocreate.AutoCreateEventTypesOnBroker(brokerName))
 }
 
 func InstallBroker(brokerName string) *feature.Feature {

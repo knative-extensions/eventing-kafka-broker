@@ -27,7 +27,7 @@ import (
 	"knative.dev/pkg/system"
 	_ "knative.dev/pkg/system/testing"
 
-	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/eventing/test/rekt/features/broker"
 	b "knative.dev/eventing/test/rekt/resources/broker"
@@ -52,7 +52,7 @@ func TestBrokerConformance(t *testing.T) {
 	if b.EnvCfg.BrokerClass == eventing.MTChannelBrokerClassValue {
 		configName := feature.MakeRandomK8sName("kafka-broker-config")
 		opts = append(opts, b.WithConfig(configName))
-		env.Prerequisite(ctx, t, BrokerCreateConfigMap(configName))
+		env.Prerequisite(ctx, t, features.BrokerCreateConfigMap(configName))
 	}
 
 	brokerName := feature.MakeRandomK8sName("broker")
@@ -61,14 +61,4 @@ func TestBrokerConformance(t *testing.T) {
 
 	env.TestSet(ctx, t, broker.ControlPlaneConformance(brokerName, opts...))
 	env.TestSet(ctx, t, broker.DataPlaneConformance(brokerName))
-}
-
-func BrokerCreateConfigMap(configName string) *feature.Feature {
-	f := feature.NewFeature()
-
-	f.Setup("create broker config", brokerconfigmap.Install(configName,
-		brokerconfigmap.WithKafkaChannelMTBroker(),
-	))
-
-	return f
 }
