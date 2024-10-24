@@ -23,12 +23,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
-	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
+
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 
 	eventingkafkatestlib "knative.dev/eventing-kafka-broker/test/lib"
 
@@ -123,7 +124,7 @@ func (k kafkaSinkSourceSut) deploySource(ctx sut.Context, destination duckv1.Des
 		Spec: *k.Source.Spec.DeepCopy(),
 	}
 	ks.Spec.Sink = destination
-	eventingkafkatestlib.CreateKafkaSourceV1Beta1OrFail(ctx.Client, ks)
+	eventingkafkatestlib.CreateKafkaSourceOrFail(ctx.Client, ks)
 }
 
 func (k kafkaSinkSourceSut) fetchUrl(ctx sut.Context) *apis.URL {

@@ -23,7 +23,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )
 
 func TestConsumerGroupSetDefaults(t *testing.T) {
