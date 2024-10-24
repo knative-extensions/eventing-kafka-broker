@@ -22,7 +22,7 @@ package e2e_sink
 import (
 	"testing"
 
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	. "knative.dev/eventing-kafka-broker/test/pkg"
@@ -31,7 +31,7 @@ import (
 
 func TestKafkaSinkV1Alpha1DefaultContentMode(t *testing.T) {
 	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, nil, func(kss *eventingv1alpha1.KafkaSinkSpec) error {
-		kss.ContentMode = pointer.String("")
+		kss.ContentMode = ptr.To("")
 		return nil
 	})
 }
