@@ -34,14 +34,15 @@ public class DispatcherEnv extends BaseEnv {
 
     public static final String CE_METADATA_EXTENSION_PREFIX = "CE_METADATA_EXTENSION_PREFIX";
     private final String ceMetadataExtensionPrefix;
-  
+
     public DispatcherEnv(Function<String, String> envProvider) {
         super(envProvider);
 
         this.consumerConfigFilePath = requireNonNull(envProvider.apply(CONSUMER_CONFIG_FILE_PATH));
         this.webClientConfigFilePath = requireNonNull(envProvider.apply(WEBCLIENT_CONFIG_FILE_PATH));
         this.egressesInitialCapacity = Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
-        this.ceMetadataExtensionPrefix = requireNonNullElse(envProvider.apply(CE_METADATA_EXTENSION_PREFIX), "knativekafka");
+        this.ceMetadataExtensionPrefix =
+                requireNonNullElse(envProvider.apply(CE_METADATA_EXTENSION_PREFIX), "knativekafka");
     }
 
     public String getConsumerConfigFilePath() {

@@ -30,7 +30,8 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
     private final DataPlaneContract.CloudEventOverrides cloudEventOverrides;
     private final String ceMetadataExtensionPrefix;
 
-    public CloudEventOverridesMutator(final DataPlaneContract.CloudEventOverrides cloudEventOverrides, final String ceMetadataExtensionPrefix) {
+    public CloudEventOverridesMutator(
+            final DataPlaneContract.CloudEventOverrides cloudEventOverrides, final String ceMetadataExtensionPrefix) {
         this.cloudEventOverrides = cloudEventOverrides;
         this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
     }

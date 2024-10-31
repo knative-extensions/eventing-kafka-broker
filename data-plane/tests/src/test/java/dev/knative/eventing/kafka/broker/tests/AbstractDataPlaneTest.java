@@ -361,7 +361,8 @@ public abstract class AbstractDataPlaneTest {
                 AuthProvider.noAuth(),
                 Metrics.getRegistry(),
                 getReactiveConsumerFactory(),
-                getReactiveProducerFactory());
+                getReactiveProducerFactory(),
+                "knativekafka");
 
         final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 

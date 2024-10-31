@@ -165,8 +165,7 @@ public class ConsumerVerticleContext {
         return this;
     }
 
-    public ConsumerVerticleContext withCeMetadataExtensionPrefix(
-            final String ceMetadataExtensionPrefix) {
+    public ConsumerVerticleContext withCeMetadataExtensionPrefix(final String ceMetadataExtensionPrefix) {
         this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
         return this;
     }

@@ -75,7 +75,8 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory<>());
+                new dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory<>(),
+                "knativekafka");
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
@@ -120,7 +121,8 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new MockReactiveProducerFactory<>());
+                new MockReactiveProducerFactory<>(),
+                "knativekafka");
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
@@ -169,7 +171,8 @@ public class ConsumerVerticleFactoryImplTest {
                 mock(AuthProvider.class),
                 mock(MeterRegistry.class),
                 new MockReactiveConsumerFactory<>(),
-                new MockReactiveProducerFactory<>());
+                new MockReactiveProducerFactory<>(),
+                "knativekafka");
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")

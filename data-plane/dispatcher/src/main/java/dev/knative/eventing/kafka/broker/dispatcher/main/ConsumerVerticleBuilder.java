@@ -123,8 +123,7 @@ public class ConsumerVerticleBuilder {
                         Metrics.getRegistry()),
                 new CloudEventOverridesMutator(
                         consumerVerticleContext.getResource().getCloudEventOverrides(),
-                        consumerVerticleContext.getCeMetadataExtensionPrefix()
-                        ));
+                        consumerVerticleContext.getCeMetadataExtensionPrefix()));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
 
         final var partitionRevokedHandlers =

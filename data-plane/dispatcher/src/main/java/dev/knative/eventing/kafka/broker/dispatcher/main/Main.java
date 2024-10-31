@@ -119,7 +119,8 @@ public class Main {
                             AuthProvider.kubernetes(vertx),
                             Metrics.getRegistry(),
                             reactiveConsumerFactory,
-                            reactiveProducerFactory),
+                            reactiveProducerFactory,
+                            env.getCeMetadataExtensionPrefix()),
                     env.getEgressesInitialCapacity());
 
             // Deploy the consumer deployer
