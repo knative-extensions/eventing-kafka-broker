@@ -1142,7 +1142,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.42.2-0.20240923151015-7fedbd08af70
+# knative.dev/eventing v0.42.4-0.20241030064549-19e4c4bddaca
 ## explicit; go 1.22
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1248,17 +1248,6 @@ knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
 knative.dev/eventing/pkg/reconciler/testing/v1
 knative.dev/eventing/pkg/scheduler
-knative.dev/eventing/pkg/scheduler/factory
-knative.dev/eventing/pkg/scheduler/plugins/core/availabilitynodepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/availabilityzonepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/evenpodspread
-knative.dev/eventing/pkg/scheduler/plugins/core/lowestordinalpriority
-knative.dev/eventing/pkg/scheduler/plugins/core/podfitsresources
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithavailabilitynodepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithavailabilityzonepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithevenpodspreadpriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithhighestordinalpriority
-knative.dev/eventing/pkg/scheduler/plugins/kafka/nomaxresourcecount
 knative.dev/eventing/pkg/scheduler/state
 knative.dev/eventing/pkg/scheduler/statefulset
 knative.dev/eventing/pkg/tracing
