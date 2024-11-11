@@ -18,7 +18,6 @@ package consumergroup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -26,7 +25,6 @@ import (
 	v1 "k8s.io/client-go/informers/core/v1"
 
 	"github.com/kelseyhightower/envconfig"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,7 +43,6 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
-	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
@@ -93,11 +90,9 @@ type envConfig struct {
 }
 
 type SchedulerConfig struct {
-	StatefulSetName   string
-	RefreshPeriod     time.Duration
-	Capacity          int32
-	SchedulerPolicy   *scheduler.SchedulerPolicy
-	DeSchedulerPolicy *scheduler.SchedulerPolicy
+	StatefulSetName string
+	RefreshPeriod   time.Duration
+	Capacity        int32
 }
 
 func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
@@ -109,10 +104,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	c := SchedulerConfig{
-		RefreshPeriod:     time.Duration(env.SchedulerRefreshPeriod) * time.Second,
-		Capacity:          env.PodCapacity,
-		SchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, env.SchedulerPolicyConfigMap),
-		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
+		RefreshPeriod: time.Duration(env.SchedulerRefreshPeriod) * time.Second,
+		Capacity:      env.PodCapacity,
 	}
 
 	dispatcherPodInformer := podinformer.Get(ctx, internalsapi.DispatcherLabelSelectorStr)
@@ -332,11 +325,9 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string,
 	return createStatefulSetScheduler(
 		ctx,
 		SchedulerConfig{
-			StatefulSetName:   ssName,
-			RefreshPeriod:     c.RefreshPeriod,
-			Capacity:          c.Capacity,
-			SchedulerPolicy:   c.SchedulerPolicy,
-			DeSchedulerPolicy: c.DeSchedulerPolicy,
+			StatefulSetName: ssName,
+			RefreshPeriod:   c.RefreshPeriod,
+			Capacity:        c.Capacity,
 		},
 		func() ([]scheduler.VPod, error) {
 			consumerGroups, err := lister.List(labels.SelectorFromSet(getSelectorLabel(ssName)))
@@ -380,12 +371,8 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		ScaleCacheConfig:     scheduler.ScaleCacheConfig{RefreshPeriod: statefulSetScaleCacheRefreshPeriod},
 		PodCapacity:          c.Capacity,
 		RefreshPeriod:        c.RefreshPeriod,
-		SchedulerPolicy:      scheduler.MAXFILLUP,
-		SchedPolicy:          c.SchedulerPolicy,
-		DeschedPolicy:        c.DeSchedulerPolicy,
 		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		VPodLister:           lister,
-		NodeLister:           nodeinformer.Get(ctx).Lister(),
 		PodLister:            dispatcherPodInformer.Lister().Pods(system.Namespace()),
 	})
 
@@ -393,61 +380,4 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		Scheduler:       ss,
 		SchedulerConfig: c,
 	}
-}
-
-// schedulerPolicyFromConfigMapOrFail reads predicates and priorities data from configMap
-func schedulerPolicyFromConfigMapOrFail(ctx context.Context, configMapName string) *scheduler.SchedulerPolicy {
-	p, err := schedulerPolicyFromConfigMap(ctx, configMapName)
-	if err != nil {
-		logging.FromContext(ctx).Fatal(zap.Error(err))
-	}
-	return p
-}
-
-// schedulerPolicyFromConfigMap reads predicates and priorities data from configMap
-func schedulerPolicyFromConfigMap(ctx context.Context, configMapName string) (*scheduler.SchedulerPolicy, error) {
-	policyConfigMap, err := kubeclient.Get(ctx).CoreV1().ConfigMaps(system.Namespace()).Get(ctx, configMapName, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("couldn't get scheduler policy config map %s/%s: %v", system.Namespace(), configMapName, err)
-	}
-
-	logger := logging.FromContext(ctx).
-		Desugar().
-		With(zap.String("configmap", configMapName))
-	policy := &scheduler.SchedulerPolicy{}
-
-	preds, found := policyConfigMap.Data["predicates"]
-	if !found {
-		return nil, fmt.Errorf("missing policy config map %s/%s value at key predicates", system.Namespace(), configMapName)
-	}
-	if err := json.NewDecoder(strings.NewReader(preds)).Decode(&policy.Predicates); err != nil {
-		return nil, fmt.Errorf("invalid policy %v: %v", preds, err)
-	}
-
-	priors, found := policyConfigMap.Data["priorities"]
-	if !found {
-		return nil, fmt.Errorf("missing policy config map value at key priorities")
-	}
-	if err := json.NewDecoder(strings.NewReader(priors)).Decode(&policy.Priorities); err != nil {
-		return nil, fmt.Errorf("invalid policy %v: %v", preds, err)
-	}
-
-	if errs := validatePolicy(policy); errs != nil {
-		return nil, multierr.Combine(err)
-	}
-
-	logger.Info("Schedulers policy registration", zap.Any("policy", policy))
-
-	return policy, nil
-}
-
-func validatePolicy(policy *scheduler.SchedulerPolicy) []error {
-	var validationErrors []error
-
-	for _, priority := range policy.Priorities {
-		if priority.Weight < scheduler.MinWeight || priority.Weight > scheduler.MaxWeight {
-			validationErrors = append(validationErrors, fmt.Errorf("priority %s should have a positive weight applied to it or it has overflown", priority.Name))
-		}
-	}
-	return validationErrors
 }
