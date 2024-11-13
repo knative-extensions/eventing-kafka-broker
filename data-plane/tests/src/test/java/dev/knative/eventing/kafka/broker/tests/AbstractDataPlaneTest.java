@@ -353,6 +353,7 @@ public abstract class AbstractDataPlaneTest {
                 NullCloudEventInterceptor.class.getName() + "," + InvalidCloudEventInterceptor.class.getName());
 
         final var producerConfigs = producerConfigs();
+        final var ceMetadataExtensionPrefix = "knativekafka";
 
         final var consumerVerticleFactory = new ConsumerVerticleFactoryImpl(
                 consumerConfigs,
@@ -363,7 +364,8 @@ public abstract class AbstractDataPlaneTest {
                 getReactiveConsumerFactory(),
                 getReactiveProducerFactory(),
                 mock(EventTypeCreator.class),
-                mock(EventTypeListerFactory.class));
+                mock(EventTypeListerFactory.class),
+                ceMetadataExtensionPrefix);
 
         final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 

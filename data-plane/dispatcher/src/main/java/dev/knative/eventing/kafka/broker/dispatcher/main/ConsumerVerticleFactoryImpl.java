@@ -43,6 +43,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     private final ReactiveProducerFactory reactiveProducerFactory;
     private final EventTypeCreator eventTypeCreator;
     private final EventTypeListerFactory eventTypeListerFactory;
+    private final String ceMetadataExtensionPrefix;
 
     /**
      * All args constructor.
@@ -62,7 +63,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
             final ReactiveConsumerFactory reactiveConsumerFactory,
             final ReactiveProducerFactory reactiveProducerFactory,
             EventTypeCreator eventTypeCreator,
-            EventTypeListerFactory eventTypeListerFactory) {
+            EventTypeListerFactory eventTypeListerFactory,
+            final String ceMetadataExtensionPrefix) {
         this.eventTypeCreator = eventTypeCreator;
         this.eventTypeListerFactory = eventTypeListerFactory;
 
@@ -83,6 +85,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
         this.metricsRegistry = metricsRegistry;
         this.reactiveConsumerFactory = reactiveConsumerFactory;
         this.reactiveProducerFactory = reactiveProducerFactory;
+        this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
     }
 
     /**
@@ -103,7 +106,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                         .withConsumerFactory(reactiveConsumerFactory)
                         .withProducerFactory(reactiveProducerFactory)
                         .withEventTypeCreator(eventTypeCreator)
-                        .withEventTypeListerFactory(eventTypeListerFactory))
+                        .withEventTypeListerFactory(eventTypeListerFactory)
+                        .withCeMetadataExtensionPrefix(ceMetadataExtensionPrefix))
                 .build();
     }
 }

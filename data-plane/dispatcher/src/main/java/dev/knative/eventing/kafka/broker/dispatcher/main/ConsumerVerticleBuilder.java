@@ -115,7 +115,8 @@ public class ConsumerVerticleBuilder {
                                 TracingPolicy.PROPAGATE),
                         Metrics.getRegistry()),
                 new CloudEventOverridesMutator(
-                        consumerVerticleContext.getResource().getCloudEventOverrides()));
+                        consumerVerticleContext.getResource().getCloudEventOverrides(),
+                        consumerVerticleContext.getCeMetadataExtensionPrefix()));
         consumerVerticle.setRecordDispatcher(recordDispatcher);
 
         final var partitionRevokedHandlers =
