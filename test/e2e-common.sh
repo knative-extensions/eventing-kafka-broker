@@ -568,25 +568,25 @@ function unmount_knative_eventing_bundle() {
   for receiver in kafka-broker-receiver kafka-channel-receiver kafka-sink-receiver
   do
     kubectl get deployment -n knative-eventing "$receiver" -o json | \
-      jq '(.spec.template.spec.volumes | select(.name=="knative-eventing-bundle")) |= empty' | \
+      jq '(.spec.template.spec.volumes[] | select(.name=="knative-eventing-bundle")) |= empty' | \
       jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .volumeMounts[] | select(.name=="knative-eventing-bundle")) |= empty' | \
-      jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= (. | sub(" -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks", ""))' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= (. | sub(" -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks";""))' | \
       kubectl apply -f -
   done
 
   for dispatcher in kafka-broker-dispatcher kafka-channel-dispatcher kafka-source-dispatcher
   do
     kubectl get statefulset -n knative-eventing "$dispatcher" -o json | \
-      jq '(.spec.template.spec.volumes | select(.name=="knative-eventing-bundle")) |= empty' | \
+      jq '(.spec.template.spec.volumes[] | select(.name=="knative-eventing-bundle")) |= empty' | \
       jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .volumeMounts[] | select(.name=="knative-eventing-bundle")) |= empty' | \
-      jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= (. | sub(" -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks", ""))' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= (. | sub(" -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks";""))' | \
       kubectl apply -f -
   done
 
   echo "Unmounting knative-eventing-bundle ConfigMap from kafka-controller"
 
   kubectl get deployment -n knative-eventing kafka-controller -o json | \
-    jq '(.spec.template.spec.volumes | select(.name=="knative-eventing-bundle")) |= empty' | \
+    jq '(.spec.template.spec.volumes[] | select(.name=="knative-eventing-bundle")) |= empty' | \
     jq '(.spec.template.spec.containers[] | select(.name=="controller") | .volumeMounts[] | select(.name=="knative-eventing-bundle")) |= empty' | \
     jq '(.spec.template.spec.containers[] | select(.name=="controller") | .env[] | select(.name=="SSL_CERT_DIR")) |= empty' | \
     kubectl apply -f -

@@ -54,7 +54,7 @@ echo "Running 'Implicit CA' E2E Reconciler tests with knative-eventing-bundle mo
 
 mount_knative_eventing_bundle
 
-go_test_e2e -tags=e2e,implicitca -timeout=5m ./test/e2e_new/... || fail_test "E2E (new - implicitca) suite failed"
+go_test_e2e -tags=e2e,implicitca -timeout=5m ./test/e2e_new -run ImplicitCA || fail_test "E2E (new - implicitca) suite failed"
 
 unmount_knative_eventing_bundle
 
