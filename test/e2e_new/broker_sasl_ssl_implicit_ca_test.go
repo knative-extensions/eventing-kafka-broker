@@ -20,12 +20,13 @@
 package e2e_new
 
 import (
+	"testing"
+
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
-	"testing"
 )
 
 func TestBrokerAuthImplicitCASslSaslScram512(t *testing.T) {
