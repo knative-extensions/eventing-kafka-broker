@@ -3,7 +3,7 @@
 source $(dirname "$0")/e2e-common.sh
 
 if ! ${SKIP_INITIALIZE}; then
-  initialize "$@" --num-nodes=4
+  initialize "$@" --num-nodes=5
   save_release_artifacts || fail_test "Failed to save release artifacts"
 fi
 
