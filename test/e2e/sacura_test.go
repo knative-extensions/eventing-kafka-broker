@@ -21,6 +21,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -31,11 +32,13 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/pointer"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
@@ -65,6 +68,8 @@ type SacuraTestConfig struct {
 	// Namespace is the test namespace.
 	Namespace string
 
+	ConsumerResourceGVR schema.GroupVersionResource
+
 	// BrokerTopic is the expected Broker topic.
 	// It's used to verify the committed offset.
 	BrokerTopic *string
@@ -80,15 +85,17 @@ type SacuraTestConfig struct {
 
 func TestSacuraSinkSourceJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:   "sacura-sink-source",
-		SourceTopic: pointer.String("sacura-sink-source-topic"),
+		Namespace:           "sacura-sink-source",
+		ConsumerResourceGVR: sources.SchemeGroupVersion.WithResource("kafkasources"),
+		SourceTopic:         pointer.String("sacura-sink-source-topic"),
 	})
 }
 
 func TestSacuraBrokerJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:   "sacura",
-		BrokerTopic: pointer.String("knative-broker-sacura-sink-source-broker"),
+		Namespace:           "sacura",
+		ConsumerResourceGVR: eventing.SchemeGroupVersion.WithResource("triggers"),
+		BrokerTopic:         pointer.String("knative-broker-sacura-sink-source-broker"),
 	})
 }
 
@@ -98,6 +105,21 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 	defer testlib.TearDown(c)
 
 	ctx := context.Background()
+
+	w, err := c.Dynamic.Resource(config.ConsumerResourceGVR).
+		Namespace(config.Namespace).
+		Watch(ctx, metav1.ListOptions{})
+	if err != nil {
+		t.Fatal("Failed to watch resource", config.ConsumerResourceGVR, err)
+	}
+	defer w.Stop()
+
+	go func() {
+		for e := range w.ResultChan() {
+			bytes, _ := json.MarshalIndent(e, "", "  ")
+			t.Logf("Consumer resource %q changed:\n%s\n\n", config.ConsumerResourceGVR.String(), string(bytes))
+		}
+	}()
 
 	jobPollError := wait.Poll(pollInterval, pollTimeout, func() (done bool, err error) {
 		job, err := c.Kube.BatchV1().Jobs(config.Namespace).Get(ctx, app, metav1.GetOptions{})
