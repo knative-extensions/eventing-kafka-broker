@@ -25,10 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
@@ -52,10 +50,6 @@ import (
 const (
 	RefreshPeriod = "100"
 	PodCapacity   = "20"
-	// ConfigKafkaSchedulerName is the name of the ConfigMap to configure the scheduler.
-	ConfigKafkaSchedulerName = "config-kafka-scheduler"
-	// ConfigKafkaDeSchedulerName is the name of the ConfigMap to configure the descheduler.
-	ConfigKafkaDeSchedulerName = "config-kafka-descheduler"
 	// ConfigKafkaAutoscalerName is the name of the ConfigMap to configure the autoscaler.
 	ConfigKafkaAutoscalerName = "config-kafka-autoscaler"
 )
@@ -67,52 +61,11 @@ func TestNewController(t *testing.T) {
 		)
 	})
 	ctx, _ = kedaclient.With(ctx)
-
-	t.Setenv("SYSTEM_NAMESPACE", systemNamespace)
-
-	ctx, _ = kubeclient.With(ctx,
-		&corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      ConfigKafkaSchedulerName,
-				Namespace: systemNamespace,
-			},
-			Data: map[string]string{
-				"predicates": `
-			     [
-			       {"Name": "PodFitsResources"},
-			       {"Name": "NoMaxResourceCount", "Args": "{\"NumPartitions\": 100}"},
-			       {"Name": "EvenPodSpread", "Args": "{\"MaxSkew\": 2}"}
-			     ]`,
-				"priorities": `
-                [
-                  {"Name": "AvailabilityZonePriority", "Weight": 10, "Args":  "{\"MaxSkew\": 2}"},
-                  {"Name": "LowestOrdinalPriority", "Weight": 2}
-                ]`,
-			},
-		},
-		&corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      ConfigKafkaDeSchedulerName,
-				Namespace: systemNamespace,
-			},
-			Data: map[string]string{
-				"predicates": `[]`,
-				"priorities": `
-                 [
-                    {"Name": "RemoveWithEvenPodSpreadPriority", "Weight": 10, "Args": "{\"MaxSkew\": 2}"},
-                    {"Name": "RemoveWithAvailabilityZonePriority", "Weight": 10, "Args":  "{\"MaxSkew\": 2}"},
-                    {"Name": "RemoveWithHighestOrdinalPriority", "Weight": 2}
-                 ]`,
-			},
-		},
-	)
-
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
+	t.Setenv("SYSTEM_NAMESPACE", systemNamespace)
 	t.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
 	t.Setenv("POD_CAPACITY", PodCapacity)
-	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
-	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
 	t.Setenv("AUTOSCALER_CONFIG", ConfigKafkaAutoscalerName)
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

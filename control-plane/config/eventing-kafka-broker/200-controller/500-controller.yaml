@@ -152,12 +152,6 @@ spec:
             - name: POD_CAPACITY
               value: '20'
 
-            - name: SCHEDULER_CONFIG
-              value: 'config-kafka-scheduler'
-
-            - name: DESCHEDULER_CONFIG
-              value: 'config-kafka-descheduler'
-
             - name: AUTOSCALER_CONFIG
               value: 'config-kafka-autoscaler'
 
