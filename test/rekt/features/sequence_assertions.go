@@ -20,7 +20,10 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
+
+	"slices"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	types2 "github.com/cloudevents/sdk-go/v2/types"
@@ -28,7 +31,6 @@ import (
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
-	"slices"
 )
 
 type sequenceTransformationOrAssertion func(ctx context.Context, events []eventshub.EventInfo) ([]eventshub.EventInfo, error)
