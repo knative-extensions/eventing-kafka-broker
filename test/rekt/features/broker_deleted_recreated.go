@@ -18,6 +18,9 @@ package features
 
 import (
 	"context"
+	"math"
+	"strconv"
+
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,8 +31,6 @@ import (
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
-	"math"
-	"strconv"
 
 	"knative.dev/pkg/system"
 
