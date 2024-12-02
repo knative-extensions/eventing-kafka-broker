@@ -60,7 +60,7 @@ import (
 
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 
-	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"

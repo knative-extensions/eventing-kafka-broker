@@ -28,7 +28,7 @@ import (
 	"knative.dev/eventing/test/lib/recordevents"
 	"knative.dev/eventing/test/lib/resources"
 
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	contribtestlib "knative.dev/eventing-kafka-broker/test/lib"
 	contribresources "knative.dev/eventing-kafka-broker/test/lib/resources"
 )
@@ -112,7 +112,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 	for name, test := range tests {
 		test := test
 		name := name
-		for _, version := range []string{"v1beta1"} {
+		for _, version := range []string{"v1"} {
 			testName := name + "-" + version
 			t.Run(testName, func(t *testing.T) {
 				testKafkaSource(t, name, version, test.messageKey, test.messageHeaders, test.messagePayload, test.matcherGen, KafkaBootstrapUrlPlain, test.extensions)
@@ -151,18 +151,18 @@ func testKafkaSource(t *testing.T,
 
 	t.Logf("Creating KafkaSource %s", version)
 	switch version {
-	case "v1beta1":
-		contribtestlib.CreateKafkaSourceV1Beta1OrFail(client, contribresources.KafkaSourceV1Beta1(
+	case "v1":
+		contribtestlib.CreateKafkaSourceOrFail(client, contribresources.KafkaSource(
 			bootStrapServer,
 			kafkaTopicName,
-			sourcesv1beta1.Ordered,
+			sources.Ordered,
 			resources.ServiceRef(recordEventPodName),
-			contribresources.WithNameV1Beta1(kafkaSourceName),
-			contribresources.WithConsumerGroupV1Beta1(consumerGroup),
-			contribresources.WithExtensionsV1Beta1(extensions),
+			contribresources.WithName(kafkaSourceName),
+			contribresources.WithConsumerGroup(consumerGroup),
+			contribresources.WithExtensions(extensions),
 		))
-		cloudEventsSourceName = sourcesv1beta1.KafkaEventSource(client.Namespace, kafkaSourceName, kafkaTopicName)
-		cloudEventsEventType = sourcesv1beta1.KafkaEventType
+		cloudEventsSourceName = sources.KafkaEventSource(client.Namespace, kafkaSourceName, kafkaTopicName)
+		cloudEventsEventType = sources.KafkaEventType
 	default:
 		t.Fatalf("Unknown KafkaSource version %s", version)
 	}

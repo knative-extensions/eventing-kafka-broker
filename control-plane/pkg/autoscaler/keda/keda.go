@@ -27,7 +27,7 @@ import (
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/logging"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 
@@ -222,7 +222,7 @@ func retrieveSaslTypeIfPresent(cg *kafkainternals.ConsumerGroup, secret corev1.S
 	return nil
 }
 
-func addAuthSecretTargetRef(parameter string, secretKeyRef v1beta1.SecretValueFromSource, secretTargetRefs []kedav1alpha1.AuthSecretTargetRef) []kedav1alpha1.AuthSecretTargetRef {
+func addAuthSecretTargetRef(parameter string, secretKeyRef bindings.SecretValueFromSource, secretTargetRefs []kedav1alpha1.AuthSecretTargetRef) []kedav1alpha1.AuthSecretTargetRef {
 	if secretKeyRef.SecretKeyRef == nil || secretKeyRef.SecretKeyRef.Name == "" || secretKeyRef.SecretKeyRef.Key == "" {
 		return secretTargetRefs
 	}

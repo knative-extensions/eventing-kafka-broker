@@ -39,7 +39,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
-	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumer"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"

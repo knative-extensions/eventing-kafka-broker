@@ -25,8 +25,8 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )

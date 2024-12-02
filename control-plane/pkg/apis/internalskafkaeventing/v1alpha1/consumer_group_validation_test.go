@@ -27,7 +27,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )
 
 const (

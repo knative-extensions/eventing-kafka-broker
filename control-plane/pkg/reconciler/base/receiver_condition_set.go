@@ -28,7 +28,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/reconciler"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
