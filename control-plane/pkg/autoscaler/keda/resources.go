@@ -31,6 +31,8 @@ var (
 	KedaSchemeGroupVersion = schema.GroupVersion{Group: "keda.sh", Version: "v1alpha1"}
 )
 
+const scaledObjectPrefixName = "so-"
+
 func GenerateScaledObject(obj metav1.Object, gvk schema.GroupVersionKind, scaleTarget *kedav1alpha1.ScaleTarget, triggers []kedav1alpha1.ScaleTriggers, aconfig autoscaler.AutoscalerConfig) (*kedav1alpha1.ScaledObject, error) {
 
 	cooldownPeriod, err := GetInt32ValueFromMap(obj.GetAnnotations(), autoscaler.AutoscalingCooldownPeriodAnnotation, aconfig.AutoscalerDefaults[autoscaler.AutoscalingCooldownPeriodAnnotation])
@@ -70,7 +72,7 @@ func GenerateScaledObject(obj metav1.Object, gvk schema.GroupVersionKind, scaleT
 }
 
 func GenerateScaledObjectName(obj metav1.Object) string {
-	return fmt.Sprintf("so-%s", string(obj.GetUID()))
+	return fmt.Sprintf("%s%s", scaledObjectPrefixName, string(obj.GetUID()))
 }
 
 func GetInt32ValueFromMap(dict map[string]string, key string, defaultValue int32) (*int32, error) {
