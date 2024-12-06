@@ -264,6 +264,7 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 								Ingress:          &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 								BootstrapServers: bootstrapServers,
 								Reference:        BrokerReference(),
+								FeatureFlags:     FeatureFlagsETAutocreate(false),
 							},
 						},
 						Generation: 1,
@@ -316,6 +317,7 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 							URL:  brokerNamespacedAddress,
 						}),
 						WithBrokerAddessable(),
+						reconcilertesting.WithBrokerEventPoliciesReadyBecauseOIDCDisabled(),
 					),
 				},
 			},
@@ -509,6 +511,7 @@ func useTableNamespaced(t *testing.T, table TableTest, env *config.Env) {
 			ServiceAccountLister:     listers.GetServiceAccountLister(),
 			ServiceLister:            listers.GetServiceLister(),
 			ClusterRoleBindingLister: listers.GetClusterRoleBindingLister(),
+			EventPolicyLister:        listers.GetEventPolicyLister(),
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,

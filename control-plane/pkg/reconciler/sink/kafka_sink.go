@@ -21,6 +21,15 @@ import (
 	"fmt"
 	"time"
 
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+
+	corev1 "k8s.io/api/core/v1"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+
+	"k8s.io/utils/ptr"
+	"knative.dev/eventing/pkg/auth"
+	"knative.dev/pkg/logging"
+
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/types"
@@ -63,7 +72,8 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	ConfigMapLister corelisters.ConfigMapLister
+	ConfigMapLister   corelisters.ConfigMapLister
+	EventPolicyLister eventingv1alpha1listers.EventPolicyLister
 
 	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -81,6 +91,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, ks)
+	features := feature.FromContext(ctx)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     ks,
@@ -157,6 +168,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Got contract config map")
 
+	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not get applying eventpolicies for kafkasink: %v", err)
+	}
+
 	// Get contract data.
 	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
 	if err != nil && ct == nil {
@@ -175,39 +191,17 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		zap.Any("contract", ct),
 	)
 
+	var audience *string
+	if features.IsOIDCAuthentication() {
+		audience = ptr.To(auth.GetAudience(eventing.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the kafkasinks audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the kafkasinks audience as OIDC is not enabled")
+		audience = nil
+	}
+
 	// Get sink configuration.
-	sinkConfig := &contract.Resource{
-		Uid:    string(ks.UID),
-		Topics: []string{ks.Spec.Topic},
-		Ingress: &contract.Ingress{
-			Path:                       receiver.PathFromObject(ks),
-			ContentMode:                coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
-			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
-		},
-		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
-		Reference: &contract.Reference{
-			Uuid:         string(ks.GetUID()),
-			Namespace:    ks.GetNamespace(),
-			Name:         ks.GetName(),
-			Kind:         "KafkaSink",
-			GroupVersion: eventingv1alpha1.SchemeGroupVersion.String(),
-		},
-	}
-	if ks.Spec.HasAuthConfig() {
-		sinkConfig.Auth = &contract.Resource_AuthSecret{
-			AuthSecret: &contract.Reference{
-				Uuid:      string(secret.UID),
-				Namespace: secret.Namespace,
-				Name:      secret.Name,
-				Version:   secret.ResourceVersion,
-			},
-		}
-	}
-
-	if ks.Status.Address != nil && ks.Status.Address.Audience != nil {
-		sinkConfig.Ingress.Audience = *ks.Status.Address.Audience
-	}
-
+	sinkConfig := r.getSinkContractResource(ctx, ks, secret, audience, applyingEventPolicies)
 	statusConditionManager.ConfigResolved()
 
 	sinkIndex := coreconfig.FindResource(ct, ks.UID)
@@ -234,22 +228,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
 	logger.Debug("Updated receiver pod annotation")
 
-	transportEncryptionFlags := feature.FromContext(ctx)
+	err = auth.UpdateStatusWithProvidedEventPolicies(features, &ks.Status.AppliedEventPoliciesStatus, &ks.Status, applyingEventPolicies)
+	if err != nil {
+		return fmt.Errorf("could not update KafkaSinks status with EventPolicies: %v", err)
+	}
+
 	var addressableStatus duckv1.AddressStatus
-	if transportEncryptionFlags.IsPermissiveTransportEncryption() {
+	if features.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
 		}
 
-		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
+		httpAddress := receiver.HTTPAddress(r.IngressHost, audience, ks)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, audience, ks, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -257,7 +255,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		//   - http address with path-based routing
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress, httpAddress}
-	} else if transportEncryptionFlags.IsStrictTransportEncryption() {
+	} else if features.IsStrictTransportEncryption() {
 		// Strict mode: (only https addresses)
 		// - status.address https address with path-based routing
 		// - status.addresses:
@@ -266,14 +264,14 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		if err != nil {
 			return err
 		}
-		httpsAddress := receiver.HTTPSAddress(r.IngressHost, nil, ks, caCerts)
+		httpsAddress := receiver.HTTPSAddress(r.IngressHost, audience, ks, caCerts)
 
 		addressableStatus.Address = &httpsAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 	} else {
 		// Disabled mode:
 		// Unchange
-		httpAddress := receiver.HTTPAddress(r.IngressHost, nil, ks)
+		httpAddress := receiver.HTTPAddress(r.IngressHost, audience, ks)
 
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
@@ -341,7 +339,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -428,4 +426,44 @@ func (r *Reconciler) setTrustBundles(ct *contract.Contract) error {
 	}
 	ct.TrustBundles = tb
 	return nil
+}
+
+func (r *Reconciler) getSinkContractResource(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, secret *corev1.Secret, audience *string, applyingEventPolicies []*v1alpha1.EventPolicy) *contract.Resource {
+	features := feature.FromContext(ctx)
+	sinkConfig := &contract.Resource{
+		Uid:    string(kafkaSink.UID),
+		Topics: []string{kafkaSink.Spec.Topic},
+		Ingress: &contract.Ingress{
+			Path:          receiver.PathFromObject(kafkaSink),
+			ContentMode:   coreconfig.ContentModeFromString(*kafkaSink.Spec.ContentMode),
+			EventPolicies: coreconfig.ContractEventPoliciesFromEventPolicies(applyingEventPolicies, kafkaSink.Namespace, features),
+		},
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate),
+		},
+		BootstrapServers: kafka.BootstrapServersCommaSeparated(kafkaSink.Spec.BootstrapServers),
+		Reference: &contract.Reference{
+			Uuid:         string(kafkaSink.GetUID()),
+			Namespace:    kafkaSink.GetNamespace(),
+			Name:         kafkaSink.GetName(),
+			Kind:         "KafkaSink",
+			GroupVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+		},
+	}
+	if kafkaSink.Spec.HasAuthConfig() {
+		sinkConfig.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(secret.UID),
+				Namespace: secret.Namespace,
+				Name:      secret.Name,
+				Version:   secret.ResourceVersion,
+			},
+		}
+	}
+
+	if audience != nil {
+		sinkConfig.Ingress.Audience = *audience
+	}
+
+	return sinkConfig
 }

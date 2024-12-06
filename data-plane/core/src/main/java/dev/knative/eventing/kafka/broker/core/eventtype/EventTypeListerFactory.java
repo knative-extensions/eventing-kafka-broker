@@ -16,21 +16,27 @@
 
 package dev.knative.eventing.kafka.broker.core.eventtype;
 
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
-public class EventTypeListerFactory {
+public class EventTypeListerFactory implements AutoCloseable {
+    private static final long INFORMER_RESYNC_MS = 30 * 1000;
     private final Map<String, Lister<EventType>> listerMap;
-    private final SharedIndexInformer<EventType> eventTypeInformer;
+    private final List<SharedIndexInformer<EventType>> informers;
+    private final MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient;
 
-    public EventTypeListerFactory(SharedIndexInformer<EventType> eventTypeInformer) {
-        if (eventTypeInformer == null) {
-            throw new IllegalArgumentException("you must provide a non null eventtype informer");
-        }
-        this.eventTypeInformer = eventTypeInformer;
+    public EventTypeListerFactory(
+            MixedOperation<EventType, KubernetesResourceList<EventType>, Resource<EventType>> eventTypeClient) {
+        this.eventTypeClient = eventTypeClient;
         this.listerMap = new HashMap<>();
+        this.informers = new LinkedList<>();
     }
 
     public Lister<EventType> getForNamespace(String namespace) {
@@ -41,8 +47,16 @@ public class EventTypeListerFactory {
     }
 
     private Lister<EventType> createListerForNamespace(String namespace) {
-        final var lister = new Lister<>(this.eventTypeInformer.getIndexer(), namespace);
+        final var informer = this.eventTypeClient.inNamespace(namespace).runnableInformer(INFORMER_RESYNC_MS);
+        informer.start();
+        this.informers.add(informer);
+        final var lister = new Lister<>(informer.getIndexer(), namespace);
         this.listerMap.put(namespace, lister);
         return lister;
+    }
+
+    @Override
+    public void close() {
+        this.informers.forEach(SharedIndexInformer::close);
     }
 }

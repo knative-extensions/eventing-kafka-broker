@@ -22,11 +22,15 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
+
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 
 	"github.com/rickb777/date/period"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	duck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/resolver"
 
@@ -49,6 +53,90 @@ func ContentModeFromString(mode string) contract.ContentMode {
 			[]string{eventing.ModeStructured, eventing.ModeBinary},
 		))
 	}
+}
+
+// ContractEventPoliciesFromEventPolicies resolves a list of v1alpha1.EventPolicy into a list of contract.EventPolicy
+func ContractEventPoliciesFromEventPolicies(applyingEventPolicies []*eventingv1alpha1.EventPolicy, namespace string, features feature.Flags) []*contract.EventPolicy {
+	if !features.IsOIDCAuthentication() {
+		return nil
+	}
+
+	eventPolicies := make([]*contract.EventPolicy, 0, len(applyingEventPolicies))
+
+	for _, policy := range applyingEventPolicies {
+		if !policy.Status.IsReady() {
+			// only add ready eventpolicies to the contract
+			continue
+		}
+
+		contractPolicy := &contract.EventPolicy{}
+		for _, from := range policy.Status.From {
+			if strings.HasSuffix(from, "*") {
+				contractPolicy.TokenMatchers = append(contractPolicy.TokenMatchers, &contract.TokenMatcher{
+					Matcher: &contract.TokenMatcher_Prefix{
+						Prefix: &contract.Prefix{
+							Attributes: map[string]string{
+								"sub": strings.TrimSuffix(from, "*"),
+							},
+						},
+					},
+				})
+			} else {
+				contractPolicy.TokenMatchers = append(contractPolicy.TokenMatchers, &contract.TokenMatcher{
+					Matcher: &contract.TokenMatcher_Exact{
+						Exact: &contract.Exact{
+							Attributes: map[string]string{
+								"sub": from,
+							},
+						},
+					},
+				})
+			}
+		}
+
+		for _, filter := range policy.Spec.Filters {
+			contractPolicy.Filters = append(contractPolicy.Filters, contract.FromSubscriptionFilter(filter))
+		}
+
+		eventPolicies = append(eventPolicies, contractPolicy)
+	}
+
+	if len(eventPolicies) == 0 {
+		if features.IsAuthorizationDefaultModeAllowAll() {
+			// add event policy to match all subs
+			eventPolicies = append(eventPolicies, &contract.EventPolicy{
+				TokenMatchers: []*contract.TokenMatcher{
+					{
+						Matcher: &contract.TokenMatcher_Prefix{
+							Prefix: &contract.Prefix{
+								Attributes: map[string]string{
+									"sub": "",
+								},
+							},
+						},
+					},
+				},
+			})
+		} else if features.IsAuthorizationDefaultModeSameNamespace() {
+			// add event policy with prefix match
+			eventPolicies = append(eventPolicies, &contract.EventPolicy{
+				TokenMatchers: []*contract.TokenMatcher{
+					{
+						Matcher: &contract.TokenMatcher_Prefix{
+							Prefix: &contract.Prefix{
+								Attributes: map[string]string{
+									"sub": fmt.Sprintf("system:serviceaccount:%s:", namespace),
+								},
+							},
+						},
+					},
+				},
+			})
+		}
+		// else: deny all -> add no additional policy
+	}
+
+	return eventPolicies
 }
 
 func EgressConfigFromDelivery(

@@ -40,10 +40,10 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
-	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 
 	kedaclientset "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 )

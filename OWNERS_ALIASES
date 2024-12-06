@@ -58,17 +58,13 @@ aliases:
   - Leo6Leo
   - cali0707
   eventing-kafka-writers: []
-  eventing-kogito-approvers:
-  - ricardozanini
   eventing-natss-approvers:
   - astelmashenko
   - dan-j
-  - zhaojizhuang
   eventing-prometheus-approvers:
   - lberk
   - matzew
   eventing-rabbitmq-approvers:
-  - Zerpet
   - ikavgo
   - mkuratczyk
   eventing-redis-approvers:
@@ -82,6 +78,7 @@ aliases:
   eventing-wg-leads:
   - pierDipi
   eventing-writers:
+  - Leo6Leo
   - aliok
   - cali0707
   - creydr
@@ -117,41 +114,34 @@ aliases:
   - salaboy
   homebrew-kn-plugins-approvers:
   - dsimansk
-  - maximilien
   - rhuss
   kn-plugin-admin-approvers:
-  - maximilien
+  - dsimansk
   - rhuss
-  - zhanggbj
   kn-plugin-event-approvers:
   - cardil
   - rhuss
   kn-plugin-operator-approvers:
   - dsimansk
   - houshengbo
-  - maximilien
   - rhuss
   kn-plugin-quickstart-approvers:
   - dsimansk
   - psschwei
   - rhuss
   kn-plugin-sample-approvers:
-  - maximilien
+  - dsimansk
   - rhuss
   kn-plugin-service-log-approvers:
   - rhuss
   kn-plugin-source-kafka-approvers:
   - daisy-ycguo
   - dsimansk
-  - maximilien
   - rhuss
   kn-plugin-source-kamelet-approvers:
   - christophd
   - rhuss
   knative-admin:
-  - Cali0707
-  - Leo6Leo
-  - ReToCode
   - aliok
   - cardil
   - davidhadas
@@ -166,14 +156,8 @@ aliases:
   - nainaz
   - psschwei
   - salaboy
-  - skonto
   - upodroid
-  knative-release-leads:
-  - Cali0707
-  - Leo6Leo
-  - ReToCode
-  - dsimansk
-  - skonto
+  knative-release-leads: []
   knative-robots:
   - knative-automation
   - knative-prow-releaser-robot
@@ -207,7 +191,6 @@ aliases:
   - upodroid
   security-guard-approvers:
   - davidhadas
-  - maximilien
   - psschwei
   - rhuss
   security-wg-leads:
@@ -240,14 +223,22 @@ aliases:
   - skonto
   steering-committee:
   - aliok
-  - evankanderson
-  - nainaz
-  - salaboy
-  technical-oversight-committee:
   - davidhadas
   - dprotaso
   - dsimansk
+  - evankanderson
+  - nainaz
   - psschwei
+  - salaboy
+  technical-oversight-committee:
+  - aliok
+  - davidhadas
+  - dprotaso
+  - dsimansk
+  - evankanderson
+  - nainaz
+  - psschwei
+  - salaboy
   ux-wg-leads:
   - cali0707
   - leo6leo

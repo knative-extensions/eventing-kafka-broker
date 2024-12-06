@@ -31,6 +31,8 @@ import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
@@ -42,7 +44,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticl
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleFactoryImpl;
 import dev.knative.eventing.kafka.broker.receiver.impl.IngressProducerReconcilableStore;
 import dev.knative.eventing.kafka.broker.receiver.impl.ReceiverVerticle;
-import dev.knative.eventing.kafka.broker.receiver.impl.StrictRequestToRecordMapper;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -359,7 +361,9 @@ public abstract class AbstractDataPlaneTest {
                 AuthProvider.noAuth(),
                 Metrics.getRegistry(),
                 getReactiveConsumerFactory(),
-                getReactiveProducerFactory());
+                getReactiveProducerFactory(),
+                mock(EventTypeCreator.class),
+                mock(EventTypeListerFactory.class));
 
         final var verticle = new ConsumerDeployerVerticle(consumerVerticleFactory, 10);
 
@@ -389,14 +393,13 @@ public abstract class AbstractDataPlaneTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> new IngressProducerReconcilableStore(
-                        AuthProvider.noAuth(), producerConfigs(), properties -> getReactiveProducerFactory()
-                                .create(v, properties)),
-                new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(),
-                        Metrics.getRegistry(),
-                        (((event, reference) -> null))),
+                        AuthProvider.noAuth(),
+                        producerConfigs(),
+                        properties -> getReactiveProducerFactory().create(v, properties),
+                        mock(EventTypeListerFactory.class)),
+                new IngressRequestHandlerImpl(Metrics.getRegistry(), (((event, lister, reference) -> null))),
                 SECRET_VOLUME_PATH,
-                null);
+                mock(OIDCDiscoveryConfigListener.class));
 
         final CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(verticle, context.succeeding(h -> latch.countDown()));

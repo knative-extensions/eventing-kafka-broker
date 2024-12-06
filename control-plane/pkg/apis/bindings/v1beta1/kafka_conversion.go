@@ -18,27 +18,63 @@ package v1beta1
 
 import (
 	"context"
-	"fmt"
 
-	"knative.dev/pkg/apis"
+	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 )
 
-// ConvertTo implements apis.Convertible
-func (source *KafkaBinding) ConvertTo(_ context.Context, sink apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", sink)
+// ConvertToV1 converts v1beta1 to v1.
+func (source *KafkaAuthSpec) ConvertToV1(_ context.Context) *v1.KafkaAuthSpec {
+	if source == nil {
+		return nil
+	}
+	sink := &v1.KafkaAuthSpec{
+		BootstrapServers: source.BootstrapServers,
+		Net: v1.KafkaNetSpec{
+			SASL: v1.KafkaSASLSpec{
+				Enable: source.Net.SASL.Enable,
+				User: v1.SecretValueFromSource{
+					SecretKeyRef: source.Net.SASL.User.SecretKeyRef,
+				},
+				Password: v1.SecretValueFromSource{
+					SecretKeyRef: source.Net.SASL.Password.SecretKeyRef,
+				},
+				Type: v1.SecretValueFromSource{
+					SecretKeyRef: source.Net.SASL.Type.SecretKeyRef,
+				},
+			},
+			TLS: v1.KafkaTLSSpec{
+				Enable: source.Net.TLS.Enable,
+				Cert: v1.SecretValueFromSource{
+					SecretKeyRef: source.Net.TLS.Cert.SecretKeyRef,
+				},
+				Key: v1.SecretValueFromSource{
+					SecretKeyRef: source.Net.TLS.Key.SecretKeyRef,
+				},
+				CACert: v1.SecretValueFromSource{
+					SecretKeyRef: source.Net.TLS.CACert.SecretKeyRef,
+				},
+			},
+		},
+	}
+	return sink
 }
 
-// ConvertFrom implements apis.Convertible
-func (sink *KafkaBinding) ConvertFrom(_ context.Context, source apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", source)
-}
+// ConvertFromV1 converts v1 to v1beta1
+func (sink *KafkaAuthSpec) ConvertFromV1(source *v1.KafkaAuthSpec) {
+	if source == nil {
+		return
+	}
+	sink.BootstrapServers = source.BootstrapServers
 
-// ConvertTo implements apis.Convertible
-func (source *KafkaAuthSpec) ConvertTo(_ context.Context, sink apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", sink)
-}
+	sink.Net.SASL.Enable = source.Net.SASL.Enable
+	sink.Net.SASL.Type.SecretKeyRef = source.Net.SASL.Type.SecretKeyRef
+	sink.Net.SASL.User.SecretKeyRef = source.Net.SASL.User.SecretKeyRef
+	sink.Net.SASL.Password.SecretKeyRef = source.Net.SASL.Password.SecretKeyRef
 
-// ConvertFrom implements apis.Convertible
-func (sink *KafkaAuthSpec) ConvertFrom(_ context.Context, source apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", source)
+	sink.Net.TLS.Enable = source.Net.TLS.Enable
+	sink.Net.TLS.Key.SecretKeyRef = source.Net.TLS.Key.SecretKeyRef
+	sink.Net.TLS.Cert.SecretKeyRef = source.Net.TLS.Cert.SecretKeyRef
+	sink.Net.TLS.CACert.SecretKeyRef = source.Net.TLS.CACert.SecretKeyRef
+
+	return
 }

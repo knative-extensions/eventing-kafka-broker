@@ -17,27 +17,33 @@
 package consumergroup
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered/fake"
 	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake"
+	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
+	_ "knative.dev/pkg/client/injection/kube/informers/factory/filtered/fake"
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer/fake"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumer/fake"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup/fake"
 	_ "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/informers/keda/v1alpha1/scaledobject/fake"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
@@ -55,7 +61,11 @@ const (
 )
 
 func TestNewController(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t)
+	ctx, _ := reconcilertesting.SetupFakeContext(t, func(ctx context.Context) context.Context {
+		return filteredFactory.WithSelectors(ctx,
+			internalsapi.DispatcherLabelSelectorStr,
+		)
+	})
 	ctx, _ = kedaclient.With(ctx)
 
 	t.Setenv("SYSTEM_NAMESPACE", systemNamespace)

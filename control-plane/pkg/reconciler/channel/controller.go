@@ -22,6 +22,8 @@ import (
 	"net"
 	"net/http"
 
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -45,12 +47,15 @@ import (
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing/pkg/apis/feature"
 
+	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	consumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+
 	"knative.dev/pkg/controller"
+
+	"knative.dev/eventing/pkg/auth"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -63,10 +68,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	configmapInformer := configmapinformer.Get(ctx)
 	channelInformer := kafkachannelinformer.Get(ctx)
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
+	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(conditionSet)
-
-	clientPool := clientpool.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -79,14 +83,21 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		Env:                  configs,
-		ConfigMapLister:      configmapInformer.Lister(),
-		ServiceLister:        serviceinformer.Get(ctx).Lister(),
-		SubscriptionLister:   subscriptioninformer.Get(ctx).Lister(),
-		ConsumerGroupLister:  consumerGroupInformer.Lister(),
-		InternalsClient:      consumergroupclient.Get(ctx),
-		KafkaFeatureFlags:    apisconfig.DefaultFeaturesConfig(),
+		Env:                 configs,
+		ConfigMapLister:     configmapInformer.Lister(),
+		ServiceLister:       serviceinformer.Get(ctx).Lister(),
+		SubscriptionLister:  subscriptioninformer.Get(ctx).Lister(),
+		ConsumerGroupLister: consumerGroupInformer.Lister(),
+		EventPolicyLister:   eventPolicyInformer.Lister(),
+		InternalsClient:     consumergroupclient.Get(ctx),
+		KafkaFeatureFlags:   apisconfig.DefaultFeaturesConfig(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	logger := logging.FromContext(ctx)
@@ -104,6 +115,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		if globalResync != nil {
 			globalResync(nil)
 		}
+		err = reconciler.UpdateReceiverConfigFeaturesUpdatedAnnotation(ctx, logger.Desugar())
+		if err != nil {
+			logger.Warn("config-features updated, but the receiver pods were not successfully annotated. This may lead to features not working as expected.", zap.Error(err))
+		}
 	})
 	featureStore.WatchConfigs(watcher)
 
@@ -113,6 +128,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 				ConfigStore: featureStore,
 			}
 		})
+
+	globalResync = func(obj interface{}) {
+		impl.GlobalResync(channelInformer.Informer())
+	}
 
 	kafkaConfigStore := apisconfig.NewStore(ctx, func(name string, value *apisconfig.KafkaFeatureFlags) {
 		reconciler.KafkaFeatureFlags.Reset(value)
@@ -168,5 +187,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 		Handler:    controller.HandleAll(consumergroup.Enqueue("kafkachannel", impl.EnqueueKey)),
 	})
 
+	channelGK := messagingv1beta.SchemeGroupVersion.WithKind("KafkaChannel").GroupKind()
+	// Enqueue KafkaChannel, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the KafkaSink
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(channelInformer.Informer().GetIndexer(), channelGK, impl.EnqueueKey))
 	return impl
 }

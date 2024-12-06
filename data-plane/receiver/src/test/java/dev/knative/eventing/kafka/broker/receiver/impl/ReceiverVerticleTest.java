@@ -34,11 +34,13 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
+import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -125,7 +127,8 @@ public class ReceiverVerticleTest {
                 new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
         ReactiveKafkaProducer<String, CloudEvent> producer = new MockReactiveKafkaProducer<>(mockProducer);
 
-        store = new IngressProducerReconcilableStore(AuthProvider.noAuth(), new Properties(), properties -> producer);
+        store = new IngressProducerReconcilableStore(
+                AuthProvider.noAuth(), new Properties(), properties -> producer, mock(EventTypeListerFactory.class));
 
         registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
@@ -148,10 +151,9 @@ public class ReceiverVerticleTest {
                 httpServerOptions,
                 httpsServerOptions,
                 v -> store,
-                new IngressRequestHandlerImpl(
-                        StrictRequestToRecordMapper.getInstance(), registry, ((event, reference) -> null)),
+                new IngressRequestHandlerImpl(registry, ((event, lister, reference) -> null)),
                 SECRET_VOLUME_PATH,
-                null);
+                mock(OIDCDiscoveryConfigListener.class));
         vertx.deployVerticle(verticle, testContext.succeeding(ar -> testContext.completeNow()));
 
         // Connect to the logger in ReceiverVerticle

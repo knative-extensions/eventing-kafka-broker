@@ -24,6 +24,10 @@ import (
 	"strings"
 	"time"
 
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+
 	"k8s.io/utils/pointer"
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
@@ -38,12 +42,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
@@ -66,9 +71,9 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
-	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 
@@ -109,6 +114,7 @@ type Reconciler struct {
 	ConfigMapLister    corelisters.ConfigMapLister
 	ServiceLister      corelisters.ServiceLister
 	SubscriptionLister messaginglisters.SubscriptionLister
+	EventPolicyLister  eventingv1alpha1listers.EventPolicyLister
 
 	Prober prober.NewProber
 
@@ -121,6 +127,7 @@ type Reconciler struct {
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, channel)
+	featureFlags := feature.FromContext(ctx)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
@@ -219,8 +226,22 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
 
+	var audience *string
+	if featureFlags.IsOIDCAuthentication() {
+		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
+		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
+	} else {
+		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
+		audience = nil
+	}
+
+	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta)
+	if err != nil {
+		return fmt.Errorf("could not get applying eventpolicies for kafkaChannel: %v", err)
+	}
+
 	// Get resource configuration
-	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig)
+	channelResource, err := r.getChannelContractResource(ctx, topic, channel, authContext, topicConfig, audience, applyingEventPolicies)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -250,6 +271,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	logger.Debug("Contract config map updated")
 	statusConditionManager.ConfigMapUpdated()
 
+	err = auth.UpdateStatusWithProvidedEventPolicies(featureFlags, &channel.Status.AppliedEventPoliciesStatus, &channel.Status, applyingEventPolicies)
+	if err != nil {
+		return fmt.Errorf("could not update KafkaChannel status with EventPolicies: %v", err)
+	}
+
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to anyway update remaining annotations with the contract generation that was saved in the CM.
@@ -261,7 +287,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	// the update even if here eventually means seconds or minutes after the actual update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		logger.Error("Failed to update receiver pod annotation", zap.Error(
 			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
 		))
@@ -273,16 +299,6 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	if err != nil {
 		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
 		return err
-	}
-
-	featureFlags := feature.FromContext(ctx)
-	var audience *string
-	if featureFlags.IsOIDCAuthentication() {
-		audience = pointer.String(auth.GetAudience(messaging.SchemeGroupVersion.WithKind("KafkaChannel"), channel.ObjectMeta))
-		logging.FromContext(ctx).Debugw("Setting the KafkaChannels audience", zap.String("audience", *audience))
-	} else {
-		logging.FromContext(ctx).Debug("Clearing the KafkaChannels audience as OIDC is not enabled")
-		audience = nil
 	}
 
 	var addressableStatus duckv1.AddressStatus
@@ -415,7 +431,7 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1
 	// Note: if there aren't changes to be done at the pod annotation level, we just skip the update.
 
 	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+	if err := r.UpdateReceiverPodsContractGenerationAnnotation(ctx, logger, ct.Generation); err != nil {
 		return err
 	}
 
@@ -587,6 +603,13 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
+			TopLevelResourceRef: &corev1.ObjectReference{
+				APIVersion: messagingv1beta1.SchemeGroupVersion.String(),
+				Kind:       "KafkaChannel",
+				Name:       channel.Name,
+				Namespace:  channel.Namespace,
+				UID:        channel.UID,
+			},
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -685,14 +708,19 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 	return cg, nil
 }
 
-func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig) (*contract.Resource, error) {
+func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, auth *security.NetSpecAuthContext, config *kafka.TopicConfig, audience *string, applyingEventPolicies []*v1alpha1.EventPolicy) (*contract.Resource, error) {
+	features := feature.FromContext(ctx)
+
 	resource := &contract.Resource{
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			Host:                       receiver.Host(channel.GetNamespace(), channel.GetName()),
-			EnableAutoCreateEventTypes: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
-			Path:                       receiver.Path(channel.GetNamespace(), channel.GetName()),
+			Host:          receiver.Host(channel.GetNamespace(), channel.GetName()),
+			Path:          receiver.Path(channel.GetNamespace(), channel.GetName()),
+			EventPolicies: coreconfig.ContractEventPoliciesFromEventPolicies(applyingEventPolicies, channel.Namespace, features),
+		},
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: features.IsEnabled(feature.EvenTypeAutoCreate) && !ownedByBroker(channel),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
@@ -708,10 +736,19 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		resource.Auth = &contract.Resource_MultiAuthSecret{
 			MultiAuthSecret: auth.MultiSecretReference,
 		}
+	} else if auth != nil && auth.VirtualSecret != nil {
+		resource.Auth = &contract.Resource_AuthSecret{
+			AuthSecret: &contract.Reference{
+				Uuid:      string(auth.VirtualSecret.UID),
+				Namespace: auth.VirtualSecret.Namespace,
+				Name:      auth.VirtualSecret.Name,
+				Version:   auth.VirtualSecret.ResourceVersion,
+			},
+		}
 	}
 
-	if channel.Status.Address != nil && channel.Status.Address.Audience != nil {
-		resource.Ingress.Audience = *channel.Status.Address.Audience
+	if audience != nil {
+		resource.Ingress.Audience = *audience
 	}
 
 	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
@@ -850,4 +887,14 @@ func mergeDeliverySpecs(d1, d2 *v1.DeliverySpec) *v1.DeliverySpec {
 	}
 
 	return d
+}
+
+func ownedByBroker(channel *messagingv1beta1.KafkaChannel) bool {
+	for _, ref := range channel.OwnerReferences {
+		if strings.EqualFold(ref.Kind, "broker") {
+			return true
+		}
+	}
+
+	return false
 }

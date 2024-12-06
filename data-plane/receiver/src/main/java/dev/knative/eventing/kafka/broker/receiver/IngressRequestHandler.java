@@ -16,11 +16,12 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
+import io.cloudevents.CloudEvent;
 
 /**
  * This class handles incoming ingress requests.
  */
 public interface IngressRequestHandler extends IngressReconcilerListener {
 
-    void handle(RequestContext request, IngressProducer producer);
+    void handle(RequestContext request, CloudEvent cloudEvent, IngressProducer producer);
 }

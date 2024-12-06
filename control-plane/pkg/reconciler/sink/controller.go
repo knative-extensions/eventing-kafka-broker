@@ -22,6 +22,10 @@ import (
 	"net"
 	"net/http"
 
+	"knative.dev/eventing/pkg/auth"
+
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,8 +57,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	logger := logging.FromContext(ctx)
 
 	configmapInformer := configmapinformer.Get(ctx)
-
-	clientPool := clientpool.Get(ctx)
+	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &base.Reconciler{
@@ -67,9 +70,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DataPlaneNamespace:          configs.SystemNamespace,
 			ReceiverLabel:               base.SinkReceiverLabel,
 		},
-		ConfigMapLister:      configmapInformer.Lister(),
-		GetKafkaClusterAdmin: clientPool.GetClusterAdmin,
-		Env:                  configs,
+		ConfigMapLister:   configmapInformer.Lister(),
+		EventPolicyLister: eventPolicyInformer.Lister(),
+		Env:               configs,
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
@@ -85,6 +95,10 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(_ string, obj interface{}) {
 		if globalResync != nil {
 			globalResync(obj)
+		}
+		err = reconciler.UpdateReceiverConfigFeaturesUpdatedAnnotation(ctx, logger.Desugar())
+		if err != nil {
+			logger.Warn("config-features updated, but the receiver pods were not successfully annotated. This may lead to features not working as expected.", zap.Error(err))
 		}
 	})
 	featureStore.WatchConfigs(watcher)
@@ -152,6 +166,12 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	sinkInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: reconciler.OnDeleteObserver,
 	})
+
+	sinkGK := eventing.SchemeGroupVersion.WithKind("KafkaSink").GroupKind()
+
+	// Enqueue the KafkaSink, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the KafkaSink
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(sinkInformer.Informer().GetIndexer(), sinkGK, impl.EnqueueKey))
 
 	return impl
 }

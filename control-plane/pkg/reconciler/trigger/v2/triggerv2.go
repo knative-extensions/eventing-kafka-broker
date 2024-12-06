@@ -42,10 +42,10 @@ import (
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned"
-	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -134,6 +134,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 	return nil
 }
 
+func (r *Reconciler) FinalizeKind(context.Context, *eventing.Trigger) reconciler.Event {
+	// No-op, left here for backward compatibility.
+	// This configures the knative/pkg base reconciler to remove the finalizer,
+	// for more details, see https://github.com/knative-extensions/eventing-kafka-broker/issues/4034
+	return nil
+}
+
 func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventing.Broker, trigger *eventing.Trigger) (*internalscg.ConsumerGroup, error) {
 
 	var deliveryOrdering = sources.Unordered
@@ -202,6 +209,13 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
+			TopLevelResourceRef: &corev1.ObjectReference{
+				APIVersion: eventing.SchemeGroupVersion.String(),
+				Kind:       "Broker",
+				Name:       broker.Name,
+				Namespace:  broker.Namespace,
+				UID:        broker.UID,
+			},
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{

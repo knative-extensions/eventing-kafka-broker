@@ -17,10 +17,14 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+import io.fabric8.kubernetes.client.informers.cache.Lister;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
@@ -30,8 +34,26 @@ public abstract class BaseResponseHandler implements ResponseHandler {
 
     protected final Logger logger;
 
+    private boolean isEventTypeAutocreateEnabled;
+    private EventTypeCreator eventTypeCreator;
+    private Lister<EventType> eventTypeLister;
+    private DataPlaneContract.Reference reference;
+
     public BaseResponseHandler(Logger logger) {
         this.logger = logger;
+        this.isEventTypeAutocreateEnabled = false;
+    }
+
+    public BaseResponseHandler withEventTypeAutocreate(
+            EventTypeCreator eventTypeCreator,
+            Lister<EventType> eventTypeLister,
+            DataPlaneContract.Reference reference) {
+        logger.info("cali0707: enabling eventtype autocreate");
+        this.eventTypeCreator = eventTypeCreator;
+        this.eventTypeLister = eventTypeLister;
+        this.reference = reference;
+        this.isEventTypeAutocreateEnabled = true;
+        return this;
     }
 
     /**
@@ -79,6 +101,19 @@ public abstract class BaseResponseHandler implements ResponseHandler {
 
         TracingSpan.decorateCurrentWithEvent(event);
 
+        if (this.isEventTypeAutocreateEnabled) {
+            return this.doHandleEvent(event).compose((ignored) -> this.eventTypeCreator
+                    .create(event, this.eventTypeLister, this.reference)
+                    .compose(
+                            eventType -> {
+                                logger.debug("successfully created eventtype {}", eventType);
+                                return Future.succeededFuture();
+                            },
+                            cause -> {
+                                logger.warn("failed to create eventtype", cause);
+                                return Future.failedFuture(cause);
+                            }));
+        }
         return this.doHandleEvent(event);
     }
 

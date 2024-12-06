@@ -38,7 +38,7 @@ import (
 	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
-	fakekafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	fakekafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	fakekeda "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 

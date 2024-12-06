@@ -44,10 +44,10 @@ import (
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/eventing/pkg/scheduler"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -61,10 +61,10 @@ import (
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
 )
 
-type SchedulerFunc func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error)
+type SchedulerFunc func(ctx context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error)
 
-func (f SchedulerFunc) Schedule(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
-	return f(vpod)
+func (f SchedulerFunc) Schedule(ctx context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+	return f(ctx, vpod)
 }
 
 const (
@@ -102,7 +102,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -173,8 +173,8 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Consumers in multiple pods, with pods pending and unknown phase",
 			Objects: []runtime.Object{
 				NewService(),
-				NewDispatcherPod("p1", PodLabel(kafkainternals.SourceStatefulSetName), PodPending()),
-				NewDispatcherPod("p2", PodLabel(kafkainternals.SourceStatefulSetName)),
+				NewDispatcherPod("p1", PodLabel("app", kafkainternals.SourceStatefulSetName), DispatcherLabel(), PodPending()),
+				NewDispatcherPod("p2", PodLabel("app", kafkainternals.SourceStatefulSetName), DispatcherLabel()),
 				NewConsumerGroup(
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
@@ -189,7 +189,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -307,7 +307,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -402,7 +402,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -528,7 +528,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -702,7 +702,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -877,7 +877,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -1034,7 +1034,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 					}, nil
@@ -1121,7 +1121,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -1208,7 +1208,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -1303,7 +1303,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 2},
@@ -1426,7 +1426,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 2},
@@ -1533,7 +1533,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -1630,7 +1630,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, io.EOF
 				}),
 			},
@@ -1723,6 +1723,10 @@ func TestReconcileKind(t *testing.T) {
 
 }
 
+func DispatcherLabel() PodOption {
+	return PodLabel("app.kubernetes.io/kind", "kafka-dispatcher")
+}
+
 func TestReconcileKindNoAutoscaler(t *testing.T) {
 
 	tt := TableTest{
@@ -1758,7 +1762,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			},
 			Key: ConsumerGroupTestKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return []eventingduckv1alpha1.Placement{
 						{PodName: "p1", VReplicas: 1},
 						{PodName: "p2", VReplicas: 1},
@@ -1922,7 +1926,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			Key: testKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
 			},
@@ -1991,7 +1995,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			Key: testKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
 			},
@@ -2117,7 +2121,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			Key: testKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
 			},
@@ -2163,7 +2167,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			Key: testKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
 				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrUnknownTopicOrPartition,
@@ -2210,7 +2214,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			Key: testKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
 				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrGroupIDNotFound,
@@ -2258,7 +2262,7 @@ func TestFinalizeKind(t *testing.T) {
 			WantErr: true,
 			Key:     testKey,
 			OtherTestData: map[string]interface{}{
-				testSchedulerKey: SchedulerFunc(func(vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
 					return nil, nil
 				}),
 				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrClusterAuthorizationFailed,

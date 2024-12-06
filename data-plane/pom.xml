@@ -35,7 +35,6 @@
     <maven.jar.plugin.version>3.4.2</maven.jar.plugin.version>
     <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
     <maven.shade.plugin.version>3.5.1</maven.shade.plugin.version>
-    <maven.editorconfig.plugin.version>0.1.1</maven.editorconfig.plugin.version>
     <maven.jacoco.plugin.version>0.8.12</maven.jacoco.plugin.version>
     <maven.enforcer.plugin.version>3.5.0</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
@@ -60,7 +59,7 @@
     <fabric8.kubernetes.version>6.10.0</fabric8.kubernetes.version>
     <kafka.version>3.7.1</kafka.version>
     <debezium.version>2.6.1.Final</debezium.version>
-    <jib.version>3.4.0</jib.version>
+    <jib.version>3.4.4</jib.version>
     <quarkus.version>3.8.4</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
@@ -431,6 +430,10 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.8.0</version>
+        </plugin>
+        <plugin>
           <groupId>com.google.cloud.tools</groupId>
           <artifactId>jib-maven-plugin</artifactId>
           <version>${jib.version}</version>
@@ -458,27 +461,6 @@
                 </platform>
               </platforms>
             </from>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.ec4j.maven</groupId>
-          <artifactId>editorconfig-maven-plugin</artifactId>
-          <version>${maven.editorconfig.plugin.version}</version>
-          <executions>
-            <execution>
-              <id>check</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration>
-            <excludes>
-              <exclude>.dockerignore</exclude>
-              <exclude>config/***</exclude>
-              <exclude>.mvn/***</exclude>
-            </excludes>
           </configuration>
         </plugin>
         <plugin>

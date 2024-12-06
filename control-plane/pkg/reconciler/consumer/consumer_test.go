@@ -37,10 +37,10 @@ import (
 	"knative.dev/pkg/tracker"
 
 	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
-	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
+	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -62,6 +62,8 @@ var (
 	DefaultEnv = &config.Env{
 		SystemNamespace: "knative-eventing",
 	}
+
+	SourceKind = "KafkaSource"
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -119,19 +121,24 @@ func TestReconcileKind(t *testing.T) {
 								KeyType:       0,
 								VReplicas:     1,
 								Reference: &contract.Reference{
-									Uuid:      SourceUUID,
-									Namespace: ConsumerNamespace,
-									Name:      SourceName,
+									Uuid:         SourceUUID,
+									Namespace:    ConsumerNamespace,
+									Name:         SourceName,
+									Kind:         SourceKind,
+									GroupVersion: kafkasource.SchemeGroupVersion.String(),
 								},
 								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
 							Reference: &contract.Reference{
-								Uuid:      SourceUUID,
-								Namespace: ConsumerNamespace,
-								Name:      SourceName,
+								Uuid:         SourceUUID,
+								Namespace:    ConsumerNamespace,
+								Name:         SourceName,
+								Kind:         SourceKind,
+								GroupVersion: kafkasource.SchemeGroupVersion.String(),
 							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
 						},
 					},
 				},
@@ -221,19 +228,24 @@ func TestReconcileKind(t *testing.T) {
 								KeyType:       contract.KeyType_Integer,
 								VReplicas:     1,
 								Reference: &contract.Reference{
-									Uuid:      SourceUUID,
-									Namespace: ConsumerNamespace,
-									Name:      SourceName,
+									Uuid:         SourceUUID,
+									Namespace:    ConsumerNamespace,
+									Name:         SourceName,
+									Kind:         SourceKind,
+									GroupVersion: kafkasource.SchemeGroupVersion.String(),
 								},
 								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
 							Reference: &contract.Reference{
-								Uuid:      SourceUUID,
-								Namespace: ConsumerNamespace,
-								Name:      SourceName,
+								Uuid:         SourceUUID,
+								Namespace:    ConsumerNamespace,
+								Name:         SourceName,
+								Kind:         SourceKind,
+								GroupVersion: kafkasource.SchemeGroupVersion.String(),
 							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
 						},
 					},
 				},
@@ -323,19 +335,24 @@ func TestReconcileKind(t *testing.T) {
 								KeyType:       0,
 								VReplicas:     2,
 								Reference: &contract.Reference{
-									Uuid:      SourceUUID,
-									Namespace: ConsumerNamespace,
-									Name:      SourceName,
+									Uuid:         SourceUUID,
+									Namespace:    ConsumerNamespace,
+									Name:         SourceName,
+									Kind:         SourceKind,
+									GroupVersion: kafkasource.SchemeGroupVersion.String(),
 								},
 								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
 							Reference: &contract.Reference{
-								Uuid:      SourceUUID,
-								Namespace: ConsumerNamespace,
-								Name:      SourceName,
+								Uuid:         SourceUUID,
+								Namespace:    ConsumerNamespace,
+								Name:         SourceName,
+								Kind:         SourceKind,
+								GroupVersion: kafkasource.SchemeGroupVersion.String(),
 							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
 						},
 					},
 				},
@@ -438,19 +455,24 @@ func TestReconcileKind(t *testing.T) {
 								DeliveryOrder: contract.DeliveryOrder_ORDERED,
 								KeyType:       0,
 								Reference: &contract.Reference{
-									Uuid:      SourceUUID,
-									Namespace: ConsumerNamespace,
-									Name:      SourceName,
+									Uuid:         SourceUUID,
+									Namespace:    ConsumerNamespace,
+									Name:         SourceName,
+									Kind:         SourceKind,
+									GroupVersion: kafkasource.SchemeGroupVersion.String(),
 								},
 								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
 							Reference: &contract.Reference{
-								Uuid:      SourceUUID,
-								Namespace: ConsumerNamespace,
-								Name:      SourceName,
+								Uuid:         SourceUUID,
+								Namespace:    ConsumerNamespace,
+								Name:         SourceName,
+								Kind:         SourceKind,
+								GroupVersion: kafkasource.SchemeGroupVersion.String(),
 							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
 						},
 					},
 				},
@@ -854,19 +876,24 @@ func TestReconcileKind(t *testing.T) {
 								KeyType:            0,
 								VReplicas:          1,
 								Reference: &contract.Reference{
-									Uuid:      SourceUUID,
-									Namespace: ConsumerNamespace,
-									Name:      SourceName,
+									Uuid:         SourceUUID,
+									Namespace:    ConsumerNamespace,
+									Name:         SourceName,
+									Kind:         SourceKind,
+									GroupVersion: kafkasource.SchemeGroupVersion.String(),
 								},
 								FeatureFlags: defaultContractFeatureFlags,
 							}},
 							Auth:                nil,
 							CloudEventOverrides: nil,
 							Reference: &contract.Reference{
-								Uuid:      SourceUUID,
-								Namespace: ConsumerNamespace,
-								Name:      SourceName,
+								Uuid:         SourceUUID,
+								Namespace:    ConsumerNamespace,
+								Name:         SourceName,
+								Kind:         SourceKind,
+								GroupVersion: kafkasource.SchemeGroupVersion.String(),
 							},
+							FeatureFlags: FeatureFlagsETAutocreate(false),
 						},
 					},
 				},

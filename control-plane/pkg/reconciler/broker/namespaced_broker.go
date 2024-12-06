@@ -45,6 +45,7 @@ import (
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -75,6 +76,7 @@ type NamespacedReconciler struct {
 	DeploymentLister         appslisters.DeploymentLister
 	StatefulSetLister        appslisters.StatefulSetLister
 	BrokerLister             eventinglisters.BrokerLister
+	EventPolicyLister        eventingv1alpha1listers.EventPolicyLister
 
 	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -244,6 +246,7 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 		Prober:               r.Prober,
 		Counter:              r.Counter,
 		KafkaFeatureFlags:    r.KafkaFeatureFlags,
+		EventPolicyLister:    r.EventPolicyLister,
 	}
 }
 

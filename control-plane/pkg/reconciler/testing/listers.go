@@ -28,9 +28,11 @@ import (
 	rbaclisters "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 	"knative.dev/pkg/reconciler/testing"
 
@@ -39,13 +41,13 @@ import (
 	eventingkafkachannelslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1beta1"
 	eventingkafkasourceslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1beta1"
 
-	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 
 	eventingkafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkabrokerclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
-	fakekafkainternalsclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/fake"
-	consumerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	fakekafkainternalsclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
 	eventingkafkabrokerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
+	consumerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 )
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
@@ -170,6 +172,10 @@ func (l *Listers) GetStatefulSetLister() appslisters.StatefulSetLister {
 
 func (l *Listers) GetNamespaceLister() corelisters.NamespaceLister {
 	return corelisters.NewNamespaceLister(l.indexerFor(&corev1.Namespace{}))
+}
+
+func (l *Listers) GetEventPolicyLister() eventingv1alpha1listers.EventPolicyLister {
+	return eventingv1alpha1listers.NewEventPolicyLister(l.indexerFor(&eventingv1alpha1.EventPolicy{}))
 }
 
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {

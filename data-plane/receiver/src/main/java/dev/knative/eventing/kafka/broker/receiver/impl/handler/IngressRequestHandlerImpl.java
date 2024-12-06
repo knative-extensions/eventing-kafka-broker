@@ -28,7 +28,6 @@ import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
-import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
 import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -68,121 +67,101 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(IngressRequestHandlerImpl.class);
 
-    private final RequestToRecordMapper requestToRecordMapper;
     private final MeterRegistry meterRegistry;
 
     private final EventTypeCreator eventTypeCreator;
 
-    public IngressRequestHandlerImpl(
-            final RequestToRecordMapper requestToRecordMapper,
-            final MeterRegistry meterRegistry,
-            final EventTypeCreator eventTypeCreator) {
-        this.requestToRecordMapper = requestToRecordMapper;
+    public IngressRequestHandlerImpl(final MeterRegistry meterRegistry, final EventTypeCreator eventTypeCreator) {
         this.meterRegistry = meterRegistry;
         this.eventTypeCreator = eventTypeCreator;
     }
 
     @Override
-    public void handle(final RequestContext requestContext, final IngressProducer producer) {
+    public void handle(final RequestContext requestContext, CloudEvent cloudEvent, final IngressProducer producer) {
 
         final Tags resourceTags = Metrics.resourceRefTags(producer.getReference());
 
-        requestToRecordMapper
-                .requestToRecord(requestContext.getRequest(), producer.getTopic())
-                .onFailure(cause -> {
-                    // Conversion to record failed
+        if (cloudEvent == null) {
+            requestContext.getRequest().response().setStatusCode(MAPPER_FAILED).end();
+
+            final var tags = MAPPER_FAILED_COMMON_TAGS.and(resourceTags);
+            Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
+            Metrics.eventCount(tags).register(meterRegistry).increment();
+
+            logger.warn(
+                    "Failed to get cloudevent from request {}",
+                    keyValue("path", requestContext.getRequest().path()));
+
+            return;
+        }
+
+        ProducerRecord<String, CloudEvent> record = new ProducerRecord<>(producer.getTopic(), cloudEvent);
+        // Conversion to record succeeded, let's push it to Kafka
+        if (logger.isDebugEnabled()) {
+            final var span = Span.fromContextOrNull(Context.current());
+            if (span != null) {
+                logger.debug(
+                        "Received event {} {}",
+                        keyValue("event", record.value()),
+                        keyValue(
+                                TracingConfig.TRACE_ID_KEY,
+                                span.getSpanContext().getTraceId()));
+            } else {
+                logger.debug("Received event {}", keyValue("event", record.value()));
+            }
+        }
+
+        // Decorate the span with event specific attributed
+        TracingSpan.decorateCurrentWithEvent(record.value());
+
+        final var eventTypeTag = Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
+
+        publishRecord(producer, record)
+                .onSuccess(m -> {
                     requestContext
                             .getRequest()
                             .response()
-                            .setStatusCode(MAPPER_FAILED)
+                            .setStatusCode(RECORD_PRODUCED)
                             .end();
 
-                    final var tags = MAPPER_FAILED_COMMON_TAGS.and(resourceTags);
+                    final var tags =
+                            RECORD_PRODUCED_COMMON_TAGS.and(resourceTags).and(eventTypeTag);
+                    Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
+                    Metrics.eventCount(tags).register(meterRegistry).increment();
+                })
+                .onFailure(cause -> {
+                    requestContext
+                            .getRequest()
+                            .response()
+                            .setStatusCode(FAILED_TO_PRODUCE)
+                            .end();
+
+                    final var tags =
+                            FAILED_TO_PRODUCE_COMMON_TAGS.and(resourceTags).and(eventTypeTag);
                     Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
                     Metrics.eventCount(tags).register(meterRegistry).increment();
 
                     logger.warn(
-                            "Failed to convert request to record {}",
+                            "Failed to produce record {}",
                             keyValue("path", requestContext.getRequest().path()),
                             cause);
                 })
-                .compose(record -> {
-                    // Conversion to record succeeded, let's push it to Kafka
-                    if (logger.isDebugEnabled()) {
-                        final var span = Span.fromContextOrNull(Context.current());
-                        if (span != null) {
-                            logger.debug(
-                                    "Received event {} {}",
-                                    keyValue("event", record.value()),
-                                    keyValue(
-                                            TracingConfig.TRACE_ID_KEY,
-                                            span.getSpanContext().getTraceId()));
-                        } else {
-                            logger.debug("Received event {}", keyValue("event", record.value()));
-                        }
+                .compose((recordMetadata) -> {
+                    if (producer.isEventTypeAutocreateEnabled()) {
+                        return this.eventTypeCreator
+                                .create(record.value(), producer.getEventTypeLister(), producer.getReference())
+                                .compose(
+                                        et -> {
+                                            logger.debug("successfully created eventtype {}", et);
+                                            return Future.succeededFuture(recordMetadata);
+                                        },
+                                        cause -> {
+                                            logger.warn("failed to create eventtype", cause);
+                                            return Future.succeededFuture(recordMetadata);
+                                        });
+                    } else {
+                        return Future.succeededFuture(recordMetadata);
                     }
-
-                    // Decorate the span with event specific attributed
-                    TracingSpan.decorateCurrentWithEvent(record.value());
-
-                    final var eventTypeTag =
-                            Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
-
-                    return publishRecord(producer, record)
-                            .onSuccess(m -> {
-                                requestContext
-                                        .getRequest()
-                                        .response()
-                                        .setStatusCode(RECORD_PRODUCED)
-                                        .end();
-
-                                final var tags = RECORD_PRODUCED_COMMON_TAGS
-                                        .and(resourceTags)
-                                        .and(eventTypeTag);
-                                Metrics.eventDispatchLatency(tags)
-                                        .register(meterRegistry)
-                                        .record(requestContext.performLatency());
-                                Metrics.eventCount(tags).register(meterRegistry).increment();
-                            })
-                            .onFailure(cause -> {
-                                requestContext
-                                        .getRequest()
-                                        .response()
-                                        .setStatusCode(FAILED_TO_PRODUCE)
-                                        .end();
-
-                                final var tags = FAILED_TO_PRODUCE_COMMON_TAGS
-                                        .and(resourceTags)
-                                        .and(eventTypeTag);
-                                Metrics.eventDispatchLatency(tags)
-                                        .register(meterRegistry)
-                                        .record(requestContext.performLatency());
-                                Metrics.eventCount(tags).register(meterRegistry).increment();
-
-                                logger.warn(
-                                        "Failed to produce record {}",
-                                        keyValue(
-                                                "path",
-                                                requestContext.getRequest().path()),
-                                        cause);
-                            })
-                            .compose((recordMetadata) -> {
-                                if (producer.isEventTypeAutocreateEnabled()) {
-                                    return this.eventTypeCreator
-                                            .create(record.value(), producer.getReference())
-                                            .compose(
-                                                    et -> {
-                                                        logger.debug("successfully created eventtype {}", et);
-                                                        return Future.succeededFuture(recordMetadata);
-                                                    },
-                                                    cause -> {
-                                                        logger.warn("failed to create eventtype", cause);
-                                                        return Future.succeededFuture(recordMetadata);
-                                                    });
-                                } else {
-                                    return Future.succeededFuture(recordMetadata);
-                                }
-                            });
                 });
     }
 

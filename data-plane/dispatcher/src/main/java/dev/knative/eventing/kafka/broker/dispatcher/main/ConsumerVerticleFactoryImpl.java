@@ -17,6 +17,8 @@ package dev.knative.eventing.kafka.broker.dispatcher.main;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveConsumerFactory;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
+import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.ConsumerVerticleFactory;
@@ -39,6 +41,8 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     private final MeterRegistry metricsRegistry;
     private final ReactiveConsumerFactory reactiveConsumerFactory;
     private final ReactiveProducerFactory reactiveProducerFactory;
+    private final EventTypeCreator eventTypeCreator;
+    private final EventTypeListerFactory eventTypeListerFactory;
 
     /**
      * All args constructor.
@@ -56,7 +60,11 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
             final AuthProvider authProvider,
             final MeterRegistry metricsRegistry,
             final ReactiveConsumerFactory reactiveConsumerFactory,
-            final ReactiveProducerFactory reactiveProducerFactory) {
+            final ReactiveProducerFactory reactiveProducerFactory,
+            EventTypeCreator eventTypeCreator,
+            EventTypeListerFactory eventTypeListerFactory) {
+        this.eventTypeCreator = eventTypeCreator;
+        this.eventTypeListerFactory = eventTypeListerFactory;
 
         Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
         Objects.requireNonNull(webClientOptions, "provide webClientOptions");
@@ -93,7 +101,9 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
                         .withMeterRegistry(metricsRegistry)
                         .withResource(egressContext)
                         .withConsumerFactory(reactiveConsumerFactory)
-                        .withProducerFactory(reactiveProducerFactory))
+                        .withProducerFactory(reactiveProducerFactory)
+                        .withEventTypeCreator(eventTypeCreator)
+                        .withEventTypeListerFactory(eventTypeListerFactory))
                 .build();
     }
 }

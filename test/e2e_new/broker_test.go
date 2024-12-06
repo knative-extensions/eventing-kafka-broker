@@ -34,6 +34,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
+	"knative.dev/eventing/test/rekt/features/authz"
 	"knative.dev/eventing/test/rekt/features/broker"
 	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
 	"knative.dev/eventing/test/rekt/features/oidc"
@@ -255,6 +256,23 @@ func TestBrokerEventTypeAutoCreate(t *testing.T) {
 	env.Test(ctx, t, eventtype_autocreate.AutoCreateEventTypesOnBroker(brokerName))
 }
 
+func TestTriggerEventTypeAutoCreate(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+	)
+
+	brokerName := feature.MakeRandomK8sName("broker")
+
+	env.Prerequisite(ctx, t, InstallBroker(brokerName))
+	env.Test(ctx, t, eventtype_autocreate.AutoCreateEventTypesOnTrigger(brokerName))
+}
+
 func InstallBroker(brokerName string) *feature.Feature {
 	install, cmName := single_partition_config.MakeInstall()
 
@@ -304,6 +322,24 @@ func TestBrokerSendsEventsWithOIDCSupport(t *testing.T) {
 	)
 
 	env.TestSet(ctx, t, brokereventingfeatures.BrokerSendEventWithOIDC())
+}
+
+func TestBrokerSupportsAuthZ(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	name := feature.MakeRandomK8sName("broker")
+	env.Prerequisite(ctx, t, broker.GoesReady(name, brokerresources.WithEnvConfig()...))
+
+	env.TestSet(ctx, t, authz.AddressableAuthZConformance(brokerresources.GVR(), "Broker", name))
 }
 
 func TestBrokerDispatcherKedaScaling(t *testing.T) {

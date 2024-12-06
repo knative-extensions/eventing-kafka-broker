@@ -25,27 +25,41 @@ import (
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1"
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
+	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	BindingsV1() bindingsv1.BindingsV1Interface
 	BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface
 	EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface
+	InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface
 	MessagingV1beta1() messagingv1beta1.MessagingV1beta1Interface
+	SourcesV1() sourcesv1.SourcesV1Interface
 	SourcesV1beta1() sourcesv1beta1.SourcesV1beta1Interface
 }
 
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
+	bindingsV1       *bindingsv1.BindingsV1Client
 	bindingsV1beta1  *bindingsv1beta1.BindingsV1beta1Client
 	eventingV1alpha1 *eventingv1alpha1.EventingV1alpha1Client
+	internalV1alpha1 *internalv1alpha1.InternalV1alpha1Client
 	messagingV1beta1 *messagingv1beta1.MessagingV1beta1Client
+	sourcesV1        *sourcesv1.SourcesV1Client
 	sourcesV1beta1   *sourcesv1beta1.SourcesV1beta1Client
+}
+
+// BindingsV1 retrieves the BindingsV1Client
+func (c *Clientset) BindingsV1() bindingsv1.BindingsV1Interface {
+	return c.bindingsV1
 }
 
 // BindingsV1beta1 retrieves the BindingsV1beta1Client
@@ -58,9 +72,19 @@ func (c *Clientset) EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interfac
 	return c.eventingV1alpha1
 }
 
+// InternalV1alpha1 retrieves the InternalV1alpha1Client
+func (c *Clientset) InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface {
+	return c.internalV1alpha1
+}
+
 // MessagingV1beta1 retrieves the MessagingV1beta1Client
 func (c *Clientset) MessagingV1beta1() messagingv1beta1.MessagingV1beta1Interface {
 	return c.messagingV1beta1
+}
+
+// SourcesV1 retrieves the SourcesV1Client
+func (c *Clientset) SourcesV1() sourcesv1.SourcesV1Interface {
+	return c.sourcesV1
 }
 
 // SourcesV1beta1 retrieves the SourcesV1beta1Client
@@ -112,6 +136,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 
 	var cs Clientset
 	var err error
+	cs.bindingsV1, err = bindingsv1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.bindingsV1beta1, err = bindingsv1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -120,7 +148,15 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.internalV1alpha1, err = internalv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.messagingV1beta1, err = messagingv1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
+	cs.sourcesV1, err = sourcesv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -149,9 +185,12 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.bindingsV1 = bindingsv1.New(c)
 	cs.bindingsV1beta1 = bindingsv1beta1.New(c)
 	cs.eventingV1alpha1 = eventingv1alpha1.New(c)
+	cs.internalV1alpha1 = internalv1alpha1.New(c)
 	cs.messagingV1beta1 = messagingv1beta1.New(c)
+	cs.sourcesV1 = sourcesv1.New(c)
 	cs.sourcesV1beta1 = sourcesv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

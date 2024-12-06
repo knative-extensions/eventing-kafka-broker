@@ -17,8 +17,15 @@ limitations under the License.
 package auth
 
 import (
+	"context"
 	"fmt"
+	"sort"
 	"strings"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"go.uber.org/zap"
+	"knative.dev/eventing/pkg/eventfilter"
+	"knative.dev/eventing/pkg/eventfilter/subscriptionsapi"
 
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/apis/feature"
@@ -92,6 +99,11 @@ func GetEventPoliciesForResource(lister listerseventingv1alpha1.EventPolicyListe
 			}
 		}
 	}
+
+	// Sort the policies by name to ensure deterministic order
+	sort.Slice(relevantPolicies, func(i, j int) bool {
+		return relevantPolicies[i].Name < relevantPolicies[j].Name
+	})
 
 	return relevantPolicies, nil
 }
@@ -204,17 +216,19 @@ func resolveSubjectsFromReference(resolver *resolver.AuthenticatableResolver, re
 	return objFullSANames, nil
 }
 
-// SubjectContained checks if the given sub is contained in the list of allowedSubs
-// or if it matches a prefix pattern in subs (e.g. system:serviceaccounts:my-ns:*)
-func SubjectContained(sub string, allowedSubs []string) bool {
-	for _, s := range allowedSubs {
-		if strings.EqualFold(s, sub) {
-			return true
-		}
+// SubjectAndFiltersPass checks if the given sub is contained in the list of allowedSubs
+// or if it matches a prefix pattern in subs (e.g. system:serviceaccounts:my-ns:*), as
+// well as if the event passes any filters associated with the subjects for an event policy
+func SubjectAndFiltersPass(ctx context.Context, sub string, allowedSubsWithFilters []subjectsWithFilters, event *cloudevents.Event, logger *zap.SugaredLogger) bool {
+	if event == nil {
+		return false
+	}
 
-		if strings.HasSuffix(s, "*") &&
-			strings.HasPrefix(sub, strings.TrimSuffix(s, "*")) {
-			return true
+	for _, swf := range allowedSubsWithFilters {
+		for _, s := range swf.subjects {
+			if strings.EqualFold(s, sub) || (strings.HasSuffix(s, "*") && strings.HasPrefix(sub, strings.TrimSuffix(s, "*"))) {
+				return subscriptionsapi.CreateSubscriptionsAPIFilters(logger.Desugar(), swf.filters).Filter(ctx, *event) != eventfilter.FailFilter
+			}
 		}
 	}
 
@@ -302,18 +316,12 @@ type EventPolicyStatusMarker interface {
 	MarkEventPoliciesTrueWithReason(reason, messageFormat string, messageA ...interface{})
 }
 
-func UpdateStatusWithEventPolicies(featureFlags feature.Flags, status *eventingduckv1.AppliedEventPoliciesStatus, statusMarker EventPolicyStatusMarker, eventPolicyLister listerseventingv1alpha1.EventPolicyLister, gvk schema.GroupVersionKind, objectMeta metav1.ObjectMeta) error {
+func UpdateStatusWithProvidedEventPolicies(featureFlags feature.Flags, status *eventingduckv1.AppliedEventPoliciesStatus, statusMarker EventPolicyStatusMarker, applyingEventPolicies []*v1alpha1.EventPolicy) error {
 	status.Policies = nil
 
-	applyingEvenPolicies, err := GetEventPoliciesForResource(eventPolicyLister, gvk, objectMeta)
-	if err != nil {
-		statusMarker.MarkEventPoliciesFailed("EventPoliciesGetFailed", "Failed to get applying event policies")
-		return fmt.Errorf("unable to get applying event policies: %w", err)
-	}
-
-	if len(applyingEvenPolicies) > 0 {
+	if len(applyingEventPolicies) > 0 {
 		unreadyEventPolicies := []string{}
-		for _, policy := range applyingEvenPolicies {
+		for _, policy := range applyingEventPolicies {
 			if !policy.Status.IsReady() {
 				unreadyEventPolicies = append(unreadyEventPolicies, policy.Name)
 			} else {
@@ -342,4 +350,14 @@ func UpdateStatusWithEventPolicies(featureFlags feature.Flags, status *eventingd
 	}
 
 	return nil
+}
+
+func UpdateStatusWithEventPolicies(featureFlags feature.Flags, status *eventingduckv1.AppliedEventPoliciesStatus, statusMarker EventPolicyStatusMarker, eventPolicyLister listerseventingv1alpha1.EventPolicyLister, gvk schema.GroupVersionKind, objectMeta metav1.ObjectMeta) error {
+	applyingEvenPolicies, err := GetEventPoliciesForResource(eventPolicyLister, gvk, objectMeta)
+	if err != nil {
+		statusMarker.MarkEventPoliciesFailed("EventPoliciesGetFailed", "Failed to get applying event policies")
+		return fmt.Errorf("unable to get applying event policies: %w", err)
+	}
+
+	return UpdateStatusWithProvidedEventPolicies(featureFlags, status, statusMarker, applyingEvenPolicies)
 }

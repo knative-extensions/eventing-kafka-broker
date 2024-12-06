@@ -61,6 +61,21 @@ message Filter {
   map<string, string> attributes = 1;
 }
 
+message TokenMatcher {
+  oneof matcher {
+    Exact exact = 1;
+    Prefix prefix = 2;
+  }
+}
+
+message EventPolicy {
+  // Token matchers of this EventPolicy
+  repeated TokenMatcher tokenMatchers = 1;
+
+  // Filters for this EventPolicy
+  repeated DialectedFilter filters = 2;
+}
+
 // BackoffPolicyType is the type for backoff policies
 enum BackoffPolicy {
 
@@ -212,11 +227,11 @@ message Ingress {
   // host header to match
   string host = 3;
 
-  // whether to autocreate event types
-  bool enableAutoCreateEventTypes = 4;
-
   // OIDC audience of this ingress
   string audience = 5;
+
+  // Ready and applying EventPolicies for this ingress
+  repeated EventPolicy eventPolicies = 6;
 }
 
 // Kubernetes resource reference.
@@ -285,6 +300,10 @@ message MultiSecretReference {
 // CloudEvent overrides.
 message CloudEventOverrides {
   map<string, string> extensions = 1;
+}
+
+message FeatureFlags {
+  bool enableEventTypeAutocreate = 1;
 }
 
 message Resource {
@@ -361,6 +380,9 @@ message Resource {
   // - setting the `source` attribute of a KafkaSource event (when it's not a CloudEvent)
   // - tagging metrics
   Reference reference = 11;
+
+  // Feature flags for the resource
+  FeatureFlags featureFlags = 12;
 }
 
 message Contract {

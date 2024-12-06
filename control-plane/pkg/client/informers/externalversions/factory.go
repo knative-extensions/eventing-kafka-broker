@@ -31,6 +31,7 @@ import (
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/bindings"
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/eventing"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
+	internalskafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalskafkaeventing"
 	messaging "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/messaging"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/sources"
 )
@@ -258,6 +259,7 @@ type SharedInformerFactory interface {
 
 	Bindings() bindings.Interface
 	Eventing() eventing.Interface
+	Internal() internalskafkaeventing.Interface
 	Messaging() messaging.Interface
 	Sources() sources.Interface
 }
@@ -268,6 +270,10 @@ func (f *sharedInformerFactory) Bindings() bindings.Interface {
 
 func (f *sharedInformerFactory) Eventing() eventing.Interface {
 	return eventing.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Internal() internalskafkaeventing.Interface {
+	return internalskafkaeventing.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Messaging() messaging.Interface {

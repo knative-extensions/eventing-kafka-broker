@@ -37,6 +37,9 @@ import (
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkachannel"
 	kafkachannelresource "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
+	channelresource "knative.dev/eventing/test/rekt/resources/channel"
+
+	"knative.dev/eventing/test/rekt/features/authz"
 )
 
 const (
@@ -109,6 +112,42 @@ func TestKafkaChannelOIDC(t *testing.T) {
 	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
 
 	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(kafkachannelresource.GVR(), "KafkaChannel", name, env.Namespace()))
+}
+
+func TestChannelWithBackingKafkaChannelSupportsAuthZ(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	name := feature.MakeRandomK8sName("channel")
+	env.Prerequisite(ctx, t, channel.GoesReady(name))
+
+	env.TestSet(ctx, t, authz.AddressableAuthZConformance(channelresource.GVR(), "Channel", name))
+}
+
+func TestKafkaChannelSupportsAuthZ(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.Managed(t),
+		eventshub.WithTLS(t),
+	)
+
+	name := feature.MakeRandomK8sName("kafkachannel")
+	env.Prerequisite(ctx, t, channel.ImplGoesReady(name))
+
+	env.TestSet(ctx, t, authz.AddressableAuthZConformance(kafkachannelresource.GVR(), "KafkaChannel", name))
 }
 
 func TestKafkaChannelKedaScaling(t *testing.T) {

@@ -20,6 +20,10 @@ import (
 	"context"
 	"fmt"
 
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -139,6 +143,12 @@ func SinkReference() *contract.Reference {
 	}
 }
 
+func FeatureFlagsETAutocreate(enabled bool) *contract.FeatureFlags {
+	return &contract.FeatureFlags{
+		EnableEventTypeAutocreate: enabled,
+	}
+}
+
 func SinkReceiverPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -196,5 +206,44 @@ func WithSinkAddessable() KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*eventing.KafkaSink)
 		ch.GetConditionSet().Manage(ch.GetStatus()).MarkTrue(base.ConditionAddressable)
+	}
+}
+func WithSinkEventPoliciesReady() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*eventing.KafkaSink)
+		ks.Status.MarkEventPoliciesTrue()
+	}
+}
+
+func WithSinkEventPoliciesNotReady(reason, message string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*eventing.KafkaSink)
+		ks.Status.MarkEventPoliciesFailed(reason, message)
+	}
+}
+
+func WithSinkEventPoliciesListed(policyNames ...string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*eventing.KafkaSink)
+		for _, name := range policyNames {
+			ks.Status.Policies = append(ks.Status.Policies, eventingduckv1.AppliedEventPolicyRef{
+				APIVersion: eventingv1alpha1.SchemeGroupVersion.String(),
+				Name:       name,
+			})
+		}
+	}
+}
+
+func WithSinkEventPoliciesReadyBecauseOIDCDisabled() KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*eventing.KafkaSink)
+		ks.Status.MarkEventPoliciesTrueWithReason("OIDCDisabled", "Feature %q must be enabled to support Authorization", feature.OIDCAuthentication)
+	}
+}
+
+func WithSinkEventPoliciesReadyBecauseNoPolicyAndOIDCEnabled(authzMode feature.Flag) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*eventing.KafkaSink)
+		ks.Status.MarkEventPoliciesTrueWithReason("DefaultAuthorizationMode", "Default authz mode is %q", authzMode)
 	}
 }

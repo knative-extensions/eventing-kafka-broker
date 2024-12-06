@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/eventing/pkg/apis/feature"
+
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -35,11 +37,11 @@ import (
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
-	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumer"
+	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -129,6 +131,14 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 		egress.VReplicas = 1
 	}
 
+	topLevelUserFacingResourceRef, err := r.reconcileTopLevelUserFacingResourceRef(c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reconcile top-level user facing resource reference: %w", err)
+	}
+	if topLevelUserFacingResourceRef == nil {
+		topLevelUserFacingResourceRef = userFacingResourceRef
+	}
+
 	resource := &contract.Resource{
 		Uid:                 string(c.UID),
 		Topics:              c.Spec.Topics,
@@ -136,7 +146,10 @@ func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainte
 		Egresses:            []*contract.Egress{egress},
 		Auth:                nil, // Auth will be added by reconcileAuth
 		CloudEventOverrides: reconcileCEOverrides(c),
-		Reference:           userFacingResourceRef,
+		Reference:           topLevelUserFacingResourceRef,
+		FeatureFlags: &contract.FeatureFlags{
+			EnableEventTypeAutocreate: feature.FromContext(ctx).IsEnabled(feature.EvenTypeAutoCreate),
+		},
 	}
 
 	if err := r.reconcileAuth(ctx, c, resource); err != nil {
@@ -240,22 +253,21 @@ func (r *Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consum
 			return fmt.Errorf("failed to get secret: %w", err)
 		}
 
-		if _, ok := secret.Data[security.ProtocolKey]; !ok {
-			authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
-			if err != nil {
-				return err
-			}
-
+		authContext, err := security.ResolveAuthContextFromLegacySecret(secret)
+		if err != nil {
+			return err
+		}
+		if authContext.MultiSecretReference != nil {
 			resource.Auth = &contract.Resource_MultiAuthSecret{
 				MultiAuthSecret: authContext.MultiSecretReference,
 			}
-		} else {
+		} else if authContext.VirtualSecret != nil {
 			resource.Auth = &contract.Resource_AuthSecret{
 				AuthSecret: &contract.Reference{
-					Uuid:      string(secret.UID),
-					Namespace: secret.Namespace,
-					Name:      secret.Name,
-					Version:   secret.ResourceVersion,
+					Uuid:      string(authContext.VirtualSecret.UID),
+					Namespace: authContext.VirtualSecret.Namespace,
+					Name:      authContext.VirtualSecret.Name,
+					Version:   authContext.VirtualSecret.ResourceVersion,
 				},
 			}
 		}
@@ -289,9 +301,36 @@ func (r *Reconciler) reconcileUserFacingResourceRef(c *kafkainternals.Consumer) 
 
 	userFacingResource := cg.GetUserFacingResourceRef()
 	ref := &contract.Reference{
-		Uuid:      string(userFacingResource.UID),
-		Namespace: c.GetNamespace(),
-		Name:      userFacingResource.Name,
+		Uuid:         string(userFacingResource.UID),
+		Namespace:    c.GetNamespace(),
+		Name:         userFacingResource.Name,
+		Kind:         userFacingResource.Kind,
+		GroupVersion: userFacingResource.APIVersion,
+	}
+	return ref, nil
+}
+
+func (r *Reconciler) reconcileTopLevelUserFacingResourceRef(c *kafkainternals.Consumer) (*contract.Reference, error) {
+
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(c.GetNamespace()).Get(c.GetConsumerGroup().Name)
+	if apierrors.IsNotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get %s: %w", kafkainternals.ConsumerGroupGroupVersionKind.Kind, err)
+	}
+
+	userFacingResource := cg.GetTopLevelUserFacingResourceRef()
+	if userFacingResource == nil {
+		return nil, nil
+	}
+
+	ref := &contract.Reference{
+		Uuid:         string(userFacingResource.UID),
+		Namespace:    c.GetNamespace(),
+		Name:         userFacingResource.Name,
+		Kind:         userFacingResource.Kind,
+		GroupVersion: userFacingResource.APIVersion,
 	}
 	return ref, nil
 }
@@ -400,7 +439,7 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 	}
 
 	// Get contract associated with the pod.
-	cmName, err := eventing.ConfigMapNameFromPod(p)
+	cmName, err := internalsapi.ConfigMapNameFromPod(p)
 	if err != nil {
 		return false, err
 	}
@@ -435,7 +474,7 @@ func (r *Reconciler) schedule(ctx context.Context, logger *zap.Logger, c *kafkai
 		return false, err
 	}
 
-	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, ct.Generation, []*corev1.Pod{p})
+	return true, b.UpdatePodsAnnotation(ctx, logger, "dispatcher" /* component, for logging */, base.VolumeGenerationAnnotationKey, fmt.Sprint(ct.Generation), []*corev1.Pod{p})
 }
 
 func (r *Reconciler) commonReconciler(p *corev1.Pod, cmName string) base.Reconciler {

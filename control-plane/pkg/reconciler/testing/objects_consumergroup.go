@@ -28,7 +28,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 )
@@ -246,5 +246,11 @@ func WithDeletedTimeStampConsumeGroup(cg *kafkainternals.ConsumerGroup) {
 func WithConfigmapOwnerRef(ownerref *metav1.OwnerReference) reconcilertesting.ConfigMapOption {
 	return func(cg *corev1.ConfigMap) {
 		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+	}
+}
+
+func WithTopLevelResourceRef(ref *corev1.ObjectReference) ConsumerGroupOption {
+	return func(cg *kafkainternals.ConsumerGroup) {
+		cg.Spec.TopLevelResourceRef = ref
 	}
 }

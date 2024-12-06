@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"time"
 
+	"knative.dev/eventing/pkg/auth"
+
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/network"
 
@@ -52,6 +54,7 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
+	eventpolicyinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	deploymentinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/deployment"
 	statefulsetinformer "knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
@@ -81,14 +84,13 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	configmapInformer := configmapinformer.Get(ctx)
+	eventPolicyInformer := eventpolicyinformer.Get(ctx)
 
 	cfg := injection.GetConfig(ctx)
 	mfc, err := mfclient.NewClient(cfg)
 	if err != nil {
 		logger.Fatal("unable to create Manifestival client-go client", zap.Error(err))
 	}
-
-	clientPool := clientpool.Get(ctx)
 
 	reconciler := &NamespacedReconciler{
 		Reconciler: &base.Reconciler{
@@ -103,7 +105,6 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			DispatcherLabel:              base.BrokerDispatcherLabel,
 			ReceiverLabel:                base.BrokerReceiverLabel,
 		},
-		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		NamespaceLister:                    namespaceinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapInformer.Lister(),
 		ServiceAccountLister:               serviceaccountinformer.Get(ctx).Lister(),
@@ -112,11 +113,19 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		StatefulSetLister:                  statefulsetinformer.Get(ctx).Lister(),
 		DeploymentLister:                   deploymentinformer.Get(ctx).Lister(),
 		BrokerLister:                       brokerinformer.Get(ctx).Lister(),
+		EventPolicyLister:                  eventPolicyInformer.Lister(),
 		Env:                                env,
 		Counter:                            counter.NewExpiringCounter(ctx),
 		ManifestivalClient:                 mfc,
 		DataplaneLifecycleLocksByNamespace: util.NewExpiringLockMap[string](ctx, time.Minute*30),
 		KafkaFeatureFlags:                  apisconfig.DefaultFeaturesConfig(),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		reconciler.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+	} else {
+		reconciler.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.NamespacedBrokerClass, func(impl *controller.Impl) controller.Options {
@@ -243,6 +252,12 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 			DeleteFunc: reconciler.OnDeleteObserver,
 		},
 	})
+
+	brokerGK := eventing.SchemeGroupVersion.WithKind("Broker").GroupKind()
+
+	// Enqueue the Broker, if we have an EventPolicy which was referencing
+	// or got updated and now is referencing the Broker
+	eventPolicyInformer.Informer().AddEventHandler(auth.EventPolicyEventHandler(brokerInformer.Informer().GetIndexer(), brokerGK, impl.EnqueueKey))
 
 	return impl
 }

@@ -25,9 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 
-	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy/fake"
 	_ "knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription/fake"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	_ "knative.dev/pkg/client/injection/ducks/duck/v1/addressable/fake"
@@ -41,7 +39,11 @@ import (
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 )

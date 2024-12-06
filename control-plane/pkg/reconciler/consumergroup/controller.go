@@ -23,16 +23,20 @@ import (
 	"strings"
 	"time"
 
+	v1 "k8s.io/client-go/informers/core/v1"
+
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/tools/cache"
 
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -42,7 +46,7 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -54,11 +58,11 @@ import (
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
-	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumer"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup"
+	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client"
@@ -111,13 +115,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		DeSchedulerPolicy: schedulerPolicyFromConfigMapOrFail(ctx, env.DeSchedulerPolicyConfigMap),
 	}
 
-	schedulers := map[string]Scheduler{
-		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName),
-		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName),
-		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName),
-	}
+	dispatcherPodInformer := podinformer.Get(ctx, internalsapi.DispatcherLabelSelectorStr)
 
-	clientPool := clientpool.Get(ctx)
+	schedulers := map[string]Scheduler{
+		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName, dispatcherPodInformer),
+		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName, dispatcherPodInformer),
+		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName, dispatcherPodInformer),
+	}
 
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
@@ -125,18 +129,25 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		InternalsClient:                    internalsclient.Get(ctx).InternalV1alpha1(),
 		SecretLister:                       secretinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapinformer.Get(ctx).Lister(),
-		PodLister:                          podinformer.Get(ctx).Lister(),
+		PodLister:                          dispatcherPodInformer.Lister(),
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
-		GetKafkaClient:                     clientPool.GetClient,
 		InitOffsetsFunc:                    offset.InitOffsets,
 		SystemNamespace:                    system.Namespace(),
-		GetKafkaClusterAdmin:               clientPool.GetClusterAdmin,
 		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, 20*time.Minute),
+	}
+
+	clientPool := clientpool.Get(ctx)
+	if clientPool == nil {
+		r.GetKafkaClusterAdmin = clientpool.DisabledGetKafkaClusterAdminFunc
+		r.GetKafkaClient = clientpool.DisabledGetClient
+	} else {
+		r.GetKafkaClusterAdmin = clientPool.GetClusterAdmin
+		r.GetKafkaClient = clientPool.GetClient
 	}
 
 	consumerInformer := consumer.Get(ctx)
@@ -194,6 +205,47 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		return cg, ok
 	})
 
+	dispatcherPodInformer.Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
+		pod, ok := obj.(*corev1.Pod)
+		if !ok {
+			return
+		}
+
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetPrefix(pod.Name)
+		if !ok {
+			return
+		}
+
+		cmName, err := internalsapi.ConfigMapNameFromPod(pod)
+		if err != nil {
+			logger.Warnw("Failed to get ConfigMap name from pod", zap.String("pod", pod.Name), zap.Error(err))
+			return
+		}
+		if err := r.ensureContractConfigMapExists(ctx, pod, cmName); err != nil {
+			logger.Warnw("Failed to ensure ConfigMap for pod exists", zap.String("pod", pod.Name), zap.String("configmap", cmName), zap.Error(err))
+			return
+		}
+
+		impl.FilteredGlobalResync(
+			func(obj interface{}) bool {
+				cg, ok := obj.(*kafkainternals.ConsumerGroup)
+				if !ok {
+					return false
+				}
+
+				uf := cg.GetUserFacingResourceRef()
+				if uf == nil {
+					return false
+				}
+				if strings.EqualFold(kind, uf.Kind) {
+					return true
+				}
+				return false
+			},
+			consumerGroupInformer.Informer(),
+		)
+	}))
+
 	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
@@ -209,7 +261,7 @@ func ResyncOnStatefulSetChange(ctx context.Context, filteredResync func(f func(i
 			return
 		}
 
-		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetName(ss.GetName())
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetPrefix(ss.GetName())
 		if !ok {
 			return
 		}
@@ -275,7 +327,7 @@ func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) f
 	}
 }
 
-func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string) Scheduler {
+func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string, dispatcherPodInformer v1.PodInformer) Scheduler {
 	lister := consumergroup.Get(ctx).Lister()
 	return createStatefulSetScheduler(
 		ctx,
@@ -297,6 +349,7 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string)
 			}
 			return vpods, nil
 		},
+		dispatcherPodInformer,
 	)
 }
 
@@ -320,7 +373,7 @@ func getSelectorLabel(ssName string) map[string]string {
 	return selectorLabel
 }
 
-func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister) Scheduler {
+func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister scheduler.VPodLister, dispatcherPodInformer v1.PodInformer) Scheduler {
 	ss, _ := statefulsetscheduler.New(ctx, &statefulsetscheduler.Config{
 		StatefulSetNamespace: system.Namespace(),
 		StatefulSetName:      c.StatefulSetName,
@@ -333,6 +386,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		VPodLister:           lister,
 		NodeLister:           nodeinformer.Get(ctx).Lister(),
+		PodLister:            dispatcherPodInformer.Lister().Pods(system.Namespace()),
 	})
 
 	return Scheduler{
