@@ -185,28 +185,6 @@ public class ConsumerVerticleBuilder {
         return Filter.noop();
     }
 
-    private static Filter getFilter(List<DataPlaneContract.DialectedFilter> filters) {
-        return AllFilter.newFilter(
-                filters.stream().map(ConsumerVerticleBuilder::getFilter).collect(Collectors.toList()));
-    }
-
-    private static Filter getFilter(DataPlaneContract.DialectedFilter filter) {
-        return switch (filter.getFilterCase()) {
-            case EXACT -> new ExactFilter(filter.getExact().getAttributesMap());
-            case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
-            case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
-            case NOT -> new NotFilter(getFilter(filter.getNot().getFilter()));
-            case ANY -> AnyFilter.newFilter(filter.getAny().getFiltersList().stream()
-                    .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toList()));
-            case ALL -> AllFilter.newFilter(filter.getAll().getFiltersList().stream()
-                    .map(ConsumerVerticleBuilder::getFilter)
-                    .collect(Collectors.toList()));
-            case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
-            default -> Filter.noop();
-        };
-    }
-
     private WebClientOptions createWebClientOptionsFromCACerts(final String caCerts) {
         final var pemTrustOptions = new PemTrustOptions();
         for (String trustBundle : consumerVerticleContext.getTrustBundles()) {
