@@ -531,3 +531,63 @@ function setup_kafka_channel_auth() {
 function install_eventing_core_test_tls_resources() {
     ko apply -Rf "${repo_root_dir}/vendor/knative.dev/eventing/test/config/tls" || return $?
 }
+
+function mount_knative_eventing_bundle() {
+  echo "Mounting knative-eventing-bundle ConfigMap to data-plane components"
+
+  for receiver in kafka-broker-receiver kafka-channel-receiver kafka-sink-receiver
+  do
+    kubectl get deployment -n knative-eventing "$receiver" -o json | \
+      jq '.spec.template.spec.volumes |= . + [{"name":"knative-eventing-bundle","configMap":{"defaultMode":420,"name":"knative-eventing-bundle"}}]' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .volumeMounts)  |= . + [{"mountPath":"/etc/knative-eventing-bundle/knative-eventing-bundle.jks","name":"knative-eventing-bundle","readOnly":true,"subPath":"knative-eventing-bundle.jks"}]' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= . + " -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks"' | \
+      kubectl apply -f -
+  done
+
+  for dispatcher in kafka-broker-dispatcher kafka-channel-dispatcher kafka-source-dispatcher
+  do
+    kubectl get statefulset -n knative-eventing "$dispatcher" -o json | \
+      jq '.spec.template.spec.volumes |= . + [{"name":"knative-eventing-bundle","configMap":{"defaultMode":420,"name":"knative-eventing-bundle"}}]' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .volumeMounts)  |= . + [{"mountPath":"/etc/knative-eventing-bundle/knative-eventing-bundle.jks","name":"knative-eventing-bundle","readOnly":true,"subPath":"knative-eventing-bundle.jks"}]' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= . + " -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks"' | \
+      kubectl apply -f -
+  done
+
+  echo "Mounting knative-eventing-bundle ConfigMap to kafka-controller"
+
+  kubectl get deployment -n knative-eventing kafka-controller -o json | \
+    jq '.spec.template.spec.volumes |= . + [{"name":"knative-eventing-bundle","configMap":{"defaultMode":420,"name":"knative-eventing-bundle"}}]' | \
+    jq '(.spec.template.spec.containers[] | select(.name=="controller") | .volumeMounts) |= . + [{"mountPath":"/etc/knative-eventing-bundle/knative-eventing-bundle.pem","name":"knative-eventing-bundle","readOnly":true,"subPath":"knative-eventing-bundle.pem"}]' | \
+    jq '(.spec.template.spec.containers[] | select(.name=="controller") | .env) |= . + [{"name":"SSL_CERT_DIR","value":"/etc/knative-eventing-bundle:/etc/ssl/certs"}]' | \
+    kubectl apply -f -
+}
+
+function unmount_knative_eventing_bundle() {
+  echo "Unmounting knative-eventing-bundle ConfigMap from data-plane components"
+
+  for receiver in kafka-broker-receiver kafka-channel-receiver kafka-sink-receiver
+  do
+    kubectl get deployment -n knative-eventing "$receiver" -o json | \
+      jq '(.spec.template.spec.volumes[] | select(.name=="knative-eventing-bundle")) |= empty' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .volumeMounts[] | select(.name=="knative-eventing-bundle")) |= empty' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$receiver"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= (. | sub(" -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks";""))' | \
+      kubectl apply -f -
+  done
+
+  for dispatcher in kafka-broker-dispatcher kafka-channel-dispatcher kafka-source-dispatcher
+  do
+    kubectl get statefulset -n knative-eventing "$dispatcher" -o json | \
+      jq '(.spec.template.spec.volumes[] | select(.name=="knative-eventing-bundle")) |= empty' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .volumeMounts[] | select(.name=="knative-eventing-bundle")) |= empty' | \
+      jq '(.spec.template.spec.containers[] | select(.name=="'"$dispatcher"'") | .env[] | select(.name=="JAVA_TOOL_OPTIONS") | .value) |= (. | sub(" -Djavax.net.ssl.trustStore=/etc/knative-eventing-bundle/knative-eventing-bundle.jks";""))' | \
+      kubectl apply -f -
+  done
+
+  echo "Unmounting knative-eventing-bundle ConfigMap from kafka-controller"
+
+  kubectl get deployment -n knative-eventing kafka-controller -o json | \
+    jq '(.spec.template.spec.volumes[] | select(.name=="knative-eventing-bundle")) |= empty' | \
+    jq '(.spec.template.spec.containers[] | select(.name=="controller") | .volumeMounts[] | select(.name=="knative-eventing-bundle")) |= empty' | \
+    jq '(.spec.template.spec.containers[] | select(.name=="controller") | .env[] | select(.name=="SSL_CERT_DIR")) |= empty' | \
+    kubectl apply -f -
+}
