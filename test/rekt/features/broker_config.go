@@ -61,3 +61,13 @@ func BrokerWithCustomReplicationFactorAndNumPartitions(env environment.Environme
 	f.Assert("Number of partitions", kafkatopic.HasNumPartitions(topic, numPartitions))
 	return f
 }
+
+func BrokerCreateConfigMap(configName string) *feature.Feature {
+	f := feature.NewFeature()
+
+	f.Setup("create broker config", brokerconfigmap.Install(configName,
+		brokerconfigmap.WithKafkaChannelMTBroker(),
+	))
+
+	return f
+}
