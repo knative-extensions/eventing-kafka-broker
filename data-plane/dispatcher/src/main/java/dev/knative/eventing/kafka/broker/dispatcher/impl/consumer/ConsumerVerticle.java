@@ -65,14 +65,14 @@ public abstract class ConsumerVerticle extends AbstractVerticle {
 
     @Override
     public void stop(Promise<Void> stopPromise) {
-        logger.info("Stopping consumer {}", consumerVerticleContext.getLoggingKeyValue());
+        logger.info("Stopping consumer verticle {}", consumerVerticleContext.getLoggingKeyValue());
 
         AsyncCloseable.compose(this.recordDispatcher, this.closeable, this.consumer::close)
                 .close()
-                .onComplete(
-                        r -> logger.info("Consumer verticle closed {}", consumerVerticleContext.getLoggingKeyValue()));
-
-        stopPromise.tryComplete();
+                .onComplete(r -> {
+                    stopPromise.tryComplete();
+                    logger.info("Consumer verticle closed {}", consumerVerticleContext.getLoggingKeyValue());
+                });
     }
 
     public void setConsumer(ReactiveKafkaConsumer<Object, CloudEvent> consumer) {
