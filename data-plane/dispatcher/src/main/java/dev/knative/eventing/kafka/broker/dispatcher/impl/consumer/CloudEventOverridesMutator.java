@@ -28,9 +28,12 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class CloudEventOverridesMutator implements CloudEventMutator {
 
     private final DataPlaneContract.CloudEventOverrides cloudEventOverrides;
+    private final String ceMetadataExtensionPrefix;
 
-    public CloudEventOverridesMutator(final DataPlaneContract.CloudEventOverrides cloudEventOverrides) {
+    public CloudEventOverridesMutator(
+            final DataPlaneContract.CloudEventOverrides cloudEventOverrides, final String ceMetadataExtensionPrefix) {
         this.cloudEventOverrides = cloudEventOverrides;
+        this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
     }
 
     @Override
@@ -49,7 +52,7 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
     }
 
     private void applyKafkaMetadata(CloudEventBuilder builder, Number partition, Number offset) {
-        builder.withExtension("knativekafkapartition", partition);
-        builder.withExtension("knativekafkaoffset", offset);
+        builder.withExtension(ceMetadataExtensionPrefix + "partition", partition);
+        builder.withExtension(ceMetadataExtensionPrefix + "offset", offset);
     }
 }
