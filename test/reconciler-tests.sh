@@ -50,6 +50,14 @@ go_test_e2e -tags=e2e,cloudevents -timeout=1h ./test/e2e_new_channel/... || fail
 
 go_test_e2e -tags=deletecm ./test/e2e_new/... || fail_test "E2E (new deletecm) suite failed"
 
+echo "Running 'Implicit CA' E2E Reconciler tests with knative-eventing-bundle mounted"
+
+mount_knative_eventing_bundle
+
+go_test_e2e -tags=e2e,implicitca -timeout=5m ./test/e2e_new -run ImplicitCA || fail_test "E2E (new - implicitca) suite failed"
+
+unmount_knative_eventing_bundle
+
 echo "Running E2E Reconciler tests with consumergroup id template changed"
 
 kubectl apply -f "$(dirname "$0")/config-kafka-features/new-cg-id.yaml"
