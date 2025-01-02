@@ -1169,7 +1169,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.43.1-0.20241029203049-7c97e6ff8358 => ../eventing
+# knative.dev/eventing v0.43.1-0.20241223131119-c9047a198255
 ## explicit; go 1.22.7
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1350,10 +1350,10 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20241106013728-b7995315deb5
+# knative.dev/hack v0.0.0-20241227080210-e92a16ae0893
 ## explicit; go 1.21
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20241118074447-a7fd9b10bb9f
+# knative.dev/pkg v0.0.0-20241223131119-4c901591eb4a
 ## explicit; go 1.22.7
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1473,8 +1473,8 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20241106013737-0619dc3ecbcf
-## explicit; go 1.22.0
+# knative.dev/reconciler-test v0.0.0-20241223131247-96258bea6ce4
+## explicit; go 1.22.7
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
 knative.dev/reconciler-test/pkg/eventshub
@@ -1523,4 +1523,3 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit; go 1.12
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
-# knative.dev/eventing => ../eventing

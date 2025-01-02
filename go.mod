@@ -35,10 +35,10 @@ require (
 	k8s.io/apiserver v0.30.3
 	k8s.io/client-go v0.30.3
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
-	knative.dev/eventing v0.43.1-0.20241029203049-7c97e6ff8358
-	knative.dev/hack v0.0.0-20241106013728-b7995315deb5
-	knative.dev/pkg v0.0.0-20241118074447-a7fd9b10bb9f
-	knative.dev/reconciler-test v0.0.0-20241106013737-0619dc3ecbcf
+	knative.dev/eventing v0.43.1-0.20241223131119-c9047a198255
+	knative.dev/hack v0.0.0-20241227080210-e92a16ae0893
+	knative.dev/pkg v0.0.0-20241223131119-4c901591eb4a
+	knative.dev/reconciler-test v0.0.0-20241223131247-96258bea6ce4
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -141,5 +141,3 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
-
-replace knative.dev/eventing => ../eventing
