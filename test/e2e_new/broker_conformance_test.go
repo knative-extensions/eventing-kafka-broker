@@ -107,7 +107,7 @@ func KafkaBrokerDataPlaneConformance(brokerName string) *feature.FeatureSet {
 }
 
 func BrokerConsumer(brokerName string) *feature.Feature {
-	f := feature.NewFeatureNamed("Ingress")
+	f := feature.NewFeatureNamed("BrokerConsumer")
 
 	sink1 := feature.MakeRandomK8sName("sink-1")
 	sink2 := feature.MakeRandomK8sName("sink-2")
