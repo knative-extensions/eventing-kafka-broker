@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -101,6 +102,11 @@ func TestSacuraBrokerJob(t *testing.T) {
 	})
 }
 
+type Event struct {
+	GVR   schema.GroupVersionResource
+	Event watch.Event
+}
+
 func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	c := testlib.Setup(t, false)
@@ -108,14 +114,29 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	ctx := context.Background()
 
-	watchUserFacingResource := watchResource(t, ctx, c.Dynamic, config.Namespace, config.ConsumerResourceGVR)
+	out := make(chan Event)
+
+	watchContext, watchCancel := context.WithCancel(ctx)
+
+	watchUserFacingResource := watchResource(t, watchContext, c.Dynamic, config.Namespace, config.ConsumerResourceGVR, out)
 	t.Cleanup(watchUserFacingResource.Stop)
 
-	watchConsumerGroups := watchResource(t, ctx, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumergroups"))
+	watchConsumerGroups := watchResource(t, watchContext, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumergroups"), out)
 	t.Cleanup(watchConsumerGroups.Stop)
 
-	watchConsumer := watchResource(t, ctx, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumers"))
+	watchConsumer := watchResource(t, watchContext, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumers"), out)
 	t.Cleanup(watchConsumer.Stop)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		for e := range out {
+			bytes, _ := json.MarshalIndent(e, "", "  ")
+			t.Logf("Resource %q changed:\n%s\n\n", e.GVR.String(), string(bytes))
+		}
+	}()
 
 	jobPollError := wait.Poll(pollInterval, pollTimeout, func() (done bool, err error) {
 		job, err := c.Kube.BatchV1().Jobs(config.Namespace).Get(ctx, app, metav1.GetOptions{})
@@ -123,6 +144,10 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 		return isJobSucceeded(job)
 	})
+
+	watchCancel()
+	close(out)
+	wg.Wait()
 
 	pkgtesting.LogJobOutput(t, ctx, c.Kube, config.Namespace, app)
 
@@ -215,7 +240,7 @@ func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface,
 	}
 }
 
-func watchResource(t *testing.T, ctx context.Context, dynamic dynamic.Interface, ns string, gvr schema.GroupVersionResource) watch.Interface {
+func watchResource(t *testing.T, ctx context.Context, dynamic dynamic.Interface, ns string, gvr schema.GroupVersionResource, out chan<- Event) watch.Interface {
 
 	w, err := dynamic.Resource(gvr).
 		Namespace(ns).
@@ -226,8 +251,15 @@ func watchResource(t *testing.T, ctx context.Context, dynamic dynamic.Interface,
 
 	go func() {
 		for e := range w.ResultChan() {
-			bytes, _ := json.MarshalIndent(e, "", "  ")
-			t.Logf("Resource %q changed:\n%s\n\n", gvr.String(), string(bytes))
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				out <- Event{
+					GVR:   gvr,
+					Event: e,
+				}
+			}
 		}
 	}()
 
