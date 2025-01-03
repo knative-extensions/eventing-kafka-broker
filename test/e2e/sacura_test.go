@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -35,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/pointer"
@@ -43,6 +45,7 @@ import (
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
 
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
@@ -99,6 +102,11 @@ func TestSacuraBrokerJob(t *testing.T) {
 	})
 }
 
+type Event struct {
+	GVR   schema.GroupVersionResource
+	Event watch.Event
+}
+
 func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	c := testlib.Setup(t, false)
@@ -106,18 +114,27 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	ctx := context.Background()
 
-	w, err := c.Dynamic.Resource(config.ConsumerResourceGVR).
-		Namespace(config.Namespace).
-		Watch(ctx, metav1.ListOptions{})
-	if err != nil {
-		t.Fatal("Failed to watch resource", config.ConsumerResourceGVR, err)
-	}
-	defer w.Stop()
+	out := make(chan Event)
 
+	watchContext, watchCancel := context.WithCancel(ctx)
+
+	watchUserFacingResource := watchResource(t, watchContext, c.Dynamic, config.Namespace, config.ConsumerResourceGVR, out)
+	t.Cleanup(watchUserFacingResource.Stop)
+
+	watchConsumerGroups := watchResource(t, watchContext, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumergroups"), out)
+	t.Cleanup(watchConsumerGroups.Stop)
+
+	watchConsumer := watchResource(t, watchContext, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumers"), out)
+	t.Cleanup(watchConsumer.Stop)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		for e := range w.ResultChan() {
+		defer wg.Done()
+
+		for e := range out {
 			bytes, _ := json.MarshalIndent(e, "", "  ")
-			t.Logf("Consumer resource %q changed:\n%s\n\n", config.ConsumerResourceGVR.String(), string(bytes))
+			t.Logf("Resource %q changed:\n%s\n\n", e.GVR.String(), string(bytes))
 		}
 	}()
 
@@ -127,6 +144,10 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 		return isJobSucceeded(job)
 	})
+
+	watchCancel()
+	close(out)
+	wg.Wait()
 
 	pkgtesting.LogJobOutput(t, ctx, c.Kube, config.Namespace, app)
 
@@ -217,4 +238,30 @@ func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface,
 
 		return fmt.Sprintf("kafka.%s.%s.%s", c, sacuraChannelName, string(sub.UID))
 	}
+}
+
+func watchResource(t *testing.T, ctx context.Context, dynamic dynamic.Interface, ns string, gvr schema.GroupVersionResource, out chan<- Event) watch.Interface {
+
+	w, err := dynamic.Resource(gvr).
+		Namespace(ns).
+		Watch(ctx, metav1.ListOptions{})
+	if err != nil {
+		t.Fatal("Failed to watch resource", gvr, err)
+	}
+
+	go func() {
+		for e := range w.ResultChan() {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				out <- Event{
+					GVR:   gvr,
+					Event: e,
+				}
+			}
+		}
+	}()
+
+	return w
 }
