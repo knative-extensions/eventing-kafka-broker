@@ -57,7 +57,8 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
         final var ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
         if (ctxInt.tracer() != null) {
             this.tracer =
-                    new ProducerTracer(ctxInt.tracer(), TracingPolicy.PROPAGATE, "" /* TODO add bootrstrap servers */);
+                    new ProducerTracer(this.vertx.tracer(), TracingPolicy.PROPAGATE, "" /* TODO add bootrstrap servers */);
+//                    new ProducerTracer(ctxInt.tracer(), TracingPolicy.PROPAGATE, "" /* TODO add bootrstrap servers */);
         } else {
             this.tracer = null;
         }
