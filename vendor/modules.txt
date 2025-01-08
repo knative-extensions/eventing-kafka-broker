@@ -1142,7 +1142,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.42.4-0.20241030064549-19e4c4bddaca
+# knative.dev/eventing v0.42.6-0.20241219120210-e387363f837c
 ## explicit; go 1.22
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1219,7 +1219,6 @@ knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake
-knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy
 knative.dev/eventing/pkg/client/injection/informers/factory
 knative.dev/eventing/pkg/client/injection/informers/factory/fake
 knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription
