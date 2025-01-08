@@ -1142,7 +1142,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.42.2-0.20240923151015-7fedbd08af70
+# knative.dev/eventing v0.42.6-0.20241219120210-e387363f837c
 ## explicit; go 1.22
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1219,7 +1219,6 @@ knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker/fake
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger
 knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake
-knative.dev/eventing/pkg/client/injection/informers/eventing/v1alpha1/eventpolicy
 knative.dev/eventing/pkg/client/injection/informers/factory
 knative.dev/eventing/pkg/client/injection/informers/factory/fake
 knative.dev/eventing/pkg/client/injection/informers/messaging/v1/subscription
@@ -1248,17 +1247,6 @@ knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
 knative.dev/eventing/pkg/reconciler/testing/v1
 knative.dev/eventing/pkg/scheduler
-knative.dev/eventing/pkg/scheduler/factory
-knative.dev/eventing/pkg/scheduler/plugins/core/availabilitynodepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/availabilityzonepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/evenpodspread
-knative.dev/eventing/pkg/scheduler/plugins/core/lowestordinalpriority
-knative.dev/eventing/pkg/scheduler/plugins/core/podfitsresources
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithavailabilitynodepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithavailabilityzonepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithevenpodspreadpriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithhighestordinalpriority
-knative.dev/eventing/pkg/scheduler/plugins/kafka/nomaxresourcecount
 knative.dev/eventing/pkg/scheduler/state
 knative.dev/eventing/pkg/scheduler/statefulset
 knative.dev/eventing/pkg/tracing
