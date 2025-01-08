@@ -21,8 +21,10 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -31,16 +33,21 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/pointer"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
+
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
 	pkgtest "knative.dev/eventing-kafka-broker/test/pkg"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
@@ -64,6 +71,8 @@ type SacuraTestConfig struct {
 	// Namespace is the test namespace.
 	Namespace string
 
+	ConsumerResourceGVR schema.GroupVersionResource
+
 	// BrokerTopic is the expected Broker topic.
 	// It's used to verify the committed offset.
 	BrokerTopic *string
@@ -79,16 +88,23 @@ type SacuraTestConfig struct {
 
 func TestSacuraSinkSourceJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:   "sacura-sink-source",
-		SourceTopic: pointer.String("sacura-sink-source-topic"),
+		Namespace:           "sacura-sink-source",
+		ConsumerResourceGVR: sources.SchemeGroupVersion.WithResource("kafkasources"),
+		SourceTopic:         pointer.String("sacura-sink-source-topic"),
 	})
 }
 
 func TestSacuraBrokerJob(t *testing.T) {
 	runSacuraTest(t, SacuraTestConfig{
-		Namespace:   "sacura",
-		BrokerTopic: pointer.String("knative-broker-sacura-sink-source-broker"),
+		Namespace:           "sacura",
+		ConsumerResourceGVR: eventing.SchemeGroupVersion.WithResource("triggers"),
+		BrokerTopic:         pointer.String("knative-broker-sacura-sink-source-broker"),
 	})
+}
+
+type Event struct {
+	GVR   schema.GroupVersionResource
+	Event watch.Event
 }
 
 func runSacuraTest(t *testing.T, config SacuraTestConfig) {
@@ -98,12 +114,40 @@ func runSacuraTest(t *testing.T, config SacuraTestConfig) {
 
 	ctx := context.Background()
 
+	out := make(chan Event)
+
+	watchContext, watchCancel := context.WithCancel(ctx)
+
+	watchUserFacingResource := watchResource(t, watchContext, c.Dynamic, config.Namespace, config.ConsumerResourceGVR, out)
+	t.Cleanup(watchUserFacingResource.Stop)
+
+	watchConsumerGroups := watchResource(t, watchContext, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumergroups"), out)
+	t.Cleanup(watchConsumerGroups.Stop)
+
+	watchConsumer := watchResource(t, watchContext, c.Dynamic, config.Namespace, kafkainternals.SchemeGroupVersion.WithResource("consumers"), out)
+	t.Cleanup(watchConsumer.Stop)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		for e := range out {
+			bytes, _ := json.MarshalIndent(e, "", "  ")
+			t.Logf("Resource %q changed:\n%s\n\n", e.GVR.String(), string(bytes))
+		}
+	}()
+
 	jobPollError := wait.Poll(pollInterval, pollTimeout, func() (done bool, err error) {
 		job, err := c.Kube.BatchV1().Jobs(config.Namespace).Get(ctx, app, metav1.GetOptions{})
 		assert.Nil(t, err)
 
 		return isJobSucceeded(job)
 	})
+
+	watchCancel()
+	close(out)
+	wg.Wait()
 
 	pkgtesting.LogJobOutput(t, ctx, c.Kube, config.Namespace, app)
 
@@ -194,4 +238,30 @@ func getKafkaSubscriptionConsumerGroup(ctx context.Context, c dynamic.Interface,
 
 		return fmt.Sprintf("kafka.%s.%s.%s", c, sacuraChannelName, string(sub.UID))
 	}
+}
+
+func watchResource(t *testing.T, ctx context.Context, dynamic dynamic.Interface, ns string, gvr schema.GroupVersionResource, out chan<- Event) watch.Interface {
+
+	w, err := dynamic.Resource(gvr).
+		Namespace(ns).
+		Watch(ctx, metav1.ListOptions{})
+	if err != nil {
+		t.Fatal("Failed to watch resource", gvr, err)
+	}
+
+	go func() {
+		for e := range w.ResultChan() {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				out <- Event{
+					GVR:   gvr,
+					Event: e,
+				}
+			}
+		}
+	}()
+
+	return w
 }
