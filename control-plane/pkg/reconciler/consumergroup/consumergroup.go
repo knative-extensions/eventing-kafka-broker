@@ -161,6 +161,12 @@ type Reconciler struct {
 	// reconciliation loop.
 	InitOffsetsFunc kafka.InitOffsetsFunc
 
+	// AreOffsetsInitializedFunc check if consumer group offsets are initialized for a provided set of
+	// topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	AreOffsetsInitializedFunc kafka.AreOffsetsInitializedFunc
+
 	SystemNamespace string
 	// GetKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -618,6 +624,14 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 
 	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId); err != nil {
 		return fmt.Errorf("failed to initialize offset: %w", err)
+	}
+
+	initialized, err := r.AreOffsetsInitializedFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId)
+	if err != nil {
+		return fmt.Errorf("failed to verify initialize offset: %w", err)
+	}
+	if !initialized {
+		return controller.NewRequeueAfter(400 * time.Millisecond)
 	}
 
 	r.InitOffsetLatestInitialOffsetCache.UpsertStatus(keyOf(cg), prober.StatusReady, struct{}{}, func(key string, _ prober.Status, _ struct{}) {

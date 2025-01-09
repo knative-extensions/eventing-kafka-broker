@@ -126,6 +126,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
 		InitOffsetsFunc:                    offset.InitOffsets,
+		AreOffsetsInitializedFunc:          offset.AreOffsetsInitialized,
 		SystemNamespace:                    system.Namespace(),
 		KafkaFeatureFlags:                  config.DefaultFeaturesConfig(),
 		KedaClient:                         kedaclient.Get(ctx),

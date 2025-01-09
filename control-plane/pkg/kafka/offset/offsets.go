@@ -18,15 +18,17 @@ package offset
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
-
-	knsarama "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/sarama"
 )
 
+// InitOffsets initialize the offsets of the given consumer group for the given topics to the newest
+// offsets of all topic-partitions.
+//
 // We want to make sure that ALL consumer group offsets are set before marking
 // the resource as ready, to avoid "losing" events in case the consumer group session
 // is closed before at least one message is consumed from ALL partitions.
@@ -45,7 +47,7 @@ func InitOffsets(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClien
 	}
 
 	// Fetch topic offsets
-	topicOffsets, err := knsarama.GetOffsets(kafkaClient, topicPartitions, sarama.OffsetNewest)
+	topicOffsets, err := getOffsets(kafkaClient, topicPartitions, sarama.OffsetNewest)
 	if err != nil {
 		return -1, fmt.Errorf("failed to get the topic offsets: %w", err)
 	}
@@ -59,7 +61,7 @@ func InitOffsets(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClien
 	dirty := false
 	for topic, partitions := range offsets.Blocks {
 		for partitionID, block := range partitions {
-			if block.Offset == -1 { // not initialized?
+			if block.Offset < 0 {
 				partitionsOffsets, ok := topicOffsets[topic]
 				if !ok {
 					// topic may have been deleted. ignore.
@@ -95,7 +97,7 @@ func InitOffsets(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClien
 
 }
 
-func CheckIfAllOffsetsInitialized(kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (bool, error) {
+func AreOffsetsInitialized(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (bool, error) {
 	_, topicPartitions, err := retrieveAllPartitions(topics, kafkaClient)
 	if err != nil {
 		return false, err
@@ -109,7 +111,7 @@ func CheckIfAllOffsetsInitialized(kafkaClient sarama.Client, kafkaAdminClient sa
 
 	for _, partitions := range offsets.Blocks {
 		for _, block := range partitions {
-			if block.Offset == -1 { // not initialized?
+			if block.Offset < 0 {
 				return false, nil
 			}
 		}
@@ -120,6 +122,10 @@ func CheckIfAllOffsetsInitialized(kafkaClient sarama.Client, kafkaAdminClient sa
 
 func retrieveAllPartitions(topics []string, kafkaClient sarama.Client) (int, map[string][]int32, error) {
 	totalPartitions := 0
+
+	if err := kafkaClient.RefreshMetadata(topics...); err != nil {
+		return -1, nil, fmt.Errorf("failed to refresh metadata for topics %#v: %w", topics, err)
+	}
 
 	// Retrieve all partitions
 	topicPartitions := make(map[string][]int32)
@@ -137,4 +143,86 @@ func retrieveAllPartitions(topics []string, kafkaClient sarama.Client) (int, map
 		topicPartitions[topic] = clone
 	}
 	return totalPartitions, topicPartitions, nil
+}
+
+// getOffsets queries the cluster to get the most recent available offset at the
+// given time (in milliseconds) for the given topics and partition
+// Time should be OffsetOldest for the earliest available offset,
+// OffsetNewest for the offset of the message that will be produced next, or a time.
+//
+// See sarama.Client.GetOffset for getting the offset of a single topic/partition combination
+func getOffsets(client sarama.Client, topicPartitions map[string][]int32, time int64) (map[string]map[int32]int64, error) {
+	if client.Closed() {
+		return nil, sarama.ErrClosedClient
+	}
+	offsets, err := retrieveOffsets(client, topicPartitions, time)
+	if err != nil {
+		if err := client.RefreshMetadata(mapKeys(topicPartitions)...); err != nil {
+			return nil, err
+		}
+		return retrieveOffsets(client, topicPartitions, time)
+	}
+
+	return offsets, nil
+}
+
+func retrieveOffsets(client sarama.Client, topicPartitions map[string][]int32, time int64) (map[string]map[int32]int64, error) {
+	version := int16(0)
+	if client.Config().Version.IsAtLeast(sarama.V0_10_1_0) {
+		version = 1
+	}
+
+	offsets := make(map[string]map[int32]int64)
+
+	// Step 1: build one OffsetRequest instance per broker.
+	requests := make(map[*sarama.Broker]*sarama.OffsetRequest)
+
+	for topic, partitions := range topicPartitions {
+		offsets[topic] = make(map[int32]int64)
+
+		for _, partitionID := range partitions {
+			broker, err := client.Leader(topic, partitionID)
+			if err != nil {
+				return nil, err
+			}
+
+			request, ok := requests[broker]
+			if !ok {
+				request = &sarama.OffsetRequest{Version: version}
+				requests[broker] = request
+			}
+
+			request.AddBlock(topic, partitionID, time, 1)
+		}
+	}
+
+	// Step 2: send requests, one per broker, and collect offsets
+	for broker, request := range requests {
+		response, err := broker.GetAvailableOffsets(request)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for topic, blocks := range response.Blocks {
+			for partitionID, block := range blocks {
+				if !errors.Is(block.Err, sarama.ErrNoError) {
+					return nil, block.Err
+				}
+
+				offsets[topic][partitionID] = block.Offset
+			}
+		}
+	}
+
+	return offsets, nil
+
+}
+
+func mapKeys(m map[string][]int32) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
