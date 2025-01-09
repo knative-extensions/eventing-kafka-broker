@@ -204,8 +204,7 @@ func (b SequenceAssertionBuilder) Eventually() feature.StepFn {
 
 		var internalErr error
 
-		wait.PollImmediate(retryInterval, retryTimeout, func() (bool, error) {
-
+		err := wait.PollUntilContextTimeout(ctx, retryInterval, retryTimeout, true, func(ctx context.Context) (bool, error) {
 			events := make([]eventshub.EventInfo, 0)
 			for _, storeName := range b.storeNames {
 				store := eventshub.StoreFromContext(ctx, storeName)
@@ -243,6 +242,10 @@ func (b SequenceAssertionBuilder) Eventually() feature.StepFn {
 
 		if internalErr != nil {
 			t.Fatal(internalErr)
+		}
+
+		if err != nil {
+			t.Fatal(err)
 		}
 	}
 }
