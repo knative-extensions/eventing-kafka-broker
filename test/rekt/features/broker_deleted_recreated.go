@@ -17,10 +17,20 @@
 package features
 
 import (
+	"context"
+	"math"
+	"strconv"
+
+	cetest "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	kafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/test/e2e_new/bogus_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub/assert"
 
 	"knative.dev/pkg/system"
 
@@ -36,15 +46,88 @@ import (
 	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
 )
 
+func compose(steps ...feature.StepFn) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		for _, s := range steps {
+			s(ctx, t)
+		}
+	}
+}
+
+// BrokerDeletedRecreated tests that when a broker and trigger is deleted and re-created, the original sink will eventually stop receiving events
 func BrokerDeletedRecreated() *feature.Feature {
 	f := feature.NewFeatureNamed("broker deleted and recreated")
 
 	brokerName := feature.MakeRandomK8sName("broker")
 	triggerName := feature.MakeRandomK8sName("trigger")
 
-	f.Setup("test broker", featuressteps.BrokerSmokeTest(brokerName, triggerName))
+	sink1 := feature.MakeRandomK8sName("asink")
+	sink2 := feature.MakeRandomK8sName("bsink")
+
+	event := cetest.FullEvent()
+	event.SetID(uuid.New().String())
+
+	eventMatchers := []cetest.EventMatcher{
+		cetest.HasId(event.ID()),
+		cetest.HasSource(event.Source()),
+		cetest.HasType(event.Type()),
+		cetest.HasSubject(event.Subject()),
+	}
+
+	backoffPolicy := eventingduck.BackoffPolicyLinear
+
+	f.Setup("test broker", compose(
+		eventshub.Install(sink1, eventshub.StartReceiver),
+		broker.Install(brokerName, broker.WithEnvConfig()...),
+		broker.IsReady(brokerName),
+		trigger.Install(
+			triggerName,
+			trigger.WithBrokerName(brokerName),
+			trigger.WithRetry(3, &backoffPolicy, ptr.To("PT1S")),
+			trigger.WithSubscriber(service.AsKReference(sink1), ""),
+		),
+		trigger.IsReady(triggerName),
+		eventshub.Install(
+			feature.MakeRandomK8sName("source"),
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.AddSequence,
+			eventshub.InputEvent(event),
+			// We want to send 1 event/s until the timeout
+			func(ctx context.Context, envs map[string]string) error {
+				_, timeout := environment.PollTimingsFromContext(ctx)
+				envs["PERIOD"] = "1" // in seconds
+				envs["MAX_MESSAGES"] = strconv.Itoa(int(math.Ceil(timeout.Seconds())))
+				return nil
+			},
+		),
+		assert.OnStore(sink1).MatchEvent(eventMatchers...).AtLeast(1),
+	))
+
 	f.Requirement("delete broker", featuressteps.DeleteBroker(brokerName))
-	f.Assert("test broker after deletion", featuressteps.BrokerSmokeTest(brokerName, triggerName))
+	f.Assert("test broker after deletion", compose(
+		eventshub.Install(sink2, eventshub.StartReceiver),
+		broker.Install(brokerName, broker.WithEnvConfig()...),
+		broker.IsReady(brokerName),
+		trigger.Install(
+			triggerName,
+			trigger.WithBrokerName(brokerName),
+			trigger.WithRetry(3, &backoffPolicy, ptr.To("PT1S")),
+			trigger.WithSubscriber(service.AsKReference(sink2), ""),
+		),
+		trigger.IsReady(triggerName),
+		// We need to check both that
+		// 1. sink1 eventually stops receiving new events
+		// 2. sink2 eventually starts receiving all events
+		// therefore, we check that eventually, the last few events sent (16 for no particular reason) are all received by the sink2 only
+		// and contain an uninterrupted (without any missing sequence numbers) source sequence as sent by the source with eventshub.AddSequence
+		EventSequenceOnStores(sink1, sink2).
+			MatchingReceived(eventMatchers...).  // ... when ...
+			OrderedBySourceSequence().           // ..., and taken the ...
+			LastN(16).                           // ... events, the sequence...
+			ContainsOnlyEventsObservedBy(sink2). // ...and...
+			IsAnUninterruptedSourceSequence().
+			Eventually(),
+	))
 
 	return f
 }
