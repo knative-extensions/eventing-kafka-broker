@@ -49,6 +49,7 @@ type ConsumerGroupInterface interface {
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ConsumerGroup, err error)
 	GetScale(ctx context.Context, consumerGroupName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(ctx context.Context, consumerGroupName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
 	ConsumerGroupExpansion
 }
@@ -206,6 +207,21 @@ func (c *consumerGroups) GetScale(ctx context.Context, consumerGroupName string,
 		Name(consumerGroupName).
 		SubResource("scale").
 		VersionedParams(&options, scheme.ParameterCodec).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *consumerGroups) UpdateScale(ctx context.Context, consumerGroupName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("consumergroups").
+		Name(consumerGroupName).
+		SubResource("scale").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(scale).
 		Do(ctx).
 		Into(result)
 	return

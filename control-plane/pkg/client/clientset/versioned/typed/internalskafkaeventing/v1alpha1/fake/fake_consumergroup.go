@@ -151,3 +151,14 @@ func (c *FakeConsumerGroups) GetScale(ctx context.Context, consumerGroupName str
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
+
+// UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *FakeConsumerGroups) UpdateScale(ctx context.Context, consumerGroupName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(consumergroupsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*autoscalingv1.Scale), err
+}
