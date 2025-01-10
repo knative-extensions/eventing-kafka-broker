@@ -45,7 +45,7 @@ jobs:
       # NOTE: Use actions/upload-artifact instead of actions/cache as the
       # workflow triggered on the default branch doesn't have access to caches
       # created on feature branches
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: dependabot-pr
           path: dependabot-pr/
