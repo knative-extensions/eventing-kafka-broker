@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"strconv"
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -53,6 +54,7 @@ import (
 
 const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
+	triggerVReplicaAnnotation = "kafka.eventing.knative.dev/vreplica"
 )
 
 type FlagsHolder struct {
@@ -325,6 +327,10 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 			Namespace: trigger.GetNamespace(),
 			Name:      trigger.GetName(),
 		},
+		FeatureFlags: &contract.EgressFeatureFlags{
+			EnableRateLimiter:            r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled(),
+			EnableOrderedExecutorMetrics: r.KafkaFeatureFlags.IsDispatcherOrderedExecutorMetricsEnabled(),
+		},
 	}
 
 	if destination.CACerts != nil {
@@ -369,6 +375,16 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 			return nil, err
 		}
 		egress.DeliveryOrder = deliveryOrder
+	}
+
+	if r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled() {
+		triggerVReplicaAnnotationValue, ok := trigger.Annotations[triggerVReplicaAnnotation]
+		if ok {
+			vReplicas, err := strconv.Atoi(triggerVReplicaAnnotationValue)
+			if err == nil {
+				egress.VReplicas = int32(vReplicas)
+			}
+		}
 	}
 
 	return egress, nil
