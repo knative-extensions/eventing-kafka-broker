@@ -63,8 +63,9 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
         final var vReplicas = Math.max(1, context.getEgress().getVReplicas());
         final var tokens = context.getMaxPollRecords() * vReplicas;
         if (context.getEgress().getFeatureFlags().getEnableRateLimiter()) {
+            // using intervally will be more effective for precise rate limiting.
             this.bucket = new LocalBucketBuilder()
-                    .addLimit(Bandwidth.classic(tokens, Refill.greedy(tokens, Duration.ofSeconds(1))))
+                    .addLimit(Bandwidth.classic(tokens, Refill.intervally(tokens, Duration.ofSeconds(1))))
                     .withSynchronizationStrategy(SynchronizationStrategy.SYNCHRONIZED)
                     .withMillisecondPrecision()
                     .build();
@@ -181,7 +182,9 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
         if (bucket != null) {
             // Once we have new records, we force add them to internal per-partition queues.
-            bucket.forceAddTokens(records.count());
+            // bucket.forceAddTokens(records.count());
+            // I think there are some mistake here since we need to consume message, not add more tokens: https://www.baeldung.com/spring-bucket4j
+            bucket.tryConsume(records.count());
         }
 
         // Put records in internal per-partition queues.
