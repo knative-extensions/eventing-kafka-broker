@@ -54,7 +54,7 @@ import (
 
 const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
-	triggerVReplicaAnnotation = "kafka.eventing.knative.dev/vreplica"
+	triggerVReplicasAnnotation = "kafka.eventing.knative.dev/vreplicas"
 )
 
 type FlagsHolder struct {
@@ -378,9 +378,9 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 
 	if r.KafkaFeatureFlags.IsDispatcherRateLimiterEnabled() {
-		triggerVReplicaAnnotationValue, ok := trigger.Annotations[triggerVReplicaAnnotation]
+		triggerVReplicasAnnotationValue, ok := trigger.Annotations[triggerVReplicasAnnotation]
 		if ok {
-			vReplicas, err := strconv.Atoi(triggerVReplicaAnnotationValue)
+			vReplicas, err := strconv.Atoi(triggerVReplicasAnnotationValue)
 			if err == nil {
 				egress.VReplicas = int32(vReplicas)
 			}
