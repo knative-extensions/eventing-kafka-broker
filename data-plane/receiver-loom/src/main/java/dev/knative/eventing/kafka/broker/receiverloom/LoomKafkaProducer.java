@@ -15,18 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.receiverloom;
 
+import com.google.common.util.concurrent.Uninterruptibles;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.tracing.kafka.ProducerTracer;
+import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.impl.future.PromiseInternal;
 import io.vertx.core.tracing.TracingPolicy;
 import java.util.Objects;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -41,17 +43,15 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
     private final Producer<K, V> producer;
 
-    private final BlockingQueue<RecordPromise<K, V>> eventQueue;
+    private final ExecutorService executorService;
     private final AtomicBoolean isClosed;
     private final ProducerTracer<?> tracer;
     private final VertxInternal vertx;
-    private final Thread sendFromQueueThread;
     private final Promise<Void> closePromise = Promise.promise();
 
     public LoomKafkaProducer(Vertx v, Producer<K, V> producer) {
         Objects.requireNonNull(v, "Vertx cannot be null");
         this.producer = producer;
-        this.eventQueue = new LinkedBlockingQueue<>();
         this.isClosed = new AtomicBoolean(false);
         this.vertx = (VertxInternal) v;
         final var ctxInt = ((ContextInternal) v.getOrCreateContext()).unwrap();
@@ -62,73 +62,54 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             this.tracer = null;
         }
 
+        ExecutorService executorService;
         if (Boolean.parseBoolean(System.getenv("ENABLE_VIRTUAL_THREADS"))) {
-            this.sendFromQueueThread = Thread.ofVirtual().start(this::sendFromQueue);
+            executorService = Executors.newVirtualThreadPerTaskExecutor();
         } else {
-            this.sendFromQueueThread = new Thread(this::sendFromQueue);
-            this.sendFromQueueThread.start();
+            executorService = Executors.newSingleThreadExecutor();
         }
+        this.executorService = Context.taskWrapping(executorService);
     }
 
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record) {
-        final Promise<RecordMetadata> promise = Promise.promise();
         if (isClosed.get()) {
-            promise.fail("Producer is closed");
-        } else {
-            eventQueue.add(new RecordPromise<>(record, this.vertx.getOrCreateContext(), promise));
+            return Future.failedFuture("Producer is closed");
         }
+        PromiseInternal<RecordMetadata> promise = vertx.promise();
+        executorService.execute(() -> sendFromQueue(new RecordPromise<>(record, promise)));
         return promise.future();
     }
 
-    private void sendFromQueue() {
-        // Process queue elements until this is closed and the tasks queue is empty
-        while (!isClosed.get() || !eventQueue.isEmpty()) {
-            try {
-                final var recordPromise = eventQueue.poll(2000, TimeUnit.MILLISECONDS);
-                if (recordPromise == null) {
-                    continue;
-                }
+    private void sendFromQueue(RecordPromise<K, V> recordPromise) {
+        final var startedSpan = this.tracer == null
+                ? null
+                : this.tracer.prepareSendMessage(recordPromise.context(), recordPromise.record);
 
-                final var startedSpan = this.tracer == null
-                        ? null
-                        : this.tracer.prepareSendMessage(recordPromise.getContext(), recordPromise.getRecord());
-
-                recordPromise
-                        .getPromise()
-                        .future()
-                        .onComplete(v -> {
-                            if (startedSpan != null) {
-                                startedSpan.finish(recordPromise.getContext());
-                            }
-                        })
-                        .onFailure(cause -> {
-                            if (startedSpan != null) {
-                                startedSpan.fail(recordPromise.getContext(), cause);
-                            }
-                        });
-                try {
-                    producer.send(
-                            recordPromise.getRecord(),
-                            (metadata, exception) -> recordPromise.getContext().runOnContext(v -> {
-                                if (exception != null) {
-                                    recordPromise.getPromise().fail(exception);
-                                    return;
-                                }
-                                recordPromise.getPromise().complete(metadata);
-                            }));
-                } catch (final KafkaException exception) {
-                    recordPromise
-                            .getContext()
-                            .runOnContext(v -> recordPromise.getPromise().fail(exception));
+        recordPromise
+                .promise
+                .future()
+                .onComplete(v -> {
+                    if (startedSpan != null) {
+                        startedSpan.finish(recordPromise.context());
+                    }
+                })
+                .onFailure(cause -> {
+                    if (startedSpan != null) {
+                        startedSpan.fail(recordPromise.context(), cause);
+                    }
+                });
+        try {
+            producer.send(recordPromise.record, (metadata, exception) -> {
+                if (exception != null) {
+                    recordPromise.fail(exception);
+                    return;
                 }
-            } catch (InterruptedException e) {
-                logger.debug("Interrupted while waiting for event queue to be populated.");
-                break;
-            }
+                recordPromise.complete(metadata);
+            });
+        } catch (final KafkaException exception) {
+            recordPromise.fail(exception);
         }
-
-        logger.debug("Background thread completed.");
     }
 
     @Override
@@ -141,12 +122,9 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
 
         Thread.ofVirtual().start(() -> {
             try {
-                while (!eventQueue.isEmpty()) {
-                    logger.debug("Waiting for the eventQueue to become empty");
-                    Thread.sleep(2000L);
-                }
-                logger.debug("Waiting for sendFromQueueThread thread to complete");
-                sendFromQueueThread.join();
+                executorService.shutdown();
+                logger.debug("Waiting for tasks to complete");
+                Uninterruptibles.awaitTerminationUninterruptibly(executorService);
                 logger.debug("Closing the producer");
                 producer.close();
                 closePromise.complete();
@@ -178,35 +156,29 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
     }
 
     private static class RecordPromise<K, V> {
-        private final ProducerRecord<K, V> record;
-        private final ContextInternal context;
-        private final Promise<RecordMetadata> promise;
+        final ProducerRecord<K, V> record;
+        final PromiseInternal<RecordMetadata> promise;
 
-        private RecordPromise(ProducerRecord<K, V> record, ContextInternal context, Promise<RecordMetadata> promise) {
+        RecordPromise(ProducerRecord<K, V> record, PromiseInternal<RecordMetadata> promise) {
             this.record = record;
-            this.context = context;
             this.promise = promise;
         }
 
-        public ProducerRecord<K, V> getRecord() {
-            return record;
+        ContextInternal context() {
+            return promise.context();
         }
 
-        public Promise<RecordMetadata> getPromise() {
-            return promise;
+        void complete(RecordMetadata result) {
+            promise.complete(result);
         }
 
-        public ContextInternal getContext() {
-            return context;
+        void fail(Throwable cause) {
+            promise.fail(cause);
         }
     }
 
     // Function needed for testing
     public boolean isSendFromQueueThreadAlive() {
-        return sendFromQueueThread.isAlive();
-    }
-
-    public int getEventQueueSize() {
-        return eventQueue.size();
+        return !executorService.isTerminated();
     }
 }
