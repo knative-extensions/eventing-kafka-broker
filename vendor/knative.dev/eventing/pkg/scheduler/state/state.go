@@ -44,13 +44,14 @@ type StateAccessor interface {
 // It is used by for the scheduler and the autoscaler
 type State struct {
 	// free tracks the free capacity of each pod.
-	//
-	// Including pods that might not exist anymore, it reflects the free capacity determined by
-	// placements in the vpod status.
 	FreeCap []int32
 
 	// schedulable pods tracks the pods that aren't being evicted.
 	SchedulablePods []int32
+
+	// LastOrdinal is the ordinal index corresponding to the last statefulset replica
+	// with placed vpods.
+	LastOrdinal int32
 
 	// Pod capacity.
 	Capacity int32
@@ -142,10 +143,14 @@ func (s *stateBuilder) State(ctx context.Context) (*State, error) {
 		return nil, err
 	}
 
-	freeCap := make([]int32, 0)
+	free := make([]int32, 0)
 	pending := make(map[types.NamespacedName]int32, 4)
 	expectedVReplicasByVPod := make(map[types.NamespacedName]int32, len(vpods))
 	schedulablePods := sets.NewInt32()
+	last := int32(-1)
+
+	// keep track of (vpod key, podname) pairs with existing placements
+	withPlacement := make(map[types.NamespacedName]map[string]bool)
 
 	podSpread := make(map[types.NamespacedName]map[string]int32)
 
@@ -167,7 +172,7 @@ func (s *stateBuilder) State(ctx context.Context) (*State, error) {
 	}
 
 	for _, p := range schedulablePods.List() {
-		freeCap = s.updateFreeCapacity(logger, freeCap, PodNameFromOrdinal(s.statefulSetName, p), 0)
+		free, last = s.updateFreeCapacity(logger, free, last, PodNameFromOrdinal(s.statefulSetName, p), 0)
 	}
 
 	// Getting current state from existing placements for all vpods
@@ -177,13 +182,16 @@ func (s *stateBuilder) State(ctx context.Context) (*State, error) {
 		pending[vpod.GetKey()] = pendingFromVPod(vpod)
 		expectedVReplicasByVPod[vpod.GetKey()] = vpod.GetVReplicas()
 
+		withPlacement[vpod.GetKey()] = make(map[string]bool)
 		podSpread[vpod.GetKey()] = make(map[string]int32)
 
 		for i := 0; i < len(ps); i++ {
 			podName := ps[i].PodName
 			vreplicas := ps[i].VReplicas
 
-			freeCap = s.updateFreeCapacity(logger, freeCap, podName, vreplicas)
+			free, last = s.updateFreeCapacity(logger, free, last, podName, vreplicas)
+
+			withPlacement[vpod.GetKey()][podName] = true
 
 			pod, err := s.podLister.Get(podName)
 			if err != nil {
@@ -196,17 +204,8 @@ func (s *stateBuilder) State(ctx context.Context) (*State, error) {
 		}
 	}
 
-	state := &State{
-		FreeCap:                freeCap,
-		SchedulablePods:        schedulablePods.List(),
-		Capacity:               s.capacity,
-		Replicas:               scale.Spec.Replicas,
-		StatefulSetName:        s.statefulSetName,
-		PodLister:              s.podLister,
-		PodSpread:              podSpread,
-		Pending:                pending,
-		ExpectedVReplicaByVPod: expectedVReplicasByVPod,
-	}
+	state := &State{FreeCap: free, SchedulablePods: schedulablePods.List(), LastOrdinal: last, Capacity: s.capacity, Replicas: scale.Spec.Replicas, StatefulSetName: s.statefulSetName, PodLister: s.podLister,
+		PodSpread: podSpread, Pending: pending, ExpectedVReplicaByVPod: expectedVReplicasByVPod}
 
 	logger.Infow("cluster state info", zap.Any("state", state))
 
@@ -220,19 +219,23 @@ func pendingFromVPod(vpod scheduler.VPod) int32 {
 	return int32(math.Max(float64(0), float64(expected-scheduled)))
 }
 
-func (s *stateBuilder) updateFreeCapacity(logger *zap.SugaredLogger, freeCap []int32, podName string, vreplicas int32) []int32 {
+func (s *stateBuilder) updateFreeCapacity(logger *zap.SugaredLogger, free []int32, last int32, podName string, vreplicas int32) ([]int32, int32) {
 	ordinal := OrdinalFromPodName(podName)
-	freeCap = grow(freeCap, ordinal, s.capacity)
+	free = grow(free, ordinal, s.capacity)
 
-	freeCap[ordinal] -= vreplicas
+	free[ordinal] -= vreplicas
 
 	// Assert the pod is not overcommitted
-	if overcommit := freeCap[ordinal]; overcommit < 0 {
+	if free[ordinal] < 0 {
 		// This should not happen anymore. Log as an error but do not interrupt the current scheduling.
-		logger.Warnw("pod is overcommitted", zap.String("podName", podName), zap.Int32("overcommit", overcommit))
+		logger.Warnw("pod is overcommitted", zap.String("podName", podName), zap.Int32("free", free[ordinal]))
 	}
 
-	return freeCap
+	if ordinal > last {
+		last = ordinal
+	}
+
+	return free, last
 }
 
 func (s *State) TotalPending() int32 {
@@ -280,16 +283,23 @@ func (s *State) MarshalJSON() ([]byte, error) {
 	type S struct {
 		FreeCap         []int32                     `json:"freeCap"`
 		SchedulablePods []int32                     `json:"schedulablePods"`
+		LastOrdinal     int32                       `json:"lastOrdinal"`
 		Capacity        int32                       `json:"capacity"`
 		Replicas        int32                       `json:"replicas"`
+		NumZones        int32                       `json:"numZones"`
+		NumNodes        int32                       `json:"numNodes"`
+		NodeToZoneMap   map[string]string           `json:"nodeToZoneMap"`
 		StatefulSetName string                      `json:"statefulSetName"`
 		PodSpread       map[string]map[string]int32 `json:"podSpread"`
+		NodeSpread      map[string]map[string]int32 `json:"nodeSpread"`
+		ZoneSpread      map[string]map[string]int32 `json:"zoneSpread"`
 		Pending         map[string]int32            `json:"pending"`
 	}
 
 	sj := S{
 		FreeCap:         s.FreeCap,
 		SchedulablePods: s.SchedulablePods,
+		LastOrdinal:     s.LastOrdinal,
 		Capacity:        s.Capacity,
 		Replicas:        s.Replicas,
 		StatefulSetName: s.StatefulSetName,
