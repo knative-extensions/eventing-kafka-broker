@@ -42,10 +42,10 @@
     <spotless.plugin.version>2.38.0</spotless.plugin.version>
 
     <!-- dependencies version -->
-    <vertx.version>4.4.7</vertx.version>
+    <vertx.version>4.5.7</vertx.version>
     <cloudevents.sdk.version>4.0.0</cloudevents.sdk.version>
-    <micrometer.version>1.11.5</micrometer.version>
-    <opentelemetry.version>1.17.0</opentelemetry.version>
+    <micrometer.version>1.12.5</micrometer.version>
+    <opentelemetry.version>1.32.0</opentelemetry.version>
     <jackson.version>2.14.1</jackson.version>
     <protobuf.version>3.25.2</protobuf.version>
     <bucket4j.version>7.6.0</bucket4j.version>
@@ -60,7 +60,7 @@
     <kafka.version>3.7.1</kafka.version>
     <debezium.version>2.6.1.Final</debezium.version>
     <jib.version>3.4.4</jib.version>
-    <quarkus.version>3.8.4</quarkus.version>
+    <quarkus.version>3.10.2</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
     <palantirJavaFormat.version>2.38.0</palantirJavaFormat.version>

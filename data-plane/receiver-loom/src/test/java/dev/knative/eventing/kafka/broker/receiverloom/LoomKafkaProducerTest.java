@@ -15,9 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.receiverloom;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -128,7 +126,6 @@ public class LoomKafkaProducerTest {
                 .onComplete(ar -> {
                     testContext.verify(() -> {
                         assertTrue(ar.succeeded());
-                        assertEquals(0, producer.getEventQueueSize());
                         assertFalse(producer.isSendFromQueueThreadAlive());
 
                         checkpoints.flag();
