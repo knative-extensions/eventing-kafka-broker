@@ -106,7 +106,8 @@ public abstract class AbstractDataPlaneTest {
 
     static {
         assertThat(PATH_SERVICE_1).isNotEqualTo(PATH_SERVICE_2);
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     private static File dataDir;

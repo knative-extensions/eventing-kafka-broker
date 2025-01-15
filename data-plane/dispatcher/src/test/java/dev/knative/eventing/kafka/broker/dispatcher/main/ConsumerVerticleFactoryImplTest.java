@@ -52,7 +52,8 @@ import org.junit.jupiter.api.Test;
 public class ConsumerVerticleFactoryImplTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     @Test
