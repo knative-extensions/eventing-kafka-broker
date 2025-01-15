@@ -58,7 +58,8 @@ import org.slf4j.LoggerFactory;
 public class UnorderedConsumerTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerTest.class);

@@ -50,7 +50,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class IngressProducerReconcilableStoreTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     @Test
