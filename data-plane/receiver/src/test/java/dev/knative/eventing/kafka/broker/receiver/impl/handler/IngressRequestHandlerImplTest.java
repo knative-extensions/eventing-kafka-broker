@@ -32,8 +32,8 @@ import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.EventPolicy;
 import io.cloudevents.CloudEvent;
 import io.fabric8.kubernetes.client.informers.cache.Lister;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -50,9 +50,11 @@ import org.junit.jupiter.api.Test;
 public class IngressRequestHandlerImplTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions()
-                .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-                .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions()
+                        .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+                        .setRegistryName(Metrics.METRICS_REGISTRY_NAME),
+                null);
     }
 
     @Test
