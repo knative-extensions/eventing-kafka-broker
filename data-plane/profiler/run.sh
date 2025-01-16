@@ -136,7 +136,7 @@ java \
 dispatcher_pid=$!
 
 # Download Sacura
-GO111MODULE=off go get github.com/pierdipi/sacura/cmd/sacura || exit 1
+GO111MODULE=off go install github.com/pierdipi/sacura/cmd/sacura@main || exit 1
 
 # Suppress failure since it fails when it doesn't receive all events.
 echo "Warm up $(date)"
