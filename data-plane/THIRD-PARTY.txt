@@ -1,5 +1,5 @@
 
-Lists of 245 third-party dependencies.
+Lists of 251 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.5.16 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.5.16 - http://logback.qos.ch/logback-core)
      (Apache License 2.0) brotli4j (com.aayushatharva.brotli4j:brotli4j:1.16.0 - https://github.com/hyperxpro/Brotli4j/brotli4j)
@@ -106,6 +106,7 @@ Lists of 245 third-party dependencies.
      (The Apache Software License, Version 2.0) micrometer-core (io.micrometer:micrometer-core:1.13.5 - https://github.com/micrometer-metrics/micrometer)
      (The Apache Software License, Version 2.0) micrometer-observation (io.micrometer:micrometer-observation:1.13.5 - https://github.com/micrometer-metrics/micrometer)
      (The Apache Software License, Version 2.0) micrometer-registry-prometheus (io.micrometer:micrometer-registry-prometheus:1.13.5 - https://github.com/micrometer-metrics/micrometer)
+     (The Apache Software License, Version 2.0) micrometer-registry-prometheus-simpleclient (io.micrometer:micrometer-registry-prometheus-simpleclient:1.13.5 - https://github.com/micrometer-metrics/micrometer)
      (Apache License, Version 2.0) Netty/Buffer (io.netty:netty-buffer:4.1.115.Final - https://netty.io/netty-buffer/)
      (Apache License, Version 2.0) Netty/Codec (io.netty:netty-codec:4.1.115.Final - https://netty.io/netty-codec/)
      (Apache License, Version 2.0) Netty/Codec/DNS (io.netty:netty-codec-dns:4.1.115.Final - https://netty.io/netty-codec-dns/)
@@ -142,6 +143,11 @@ Lists of 245 third-party dependencies.
      (The Apache Software License, Version 2.0) Prometheus Metrics Model (io.prometheus:prometheus-metrics-model:1.2.1 - http://github.com/prometheus/client_java/prometheus-metrics-model)
      (The Apache Software License, Version 2.0) Shaded Protobuf (io.prometheus:prometheus-metrics-shaded-protobuf:1.2.1 - http://github.com/prometheus/client_java/prometheus-metrics-shaded-dependencies/prometheus-metrics-shaded-protobuf)
      (The Apache Software License, Version 2.0) Prometheus Metrics Tracer Common (io.prometheus:prometheus-metrics-tracer-common:1.2.1 - http://github.com/prometheus/client_java/prometheus-metrics-tracer/prometheus-metrics-tracer-common)
+     (The Apache Software License, Version 2.0) Prometheus Java Simpleclient (io.prometheus:simpleclient:0.16.0 - http://github.com/prometheus/client_java/simpleclient)
+     (The Apache Software License, Version 2.0) Prometheus Java Simpleclient Common (io.prometheus:simpleclient_common:0.16.0 - http://github.com/prometheus/client_java/simpleclient_common)
+     (The Apache Software License, Version 2.0) Prometheus Java Span Context Supplier - Common (io.prometheus:simpleclient_tracer_common:0.16.0 - http://github.com/prometheus/client_java/simpleclient_tracer/simpleclient_tracer_common)
+     (The Apache Software License, Version 2.0) Prometheus Java Span Context Supplier - OpenTelemetry (io.prometheus:simpleclient_tracer_otel:0.16.0 - http://github.com/prometheus/client_java/simpleclient_tracer/simpleclient_tracer_otel)
+     (The Apache Software License, Version 2.0) Prometheus Java Span Context Supplier - OpenTelemetry Agent (io.prometheus:simpleclient_tracer_otel_agent:0.16.0 - http://github.com/prometheus/client_java/simpleclient_tracer/simpleclient_tracer_otel_agent)
      (The Apache Software License, Version 2.0) Quarkus - ArC - Runtime (io.quarkus:quarkus-arc:3.15.3 - https://github.com/quarkusio/quarkus)
      (Apache License, Version 2.0) Quarkus - Bootstrap - Runner (io.quarkus:quarkus-bootstrap-runner:3.15.3 - https://github.com/quarkusio/quarkus)
      (Apache License, Version 2.0) Quarkus - Bootstrap - Classloader common utilities (io.quarkus:quarkus-classloader-commons:3.15.3 - https://github.com/quarkusio/quarkus)
