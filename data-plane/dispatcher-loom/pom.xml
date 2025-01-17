@@ -79,7 +79,7 @@
         <version>${jib.version}</version>
         <configuration>
           <from>
-            <image>docker.io/library/eclipse-temurin:21-jre</image>
+            <image>registry.access.redhat.com/ubi9/openjdk-21-runtime</image>
             <platforms>
               <platform>
                 <architecture>amd64</architecture>
