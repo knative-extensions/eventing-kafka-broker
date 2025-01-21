@@ -28,6 +28,7 @@ import (
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
@@ -41,6 +42,7 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	bindingsv1beta1.AddToScheme,
 	eventingv1alpha1.AddToScheme,
 	internalv1alpha1.AddToScheme,
+	messagingv1.AddToScheme,
 	messagingv1beta1.AddToScheme,
 	sourcesv1.AddToScheme,
 	sourcesv1beta1.AddToScheme,
