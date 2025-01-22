@@ -632,7 +632,7 @@ spec:
       conversionReviewVersions: ["v1", "v1beta1"]
       clientConfig:
         service:
-          name: kafka-webhook
+          name: kafka-webhook-eventing
           namespace: knative-eventing
 
 ---
