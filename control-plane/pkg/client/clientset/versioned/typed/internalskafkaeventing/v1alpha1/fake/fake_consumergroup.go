@@ -42,22 +42,24 @@ var consumergroupsKind = v1alpha1.SchemeGroupVersion.WithKind("ConsumerGroup")
 
 // Get takes name of the consumerGroup, and returns the corresponding consumerGroup object, and an error if there is any.
 func (c *FakeConsumerGroups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ConsumerGroup, err error) {
+	emptyResult := &v1alpha1.ConsumerGroup{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(consumergroupsResource, c.ns, name), &v1alpha1.ConsumerGroup{})
+		Invokes(testing.NewGetActionWithOptions(consumergroupsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ConsumerGroup), err
 }
 
 // List takes label and field selectors, and returns the list of ConsumerGroups that match those selectors.
 func (c *FakeConsumerGroups) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ConsumerGroupList, err error) {
+	emptyResult := &v1alpha1.ConsumerGroupList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(consumergroupsResource, consumergroupsKind, c.ns, opts), &v1alpha1.ConsumerGroupList{})
+		Invokes(testing.NewListActionWithOptions(consumergroupsResource, consumergroupsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -76,40 +78,43 @@ func (c *FakeConsumerGroups) List(ctx context.Context, opts v1.ListOptions) (res
 // Watch returns a watch.Interface that watches the requested consumerGroups.
 func (c *FakeConsumerGroups) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(consumergroupsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(consumergroupsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a consumerGroup and creates it.  Returns the server's representation of the consumerGroup, and an error, if there is any.
 func (c *FakeConsumerGroups) Create(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.CreateOptions) (result *v1alpha1.ConsumerGroup, err error) {
+	emptyResult := &v1alpha1.ConsumerGroup{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(consumergroupsResource, c.ns, consumerGroup), &v1alpha1.ConsumerGroup{})
+		Invokes(testing.NewCreateActionWithOptions(consumergroupsResource, c.ns, consumerGroup, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ConsumerGroup), err
 }
 
 // Update takes the representation of a consumerGroup and updates it. Returns the server's representation of the consumerGroup, and an error, if there is any.
 func (c *FakeConsumerGroups) Update(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.UpdateOptions) (result *v1alpha1.ConsumerGroup, err error) {
+	emptyResult := &v1alpha1.ConsumerGroup{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(consumergroupsResource, c.ns, consumerGroup), &v1alpha1.ConsumerGroup{})
+		Invokes(testing.NewUpdateActionWithOptions(consumergroupsResource, c.ns, consumerGroup, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ConsumerGroup), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeConsumerGroups) UpdateStatus(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.UpdateOptions) (*v1alpha1.ConsumerGroup, error) {
+func (c *FakeConsumerGroups) UpdateStatus(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.UpdateOptions) (result *v1alpha1.ConsumerGroup, err error) {
+	emptyResult := &v1alpha1.ConsumerGroup{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(consumergroupsResource, "status", c.ns, consumerGroup), &v1alpha1.ConsumerGroup{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(consumergroupsResource, "status", c.ns, consumerGroup, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ConsumerGroup), err
 }
@@ -124,7 +129,7 @@ func (c *FakeConsumerGroups) Delete(ctx context.Context, name string, opts v1.De
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeConsumerGroups) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(consumergroupsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(consumergroupsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ConsumerGroupList{})
 	return err
@@ -132,33 +137,36 @@ func (c *FakeConsumerGroups) DeleteCollection(ctx context.Context, opts v1.Delet
 
 // Patch applies the patch and returns the patched consumerGroup.
 func (c *FakeConsumerGroups) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ConsumerGroup, err error) {
+	emptyResult := &v1alpha1.ConsumerGroup{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(consumergroupsResource, c.ns, name, pt, data, subresources...), &v1alpha1.ConsumerGroup{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(consumergroupsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ConsumerGroup), err
 }
 
 // GetScale takes name of the consumerGroup, and returns the corresponding scale object, and an error if there is any.
 func (c *FakeConsumerGroups) GetScale(ctx context.Context, consumerGroupName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(consumergroupsResource, c.ns, "scale", consumerGroupName), &autoscalingv1.Scale{})
+		Invokes(testing.NewGetSubresourceActionWithOptions(consumergroupsResource, c.ns, "scale", consumerGroupName, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
 func (c *FakeConsumerGroups) UpdateScale(ctx context.Context, consumerGroupName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(consumergroupsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(consumergroupsResource, "scale", c.ns, scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
