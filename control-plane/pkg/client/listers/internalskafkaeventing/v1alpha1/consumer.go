@@ -19,8 +19,8 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 )
@@ -38,25 +38,17 @@ type ConsumerLister interface {
 
 // consumerLister implements the ConsumerLister interface.
 type consumerLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.Consumer]
 }
 
 // NewConsumerLister returns a new ConsumerLister.
 func NewConsumerLister(indexer cache.Indexer) ConsumerLister {
-	return &consumerLister{indexer: indexer}
-}
-
-// List lists all Consumers in the indexer.
-func (s *consumerLister) List(selector labels.Selector) (ret []*v1alpha1.Consumer, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Consumer))
-	})
-	return ret, err
+	return &consumerLister{listers.New[*v1alpha1.Consumer](indexer, v1alpha1.Resource("consumer"))}
 }
 
 // Consumers returns an object that can list and get Consumers.
 func (s *consumerLister) Consumers(namespace string) ConsumerNamespaceLister {
-	return consumerNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return consumerNamespaceLister{listers.NewNamespaced[*v1alpha1.Consumer](s.ResourceIndexer, namespace)}
 }
 
 // ConsumerNamespaceLister helps list and get Consumers.
@@ -74,26 +66,5 @@ type ConsumerNamespaceLister interface {
 // consumerNamespaceLister implements the ConsumerNamespaceLister
 // interface.
 type consumerNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Consumers in the indexer for a given namespace.
-func (s consumerNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.Consumer, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Consumer))
-	})
-	return ret, err
-}
-
-// Get retrieves the Consumer from the indexer for a given namespace and name.
-func (s consumerNamespaceLister) Get(name string) (*v1alpha1.Consumer, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("consumer"), name)
-	}
-	return obj.(*v1alpha1.Consumer), nil
+	listers.ResourceIndexer[*v1alpha1.Consumer]
 }
