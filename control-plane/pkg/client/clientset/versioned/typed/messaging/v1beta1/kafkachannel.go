@@ -20,12 +20,11 @@ package v1beta1
 
 import (
 	"context"
-	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
@@ -40,6 +39,7 @@ type KafkaChannelsGetter interface {
 type KafkaChannelInterface interface {
 	Create(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.CreateOptions) (*v1beta1.KafkaChannel, error)
 	Update(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.UpdateOptions) (*v1beta1.KafkaChannel, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 	UpdateStatus(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.UpdateOptions) (*v1beta1.KafkaChannel, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
@@ -52,144 +52,18 @@ type KafkaChannelInterface interface {
 
 // kafkaChannels implements KafkaChannelInterface
 type kafkaChannels struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*v1beta1.KafkaChannel, *v1beta1.KafkaChannelList]
 }
 
 // newKafkaChannels returns a KafkaChannels
 func newKafkaChannels(c *MessagingV1beta1Client, namespace string) *kafkaChannels {
 	return &kafkaChannels{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*v1beta1.KafkaChannel, *v1beta1.KafkaChannelList](
+			"kafkachannels",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1beta1.KafkaChannel { return &v1beta1.KafkaChannel{} },
+			func() *v1beta1.KafkaChannelList { return &v1beta1.KafkaChannelList{} }),
 	}
-}
-
-// Get takes name of the kafkaChannel, and returns the corresponding kafkaChannel object, and an error if there is any.
-func (c *kafkaChannels) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.KafkaChannel, err error) {
-	result = &v1beta1.KafkaChannel{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of KafkaChannels that match those selectors.
-func (c *kafkaChannels) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.KafkaChannelList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1beta1.KafkaChannelList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested kafkaChannels.
-func (c *kafkaChannels) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a kafkaChannel and creates it.  Returns the server's representation of the kafkaChannel, and an error, if there is any.
-func (c *kafkaChannels) Create(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.CreateOptions) (result *v1beta1.KafkaChannel, err error) {
-	result = &v1beta1.KafkaChannel{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(kafkaChannel).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a kafkaChannel and updates it. Returns the server's representation of the kafkaChannel, and an error, if there is any.
-func (c *kafkaChannels) Update(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.UpdateOptions) (result *v1beta1.KafkaChannel, err error) {
-	result = &v1beta1.KafkaChannel{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		Name(kafkaChannel.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(kafkaChannel).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *kafkaChannels) UpdateStatus(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.UpdateOptions) (result *v1beta1.KafkaChannel, err error) {
-	result = &v1beta1.KafkaChannel{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		Name(kafkaChannel.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(kafkaChannel).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the kafkaChannel and deletes it. Returns an error if one occurs.
-func (c *kafkaChannels) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *kafkaChannels) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched kafkaChannel.
-func (c *kafkaChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.KafkaChannel, err error) {
-	result = &v1beta1.KafkaChannel{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("kafkachannels").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

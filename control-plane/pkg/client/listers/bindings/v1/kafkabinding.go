@@ -19,8 +19,8 @@
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 )
@@ -38,25 +38,17 @@ type KafkaBindingLister interface {
 
 // kafkaBindingLister implements the KafkaBindingLister interface.
 type kafkaBindingLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.KafkaBinding]
 }
 
 // NewKafkaBindingLister returns a new KafkaBindingLister.
 func NewKafkaBindingLister(indexer cache.Indexer) KafkaBindingLister {
-	return &kafkaBindingLister{indexer: indexer}
-}
-
-// List lists all KafkaBindings in the indexer.
-func (s *kafkaBindingLister) List(selector labels.Selector) (ret []*v1.KafkaBinding, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.KafkaBinding))
-	})
-	return ret, err
+	return &kafkaBindingLister{listers.New[*v1.KafkaBinding](indexer, v1.Resource("kafkabinding"))}
 }
 
 // KafkaBindings returns an object that can list and get KafkaBindings.
 func (s *kafkaBindingLister) KafkaBindings(namespace string) KafkaBindingNamespaceLister {
-	return kafkaBindingNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return kafkaBindingNamespaceLister{listers.NewNamespaced[*v1.KafkaBinding](s.ResourceIndexer, namespace)}
 }
 
 // KafkaBindingNamespaceLister helps list and get KafkaBindings.
@@ -74,26 +66,5 @@ type KafkaBindingNamespaceLister interface {
 // kafkaBindingNamespaceLister implements the KafkaBindingNamespaceLister
 // interface.
 type kafkaBindingNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all KafkaBindings in the indexer for a given namespace.
-func (s kafkaBindingNamespaceLister) List(selector labels.Selector) (ret []*v1.KafkaBinding, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.KafkaBinding))
-	})
-	return ret, err
-}
-
-// Get retrieves the KafkaBinding from the indexer for a given namespace and name.
-func (s kafkaBindingNamespaceLister) Get(name string) (*v1.KafkaBinding, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("kafkabinding"), name)
-	}
-	return obj.(*v1.KafkaBinding), nil
+	listers.ResourceIndexer[*v1.KafkaBinding]
 }
