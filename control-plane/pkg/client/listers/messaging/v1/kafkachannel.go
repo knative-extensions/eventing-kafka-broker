@@ -19,8 +19,8 @@
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
 )
@@ -38,25 +38,17 @@ type KafkaChannelLister interface {
 
 // kafkaChannelLister implements the KafkaChannelLister interface.
 type kafkaChannelLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.KafkaChannel]
 }
 
 // NewKafkaChannelLister returns a new KafkaChannelLister.
 func NewKafkaChannelLister(indexer cache.Indexer) KafkaChannelLister {
-	return &kafkaChannelLister{indexer: indexer}
-}
-
-// List lists all KafkaChannels in the indexer.
-func (s *kafkaChannelLister) List(selector labels.Selector) (ret []*v1.KafkaChannel, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.KafkaChannel))
-	})
-	return ret, err
+	return &kafkaChannelLister{listers.New[*v1.KafkaChannel](indexer, v1.Resource("kafkachannel"))}
 }
 
 // KafkaChannels returns an object that can list and get KafkaChannels.
 func (s *kafkaChannelLister) KafkaChannels(namespace string) KafkaChannelNamespaceLister {
-	return kafkaChannelNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return kafkaChannelNamespaceLister{listers.NewNamespaced[*v1.KafkaChannel](s.ResourceIndexer, namespace)}
 }
 
 // KafkaChannelNamespaceLister helps list and get KafkaChannels.
@@ -74,26 +66,5 @@ type KafkaChannelNamespaceLister interface {
 // kafkaChannelNamespaceLister implements the KafkaChannelNamespaceLister
 // interface.
 type kafkaChannelNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all KafkaChannels in the indexer for a given namespace.
-func (s kafkaChannelNamespaceLister) List(selector labels.Selector) (ret []*v1.KafkaChannel, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.KafkaChannel))
-	})
-	return ret, err
-}
-
-// Get retrieves the KafkaChannel from the indexer for a given namespace and name.
-func (s kafkaChannelNamespaceLister) Get(name string) (*v1.KafkaChannel, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("kafkachannel"), name)
-	}
-	return obj.(*v1.KafkaChannel), nil
+	listers.ResourceIndexer[*v1.KafkaChannel]
 }
