@@ -21,14 +21,46 @@ import (
 	"fmt"
 
 	"knative.dev/pkg/apis"
+
+	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
 )
 
 // ConvertTo implements apis.Convertible
-func (channel *KafkaChannel) ConvertTo(_ context.Context, sink apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", sink)
+func (channel *KafkaChannel) ConvertTo(_ context.Context, to apis.Convertible) error {
+	switch sink := to.(type) {
+	case *v1.KafkaChannel:
+		channel.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		sink.Spec = v1.KafkaChannelSpec{
+			NumPartitions:     channel.Spec.NumPartitions,
+			ReplicationFactor: channel.Spec.ReplicationFactor,
+			RetentionDuration: channel.Spec.RetentionDuration,
+			ChannelableSpec:   *channel.Spec.ChannelableSpec.DeepCopy(),
+		}
+		sink.Status = v1.KafkaChannelStatus{
+			ChannelableStatus: *channel.Status.ChannelableStatus.DeepCopy(),
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown version, got: %T", sink)
+	}
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaChannel) ConvertFrom(_ context.Context, channel apis.Convertible) error {
-	return fmt.Errorf("v1beta1 is the highest known version, got: %T", channel)
+func (sink *KafkaChannel) ConvertFrom(_ context.Context, from apis.Convertible) error {
+	switch channel := from.(type) {
+	case *v1.KafkaChannel:
+		channel.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		sink.Spec = KafkaChannelSpec{
+			NumPartitions:     channel.Spec.NumPartitions,
+			ReplicationFactor: channel.Spec.ReplicationFactor,
+			RetentionDuration: channel.Spec.RetentionDuration,
+			ChannelableSpec:   *channel.Spec.ChannelableSpec.DeepCopy(),
+		}
+		sink.Status = KafkaChannelStatus{
+			ChannelableStatus: *channel.Status.ChannelableStatus.DeepCopy(),
+		}
+		return nil
+	default:
+		return fmt.Errorf("unknown version, got: %T", channel)
+	}
 }

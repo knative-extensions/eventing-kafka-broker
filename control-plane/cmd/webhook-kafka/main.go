@@ -37,6 +37,7 @@ import (
 	eventingcorev1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 
+	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
 	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
@@ -57,6 +58,7 @@ var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):    &sourcesv1beta1.KafkaSource{},
 	sourcesv1.SchemeGroupVersion.WithKind("KafkaSource"):         &sourcesv1.KafkaSource{},
 	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1beta1.KafkaChannel{},
+	messagingv1.SchemeGroupVersion.WithKind("KafkaChannel"):      &messagingv1.KafkaChannel{},
 	eventingcorev1.SchemeGroupVersion.WithKind("Broker"):         &eventingv1.BrokerStub{},
 	kafkainternals.SchemeGroupVersion.WithKind("ConsumerGroup"):  &kafkainternals.ConsumerGroup{},
 	kafkainternals.SchemeGroupVersion.WithKind("Consumer"):       &kafkainternals.Consumer{},
@@ -166,6 +168,14 @@ func NewConversionController(ctx context.Context, _ configmap.Watcher) *controll
 				Zygotes: map[string]conversion.ConvertibleObject{
 					sourcesv1beta1.SchemeGroupVersion.Version: &sourcesv1beta1.KafkaSource{},
 					sourcesv1.SchemeGroupVersion.Version:      &sourcesv1.KafkaSource{},
+				},
+			},
+			messagingv1.Kind("KafkaChannel"): {
+				DefinitionName: "kafkachannels.messaging.knative.dev",
+				HubVersion:     messagingv1beta1.SchemeGroupVersion.Version,
+				Zygotes: map[string]conversion.ConvertibleObject{
+					messagingv1beta1.SchemeGroupVersion.Version: &messagingv1beta1.KafkaChannel{},
+					messagingv1.SchemeGroupVersion.Version:      &messagingv1.KafkaChannel{},
 				},
 			},
 		},
