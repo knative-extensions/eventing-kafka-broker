@@ -24,7 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	testlib "knative.dev/eventing/test/lib"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
@@ -37,7 +37,8 @@ import (
 )
 
 const (
-	sinkSecretName = "secret-test"
+	sinkSecretName       = "secret-test"
+	numPartitions  int32 = 10
 )
 
 func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
@@ -59,10 +60,10 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 
 		kss := eventingv1alpha1.KafkaSinkSpec{
 			Topic:             "kafka-sink-" + client.Namespace,
-			NumPartitions:     pointer.Int32(10),
+			NumPartitions:     ptr.To(numPartitions),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
 			BootstrapServers:  BootstrapServersPlaintextArr,
-			ContentMode:       pointer.String(mode),
+			ContentMode:       ptr.To(mode),
 		}
 		for _, opt := range opts {
 			require.Nil(t, opt(&kss))
