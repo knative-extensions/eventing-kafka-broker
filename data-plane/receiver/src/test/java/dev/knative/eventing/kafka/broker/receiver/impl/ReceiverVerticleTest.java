@@ -50,8 +50,8 @@ import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -111,9 +111,11 @@ public class ReceiverVerticleTest {
     private static IngressProducerReconcilableStore store;
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions()
-                .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-                .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions()
+                        .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+                        .setRegistryName(Metrics.METRICS_REGISTRY_NAME),
+                null);
     }
 
     private PrometheusMeterRegistry registry;

@@ -32,8 +32,8 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.micrometer.core.instrument.Tags;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -59,9 +59,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class WebClientCloudEventSenderTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions()
-                .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-                .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions()
+                        .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+                        .setRegistryName(Metrics.METRICS_REGISTRY_NAME),
+                null);
     }
 
     @Test
