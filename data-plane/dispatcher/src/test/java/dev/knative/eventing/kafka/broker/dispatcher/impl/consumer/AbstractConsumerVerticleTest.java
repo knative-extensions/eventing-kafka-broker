@@ -62,7 +62,8 @@ public abstract class AbstractConsumerVerticleTest {
     private static final ConsumerVerticleContext resourceContext = FakeConsumerVerticleContext.get();
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     @Test
