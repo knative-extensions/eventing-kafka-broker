@@ -82,7 +82,8 @@ public abstract class ReceiverVerticleTracingTest {
     private IngressProducerReconcilableStore store;
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     public abstract ReactiveKafkaProducer<String, CloudEvent> createKafkaProducer(
