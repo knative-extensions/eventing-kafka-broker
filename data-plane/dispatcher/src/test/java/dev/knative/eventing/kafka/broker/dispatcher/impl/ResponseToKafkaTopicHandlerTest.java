@@ -52,7 +52,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public class ResponseToKafkaTopicHandlerTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
     private static final String TOPIC = "t1";
