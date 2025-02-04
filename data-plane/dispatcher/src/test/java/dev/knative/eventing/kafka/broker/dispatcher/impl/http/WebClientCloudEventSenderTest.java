@@ -59,9 +59,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class WebClientCloudEventSenderTest {
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions()
-                .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-                .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions()
+                        .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+                        .setRegistryName(Metrics.METRICS_REGISTRY_NAME),
+                null);
     }
 
     @Test

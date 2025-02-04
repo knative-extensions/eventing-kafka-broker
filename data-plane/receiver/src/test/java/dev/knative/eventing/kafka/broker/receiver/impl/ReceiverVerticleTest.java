@@ -111,9 +111,11 @@ public class ReceiverVerticleTest {
     private static IngressProducerReconcilableStore store;
 
     static {
-        BackendRegistries.setupBackend(new MicrometerMetricsOptions()
-                .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
-                .setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+        BackendRegistries.setupBackend(
+                new MicrometerMetricsOptions()
+                        .setMicrometerRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+                        .setRegistryName(Metrics.METRICS_REGISTRY_NAME),
+                null);
     }
 
     private PrometheusMeterRegistry registry;
