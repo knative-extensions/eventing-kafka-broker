@@ -22,6 +22,8 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	brokerconfigmap "knative.dev/eventing-kafka-broker/test/rekt/resources/configmap/broker"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkaauthsecret"
 
 	"knative.dev/eventing/test/rekt/resources/trigger"
 
@@ -55,7 +57,7 @@ import (
 )
 
 func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {
-	f := feature.NewFeatureNamed("KafkaSourceScalesToZeroWithKeda")
+	f := feature.NewFeature()
 
 	// we need to ensure that autoscaling is enabled for the rest of the feature to work
 	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
@@ -93,7 +95,7 @@ func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {
 }
 
 func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
-	f := feature.NewFeatureNamed("KafkaSourceScalesToZeroWithKeda")
+	f := feature.NewFeature()
 
 	// we need to ensure that autoscaling is enabled for the rest of the feature to work
 	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
@@ -142,6 +144,44 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	return f
 }
 
+func KafkaSourceSASLScalesToZeroWithKeda() *feature.Feature {
+	f := feature.NewFeature()
+
+	// we need to ensure that autoscaling is enabled for the rest of the feature to work
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
+	sourceCfg := kafkaSourceConfig{
+		sourceName: feature.MakeRandomK8sName("kafka-source"),
+		authMech:   SASLMech,
+		topic:      feature.MakeRandomK8sName("kafka-source-keda-sasl"),
+	}
+	sinkCfg := kafkaSinkConfig{
+		sinkName: feature.MakeRandomK8sName("kafka-sink"),
+	}
+	sinkName, receiver := KafkaSourceFeatureSetup(f, sourceCfg, sinkCfg)
+
+	sender := feature.MakeRandomK8sName("eventshub-sender")
+
+	event := cetest.FullEvent()
+	event.SetID(uuid.New().String())
+
+	// check that the source initially has replicas = 0
+	f.Setup("Source should start with replicas = 0", verifyConsumerGroupReplicas(getKafkaSourceCg(sourceCfg.sourceName), 0, true))
+
+	options := []eventshub.EventsHubOption{
+		eventshub.StartSenderToResource(kafkasink.GVR(), sinkName),
+		eventshub.InputEvent(event),
+	}
+	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
+
+	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(test.HasId(event.ID())).Exact(1))
+
+	// after the event is sent, the source should scale down to zero replicas
+	f.Alpha("KafkaSource").Must("Scale down to zero", verifyConsumerGroupReplicas(getKafkaSourceCg(sourceCfg.sourceName), 0, false))
+
+	return f
+}
+
 func TriggerScalesToZeroWithKeda() *feature.Feature {
 	f := feature.NewFeature()
 
@@ -156,6 +196,98 @@ func TriggerScalesToZeroWithKeda() *feature.Feature {
 
 	// check that the trigger initially has replicas = 0
 	f.Setup("Trigger should start with replicas = 0", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, true))
+
+	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
+	f.Setup("install broker", broker.Install(brokerName))
+	f.Setup("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sinkName), "")))
+
+	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
+
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+
+	//after the event is sent, the trigger should scale down to zero replicas
+	f.Alpha("Trigger").Must("Scale down to zero", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, false))
+
+	return f
+}
+
+func TriggerSASLScalesToZeroWithKeda() *feature.Feature {
+	f := feature.NewFeature()
+
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
+	event := cetest.FullEvent()
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	triggerName := feature.MakeRandomK8sName("trigger")
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+	brokerConfigName := feature.MakeRandomK8sName("brokercfg")
+	authSecretName := feature.MakeRandomK8sName("kafkaauth")
+
+	// check that the trigger initially has replicas = 0
+	f.Setup("Trigger should start with replicas = 0", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, true))
+
+	f.Setup("Create auth secret", func(ctx context.Context, t feature.T) {
+		kafkaauthsecret.Install(authSecretName, kafkaauthsecret.WithSslSaslScram512Data(ctx))(ctx, t)
+	})
+
+	f.Setup("Create broker config", brokerconfigmap.Install(brokerConfigName,
+		brokerconfigmap.WithNumPartitions(3),
+		brokerconfigmap.WithReplicationFactor(3),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersSslSaslScram),
+		brokerconfigmap.WithAuthSecret(authSecretName)))
+
+	f.Setup("Install broker", broker.Install(brokerName, append(
+		broker.WithEnvConfig(),
+		broker.WithConfig(brokerConfigName))...,
+	))
+
+	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
+	f.Setup("install broker", broker.Install(brokerName))
+	f.Setup("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sinkName), "")))
+
+	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
+
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+
+	//after the event is sent, the trigger should scale down to zero replicas
+	f.Alpha("Trigger").Must("Scale down to zero", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, false))
+
+	return f
+}
+
+func TriggerSSLScalesToZeroWithKeda() *feature.Feature {
+	f := feature.NewFeature()
+
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
+	event := cetest.FullEvent()
+
+	brokerName := feature.MakeRandomK8sName("broker")
+	triggerName := feature.MakeRandomK8sName("trigger")
+	sourceName := feature.MakeRandomK8sName("source")
+	sinkName := feature.MakeRandomK8sName("sink")
+	brokerConfigName := feature.MakeRandomK8sName("brokercfg")
+	authSecretName := feature.MakeRandomK8sName("kafkaauth")
+
+	// check that the trigger initially has replicas = 0
+	f.Setup("Trigger should start with replicas = 0", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, true))
+
+	f.Setup("Create auth secret", func(ctx context.Context, t feature.T) {
+		kafkaauthsecret.Install(authSecretName, kafkaauthsecret.WithSslData(ctx))(ctx, t)
+	})
+
+	f.Setup("Create broker config", brokerconfigmap.Install(brokerConfigName,
+		brokerconfigmap.WithNumPartitions(3),
+		brokerconfigmap.WithReplicationFactor(3),
+		brokerconfigmap.WithBootstrapServer(testpkg.BootstrapServersSsl),
+		brokerconfigmap.WithAuthSecret(authSecretName)))
+
+	f.Setup("Install broker", broker.Install(brokerName, append(
+		broker.WithEnvConfig(),
+		broker.WithConfig(brokerConfigName))...,
+	))
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 	f.Setup("install broker", broker.Install(brokerName))
