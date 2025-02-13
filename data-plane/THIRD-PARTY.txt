@@ -1,5 +1,5 @@
 
-Lists of 249 third-party dependencies.
+Lists of 248 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.5.16 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.5.16 - http://logback.qos.ch/logback-core)
      (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.18.2 - https://github.com/FasterXML/jackson)
@@ -30,7 +30,6 @@ Lists of 249 third-party dependencies.
      (Apache License 2.0) Metrics Core Library (com.yammer.metrics:metrics-core:2.2.0 - http://metrics.codahale.com/metrics-core/)
      (Apache License, Version 2.0) Apache Commons BeanUtils (commons-beanutils:commons-beanutils:1.9.4 - https://commons.apache.org/proper/commons-beanutils/)
      (Apache License, Version 2.0) Apache Commons CLI (commons-cli:commons-cli:1.4 - http://commons.apache.org/proper/commons-cli/)
-     (Apache-2.0) Apache Commons Codec (commons-codec:commons-codec:1.17.0 - https://commons.apache.org/proper/commons-codec/)
      (Apache-2.0) Apache Commons Codec (commons-codec:commons-codec:1.17.2 - https://commons.apache.org/proper/commons-codec/)
      (Apache License, Version 2.0) Apache Commons Collections (commons-collections:commons-collections:3.2.2 - http://commons.apache.org/collections/)
      (The Apache Software License, Version 2.0) Commons Digester (commons-digester:commons-digester:2.1 - http://commons.apache.org/digester/)
