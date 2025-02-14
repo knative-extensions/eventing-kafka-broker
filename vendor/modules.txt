@@ -468,7 +468,7 @@ golang.org/x/net/trace
 ## explicit; go 1.18
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.10.0
+# golang.org/x/sync v0.11.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
@@ -591,7 +591,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.36.4
+# google.golang.org/protobuf v1.36.5
 ## explicit; go 1.21
 google.golang.org/protobuf/encoding/protodelim
 google.golang.org/protobuf/encoding/protojson
@@ -1155,9 +1155,6 @@ k8s.io/code-generator/pkg/util
 k8s.io/code-generator/third_party/forked/golang/reflect
 # k8s.io/gengo v0.0.0-20240404160639-a0386bf69313
 ## explicit; go 1.13
-k8s.io/gengo/args
-k8s.io/gengo/generator
-k8s.io/gengo/namer
 k8s.io/gengo/parser
 k8s.io/gengo/types
 # k8s.io/gengo/v2 v2.0.0-20240228010128-51d4e06bde70
@@ -1207,7 +1204,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.44.1-0.20250131074056-5fb693f5f65e
+# knative.dev/eventing v0.44.1-0.20250213150852-75195a587329
 ## explicit; go 1.22.7
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1391,7 +1388,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/sender
 # knative.dev/hack v0.0.0-20250128013659-5f7f0f50e9de
 ## explicit; go 1.21
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20250203163623-f62a97fc6ad4
+# knative.dev/pkg v0.0.0-20250211185550-c8bea7c326ff
 ## explicit; go 1.22.7
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1444,6 +1441,13 @@ knative.dev/pkg/client/injection/kube/informers/rbac/v1/clusterrolebinding
 knative.dev/pkg/codegen/cmd/injection-gen
 knative.dev/pkg/codegen/cmd/injection-gen/args
 knative.dev/pkg/codegen/cmd/injection-gen/generators
+knative.dev/pkg/codegen/cmd/injection-gen/generators/client
+knative.dev/pkg/codegen/cmd/injection-gen/generators/duck
+knative.dev/pkg/codegen/cmd/injection-gen/generators/factory
+knative.dev/pkg/codegen/cmd/injection-gen/generators/informers
+knative.dev/pkg/codegen/cmd/injection-gen/generators/reconciler
+knative.dev/pkg/codegen/cmd/injection-gen/namer
+knative.dev/pkg/codegen/cmd/injection-gen/tags
 knative.dev/pkg/configmap
 knative.dev/pkg/configmap/hash-gen
 knative.dev/pkg/configmap/informer
