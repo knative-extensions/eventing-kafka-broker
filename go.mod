@@ -28,16 +28,16 @@ require (
 	go.uber.org/atomic v1.10.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
-	google.golang.org/protobuf v1.36.4
+	google.golang.org/protobuf v1.36.5
 	k8s.io/api v0.31.4
 	k8s.io/apiextensions-apiserver v0.31.4
 	k8s.io/apimachinery v0.31.4
 	k8s.io/apiserver v0.31.4
 	k8s.io/client-go v0.31.4
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
-	knative.dev/eventing v0.44.1-0.20250131074056-5fb693f5f65e
+	knative.dev/eventing v0.44.1-0.20250213150852-75195a587329
 	knative.dev/hack v0.0.0-20250128013659-5f7f0f50e9de
-	knative.dev/pkg v0.0.0-20250203163623-f62a97fc6ad4
+	knative.dev/pkg v0.0.0-20250211185550-c8bea7c326ff
 	knative.dev/reconciler-test v0.0.0-20250129131157-3424ad806aa1
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.4.0
@@ -119,7 +119,7 @@ require (
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
