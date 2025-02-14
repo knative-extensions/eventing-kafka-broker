@@ -104,6 +104,21 @@ func WithSslSaslScram512Data(ctx context.Context) manifest.CfgFn {
 	})
 }
 
+// WithImplicitCASslSaslScram512Data same as WithSslSaslScram512Data but using an implicit CA configured in the control-plane and data-plane containers
+func WithImplicitCASslSaslScram512Data(ctx context.Context) manifest.CfgFn {
+	saslUserSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.SaslUserSecretName, metav1.GetOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	return secret.WithData(map[string][]byte{
+		"protocol":       []byte("SASL_SSL"),
+		"sasl.mechanism": []byte("SCRAM-SHA-512"),
+		"user":           []byte(pkg.SaslUserSecretName),
+		"password":       saslUserSecret.Data["password"],
+	})
+}
+
 func WithRestrictedSslSaslScram512Data(ctx context.Context) manifest.CfgFn {
 	caSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.CaSecretName, metav1.GetOptions{})
 	if err != nil {
