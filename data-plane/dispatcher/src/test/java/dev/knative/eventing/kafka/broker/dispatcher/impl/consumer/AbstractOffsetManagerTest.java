@@ -21,12 +21,15 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +47,9 @@ import org.assertj.core.api.MapAssert;
 public abstract class AbstractOffsetManagerTest {
 
     abstract RecordDispatcherListener createOffsetManager(
-            final Vertx vertx, final ReactiveKafkaConsumer<?, ?> consumer);
+            final Vertx vertx,
+            final ReactiveKafkaConsumer<?, ?> consumer,
+            Collection<TopicPartition> partitionsConsumed);
 
     protected static ConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
         return new ConsumerRecord<>(topic, partition, offset, null, null);
@@ -52,16 +57,25 @@ public abstract class AbstractOffsetManagerTest {
 
     protected MapAssert<TopicPartition, Long> assertThatOffsetCommitted(
             final Collection<TopicPartition> partitionsConsumed,
+            final long initialOffset,
             final Consumer<RecordDispatcherListener> testExecutor) {
         return assertThatOffsetCommittedWithFailures(
-                partitionsConsumed, (offsetStrategy, flag) -> testExecutor.accept(offsetStrategy));
+                partitionsConsumed, initialOffset, (offsetStrategy, flag) -> testExecutor.accept(offsetStrategy));
     }
 
     protected MapAssert<TopicPartition, Long> assertThatOffsetCommittedWithFailures(
             Collection<TopicPartition> partitionsConsumed,
+            final long initialOffset,
             BiConsumer<RecordDispatcherListener, AtomicBoolean> testExecutor) {
         final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.NONE);
         mockConsumer.assign(partitionsConsumed);
+        if (initialOffset > 0) {
+            mockConsumer.commitSync(
+                    partitionsConsumed.stream()
+                            .map(tp -> new AbstractMap.SimpleEntry<>(tp, new OffsetAndMetadata(initialOffset-1)))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            );
+        }
 
         // Funky flag to flip in order to induce a failure
         AtomicBoolean failureFlag = new AtomicBoolean(false);
@@ -79,7 +93,20 @@ public abstract class AbstractOffsetManagerTest {
                 .when(vertxConsumer)
                 .commit(any(Map.class));
 
-        final var offsetManager = createOffsetManager(Vertx.vertx(), vertxConsumer);
+        doAnswer(invocation -> {
+                    if (failureFlag.get()) {
+                        return Future.failedFuture("some failure");
+                    }
+                    // If you don't want to lose hours in debugging, please don't remove this FQCNs :)
+                    final Set<TopicPartition> topicsPartitions = invocation.getArgument(0);
+                    return Future.succeededFuture(mockConsumer.committed(topicsPartitions));
+                })
+                .when(vertxConsumer)
+                .committed(any(Set.class));
+
+        when(vertxConsumer.unwrap()).then((invocation) -> mockConsumer);
+
+        final var offsetManager = createOffsetManager(Vertx.vertx(), vertxConsumer, partitionsConsumed);
         testExecutor.accept(offsetManager, failureFlag);
 
         try {

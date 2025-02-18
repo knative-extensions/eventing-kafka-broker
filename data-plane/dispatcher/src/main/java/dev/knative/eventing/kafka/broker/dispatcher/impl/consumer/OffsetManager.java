@@ -27,6 +27,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     private final long timerId;
     private final Vertx vertx;
     private final PartitionRevokedHandler partitionRevokedHandler;
+    private final PartitionAssignedHandler partitionAssignedHandler;
 
     /**
      * All args constructor.
@@ -88,10 +90,43 @@ public final class OffsetManager implements RecordDispatcherListener {
                 logPartitions("revoked", partitions);
             }
         };
+
+        partitionAssignedHandler = partitions -> {
+            try {
+                logger.debug("Fetching committed offsets for partitions {}", keyValue("partitions", partitions));
+                final var committed = consumer.unwrap().committed(Set.of(partitions.toArray(new TopicPartition[0])));
+
+                logger.debug("Committed partitions {}", keyValue("committed", committed));
+
+                committed.forEach((tp, offset) -> {
+                    if (offset != null) {
+                        offsetTrackers.put(tp, new OffsetTracker(offset.offset() + 1));
+                    } else {
+                        offsetTrackers.put(tp, new OffsetTracker(0));
+                    }
+                });
+                // null will be returned for the partition if there is no such message, so walk through
+                // every assigned partition to set the offset tracker to 0 if wasn't set at by the committed
+                // forEach above.
+                partitions.forEach(tp -> {
+                    offsetTrackers.putIfAbsent(tp, new OffsetTracker(0));
+                });
+
+                logPartitions("assigned", partitions);
+                return Future.succeededFuture().mapEmpty();
+            } catch (final Exception ex) {
+                logger.warn("Failed to assign initial partitions offsets {}", keyValue("partitions", partitions), ex);
+                return Future.failedFuture(ex);
+            }
+        };
     }
 
     public PartitionRevokedHandler getPartitionRevokedHandler() {
         return partitionRevokedHandler;
+    }
+
+    public PartitionAssignedHandler getPartitionAssignedHandler() {
+        return partitionAssignedHandler;
     }
 
     /**
@@ -100,13 +135,7 @@ public final class OffsetManager implements RecordDispatcherListener {
      * @return
      */
     @Override
-    public void recordReceived(final ConsumerRecord<?, ?> record) {
-        final var tp = new TopicPartition(record.topic(), record.partition());
-        if (!offsetTrackers.containsKey(tp)) {
-            // Initialize offset tracker for the given record's topic/partition.
-            offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
-        }
-    }
+    public void recordReceived(final ConsumerRecord<?, ?> record) {}
 
     /**
      * {@inheritDoc}
