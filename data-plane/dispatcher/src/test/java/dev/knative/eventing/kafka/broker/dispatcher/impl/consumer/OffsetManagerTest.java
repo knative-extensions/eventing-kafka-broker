@@ -31,10 +31,15 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -48,13 +53,18 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Override
-    RecordDispatcherListener createOffsetManager(final Vertx vertx, final ReactiveKafkaConsumer<?, ?> consumer) {
-        return new OffsetManager(vertx, consumer, null, 100L);
+    RecordDispatcherListener createOffsetManager(
+            final Vertx vertx,
+            final ReactiveKafkaConsumer<?, ?> consumer,
+            Collection<TopicPartition> partitionsConsumed) {
+        final var om = new OffsetManager(vertx, consumer, null, 100L);
+        om.getPartitionAssignedHandler().partitionAssigned(partitionsConsumed);
+        return om;
     }
 
     @Test
     public void shouldCommitAfterSendingEventsOrderedOnTheSamePartition() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     for (int i = 0; i < 10; i++) {
                         var rec = record("aaa", 0, i);
@@ -66,7 +76,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionLongValues() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), Integer.MAX_VALUE - 50, offsetStrategy -> {
                     for (long i = Integer.MAX_VALUE - 50; i < ((long) Integer.MAX_VALUE) + 50; i++) {
                         var rec = record("aaa", 0, i);
                         offsetStrategy.recordReceived(rec);
@@ -78,7 +88,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionLongPeriod() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     for (long i = 0; i < 2_000_051; i++) {
 
                         var rec = record("aaa", 0, i);
@@ -91,7 +101,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldNotCommitAfterSendingEventsOrderedOnTheSamePartitionBrokenSequence() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), Integer.MAX_VALUE - 50, offsetStrategy -> {
                     // start number is odd number
                     for (long i = Integer.MAX_VALUE - 50; i < ((long) Integer.MAX_VALUE) + 50; i++) {
                         var rec = record("aaa", 0, i);
@@ -101,12 +111,12 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
                         }
                     }
                 })
-                .isEmpty();
+                .containsExactly(Map.entry(new TopicPartition("aaa", 0), Integer.MAX_VALUE - 50L - 1L));
     }
 
     @Test
     public void shouldNotCommitAndNotGoOutOfBounds() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 64));
                     offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 128));
@@ -116,7 +126,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionWithInducedFailure() {
-        assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), (offsetStrategy, failureFlag) -> {
+        assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), 0, (offsetStrategy, failureFlag) -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     failureFlag.set(true);
                     for (int i = 0; i < 10; i++) {
@@ -131,7 +141,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitInAMixedOrderWithInducedFailure() {
-        assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), (offsetStrategy, failureFlag) -> {
+        assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), 0, (offsetStrategy, failureFlag) -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
 
                     // Order:
@@ -156,7 +166,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
     @Test
     public void shouldCommitAfterSendingEventsOrderedOnDifferentPartitions() {
         assertThatOffsetCommitted(
-                        List.of(new TopicPartition("aaa", 0), new TopicPartition("aaa", 1)), offsetStrategy -> {
+                        List.of(new TopicPartition("aaa", 0), new TopicPartition("aaa", 1)), 0, offsetStrategy -> {
                             offsetStrategy.recordReceived(record("aaa", 0, 0));
                             offsetStrategy.recordReceived(record("aaa", 1, 0));
                             for (int i = 0; i < 10; i++) {
@@ -170,7 +180,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitAfterSendingEventsABitMixed() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     for (int i = 0; i < 12; i++) {
                         // This will commit in the following order:
@@ -184,7 +194,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitAfterSendingEventsABitMoreMixed() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     // This will commit in the following order:
                     // 5 2 0 7 1 3 4 6
@@ -196,7 +206,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldNotCommitAfterSendingEventsABitMoreMixedWithAMissingOne() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     // This will commit in the following order:
                     // 5 2 0 7 1 3 4
@@ -208,7 +218,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitOnlyPartiallyAfterSendingEventsABitMoreMixed() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     // This will commit in the following order:
                     // 5 2 0 1 3 4 7 8
@@ -220,7 +230,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitSuccessfullyOnSuccessfullySentToDeadLetterSink() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     var rec = record("aaa", 0, 0);
                     offsetStrategy.recordReceived(rec);
                     offsetStrategy.successfullySentToDeadLetterSink(rec);
@@ -230,7 +240,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitSuccessfullyWithRecordDiscardedInTheMiddle() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     var rec = record("aaa", 0, 0);
                     offsetStrategy.recordReceived(rec);
                     offsetStrategy.recordDiscarded(rec);
@@ -241,7 +251,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitSuccessfullyWithRecordFailedToDeadLetterSinkInTheMiddle() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     var rec = record("aaa", 0, 0);
                     offsetStrategy.recordReceived(rec);
                     offsetStrategy.failedToSendToDeadLetterSink(rec, new IllegalStateException());
@@ -252,7 +262,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldContinueToWorkAfterSendingALotOfRecords() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
                     for (int i = 128 * 64 - 1; i >= 0; i--) {
                         offsetStrategy.successfullySentToSubscriber(record("aaa", 0, i));
@@ -264,7 +274,7 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldContinueToWorkAfterResetWithOutOfOrderEventsOnANon64BitBoundary() {
-        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
+        assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), 0, offsetStrategy -> {
                     offsetStrategy.recordReceived(record("aaa", 0, 0));
 
                     // This loop will flag 1 bit in the BitSet of the OffsetTracker beyond a 64-bit
@@ -339,9 +349,15 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
             return Future.succeededFuture();
         });
 
+        when(consumer.unwrap()).then((invocation) -> {
+            final var c = new MockConsumer<>(OffsetResetStrategy.LATEST);
+            return c;
+        });
+
         final var r = record("aaa", 0, 0);
 
         OffsetManager strategy = new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L);
+        strategy.getPartitionAssignedHandler().partitionAssigned(Set.of(new TopicPartition(r.topic(), r.partition())));
         strategy.recordReceived(r);
         strategy.successfullySentToSubscriber(r);
 
@@ -361,9 +377,15 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
         when(consumer.commit((Map<TopicPartition, OffsetAndMetadata>) any()))
                 .then(invocationOnMock -> Future.failedFuture(new RuntimeException("throw exception for testing")));
 
+        when(consumer.unwrap()).then((invocation) -> {
+            final var c = new MockConsumer<>(OffsetResetStrategy.LATEST);
+            return c;
+        });
+
         final var r = record("aaa", 0, 0);
 
         OffsetManager strategy = new OffsetManager(vertx, consumer, eventsSentCounter::increment, 100L);
+        strategy.getPartitionAssignedHandler().partitionAssigned(Set.of(new TopicPartition(r.topic(), r.partition())));
         strategy.recordReceived(r);
         strategy.successfullySentToSubscriber(r);
 

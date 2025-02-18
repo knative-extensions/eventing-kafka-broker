@@ -34,7 +34,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
     private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
 
     public static final String ADDRESS = "resourcesreconciler.core";
-    public static final int RECONCILE_TIMEOUT = 10000;
+    public static final int RECONCILE_TIMEOUT = 100000;
     public static final int RECONCILE_FAILED_RETRY_DELAY = 5000;
 
     private final Vertx vertx;
@@ -76,7 +76,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
             // This is a safety timeout to the `reconcile` phase, there have been multiple times when libraries or our
             // components will cause the `Future` returned by `reconcile` to never complete (fail or succeed), in those
             // cases we stop reconciling resources completely.
-            vertx.setTimer(RECONCILE_TIMEOUT, v -> p.tryFail(v + "ms timeout reached"));
+            vertx.setTimer(RECONCILE_TIMEOUT, v -> p.tryFail(RECONCILE_TIMEOUT + "ms timeout reached"));
 
             try {
                 resourcesReconciler

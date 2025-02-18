@@ -39,6 +39,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventOver
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.ConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.PartitionAssignedHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.PartitionRevokedHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
@@ -120,7 +121,9 @@ public class ConsumerVerticleBuilder {
 
         final var partitionRevokedHandlers =
                 List.of(consumerVerticle.getPartitionRevokedHandler(), offsetManager.getPartitionRevokedHandler());
-        consumerVerticle.setRebalanceListener(createRebalanceListener(partitionRevokedHandlers));
+        final var partitionAssignedHandlers = List.of(offsetManager.getPartitionAssignedHandler());
+        consumerVerticle.setRebalanceListener(
+                createRebalanceListener(partitionRevokedHandlers, partitionAssignedHandlers));
     }
 
     private ConsumerVerticle createConsumerVerticle(final ConsumerVerticle.Initializer initializer) {
@@ -138,7 +141,8 @@ public class ConsumerVerticleBuilder {
      * @return ConsumerRebalanceListener object with the partition revoked handler running on onPartitionsRevoked
      */
     private ConsumerRebalanceListener createRebalanceListener(
-            final List<PartitionRevokedHandler> partitionRevokedHandlers) {
+            final List<PartitionRevokedHandler> partitionRevokedHandlers,
+            final List<PartitionAssignedHandler> partitionAssignedHandlers) {
         return new ConsumerRebalanceListener() {
             @Override
             public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
@@ -154,7 +158,7 @@ public class ConsumerVerticleBuilder {
 
                 for (final var future : futures) {
                     try {
-                        future.toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS);
+                        future.toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
                     } catch (final Exception ignored) {
                         ConsumerVerticleContext.logger.warn(
                                 "Partition revoked handler failed {} {}",
@@ -170,6 +174,22 @@ public class ConsumerVerticleBuilder {
                         "Received assign partitions for consumer {} {}",
                         consumerVerticleContext.getLoggingKeyValue(),
                         keyValue("partitions", partitions));
+
+                final var futures = new ArrayList<Future<Void>>(partitionAssignedHandlers.size());
+                for (var partitionAssignedHandler : partitionAssignedHandlers) {
+                    futures.add(partitionAssignedHandler.partitionAssigned(partitions));
+                }
+                for (final var future : futures) {
+                    try {
+                        future.toCompletionStage().toCompletableFuture().get(60, TimeUnit.SECONDS);
+                    } catch (final Exception ex) {
+                        ConsumerVerticleContext.logger.error(
+                                "Partition assigned handler failed {} {}",
+                                consumerVerticleContext.getLoggingKeyValue(),
+                                keyValue("partitions", partitions),
+                                ex);
+                    }
+                }
             }
         };
     }
