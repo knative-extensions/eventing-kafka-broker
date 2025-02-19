@@ -41,10 +41,10 @@ public interface Filter extends Predicate<CloudEvent> {
             case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
             case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
             case NOT -> new NotFilter(fromContract(filter.getNot().getFilter()));
-            case ANY -> new AnyFilter(filter.getAny().getFiltersList().stream()
+            case ANY -> AnyFilter.newFilter(filter.getAny().getFiltersList().stream()
                     .map(Filter::fromContract)
                     .collect(Collectors.toList()));
-            case ALL -> new AllFilter(filter.getAll().getFiltersList().stream()
+            case ALL -> AllFilter.newFilter(filter.getAll().getFiltersList().stream()
                     .map(Filter::fromContract)
                     .collect(Collectors.toList()));
             case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
@@ -53,6 +53,6 @@ public interface Filter extends Predicate<CloudEvent> {
     }
 
     static Filter fromContract(List<DataPlaneContract.DialectedFilter> filters) {
-        return new AllFilter(filters.stream().map(Filter::fromContract).collect(Collectors.toList()));
+        return AllFilter.newFilter(filters.stream().map(Filter::fromContract).collect(Collectors.toList()));
     }
 }
