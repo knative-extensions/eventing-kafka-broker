@@ -17,13 +17,19 @@
 package kafka
 
 import (
+	"os"
+	"log"
 	"github.com/IBM/sarama"
 	"github.com/rcrowley/go-metrics"
 )
 
+var configVersion sarama.KafkaVersion = sarama.DefaultVersion
+
 func init() {
 	// Disable Sarama metrics
 	metrics.UseNilMetrics = true
+
+	configVersion = getSaramaConfigVersion()
 }
 
 type ConfigOption func(config *sarama.Config) error
@@ -56,10 +62,24 @@ type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, e
 // NewClusterAdminFromClientFunc creates new sarama.ClusterAdmin from sarama.Client
 type NewClusterAdminFromClientFunc func(sarama.Client) (sarama.ClusterAdmin, error)
 
+func getSaramaConfigVersion() (sarama.KafkaVersion) {
+	saramaVersion := sarama.DefaultVersion
+	version, exists := os.LookupEnv("SARAMA_CONFIG_VERSION")
+	if exists {
+		for _, v := range sarama.SupportedVersions {
+			if v.String() == version {
+				saramaVersion = v
+			}
+		}
+	}
+	log.Printf("sarama version set to %s", saramaVersion.String())
+	return saramaVersion
+}
+
 // GetSaramaConfig returns Kafka Client configuration with the given options applied.
 func GetSaramaConfig(configOptions ...ConfigOption) (*sarama.Config, error) {
 	config := sarama.NewConfig()
-	config.Version = sarama.DefaultVersion
+	config.Version = configVersion
 
 	err := Options(config, configOptions...)
 	if err != nil {
