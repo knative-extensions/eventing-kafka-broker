@@ -19,24 +19,24 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	apisbindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/bindings/v1beta1"
+	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/bindings/v1beta1"
 )
 
 // KafkaBindingInformer provides access to a shared informer and lister for
 // KafkaBindings.
 type KafkaBindingInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.KafkaBindingLister
+	Lister() bindingsv1beta1.KafkaBindingLister
 }
 
 type kafkaBindingInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaBindingInformer(client versioned.Interface, namespace strin
 				return client.BindingsV1beta1().KafkaBindings(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&bindingsv1beta1.KafkaBinding{},
+		&apisbindingsv1beta1.KafkaBinding{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaBindingInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *kafkaBindingInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&bindingsv1beta1.KafkaBinding{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisbindingsv1beta1.KafkaBinding{}, f.defaultInformer)
 }
 
-func (f *kafkaBindingInformer) Lister() v1beta1.KafkaBindingLister {
-	return v1beta1.NewKafkaBindingLister(f.Informer().GetIndexer())
+func (f *kafkaBindingInformer) Lister() bindingsv1beta1.KafkaBindingLister {
+	return bindingsv1beta1.NewKafkaBindingLister(f.Informer().GetIndexer())
 }
