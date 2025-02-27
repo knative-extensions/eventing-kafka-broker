@@ -17,8 +17,9 @@
 package kafka
 
 import (
-	"os"
 	"log"
+	"os"
+
 	"github.com/IBM/sarama"
 	"github.com/rcrowley/go-metrics"
 )
@@ -62,7 +63,7 @@ type NewClientFunc func(addrs []string, config *sarama.Config) (sarama.Client, e
 // NewClusterAdminFromClientFunc creates new sarama.ClusterAdmin from sarama.Client
 type NewClusterAdminFromClientFunc func(sarama.Client) (sarama.ClusterAdmin, error)
 
-func getSaramaConfigVersion() (sarama.KafkaVersion) {
+func getSaramaConfigVersion() sarama.KafkaVersion {
 	saramaVersion := sarama.DefaultVersion
 	version, exists := os.LookupEnv("SARAMA_CONFIG_VERSION")
 	if exists {
