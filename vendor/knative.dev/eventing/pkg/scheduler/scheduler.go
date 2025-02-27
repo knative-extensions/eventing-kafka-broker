@@ -42,6 +42,8 @@ type VPodLister func() ([]VPod, error)
 // Evictor allows for vreplicas to be evicted.
 // For instance, the evictor is used by the statefulset scheduler to
 // move vreplicas to pod with a lower ordinal.
+//
+// pod might be `nil`.
 type Evictor func(pod *corev1.Pod, vpod VPod, from *duckv1alpha1.Placement) error
 
 // Scheduler is responsible for placing VPods into real Kubernetes pods
@@ -64,6 +66,8 @@ func (f SchedulerFunc) Schedule(ctx context.Context, vpod VPod) ([]duckv1alpha1.
 // VPod represents virtual replicas placed into real Kubernetes pods
 // The scheduler is responsible for placing VPods
 type VPod interface {
+	GetDeletionTimestamp() *metav1.Time
+
 	// GetKey returns the VPod key (namespace/name).
 	GetKey() types.NamespacedName
 
