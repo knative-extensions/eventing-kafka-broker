@@ -28,8 +28,12 @@ import (
 // InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
 type InitOffsetsFunc func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error)
 
+// AreOffsetsInitializedFunc initialize offsets for a provided set of topics and a provided consumer group id.
+type AreOffsetsInitializedFunc func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (bool, error)
+
 var (
-	_ InitOffsetsFunc = offset.InitOffsets
+	_ InitOffsetsFunc           = offset.InitOffsets
+	_ AreOffsetsInitializedFunc = offset.AreOffsetsInitialized
 )
 
 const (
