@@ -19,13 +19,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,36 @@ type ConsumersGetter interface {
 
 // ConsumerInterface has methods to work with Consumer resources.
 type ConsumerInterface interface {
-	Create(ctx context.Context, consumer *v1alpha1.Consumer, opts v1.CreateOptions) (*v1alpha1.Consumer, error)
-	Update(ctx context.Context, consumer *v1alpha1.Consumer, opts v1.UpdateOptions) (*v1alpha1.Consumer, error)
+	Create(ctx context.Context, consumer *internalskafkaeventingv1alpha1.Consumer, opts v1.CreateOptions) (*internalskafkaeventingv1alpha1.Consumer, error)
+	Update(ctx context.Context, consumer *internalskafkaeventingv1alpha1.Consumer, opts v1.UpdateOptions) (*internalskafkaeventingv1alpha1.Consumer, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, consumer *v1alpha1.Consumer, opts v1.UpdateOptions) (*v1alpha1.Consumer, error)
+	UpdateStatus(ctx context.Context, consumer *internalskafkaeventingv1alpha1.Consumer, opts v1.UpdateOptions) (*internalskafkaeventingv1alpha1.Consumer, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.Consumer, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ConsumerList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*internalskafkaeventingv1alpha1.Consumer, error)
+	List(ctx context.Context, opts v1.ListOptions) (*internalskafkaeventingv1alpha1.ConsumerList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Consumer, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *internalskafkaeventingv1alpha1.Consumer, err error)
 	ConsumerExpansion
 }
 
 // consumers implements ConsumerInterface
 type consumers struct {
-	*gentype.ClientWithList[*v1alpha1.Consumer, *v1alpha1.ConsumerList]
+	*gentype.ClientWithList[*internalskafkaeventingv1alpha1.Consumer, *internalskafkaeventingv1alpha1.ConsumerList]
 }
 
 // newConsumers returns a Consumers
 func newConsumers(c *InternalV1alpha1Client, namespace string) *consumers {
 	return &consumers{
-		gentype.NewClientWithList[*v1alpha1.Consumer, *v1alpha1.ConsumerList](
+		gentype.NewClientWithList[*internalskafkaeventingv1alpha1.Consumer, *internalskafkaeventingv1alpha1.ConsumerList](
 			"consumers",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.Consumer { return &v1alpha1.Consumer{} },
-			func() *v1alpha1.ConsumerList { return &v1alpha1.ConsumerList{} }),
+			func() *internalskafkaeventingv1alpha1.Consumer { return &internalskafkaeventingv1alpha1.Consumer{} },
+			func() *internalskafkaeventingv1alpha1.ConsumerList {
+				return &internalskafkaeventingv1alpha1.ConsumerList{}
+			},
+		),
 	}
 }
