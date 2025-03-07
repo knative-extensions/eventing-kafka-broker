@@ -19,10 +19,10 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
 // KafkaSinkLister helps list KafkaSinks.
@@ -30,7 +30,7 @@ import (
 type KafkaSinkLister interface {
 	// List lists all KafkaSinks in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.KafkaSink, err error)
+	List(selector labels.Selector) (ret []*eventingv1alpha1.KafkaSink, err error)
 	// KafkaSinks returns an object that can list and get KafkaSinks.
 	KafkaSinks(namespace string) KafkaSinkNamespaceLister
 	KafkaSinkListerExpansion
@@ -38,17 +38,17 @@ type KafkaSinkLister interface {
 
 // kafkaSinkLister implements the KafkaSinkLister interface.
 type kafkaSinkLister struct {
-	listers.ResourceIndexer[*v1alpha1.KafkaSink]
+	listers.ResourceIndexer[*eventingv1alpha1.KafkaSink]
 }
 
 // NewKafkaSinkLister returns a new KafkaSinkLister.
 func NewKafkaSinkLister(indexer cache.Indexer) KafkaSinkLister {
-	return &kafkaSinkLister{listers.New[*v1alpha1.KafkaSink](indexer, v1alpha1.Resource("kafkasink"))}
+	return &kafkaSinkLister{listers.New[*eventingv1alpha1.KafkaSink](indexer, eventingv1alpha1.Resource("kafkasink"))}
 }
 
 // KafkaSinks returns an object that can list and get KafkaSinks.
 func (s *kafkaSinkLister) KafkaSinks(namespace string) KafkaSinkNamespaceLister {
-	return kafkaSinkNamespaceLister{listers.NewNamespaced[*v1alpha1.KafkaSink](s.ResourceIndexer, namespace)}
+	return kafkaSinkNamespaceLister{listers.NewNamespaced[*eventingv1alpha1.KafkaSink](s.ResourceIndexer, namespace)}
 }
 
 // KafkaSinkNamespaceLister helps list and get KafkaSinks.
@@ -56,15 +56,15 @@ func (s *kafkaSinkLister) KafkaSinks(namespace string) KafkaSinkNamespaceLister 
 type KafkaSinkNamespaceLister interface {
 	// List lists all KafkaSinks in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.KafkaSink, err error)
+	List(selector labels.Selector) (ret []*eventingv1alpha1.KafkaSink, err error)
 	// Get retrieves the KafkaSink from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.KafkaSink, error)
+	Get(name string) (*eventingv1alpha1.KafkaSink, error)
 	KafkaSinkNamespaceListerExpansion
 }
 
 // kafkaSinkNamespaceLister implements the KafkaSinkNamespaceLister
 // interface.
 type kafkaSinkNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.KafkaSink]
+	listers.ResourceIndexer[*eventingv1alpha1.KafkaSink]
 }
