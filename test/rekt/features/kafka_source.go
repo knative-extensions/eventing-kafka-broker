@@ -326,7 +326,6 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 	case TLSMech:
 		f.Setup("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), TLSSecretName, secretName))
 		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslArr),
-			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 			kafkasource.WithTLSCert(secretName, "user.crt"),
 			kafkasource.WithTLSKey(secretName, "user.key"),
 			kafkasource.WithTLSEnabled(),
