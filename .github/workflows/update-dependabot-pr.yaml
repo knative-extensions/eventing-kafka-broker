@@ -28,10 +28,6 @@ jobs:
         with:
           go-version-file: ./src/github.com/${{ github.repository }}/go.mod
 
-      - name: Install yq
-        run: |
-          go install github.com/mikefarah/yq/v3@latest
-
       - name: Run ./hack/update-codegen.sh
         working-directory: ./src/github.com/${{ github.repository }}
         run: ./hack/update-codegen.sh
