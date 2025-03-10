@@ -19,129 +19,32 @@
 package fake
 
 import (
-	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
+	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1"
 )
 
-// FakeKafkaChannels implements KafkaChannelInterface
-type FakeKafkaChannels struct {
+// fakeKafkaChannels implements KafkaChannelInterface
+type fakeKafkaChannels struct {
+	*gentype.FakeClientWithList[*v1.KafkaChannel, *v1.KafkaChannelList]
 	Fake *FakeMessagingV1
-	ns   string
 }
 
-var kafkachannelsResource = v1.SchemeGroupVersion.WithResource("kafkachannels")
-
-var kafkachannelsKind = v1.SchemeGroupVersion.WithKind("KafkaChannel")
-
-// Get takes name of the kafkaChannel, and returns the corresponding kafkaChannel object, and an error if there is any.
-func (c *FakeKafkaChannels) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.KafkaChannel, err error) {
-	emptyResult := &v1.KafkaChannel{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(kafkachannelsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeKafkaChannels(fake *FakeMessagingV1, namespace string) messagingv1.KafkaChannelInterface {
+	return &fakeKafkaChannels{
+		gentype.NewFakeClientWithList[*v1.KafkaChannel, *v1.KafkaChannelList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("kafkachannels"),
+			v1.SchemeGroupVersion.WithKind("KafkaChannel"),
+			func() *v1.KafkaChannel { return &v1.KafkaChannel{} },
+			func() *v1.KafkaChannelList { return &v1.KafkaChannelList{} },
+			func(dst, src *v1.KafkaChannelList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.KafkaChannelList) []*v1.KafkaChannel { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.KafkaChannelList, items []*v1.KafkaChannel) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1.KafkaChannel), err
-}
-
-// List takes label and field selectors, and returns the list of KafkaChannels that match those selectors.
-func (c *FakeKafkaChannels) List(ctx context.Context, opts metav1.ListOptions) (result *v1.KafkaChannelList, err error) {
-	emptyResult := &v1.KafkaChannelList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(kafkachannelsResource, kafkachannelsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.KafkaChannelList{ListMeta: obj.(*v1.KafkaChannelList).ListMeta}
-	for _, item := range obj.(*v1.KafkaChannelList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested kafkaChannels.
-func (c *FakeKafkaChannels) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(kafkachannelsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a kafkaChannel and creates it.  Returns the server's representation of the kafkaChannel, and an error, if there is any.
-func (c *FakeKafkaChannels) Create(ctx context.Context, kafkaChannel *v1.KafkaChannel, opts metav1.CreateOptions) (result *v1.KafkaChannel, err error) {
-	emptyResult := &v1.KafkaChannel{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(kafkachannelsResource, c.ns, kafkaChannel, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaChannel), err
-}
-
-// Update takes the representation of a kafkaChannel and updates it. Returns the server's representation of the kafkaChannel, and an error, if there is any.
-func (c *FakeKafkaChannels) Update(ctx context.Context, kafkaChannel *v1.KafkaChannel, opts metav1.UpdateOptions) (result *v1.KafkaChannel, err error) {
-	emptyResult := &v1.KafkaChannel{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(kafkachannelsResource, c.ns, kafkaChannel, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaChannel), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeKafkaChannels) UpdateStatus(ctx context.Context, kafkaChannel *v1.KafkaChannel, opts metav1.UpdateOptions) (result *v1.KafkaChannel, err error) {
-	emptyResult := &v1.KafkaChannel{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(kafkachannelsResource, "status", c.ns, kafkaChannel, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaChannel), err
-}
-
-// Delete takes name of the kafkaChannel and deletes it. Returns an error if one occurs.
-func (c *FakeKafkaChannels) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(kafkachannelsResource, c.ns, name, opts), &v1.KafkaChannel{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeKafkaChannels) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(kafkachannelsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.KafkaChannelList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched kafkaChannel.
-func (c *FakeKafkaChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.KafkaChannel, err error) {
-	emptyResult := &v1.KafkaChannel{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(kafkachannelsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaChannel), err
 }
