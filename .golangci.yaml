@@ -3,9 +3,6 @@ run:
 
   build-tags:
     - e2e
-  skip-dirs:
-    - control-plane/pkg/client
-    - data-plane
 
 linters:
   enable:
@@ -18,6 +15,9 @@ linters:
     - errcheck
 
 issues:
+  exclude-dirs:
+    - control-plane/pkg/client
+    - data-plane
   exclude-rules:
     - path: test # Excludes /test, *_test.go etc.
       linters:
