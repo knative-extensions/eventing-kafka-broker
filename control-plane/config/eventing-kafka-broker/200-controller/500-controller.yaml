@@ -152,6 +152,15 @@ spec:
             - name: POD_CAPACITY
               value: '20'
 
+            # The minimum number of dispatchers instances to run. This configuration helps with configuring HA for
+            # dispatchers.
+            # The virtual replicas for resources are placed on different pods by the Eventing scheduler, by having
+            # DISPATCHERS_MIN_REPLICAS be more than 1, even when the total number of virtual replicas is less than
+            # POD_CAPACITY, the virtual replicas for resources will spread out across replicas leading to better
+            # availability.
+            - name: DISPATCHERS_MIN_REPLICAS
+              value: '0'
+
             - name: SCHEDULER_CONFIG
               value: 'config-kafka-scheduler'
 

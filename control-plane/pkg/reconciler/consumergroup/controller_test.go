@@ -52,6 +52,7 @@ import (
 const (
 	RefreshPeriod = "100"
 	PodCapacity   = "20"
+	MinReplicas   = "2"
 	// ConfigKafkaSchedulerName is the name of the ConfigMap to configure the scheduler.
 	ConfigKafkaSchedulerName = "config-kafka-scheduler"
 	// ConfigKafkaDeSchedulerName is the name of the ConfigMap to configure the descheduler.
@@ -111,6 +112,7 @@ func TestNewController(t *testing.T) {
 
 	t.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
 	t.Setenv("POD_CAPACITY", PodCapacity)
+	t.Setenv("DISPATCHERS_MIN_REPLICAS", MinReplicas)
 	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
 	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
 	t.Setenv("AUTOSCALER_CONFIG", ConfigKafkaAutoscalerName)

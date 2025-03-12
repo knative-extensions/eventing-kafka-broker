@@ -84,6 +84,7 @@ var (
 type envConfig struct {
 	SchedulerRefreshPeriod     int64  `envconfig:"AUTOSCALER_REFRESH_PERIOD" required:"true"`
 	PodCapacity                int32  `envconfig:"POD_CAPACITY" required:"true"`
+	DispatcherMinReplicas      int32  `envconfig:"DISPATCHERS_MIN_REPLICAS" required:"true"`
 	SchedulerPolicyConfigMap   string `envconfig:"SCHEDULER_CONFIG" required:"true"`
 	DeSchedulerPolicyConfigMap string `envconfig:"DESCHEDULER_CONFIG" required:"true"`
 	AutoscalerConfigMap        string `envconfig:"AUTOSCALER_CONFIG" required:"true"`
@@ -93,6 +94,7 @@ type SchedulerConfig struct {
 	StatefulSetName string
 	RefreshPeriod   time.Duration
 	Capacity        int32
+	MinReplicas     int32
 }
 
 func NewController(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
@@ -106,6 +108,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	c := SchedulerConfig{
 		RefreshPeriod: time.Duration(env.SchedulerRefreshPeriod) * time.Second,
 		Capacity:      env.PodCapacity,
+		MinReplicas:   env.DispatcherMinReplicas,
 	}
 
 	dispatcherPodInformer := podinformer.Get(ctx, internalsapi.DispatcherLabelSelectorStr)
@@ -374,6 +377,7 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		Evictor:              newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		VPodLister:           lister,
 		PodLister:            dispatcherPodInformer.Lister().Pods(system.Namespace()),
+		MinReplicas:          c.MinReplicas,
 	})
 
 	return Scheduler{
