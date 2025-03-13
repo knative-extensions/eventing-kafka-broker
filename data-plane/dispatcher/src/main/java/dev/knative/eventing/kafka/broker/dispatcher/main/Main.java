@@ -138,7 +138,8 @@ public class Main {
                             reactiveConsumerFactory,
                             reactiveProducerFactory,
                             eventTypeCreator,
-                            eventTypeListerFactory),
+                            eventTypeListerFactory,
+                            env.getCeMetadataExtensionPrefix()),
                     env.getEgressesInitialCapacity());
 
             // Deploy the consumer deployer
