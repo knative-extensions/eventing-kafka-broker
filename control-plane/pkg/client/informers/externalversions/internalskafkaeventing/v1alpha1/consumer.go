@@ -19,24 +19,24 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	apisinternalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
+	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 )
 
 // ConsumerInformer provides access to a shared informer and lister for
 // Consumers.
 type ConsumerInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ConsumerLister
+	Lister() internalskafkaeventingv1alpha1.ConsumerLister
 }
 
 type consumerInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredConsumerInformer(client versioned.Interface, namespace string, r
 				return client.InternalV1alpha1().Consumers(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&internalskafkaeventingv1alpha1.Consumer{},
+		&apisinternalskafkaeventingv1alpha1.Consumer{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *consumerInformer) defaultInformer(client versioned.Interface, resyncPer
 }
 
 func (f *consumerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&internalskafkaeventingv1alpha1.Consumer{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisinternalskafkaeventingv1alpha1.Consumer{}, f.defaultInformer)
 }
 
-func (f *consumerInformer) Lister() v1alpha1.ConsumerLister {
-	return v1alpha1.NewConsumerLister(f.Informer().GetIndexer())
+func (f *consumerInformer) Lister() internalskafkaeventingv1alpha1.ConsumerLister {
+	return internalskafkaeventingv1alpha1.NewConsumerLister(f.Informer().GetIndexer())
 }

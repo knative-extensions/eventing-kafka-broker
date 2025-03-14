@@ -19,13 +19,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type KafkaBindingsGetter interface {
 
 // KafkaBindingInterface has methods to work with KafkaBinding resources.
 type KafkaBindingInterface interface {
-	Create(ctx context.Context, kafkaBinding *v1.KafkaBinding, opts metav1.CreateOptions) (*v1.KafkaBinding, error)
-	Update(ctx context.Context, kafkaBinding *v1.KafkaBinding, opts metav1.UpdateOptions) (*v1.KafkaBinding, error)
+	Create(ctx context.Context, kafkaBinding *bindingsv1.KafkaBinding, opts metav1.CreateOptions) (*bindingsv1.KafkaBinding, error)
+	Update(ctx context.Context, kafkaBinding *bindingsv1.KafkaBinding, opts metav1.UpdateOptions) (*bindingsv1.KafkaBinding, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, kafkaBinding *v1.KafkaBinding, opts metav1.UpdateOptions) (*v1.KafkaBinding, error)
+	UpdateStatus(ctx context.Context, kafkaBinding *bindingsv1.KafkaBinding, opts metav1.UpdateOptions) (*bindingsv1.KafkaBinding, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.KafkaBinding, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.KafkaBindingList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*bindingsv1.KafkaBinding, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*bindingsv1.KafkaBindingList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.KafkaBinding, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *bindingsv1.KafkaBinding, err error)
 	KafkaBindingExpansion
 }
 
 // kafkaBindings implements KafkaBindingInterface
 type kafkaBindings struct {
-	*gentype.ClientWithList[*v1.KafkaBinding, *v1.KafkaBindingList]
+	*gentype.ClientWithList[*bindingsv1.KafkaBinding, *bindingsv1.KafkaBindingList]
 }
 
 // newKafkaBindings returns a KafkaBindings
 func newKafkaBindings(c *BindingsV1Client, namespace string) *kafkaBindings {
 	return &kafkaBindings{
-		gentype.NewClientWithList[*v1.KafkaBinding, *v1.KafkaBindingList](
+		gentype.NewClientWithList[*bindingsv1.KafkaBinding, *bindingsv1.KafkaBindingList](
 			"kafkabindings",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.KafkaBinding { return &v1.KafkaBinding{} },
-			func() *v1.KafkaBindingList { return &v1.KafkaBindingList{} }),
+			func() *bindingsv1.KafkaBinding { return &bindingsv1.KafkaBinding{} },
+			func() *bindingsv1.KafkaBindingList { return &bindingsv1.KafkaBindingList{} },
+		),
 	}
 }

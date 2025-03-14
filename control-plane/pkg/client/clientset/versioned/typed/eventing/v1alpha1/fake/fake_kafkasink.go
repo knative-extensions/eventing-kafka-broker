@@ -19,129 +19,32 @@
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 )
 
-// FakeKafkaSinks implements KafkaSinkInterface
-type FakeKafkaSinks struct {
+// fakeKafkaSinks implements KafkaSinkInterface
+type fakeKafkaSinks struct {
+	*gentype.FakeClientWithList[*v1alpha1.KafkaSink, *v1alpha1.KafkaSinkList]
 	Fake *FakeEventingV1alpha1
-	ns   string
 }
 
-var kafkasinksResource = v1alpha1.SchemeGroupVersion.WithResource("kafkasinks")
-
-var kafkasinksKind = v1alpha1.SchemeGroupVersion.WithKind("KafkaSink")
-
-// Get takes name of the kafkaSink, and returns the corresponding kafkaSink object, and an error if there is any.
-func (c *FakeKafkaSinks) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.KafkaSink, err error) {
-	emptyResult := &v1alpha1.KafkaSink{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(kafkasinksResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeKafkaSinks(fake *FakeEventingV1alpha1, namespace string) eventingv1alpha1.KafkaSinkInterface {
+	return &fakeKafkaSinks{
+		gentype.NewFakeClientWithList[*v1alpha1.KafkaSink, *v1alpha1.KafkaSinkList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("kafkasinks"),
+			v1alpha1.SchemeGroupVersion.WithKind("KafkaSink"),
+			func() *v1alpha1.KafkaSink { return &v1alpha1.KafkaSink{} },
+			func() *v1alpha1.KafkaSinkList { return &v1alpha1.KafkaSinkList{} },
+			func(dst, src *v1alpha1.KafkaSinkList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.KafkaSinkList) []*v1alpha1.KafkaSink { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1alpha1.KafkaSinkList, items []*v1alpha1.KafkaSink) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.KafkaSink), err
-}
-
-// List takes label and field selectors, and returns the list of KafkaSinks that match those selectors.
-func (c *FakeKafkaSinks) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.KafkaSinkList, err error) {
-	emptyResult := &v1alpha1.KafkaSinkList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(kafkasinksResource, kafkasinksKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.KafkaSinkList{ListMeta: obj.(*v1alpha1.KafkaSinkList).ListMeta}
-	for _, item := range obj.(*v1alpha1.KafkaSinkList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested kafkaSinks.
-func (c *FakeKafkaSinks) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(kafkasinksResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a kafkaSink and creates it.  Returns the server's representation of the kafkaSink, and an error, if there is any.
-func (c *FakeKafkaSinks) Create(ctx context.Context, kafkaSink *v1alpha1.KafkaSink, opts v1.CreateOptions) (result *v1alpha1.KafkaSink, err error) {
-	emptyResult := &v1alpha1.KafkaSink{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(kafkasinksResource, c.ns, kafkaSink, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.KafkaSink), err
-}
-
-// Update takes the representation of a kafkaSink and updates it. Returns the server's representation of the kafkaSink, and an error, if there is any.
-func (c *FakeKafkaSinks) Update(ctx context.Context, kafkaSink *v1alpha1.KafkaSink, opts v1.UpdateOptions) (result *v1alpha1.KafkaSink, err error) {
-	emptyResult := &v1alpha1.KafkaSink{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(kafkasinksResource, c.ns, kafkaSink, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.KafkaSink), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeKafkaSinks) UpdateStatus(ctx context.Context, kafkaSink *v1alpha1.KafkaSink, opts v1.UpdateOptions) (result *v1alpha1.KafkaSink, err error) {
-	emptyResult := &v1alpha1.KafkaSink{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(kafkasinksResource, "status", c.ns, kafkaSink, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.KafkaSink), err
-}
-
-// Delete takes name of the kafkaSink and deletes it. Returns an error if one occurs.
-func (c *FakeKafkaSinks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(kafkasinksResource, c.ns, name, opts), &v1alpha1.KafkaSink{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeKafkaSinks) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(kafkasinksResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.KafkaSinkList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched kafkaSink.
-func (c *FakeKafkaSinks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.KafkaSink, err error) {
-	emptyResult := &v1alpha1.KafkaSink{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(kafkasinksResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.KafkaSink), err
 }
