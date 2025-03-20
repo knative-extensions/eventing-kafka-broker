@@ -119,8 +119,8 @@ func newController(ctx context.Context, name string, optsFunc ...OptionFunc) *co
 	logger := logging.FromContext(ctx)
 	controllerOptions := wopts.ControllerOptions
 	if controllerOptions == nil {
-		// TODO: https://github.com/knative/pkg/issues/2418
-		controllerOptions = &controller.ControllerOptions{WorkQueueName: name, Logger: logger.Named(name)}
+		const queueName = "DefaultingWebhook"
+		controllerOptions = &controller.ControllerOptions{WorkQueueName: queueName, Logger: logger.Named(queueName)}
 	}
 	c := controller.NewContext(ctx, wh, *controllerOptions)
 
