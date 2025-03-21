@@ -137,7 +137,7 @@ dispatcher_pid=$!
 
 # Download Sacura & build it
 TEMP_DIR=$(mktemp -d)
-git clone --depth 0 http://github.com/pierdipi/sacura.git $TEMP_DIR
+git clone --depth 1 http://github.com/pierdipi/sacura.git $TEMP_DIR
 pushd $TEMP_DIR
 go install ./... || exit 1
 popd
