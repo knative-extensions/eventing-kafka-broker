@@ -52,6 +52,13 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   "sinks:v1alpha1 eventing:v1alpha1 eventing:v1beta1 eventing:v1beta2 eventing:v1beta3 eventing:v1 messaging:v1 flows:v1 sources:v1alpha1 sources:v1beta2 sources:v1 duck:v1beta1 duck:v1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
+# Knative Injection (for cert-manager)
+OUTPUT_PKG="knative.dev/eventing/pkg/client/certmanager/injection" \
+${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+  github.com/cert-manager/cert-manager/pkg/client github.com/cert-manager/cert-manager/pkg/apis "certmanager:v1 acme:v1" \
+  --disable-informer-init \
+  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+
 group "Generating API reference docs"
 
 ${REPO_ROOT_DIR}/hack/update-reference-docs.sh
