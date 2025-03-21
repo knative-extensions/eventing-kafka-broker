@@ -19,129 +19,32 @@
 package fake
 
 import (
-	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1"
 )
 
-// FakeKafkaBindings implements KafkaBindingInterface
-type FakeKafkaBindings struct {
+// fakeKafkaBindings implements KafkaBindingInterface
+type fakeKafkaBindings struct {
+	*gentype.FakeClientWithList[*v1.KafkaBinding, *v1.KafkaBindingList]
 	Fake *FakeBindingsV1
-	ns   string
 }
 
-var kafkabindingsResource = v1.SchemeGroupVersion.WithResource("kafkabindings")
-
-var kafkabindingsKind = v1.SchemeGroupVersion.WithKind("KafkaBinding")
-
-// Get takes name of the kafkaBinding, and returns the corresponding kafkaBinding object, and an error if there is any.
-func (c *FakeKafkaBindings) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.KafkaBinding, err error) {
-	emptyResult := &v1.KafkaBinding{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(kafkabindingsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeKafkaBindings(fake *FakeBindingsV1, namespace string) bindingsv1.KafkaBindingInterface {
+	return &fakeKafkaBindings{
+		gentype.NewFakeClientWithList[*v1.KafkaBinding, *v1.KafkaBindingList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("kafkabindings"),
+			v1.SchemeGroupVersion.WithKind("KafkaBinding"),
+			func() *v1.KafkaBinding { return &v1.KafkaBinding{} },
+			func() *v1.KafkaBindingList { return &v1.KafkaBindingList{} },
+			func(dst, src *v1.KafkaBindingList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.KafkaBindingList) []*v1.KafkaBinding { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.KafkaBindingList, items []*v1.KafkaBinding) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1.KafkaBinding), err
-}
-
-// List takes label and field selectors, and returns the list of KafkaBindings that match those selectors.
-func (c *FakeKafkaBindings) List(ctx context.Context, opts metav1.ListOptions) (result *v1.KafkaBindingList, err error) {
-	emptyResult := &v1.KafkaBindingList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(kafkabindingsResource, kafkabindingsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.KafkaBindingList{ListMeta: obj.(*v1.KafkaBindingList).ListMeta}
-	for _, item := range obj.(*v1.KafkaBindingList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested kafkaBindings.
-func (c *FakeKafkaBindings) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(kafkabindingsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a kafkaBinding and creates it.  Returns the server's representation of the kafkaBinding, and an error, if there is any.
-func (c *FakeKafkaBindings) Create(ctx context.Context, kafkaBinding *v1.KafkaBinding, opts metav1.CreateOptions) (result *v1.KafkaBinding, err error) {
-	emptyResult := &v1.KafkaBinding{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(kafkabindingsResource, c.ns, kafkaBinding, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaBinding), err
-}
-
-// Update takes the representation of a kafkaBinding and updates it. Returns the server's representation of the kafkaBinding, and an error, if there is any.
-func (c *FakeKafkaBindings) Update(ctx context.Context, kafkaBinding *v1.KafkaBinding, opts metav1.UpdateOptions) (result *v1.KafkaBinding, err error) {
-	emptyResult := &v1.KafkaBinding{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(kafkabindingsResource, c.ns, kafkaBinding, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaBinding), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeKafkaBindings) UpdateStatus(ctx context.Context, kafkaBinding *v1.KafkaBinding, opts metav1.UpdateOptions) (result *v1.KafkaBinding, err error) {
-	emptyResult := &v1.KafkaBinding{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(kafkabindingsResource, "status", c.ns, kafkaBinding, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaBinding), err
-}
-
-// Delete takes name of the kafkaBinding and deletes it. Returns an error if one occurs.
-func (c *FakeKafkaBindings) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(kafkabindingsResource, c.ns, name, opts), &v1.KafkaBinding{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeKafkaBindings) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(kafkabindingsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.KafkaBindingList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched kafkaBinding.
-func (c *FakeKafkaBindings) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.KafkaBinding, err error) {
-	emptyResult := &v1.KafkaBinding{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(kafkabindingsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.KafkaBinding), err
 }
