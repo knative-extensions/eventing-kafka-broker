@@ -135,8 +135,13 @@ java \
   -jar "${PROJECT_ROOT_DIR}"/dispatcher-loom/target/dispatcher-loom-1.0-SNAPSHOT.jar >"${LOG_DIR}/dispatcher.log" &
 dispatcher_pid=$!
 
-# Download Sacura
-GO111MODULE=off go install github.com/pierdipi/sacura/cmd/sacura@main || exit 1
+# Download Sacura & build it
+TEMP_DIR=$(mktemp -d)
+git clone --depth 1 http://github.com/pierdipi/sacura.git $TEMP_DIR
+pushd $TEMP_DIR
+go install ./... || exit 1
+popd
+
 
 # Suppress failure since it fails when it doesn't receive all events.
 echo "Warm up $(date)"
