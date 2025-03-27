@@ -19,24 +19,24 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
+	apiskedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	versioned "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/third_party/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/client/listers/keda/v1alpha1"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/client/listers/keda/v1alpha1"
 )
 
 // ScaledJobInformer provides access to a shared informer and lister for
 // ScaledJobs.
 type ScaledJobInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ScaledJobLister
+	Lister() kedav1alpha1.ScaledJobLister
 }
 
 type scaledJobInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredScaledJobInformer(client versioned.Interface, namespace string, 
 				return client.KedaV1alpha1().ScaledJobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&kedav1alpha1.ScaledJob{},
+		&apiskedav1alpha1.ScaledJob{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *scaledJobInformer) defaultInformer(client versioned.Interface, resyncPe
 }
 
 func (f *scaledJobInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&kedav1alpha1.ScaledJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&apiskedav1alpha1.ScaledJob{}, f.defaultInformer)
 }
 
-func (f *scaledJobInformer) Lister() v1alpha1.ScaledJobLister {
-	return v1alpha1.NewScaledJobLister(f.Informer().GetIndexer())
+func (f *scaledJobInformer) Lister() kedav1alpha1.ScaledJobLister {
+	return kedav1alpha1.NewScaledJobLister(f.Informer().GetIndexer())
 }
