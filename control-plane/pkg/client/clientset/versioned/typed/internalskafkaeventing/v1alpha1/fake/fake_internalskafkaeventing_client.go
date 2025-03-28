@@ -29,11 +29,11 @@ type FakeInternalV1alpha1 struct {
 }
 
 func (c *FakeInternalV1alpha1) Consumers(namespace string) v1alpha1.ConsumerInterface {
-	return &FakeConsumers{c, namespace}
+	return newFakeConsumers(c, namespace)
 }
 
 func (c *FakeInternalV1alpha1) ConsumerGroups(namespace string) v1alpha1.ConsumerGroupInterface {
-	return &FakeConsumerGroups{c, namespace}
+	return newFakeConsumerGroups(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

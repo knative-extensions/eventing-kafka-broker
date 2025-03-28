@@ -19,10 +19,10 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 )
 
 // ConsumerLister helps list Consumers.
@@ -30,7 +30,7 @@ import (
 type ConsumerLister interface {
 	// List lists all Consumers in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.Consumer, err error)
+	List(selector labels.Selector) (ret []*internalskafkaeventingv1alpha1.Consumer, err error)
 	// Consumers returns an object that can list and get Consumers.
 	Consumers(namespace string) ConsumerNamespaceLister
 	ConsumerListerExpansion
@@ -38,17 +38,17 @@ type ConsumerLister interface {
 
 // consumerLister implements the ConsumerLister interface.
 type consumerLister struct {
-	listers.ResourceIndexer[*v1alpha1.Consumer]
+	listers.ResourceIndexer[*internalskafkaeventingv1alpha1.Consumer]
 }
 
 // NewConsumerLister returns a new ConsumerLister.
 func NewConsumerLister(indexer cache.Indexer) ConsumerLister {
-	return &consumerLister{listers.New[*v1alpha1.Consumer](indexer, v1alpha1.Resource("consumer"))}
+	return &consumerLister{listers.New[*internalskafkaeventingv1alpha1.Consumer](indexer, internalskafkaeventingv1alpha1.Resource("consumer"))}
 }
 
 // Consumers returns an object that can list and get Consumers.
 func (s *consumerLister) Consumers(namespace string) ConsumerNamespaceLister {
-	return consumerNamespaceLister{listers.NewNamespaced[*v1alpha1.Consumer](s.ResourceIndexer, namespace)}
+	return consumerNamespaceLister{listers.NewNamespaced[*internalskafkaeventingv1alpha1.Consumer](s.ResourceIndexer, namespace)}
 }
 
 // ConsumerNamespaceLister helps list and get Consumers.
@@ -56,15 +56,15 @@ func (s *consumerLister) Consumers(namespace string) ConsumerNamespaceLister {
 type ConsumerNamespaceLister interface {
 	// List lists all Consumers in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.Consumer, err error)
+	List(selector labels.Selector) (ret []*internalskafkaeventingv1alpha1.Consumer, err error)
 	// Get retrieves the Consumer from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.Consumer, error)
+	Get(name string) (*internalskafkaeventingv1alpha1.Consumer, error)
 	ConsumerNamespaceListerExpansion
 }
 
 // consumerNamespaceLister implements the ConsumerNamespaceLister
 // interface.
 type consumerNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.Consumer]
+	listers.ResourceIndexer[*internalskafkaeventingv1alpha1.Consumer]
 }
