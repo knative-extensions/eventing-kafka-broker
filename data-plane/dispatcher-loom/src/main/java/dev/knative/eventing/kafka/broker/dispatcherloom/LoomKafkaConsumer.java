@@ -25,9 +25,9 @@ import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
@@ -73,10 +73,8 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
         // Process queue elements until this is closed and the tasks queue is empty
         while (!isClosed.get() || !taskQueue.isEmpty()) {
             try {
-                Runnable task = taskQueue.poll(2000, TimeUnit.MILLISECONDS);
-                if (task != null) {
-                    task.run();
-                }
+                final var task = taskQueue.take();
+                task.run();
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for task", e);
                 break;
@@ -216,6 +214,21 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                     try {
                         consumer.subscribe(topics, listener);
                         promise.complete();
+                    } catch (Exception e) {
+                        promise.tryFail(e);
+                    }
+                },
+                promise);
+        return promise.future();
+    }
+
+    @Override
+    public Future<Map<TopicPartition, OffsetAndMetadata>> committed(final Set<TopicPartition> topicPartitions) {
+        final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
+        addTask(
+                () -> {
+                    try {
+                        promise.complete(consumer.committed(topicPartitions));
                     } catch (Exception e) {
                         promise.fail(e);
                     }
