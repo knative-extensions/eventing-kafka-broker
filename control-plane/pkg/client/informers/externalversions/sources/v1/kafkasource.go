@@ -19,24 +19,24 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
+	apissourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1"
+	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1"
 )
 
 // KafkaSourceInformer provides access to a shared informer and lister for
 // KafkaSources.
 type KafkaSourceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.KafkaSourceLister
+	Lister() sourcesv1.KafkaSourceLister
 }
 
 type kafkaSourceInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaSourceInformer(client versioned.Interface, namespace string
 				return client.SourcesV1().KafkaSources(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&sourcesv1.KafkaSource{},
+		&apissourcesv1.KafkaSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaSourceInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *kafkaSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sourcesv1.KafkaSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&apissourcesv1.KafkaSource{}, f.defaultInformer)
 }
 
-func (f *kafkaSourceInformer) Lister() v1.KafkaSourceLister {
-	return v1.NewKafkaSourceLister(f.Informer().GetIndexer())
+func (f *kafkaSourceInformer) Lister() sourcesv1.KafkaSourceLister {
+	return sourcesv1.NewKafkaSourceLister(f.Informer().GetIndexer())
 }

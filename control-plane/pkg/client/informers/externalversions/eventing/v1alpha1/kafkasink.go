@@ -19,24 +19,24 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	apiseventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
 )
 
 // KafkaSinkInformer provides access to a shared informer and lister for
 // KafkaSinks.
 type KafkaSinkInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.KafkaSinkLister
+	Lister() eventingv1alpha1.KafkaSinkLister
 }
 
 type kafkaSinkInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaSinkInformer(client versioned.Interface, namespace string, 
 				return client.EventingV1alpha1().KafkaSinks(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&eventingv1alpha1.KafkaSink{},
+		&apiseventingv1alpha1.KafkaSink{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaSinkInformer) defaultInformer(client versioned.Interface, resyncPe
 }
 
 func (f *kafkaSinkInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&eventingv1alpha1.KafkaSink{}, f.defaultInformer)
+	return f.factory.InformerFor(&apiseventingv1alpha1.KafkaSink{}, f.defaultInformer)
 }
 
-func (f *kafkaSinkInformer) Lister() v1alpha1.KafkaSinkLister {
-	return v1alpha1.NewKafkaSinkLister(f.Informer().GetIndexer())
+func (f *kafkaSinkInformer) Lister() eventingv1alpha1.KafkaSinkLister {
+	return eventingv1alpha1.NewKafkaSinkLister(f.Informer().GetIndexer())
 }

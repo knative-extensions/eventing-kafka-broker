@@ -29,7 +29,7 @@ type FakeEventingV1alpha1 struct {
 }
 
 func (c *FakeEventingV1alpha1) KafkaSinks(namespace string) v1alpha1.KafkaSinkInterface {
-	return &FakeKafkaSinks{c, namespace}
+	return newFakeKafkaSinks(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

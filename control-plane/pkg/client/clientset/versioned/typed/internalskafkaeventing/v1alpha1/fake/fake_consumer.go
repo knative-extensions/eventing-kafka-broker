@@ -19,129 +19,32 @@
 package fake
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
 )
 
-// FakeConsumers implements ConsumerInterface
-type FakeConsumers struct {
+// fakeConsumers implements ConsumerInterface
+type fakeConsumers struct {
+	*gentype.FakeClientWithList[*v1alpha1.Consumer, *v1alpha1.ConsumerList]
 	Fake *FakeInternalV1alpha1
-	ns   string
 }
 
-var consumersResource = v1alpha1.SchemeGroupVersion.WithResource("consumers")
-
-var consumersKind = v1alpha1.SchemeGroupVersion.WithKind("Consumer")
-
-// Get takes name of the consumer, and returns the corresponding consumer object, and an error if there is any.
-func (c *FakeConsumers) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Consumer, err error) {
-	emptyResult := &v1alpha1.Consumer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(consumersResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeConsumers(fake *FakeInternalV1alpha1, namespace string) internalskafkaeventingv1alpha1.ConsumerInterface {
+	return &fakeConsumers{
+		gentype.NewFakeClientWithList[*v1alpha1.Consumer, *v1alpha1.ConsumerList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("consumers"),
+			v1alpha1.SchemeGroupVersion.WithKind("Consumer"),
+			func() *v1alpha1.Consumer { return &v1alpha1.Consumer{} },
+			func() *v1alpha1.ConsumerList { return &v1alpha1.ConsumerList{} },
+			func(dst, src *v1alpha1.ConsumerList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ConsumerList) []*v1alpha1.Consumer { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1alpha1.ConsumerList, items []*v1alpha1.Consumer) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.Consumer), err
-}
-
-// List takes label and field selectors, and returns the list of Consumers that match those selectors.
-func (c *FakeConsumers) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ConsumerList, err error) {
-	emptyResult := &v1alpha1.ConsumerList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(consumersResource, consumersKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ConsumerList{ListMeta: obj.(*v1alpha1.ConsumerList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ConsumerList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested consumers.
-func (c *FakeConsumers) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(consumersResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a consumer and creates it.  Returns the server's representation of the consumer, and an error, if there is any.
-func (c *FakeConsumers) Create(ctx context.Context, consumer *v1alpha1.Consumer, opts v1.CreateOptions) (result *v1alpha1.Consumer, err error) {
-	emptyResult := &v1alpha1.Consumer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(consumersResource, c.ns, consumer, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Consumer), err
-}
-
-// Update takes the representation of a consumer and updates it. Returns the server's representation of the consumer, and an error, if there is any.
-func (c *FakeConsumers) Update(ctx context.Context, consumer *v1alpha1.Consumer, opts v1.UpdateOptions) (result *v1alpha1.Consumer, err error) {
-	emptyResult := &v1alpha1.Consumer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(consumersResource, c.ns, consumer, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Consumer), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeConsumers) UpdateStatus(ctx context.Context, consumer *v1alpha1.Consumer, opts v1.UpdateOptions) (result *v1alpha1.Consumer, err error) {
-	emptyResult := &v1alpha1.Consumer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(consumersResource, "status", c.ns, consumer, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Consumer), err
-}
-
-// Delete takes name of the consumer and deletes it. Returns an error if one occurs.
-func (c *FakeConsumers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(consumersResource, c.ns, name, opts), &v1alpha1.Consumer{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeConsumers) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(consumersResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ConsumerList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched consumer.
-func (c *FakeConsumers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Consumer, err error) {
-	emptyResult := &v1alpha1.Consumer{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(consumersResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.Consumer), err
 }

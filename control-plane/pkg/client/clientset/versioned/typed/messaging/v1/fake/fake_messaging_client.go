@@ -29,7 +29,7 @@ type FakeMessagingV1 struct {
 }
 
 func (c *FakeMessagingV1) KafkaChannels(namespace string) v1.KafkaChannelInterface {
-	return &FakeKafkaChannels{c, namespace}
+	return newFakeKafkaChannels(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

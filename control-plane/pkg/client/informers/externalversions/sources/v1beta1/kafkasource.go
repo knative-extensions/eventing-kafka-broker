@@ -19,24 +19,24 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	apissourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1beta1"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/sources/v1beta1"
 )
 
 // KafkaSourceInformer provides access to a shared informer and lister for
 // KafkaSources.
 type KafkaSourceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.KafkaSourceLister
+	Lister() sourcesv1beta1.KafkaSourceLister
 }
 
 type kafkaSourceInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaSourceInformer(client versioned.Interface, namespace string
 				return client.SourcesV1beta1().KafkaSources(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&sourcesv1beta1.KafkaSource{},
+		&apissourcesv1beta1.KafkaSource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaSourceInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *kafkaSourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&sourcesv1beta1.KafkaSource{}, f.defaultInformer)
+	return f.factory.InformerFor(&apissourcesv1beta1.KafkaSource{}, f.defaultInformer)
 }
 
-func (f *kafkaSourceInformer) Lister() v1beta1.KafkaSourceLister {
-	return v1beta1.NewKafkaSourceLister(f.Informer().GetIndexer())
+func (f *kafkaSourceInformer) Lister() sourcesv1beta1.KafkaSourceLister {
+	return sourcesv1beta1.NewKafkaSourceLister(f.Informer().GetIndexer())
 }

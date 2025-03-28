@@ -19,24 +19,24 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
+	apismessagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1"
+	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1"
 )
 
 // KafkaChannelInformer provides access to a shared informer and lister for
 // KafkaChannels.
 type KafkaChannelInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.KafkaChannelLister
+	Lister() messagingv1.KafkaChannelLister
 }
 
 type kafkaChannelInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaChannelInformer(client versioned.Interface, namespace strin
 				return client.MessagingV1().KafkaChannels(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&messagingv1.KafkaChannel{},
+		&apismessagingv1.KafkaChannel{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaChannelInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *kafkaChannelInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&messagingv1.KafkaChannel{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismessagingv1.KafkaChannel{}, f.defaultInformer)
 }
 
-func (f *kafkaChannelInformer) Lister() v1.KafkaChannelLister {
-	return v1.NewKafkaChannelLister(f.Informer().GetIndexer())
+func (f *kafkaChannelInformer) Lister() messagingv1.KafkaChannelLister {
+	return messagingv1.NewKafkaChannelLister(f.Informer().GetIndexer())
 }

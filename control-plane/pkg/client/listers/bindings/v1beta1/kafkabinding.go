@@ -19,10 +19,10 @@
 package v1beta1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 )
 
 // KafkaBindingLister helps list KafkaBindings.
@@ -30,7 +30,7 @@ import (
 type KafkaBindingLister interface {
 	// List lists all KafkaBindings in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.KafkaBinding, err error)
+	List(selector labels.Selector) (ret []*bindingsv1beta1.KafkaBinding, err error)
 	// KafkaBindings returns an object that can list and get KafkaBindings.
 	KafkaBindings(namespace string) KafkaBindingNamespaceLister
 	KafkaBindingListerExpansion
@@ -38,17 +38,17 @@ type KafkaBindingLister interface {
 
 // kafkaBindingLister implements the KafkaBindingLister interface.
 type kafkaBindingLister struct {
-	listers.ResourceIndexer[*v1beta1.KafkaBinding]
+	listers.ResourceIndexer[*bindingsv1beta1.KafkaBinding]
 }
 
 // NewKafkaBindingLister returns a new KafkaBindingLister.
 func NewKafkaBindingLister(indexer cache.Indexer) KafkaBindingLister {
-	return &kafkaBindingLister{listers.New[*v1beta1.KafkaBinding](indexer, v1beta1.Resource("kafkabinding"))}
+	return &kafkaBindingLister{listers.New[*bindingsv1beta1.KafkaBinding](indexer, bindingsv1beta1.Resource("kafkabinding"))}
 }
 
 // KafkaBindings returns an object that can list and get KafkaBindings.
 func (s *kafkaBindingLister) KafkaBindings(namespace string) KafkaBindingNamespaceLister {
-	return kafkaBindingNamespaceLister{listers.NewNamespaced[*v1beta1.KafkaBinding](s.ResourceIndexer, namespace)}
+	return kafkaBindingNamespaceLister{listers.NewNamespaced[*bindingsv1beta1.KafkaBinding](s.ResourceIndexer, namespace)}
 }
 
 // KafkaBindingNamespaceLister helps list and get KafkaBindings.
@@ -56,15 +56,15 @@ func (s *kafkaBindingLister) KafkaBindings(namespace string) KafkaBindingNamespa
 type KafkaBindingNamespaceLister interface {
 	// List lists all KafkaBindings in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.KafkaBinding, err error)
+	List(selector labels.Selector) (ret []*bindingsv1beta1.KafkaBinding, err error)
 	// Get retrieves the KafkaBinding from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.KafkaBinding, error)
+	Get(name string) (*bindingsv1beta1.KafkaBinding, error)
 	KafkaBindingNamespaceListerExpansion
 }
 
 // kafkaBindingNamespaceLister implements the KafkaBindingNamespaceLister
 // interface.
 type kafkaBindingNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.KafkaBinding]
+	listers.ResourceIndexer[*bindingsv1beta1.KafkaBinding]
 }

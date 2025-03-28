@@ -19,24 +19,24 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	apisbindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/bindings/v1"
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/bindings/v1"
 )
 
 // KafkaBindingInformer provides access to a shared informer and lister for
 // KafkaBindings.
 type KafkaBindingInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.KafkaBindingLister
+	Lister() bindingsv1.KafkaBindingLister
 }
 
 type kafkaBindingInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaBindingInformer(client versioned.Interface, namespace strin
 				return client.BindingsV1().KafkaBindings(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&bindingsv1.KafkaBinding{},
+		&apisbindingsv1.KafkaBinding{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaBindingInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *kafkaBindingInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&bindingsv1.KafkaBinding{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisbindingsv1.KafkaBinding{}, f.defaultInformer)
 }
 
-func (f *kafkaBindingInformer) Lister() v1.KafkaBindingLister {
-	return v1.NewKafkaBindingLister(f.Informer().GetIndexer())
+func (f *kafkaBindingInformer) Lister() bindingsv1.KafkaBindingLister {
+	return bindingsv1.NewKafkaBindingLister(f.Informer().GetIndexer())
 }

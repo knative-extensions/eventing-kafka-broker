@@ -19,14 +19,14 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
@@ -38,16 +38,16 @@ type ConsumerGroupsGetter interface {
 
 // ConsumerGroupInterface has methods to work with ConsumerGroup resources.
 type ConsumerGroupInterface interface {
-	Create(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.CreateOptions) (*v1alpha1.ConsumerGroup, error)
-	Update(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.UpdateOptions) (*v1alpha1.ConsumerGroup, error)
+	Create(ctx context.Context, consumerGroup *internalskafkaeventingv1alpha1.ConsumerGroup, opts v1.CreateOptions) (*internalskafkaeventingv1alpha1.ConsumerGroup, error)
+	Update(ctx context.Context, consumerGroup *internalskafkaeventingv1alpha1.ConsumerGroup, opts v1.UpdateOptions) (*internalskafkaeventingv1alpha1.ConsumerGroup, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, consumerGroup *v1alpha1.ConsumerGroup, opts v1.UpdateOptions) (*v1alpha1.ConsumerGroup, error)
+	UpdateStatus(ctx context.Context, consumerGroup *internalskafkaeventingv1alpha1.ConsumerGroup, opts v1.UpdateOptions) (*internalskafkaeventingv1alpha1.ConsumerGroup, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ConsumerGroup, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ConsumerGroupList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*internalskafkaeventingv1alpha1.ConsumerGroup, error)
+	List(ctx context.Context, opts v1.ListOptions) (*internalskafkaeventingv1alpha1.ConsumerGroupList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ConsumerGroup, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *internalskafkaeventingv1alpha1.ConsumerGroup, err error)
 	GetScale(ctx context.Context, consumerGroupName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, consumerGroupName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -56,19 +56,24 @@ type ConsumerGroupInterface interface {
 
 // consumerGroups implements ConsumerGroupInterface
 type consumerGroups struct {
-	*gentype.ClientWithList[*v1alpha1.ConsumerGroup, *v1alpha1.ConsumerGroupList]
+	*gentype.ClientWithList[*internalskafkaeventingv1alpha1.ConsumerGroup, *internalskafkaeventingv1alpha1.ConsumerGroupList]
 }
 
 // newConsumerGroups returns a ConsumerGroups
 func newConsumerGroups(c *InternalV1alpha1Client, namespace string) *consumerGroups {
 	return &consumerGroups{
-		gentype.NewClientWithList[*v1alpha1.ConsumerGroup, *v1alpha1.ConsumerGroupList](
+		gentype.NewClientWithList[*internalskafkaeventingv1alpha1.ConsumerGroup, *internalskafkaeventingv1alpha1.ConsumerGroupList](
 			"consumergroups",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ConsumerGroup { return &v1alpha1.ConsumerGroup{} },
-			func() *v1alpha1.ConsumerGroupList { return &v1alpha1.ConsumerGroupList{} }),
+			func() *internalskafkaeventingv1alpha1.ConsumerGroup {
+				return &internalskafkaeventingv1alpha1.ConsumerGroup{}
+			},
+			func() *internalskafkaeventingv1alpha1.ConsumerGroupList {
+				return &internalskafkaeventingv1alpha1.ConsumerGroupList{}
+			},
+		),
 	}
 }
 

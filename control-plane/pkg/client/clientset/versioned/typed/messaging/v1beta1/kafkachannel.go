@@ -19,13 +19,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type KafkaChannelsGetter interface {
 
 // KafkaChannelInterface has methods to work with KafkaChannel resources.
 type KafkaChannelInterface interface {
-	Create(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.CreateOptions) (*v1beta1.KafkaChannel, error)
-	Update(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.UpdateOptions) (*v1beta1.KafkaChannel, error)
+	Create(ctx context.Context, kafkaChannel *messagingv1beta1.KafkaChannel, opts v1.CreateOptions) (*messagingv1beta1.KafkaChannel, error)
+	Update(ctx context.Context, kafkaChannel *messagingv1beta1.KafkaChannel, opts v1.UpdateOptions) (*messagingv1beta1.KafkaChannel, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, kafkaChannel *v1beta1.KafkaChannel, opts v1.UpdateOptions) (*v1beta1.KafkaChannel, error)
+	UpdateStatus(ctx context.Context, kafkaChannel *messagingv1beta1.KafkaChannel, opts v1.UpdateOptions) (*messagingv1beta1.KafkaChannel, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.KafkaChannel, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.KafkaChannelList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*messagingv1beta1.KafkaChannel, error)
+	List(ctx context.Context, opts v1.ListOptions) (*messagingv1beta1.KafkaChannelList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.KafkaChannel, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *messagingv1beta1.KafkaChannel, err error)
 	KafkaChannelExpansion
 }
 
 // kafkaChannels implements KafkaChannelInterface
 type kafkaChannels struct {
-	*gentype.ClientWithList[*v1beta1.KafkaChannel, *v1beta1.KafkaChannelList]
+	*gentype.ClientWithList[*messagingv1beta1.KafkaChannel, *messagingv1beta1.KafkaChannelList]
 }
 
 // newKafkaChannels returns a KafkaChannels
 func newKafkaChannels(c *MessagingV1beta1Client, namespace string) *kafkaChannels {
 	return &kafkaChannels{
-		gentype.NewClientWithList[*v1beta1.KafkaChannel, *v1beta1.KafkaChannelList](
+		gentype.NewClientWithList[*messagingv1beta1.KafkaChannel, *messagingv1beta1.KafkaChannelList](
 			"kafkachannels",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.KafkaChannel { return &v1beta1.KafkaChannel{} },
-			func() *v1beta1.KafkaChannelList { return &v1beta1.KafkaChannelList{} }),
+			func() *messagingv1beta1.KafkaChannel { return &messagingv1beta1.KafkaChannel{} },
+			func() *messagingv1beta1.KafkaChannelList { return &messagingv1beta1.KafkaChannelList{} },
+		),
 	}
 }

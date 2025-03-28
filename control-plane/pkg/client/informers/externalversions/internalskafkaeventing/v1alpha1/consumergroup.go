@@ -19,24 +19,24 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	apisinternalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
+	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 )
 
 // ConsumerGroupInformer provides access to a shared informer and lister for
 // ConsumerGroups.
 type ConsumerGroupInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ConsumerGroupLister
+	Lister() internalskafkaeventingv1alpha1.ConsumerGroupLister
 }
 
 type consumerGroupInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredConsumerGroupInformer(client versioned.Interface, namespace stri
 				return client.InternalV1alpha1().ConsumerGroups(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&internalskafkaeventingv1alpha1.ConsumerGroup{},
+		&apisinternalskafkaeventingv1alpha1.ConsumerGroup{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *consumerGroupInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *consumerGroupInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&internalskafkaeventingv1alpha1.ConsumerGroup{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisinternalskafkaeventingv1alpha1.ConsumerGroup{}, f.defaultInformer)
 }
 
-func (f *consumerGroupInformer) Lister() v1alpha1.ConsumerGroupLister {
-	return v1alpha1.NewConsumerGroupLister(f.Informer().GetIndexer())
+func (f *consumerGroupInformer) Lister() internalskafkaeventingv1alpha1.ConsumerGroupLister {
+	return internalskafkaeventingv1alpha1.NewConsumerGroupLister(f.Informer().GetIndexer())
 }

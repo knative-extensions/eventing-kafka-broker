@@ -19,24 +19,24 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	apismessagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	versioned "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1beta1"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/messaging/v1beta1"
 )
 
 // KafkaChannelInformer provides access to a shared informer and lister for
 // KafkaChannels.
 type KafkaChannelInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.KafkaChannelLister
+	Lister() messagingv1beta1.KafkaChannelLister
 }
 
 type kafkaChannelInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredKafkaChannelInformer(client versioned.Interface, namespace strin
 				return client.MessagingV1beta1().KafkaChannels(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&messagingv1beta1.KafkaChannel{},
+		&apismessagingv1beta1.KafkaChannel{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *kafkaChannelInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *kafkaChannelInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&messagingv1beta1.KafkaChannel{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismessagingv1beta1.KafkaChannel{}, f.defaultInformer)
 }
 
-func (f *kafkaChannelInformer) Lister() v1beta1.KafkaChannelLister {
-	return v1beta1.NewKafkaChannelLister(f.Informer().GetIndexer())
+func (f *kafkaChannelInformer) Lister() messagingv1beta1.KafkaChannelLister {
+	return messagingv1beta1.NewKafkaChannelLister(f.Informer().GetIndexer())
 }

@@ -19,13 +19,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type KafkaSinksGetter interface {
 
 // KafkaSinkInterface has methods to work with KafkaSink resources.
 type KafkaSinkInterface interface {
-	Create(ctx context.Context, kafkaSink *v1alpha1.KafkaSink, opts v1.CreateOptions) (*v1alpha1.KafkaSink, error)
-	Update(ctx context.Context, kafkaSink *v1alpha1.KafkaSink, opts v1.UpdateOptions) (*v1alpha1.KafkaSink, error)
+	Create(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, opts v1.CreateOptions) (*eventingv1alpha1.KafkaSink, error)
+	Update(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, opts v1.UpdateOptions) (*eventingv1alpha1.KafkaSink, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, kafkaSink *v1alpha1.KafkaSink, opts v1.UpdateOptions) (*v1alpha1.KafkaSink, error)
+	UpdateStatus(ctx context.Context, kafkaSink *eventingv1alpha1.KafkaSink, opts v1.UpdateOptions) (*eventingv1alpha1.KafkaSink, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.KafkaSink, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.KafkaSinkList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*eventingv1alpha1.KafkaSink, error)
+	List(ctx context.Context, opts v1.ListOptions) (*eventingv1alpha1.KafkaSinkList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.KafkaSink, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *eventingv1alpha1.KafkaSink, err error)
 	KafkaSinkExpansion
 }
 
 // kafkaSinks implements KafkaSinkInterface
 type kafkaSinks struct {
-	*gentype.ClientWithList[*v1alpha1.KafkaSink, *v1alpha1.KafkaSinkList]
+	*gentype.ClientWithList[*eventingv1alpha1.KafkaSink, *eventingv1alpha1.KafkaSinkList]
 }
 
 // newKafkaSinks returns a KafkaSinks
 func newKafkaSinks(c *EventingV1alpha1Client, namespace string) *kafkaSinks {
 	return &kafkaSinks{
-		gentype.NewClientWithList[*v1alpha1.KafkaSink, *v1alpha1.KafkaSinkList](
+		gentype.NewClientWithList[*eventingv1alpha1.KafkaSink, *eventingv1alpha1.KafkaSinkList](
 			"kafkasinks",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.KafkaSink { return &v1alpha1.KafkaSink{} },
-			func() *v1alpha1.KafkaSinkList { return &v1alpha1.KafkaSinkList{} }),
+			func() *eventingv1alpha1.KafkaSink { return &eventingv1alpha1.KafkaSink{} },
+			func() *eventingv1alpha1.KafkaSinkList { return &eventingv1alpha1.KafkaSinkList{} },
+		),
 	}
 }

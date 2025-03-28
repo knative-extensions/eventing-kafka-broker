@@ -29,7 +29,7 @@ type FakeSourcesV1beta1 struct {
 }
 
 func (c *FakeSourcesV1beta1) KafkaSources(namespace string) v1beta1.KafkaSourceInterface {
-	return &FakeKafkaSources{c, namespace}
+	return newFakeKafkaSources(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

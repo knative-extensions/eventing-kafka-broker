@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	cmv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -37,6 +39,7 @@ const (
 	// is ready.
 	TransformationJsonataDeploymentReady       apis.ConditionType = "JsonataDeploymentReady"
 	TransformationJsonataDeploymentUnavailable string             = "JsonataDeploymentUnavailable"
+	TransformationJsonataCertificateNotReady   string             = "JsonataCertificateNotReady"
 	// TransformationJsonataSinkBindingReady is the condition to indicate that the Jsonata sink
 	// binding is ready.
 	TransformationJsonataSinkBindingReady apis.ConditionType = "JsonataSinkBindingReady"
@@ -87,7 +90,7 @@ func (ts *EventTransformStatus) InitializeConditions() {
 	ts.GetConditionSet().Manage(ts).InitializeConditions()
 }
 
-func (ts *EventTransformStatus) PropagateJsonataDeploymentStatus(ds appsv1.DeploymentStatus) {
+func (ts *EventTransformStatus) PropagateJsonataDeploymentStatus(ds appsv1.DeploymentStatus) bool {
 	defer ts.propagateTransformJsonataReadiness()
 	if ts.JsonataTransformationStatus == nil {
 		ts.JsonataTransformationStatus = &JsonataEventTransformationStatus{}
@@ -95,9 +98,34 @@ func (ts *EventTransformStatus) PropagateJsonataDeploymentStatus(ds appsv1.Deplo
 	ts.JsonataTransformationStatus.Deployment = ds
 	if ds.Replicas > 0 && ds.Replicas == ds.AvailableReplicas {
 		transformJsonataConditionSet.Manage(ts).MarkTrue(TransformationJsonataDeploymentReady)
-	} else {
-		transformJsonataConditionSet.Manage(ts).MarkFalse(TransformationJsonataDeploymentReady, TransformationJsonataDeploymentUnavailable, "Expected replicas: %d, available: %d", ds.Replicas, ds.AvailableReplicas)
+		return true
 	}
+	transformJsonataConditionSet.Manage(ts).MarkFalse(TransformationJsonataDeploymentReady, TransformationJsonataDeploymentUnavailable, "Expected replicas: %d, available: %d", ds.Replicas, ds.AvailableReplicas)
+	return false
+}
+
+func (ts *EventTransformStatus) PropagateJsonataCertificateStatus(cs cmv1.CertificateStatus) bool {
+	defer ts.propagateTransformJsonataReadiness()
+	var topLevel *cmv1.CertificateCondition
+	for _, cond := range cs.Conditions {
+		if cond.Type == cmv1.CertificateConditionReady {
+			topLevel = &cond
+			break
+		}
+	}
+	if topLevel == nil {
+		transformJsonataConditionSet.Manage(ts).MarkUnknown(TransformationJsonataDeploymentReady, TransformationJsonataCertificateNotReady, "Certificate is progressing")
+		return false
+	}
+	if topLevel.Status == cmmeta.ConditionUnknown {
+		transformJsonataConditionSet.Manage(ts).MarkUnknown(TransformationJsonataDeploymentReady, TransformationJsonataCertificateNotReady, "Certificate is progressing, "+topLevel.Reason+" Message: "+topLevel.Message)
+		return false
+	}
+	if topLevel.Status == cmmeta.ConditionFalse {
+		transformJsonataConditionSet.Manage(ts).MarkFalse(TransformationJsonataDeploymentReady, TransformationJsonataCertificateNotReady, "Certificate is not ready, "+topLevel.Reason+" Message: "+topLevel.Message)
+		return false
+	}
+	return true
 }
 
 func (ts *EventTransformStatus) PropagateJsonataSinkBindingUnset() {
@@ -105,7 +133,7 @@ func (ts *EventTransformStatus) PropagateJsonataSinkBindingUnset() {
 	transformJsonataConditionSet.Manage(ts).MarkTrue(TransformationJsonataSinkBindingReady)
 }
 
-func (ts *EventTransformStatus) PropagateJsonataSinkBindingStatus(sbs sourcesv1.SinkBindingStatus) {
+func (ts *EventTransformStatus) PropagateJsonataSinkBindingStatus(sbs sourcesv1.SinkBindingStatus) bool {
 	defer ts.propagateTransformJsonataReadiness()
 	if ts.JsonataTransformationStatus == nil {
 		ts.JsonataTransformationStatus = &JsonataEventTransformationStatus{}
@@ -118,15 +146,18 @@ func (ts *EventTransformStatus) PropagateJsonataSinkBindingStatus(sbs sourcesv1.
 	topLevel := sbs.GetCondition(apis.ConditionReady)
 	if topLevel == nil {
 		transformJsonataConditionSet.Manage(ts).MarkUnknown(TransformationJsonataSinkBindingReady, "", "")
-		return
+		return false
 	}
 	if topLevel.IsTrue() {
 		transformJsonataConditionSet.Manage(ts).MarkTrue(TransformationJsonataSinkBindingReady)
-	} else if topLevel.IsFalse() {
-		transformJsonataConditionSet.Manage(ts).MarkFalse(TransformationJsonataSinkBindingReady, topLevel.Reason, topLevel.Message)
-	} else {
-		transformJsonataConditionSet.Manage(ts).MarkUnknown(TransformationJsonataSinkBindingReady, topLevel.Reason, topLevel.Message)
+		return true
 	}
+	if topLevel.IsFalse() {
+		transformJsonataConditionSet.Manage(ts).MarkFalse(TransformationJsonataSinkBindingReady, topLevel.Reason, topLevel.Message)
+		return false
+	}
+	transformJsonataConditionSet.Manage(ts).MarkUnknown(TransformationJsonataSinkBindingReady, topLevel.Reason, topLevel.Message)
+	return false
 }
 
 func (ts *EventTransformStatus) propagateTransformJsonataReadiness() {
@@ -162,6 +193,10 @@ func (ts *EventTransformStatus) propagateTransformationConditionStatus(cond *api
 
 func (ts *EventTransformStatus) MarkWaitingForServiceEndpoints() {
 	ts.GetConditionSet().Manage(ts).MarkFalse(TransformConditionAddressable, TransformationAddressableWaitingForServiceEndpoints, "URL is empty")
+}
+
+func (ts *EventTransformStatus) IsTransformationReady() bool {
+	return ts.GetConditionSet().Manage(ts).GetCondition(TransformationConditionReady).IsTrue()
 }
 
 func (ts *EventTransformStatus) SetAddresses(addresses ...duckv1.Addressable) {

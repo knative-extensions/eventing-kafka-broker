@@ -19,11 +19,11 @@
 package v1
 
 import (
-	"net/http"
+	http "net/http"
 
 	rest "k8s.io/client-go/rest"
-	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
 type BindingsV1Interface interface {
@@ -85,10 +85,10 @@ func New(c rest.Interface) *BindingsV1Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1.SchemeGroupVersion
+	gv := bindingsv1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	config.NegotiatedSerializer = rest.CodecFactoryForGeneratedClient(scheme.Scheme, scheme.Codecs).WithoutConversion()
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()

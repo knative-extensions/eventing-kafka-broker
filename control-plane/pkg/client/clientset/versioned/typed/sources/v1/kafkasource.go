@@ -19,14 +19,14 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
+	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	scheme "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/scheme"
 )
 
@@ -38,16 +38,16 @@ type KafkaSourcesGetter interface {
 
 // KafkaSourceInterface has methods to work with KafkaSource resources.
 type KafkaSourceInterface interface {
-	Create(ctx context.Context, kafkaSource *v1.KafkaSource, opts metav1.CreateOptions) (*v1.KafkaSource, error)
-	Update(ctx context.Context, kafkaSource *v1.KafkaSource, opts metav1.UpdateOptions) (*v1.KafkaSource, error)
+	Create(ctx context.Context, kafkaSource *sourcesv1.KafkaSource, opts metav1.CreateOptions) (*sourcesv1.KafkaSource, error)
+	Update(ctx context.Context, kafkaSource *sourcesv1.KafkaSource, opts metav1.UpdateOptions) (*sourcesv1.KafkaSource, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, kafkaSource *v1.KafkaSource, opts metav1.UpdateOptions) (*v1.KafkaSource, error)
+	UpdateStatus(ctx context.Context, kafkaSource *sourcesv1.KafkaSource, opts metav1.UpdateOptions) (*sourcesv1.KafkaSource, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.KafkaSource, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.KafkaSourceList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*sourcesv1.KafkaSource, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*sourcesv1.KafkaSourceList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.KafkaSource, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *sourcesv1.KafkaSource, err error)
 	GetScale(ctx context.Context, kafkaSourceName string, options metav1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, kafkaSourceName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -56,19 +56,20 @@ type KafkaSourceInterface interface {
 
 // kafkaSources implements KafkaSourceInterface
 type kafkaSources struct {
-	*gentype.ClientWithList[*v1.KafkaSource, *v1.KafkaSourceList]
+	*gentype.ClientWithList[*sourcesv1.KafkaSource, *sourcesv1.KafkaSourceList]
 }
 
 // newKafkaSources returns a KafkaSources
 func newKafkaSources(c *SourcesV1Client, namespace string) *kafkaSources {
 	return &kafkaSources{
-		gentype.NewClientWithList[*v1.KafkaSource, *v1.KafkaSourceList](
+		gentype.NewClientWithList[*sourcesv1.KafkaSource, *sourcesv1.KafkaSourceList](
 			"kafkasources",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.KafkaSource { return &v1.KafkaSource{} },
-			func() *v1.KafkaSourceList { return &v1.KafkaSourceList{} }),
+			func() *sourcesv1.KafkaSource { return &sourcesv1.KafkaSource{} },
+			func() *sourcesv1.KafkaSourceList { return &sourcesv1.KafkaSourceList{} },
+		),
 	}
 }
 

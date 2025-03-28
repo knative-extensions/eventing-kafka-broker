@@ -29,7 +29,7 @@ type FakeBindingsV1 struct {
 }
 
 func (c *FakeBindingsV1) KafkaBindings(namespace string) v1.KafkaBindingInterface {
-	return &FakeKafkaBindings{c, namespace}
+	return newFakeKafkaBindings(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
