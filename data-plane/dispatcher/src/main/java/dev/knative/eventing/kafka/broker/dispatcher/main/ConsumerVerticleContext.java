@@ -75,6 +75,8 @@ public class ConsumerVerticleContext {
 
     private Tags tags;
 
+    private String ceMetadataExtensionPrefix;
+
     public ConsumerVerticleContext withConsumerConfigs(final Map<String, Object> consumerConfigs) {
         this.consumerConfigs = new HashMap<>(consumerConfigs);
         return this;
@@ -170,6 +172,11 @@ public class ConsumerVerticleContext {
         return this;
     }
 
+    public ConsumerVerticleContext withCeMetadataExtensionPrefix(final String ceMetadataExtensionPrefix) {
+        this.ceMetadataExtensionPrefix = ceMetadataExtensionPrefix;
+        return this;
+    }
+
     public ConsumerVerticleContext withEventTypeListerFactory(EventTypeListerFactory eventTypeListerFactory) {
         this.eventTypeListerFactory = eventTypeListerFactory;
         return this;
@@ -245,6 +252,10 @@ public class ConsumerVerticleContext {
 
     public ReactiveProducerFactory<String, CloudEvent> getProducerFactory() {
         return this.producerFactory;
+    }
+
+    public String getCeMetadataExtensionPrefix() {
+        return this.ceMetadataExtensionPrefix;
     }
 
     public EventTypeCreator getEventTypeCreator() {
