@@ -1,9 +1,7 @@
+version: "2"
 run:
-  timeout: 5m
-
   build-tags:
     - e2e
-
 linters:
   enable:
     - asciicheck
@@ -13,13 +11,28 @@ linters:
     - unparam
   disable:
     - errcheck
-
-issues:
-  exclude-dirs:
-    - control-plane/pkg/client
-    - data-plane
-  exclude-rules:
-    - path: test # Excludes /test, *_test.go etc.
-      linters:
-        - gosec
-        - unparam
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - gosec
+          - unparam
+        path: test
+    paths:
+      - control-plane/pkg/client
+      - data-plane
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
