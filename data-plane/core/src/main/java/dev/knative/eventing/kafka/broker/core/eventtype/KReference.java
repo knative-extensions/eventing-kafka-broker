@@ -40,6 +40,9 @@ public class KReference implements KubernetesResource {
     @JsonProperty("namespace")
     private String namespace;
 
+    @JsonProperty("address")
+    private String address;
+
     public KReference() {}
 
     public KReference(String apiVersion, String kind, String name, String namespace) {
@@ -94,6 +97,16 @@ public class KReference implements KubernetesResource {
         this.namespace = namespace;
     }
 
+    @JsonProperty("address")
+    public String getAddress() {
+        return this.address;
+    }
+
+    @JsonProperty("address")
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -102,7 +115,8 @@ public class KReference implements KubernetesResource {
         return Objects.equals(this.getApiVersion(), that.getApiVersion())
                 && Objects.equals(this.getKind(), that.getKind())
                 && Objects.equals(this.getName(), that.getName())
-                && Objects.equals(this.getNamespace(), that.getNamespace());
+                && Objects.equals(this.getNamespace(), that.getNamespace())
+                && Objects.equals(this.getAddress(), that.getAddress());
     }
 
     protected boolean canEqual(Object o) {
@@ -111,6 +125,7 @@ public class KReference implements KubernetesResource {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getApiVersion(), this.getKind(), this.getName(), this.getNamespace());
+        return Objects.hash(
+                this.getApiVersion(), this.getKind(), this.getName(), this.getNamespace(), this.getAddress());
     }
 }
