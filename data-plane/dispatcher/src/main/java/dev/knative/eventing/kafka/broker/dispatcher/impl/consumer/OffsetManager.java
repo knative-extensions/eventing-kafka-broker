@@ -22,11 +22,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -42,15 +38,19 @@ import org.slf4j.LoggerFactory;
 public final class OffsetManager implements RecordDispatcherListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OffsetManager.class);
+    private static final long OFFSET_TRACKER_CLEANUP_INTERVAL_MS = 1000;
 
     private final ReactiveKafkaConsumer<?, ?> consumer;
 
     private final Map<TopicPartition, OffsetTracker> offsetTrackers;
 
     private final Consumer<Integer> onCommit;
-    private final long timerId;
+    private final long commitTimerId;
+    private final long offsetTrackCleanupTimerId;
     private final Vertx vertx;
     private final PartitionRevokedHandler partitionRevokedHandler;
+    private final PartitionAssignedHandler partitionAssignedHandler;
+    private Collection<TopicPartition> assignedPartitions;
 
     /**
      * All args constructor.
@@ -69,10 +69,11 @@ public final class OffsetManager implements RecordDispatcherListener {
         this.offsetTrackers = new ConcurrentHashMap<>();
         this.onCommit = onCommit;
 
-        this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
+        this.commitTimerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
         this.vertx = vertx;
+        this.assignedPartitions = Collections.emptyList();
 
-        partitionRevokedHandler = partitions -> {
+        this.partitionRevokedHandler = partitions -> {
             try {
                 // Async commit offsets.
                 final var commitFuture = commit(partitions);
@@ -88,10 +89,30 @@ public final class OffsetManager implements RecordDispatcherListener {
                 logPartitions("revoked", partitions);
             }
         };
+
+        this.partitionAssignedHandler = partitions -> {
+            this.assignedPartitions = partitions;
+
+            return Future.succeededFuture().mapEmpty();
+        };
+
+        this.offsetTrackCleanupTimerId = vertx.setPeriodic(OFFSET_TRACKER_CLEANUP_INTERVAL_MS, h -> {
+            for (var entry : offsetTrackers.entrySet()) {
+                var tp = entry.getKey();
+                if (!assignedPartitions.stream().anyMatch(o -> o.partition() == tp.partition())) {
+                    // partition of offsetTrack is not in partitions list anymore --> remove offsetTracker from list
+                    offsetTrackers.remove(tp);
+                }
+            }
+        });
     }
 
     public PartitionRevokedHandler getPartitionRevokedHandler() {
         return partitionRevokedHandler;
+    }
+
+    public PartitionAssignedHandler getPartitionAssignedHandler() {
+        return partitionAssignedHandler;
     }
 
     /**
@@ -102,7 +123,10 @@ public final class OffsetManager implements RecordDispatcherListener {
     @Override
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
-        if (!offsetTrackers.containsKey(tp)) {
+        boolean recordPartitionBelongsToAssignedPartitions =
+                assignedPartitions.stream().anyMatch(o -> o.partition() == record.partition());
+
+        if (recordPartitionBelongsToAssignedPartitions && !offsetTrackers.containsKey(tp)) {
             // Initialize offset tracker for the given record's topic/partition.
             offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
         }
@@ -210,7 +234,8 @@ public final class OffsetManager implements RecordDispatcherListener {
 
     @Override
     public Future<Void> close() {
-        vertx.cancelTimer(timerId);
+        vertx.cancelTimer(commitTimerId);
+        vertx.cancelTimer(offsetTrackCleanupTimerId);
         return commitAll();
     }
 
