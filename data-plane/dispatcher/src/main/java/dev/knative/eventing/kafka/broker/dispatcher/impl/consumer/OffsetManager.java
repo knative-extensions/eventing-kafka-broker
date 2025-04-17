@@ -22,11 +22,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -75,6 +72,7 @@ public final class OffsetManager implements RecordDispatcherListener {
 
         this.commitTimerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
         this.vertx = vertx;
+        this.assignedPartitions = Collections.emptyList();
 
         this.partitionRevokedHandler = partitions -> {
             try {

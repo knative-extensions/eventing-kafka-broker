@@ -24,7 +24,6 @@ import io.vertx.core.impl.ContextInternal;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -88,11 +87,6 @@ public class MockReactiveKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K,
     public Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener) {
         consumer.subscribe(topics, listener);
         return Future.succeededFuture();
-    }
-
-    @Override
-    public Future<Map<TopicPartition, OffsetAndMetadata>> committed(Set<TopicPartition> topicPartitions) {
-        return Future.succeededFuture(consumer.committed(topicPartitions));
     }
 
     @Override

@@ -90,19 +90,6 @@ public abstract class AbstractOffsetManagerTest {
                 .when(vertxConsumer)
                 .commit(any(Map.class));
 
-        doAnswer(invocation -> {
-                    if (failureFlag.get()) {
-                        return Future.failedFuture("some failure");
-                    }
-                    // If you don't want to lose hours in debugging, please don't remove this FQCNs :)
-                    final Set<TopicPartition> topicsPartitions = invocation.getArgument(0);
-                    return Future.succeededFuture(mockConsumer.committed(topicsPartitions));
-                })
-                .when(vertxConsumer)
-                .committed(any(Set.class));
-
-        when(vertxConsumer.unwrap()).then((invocation) -> mockConsumer);
-
         final var offsetManager = createOffsetManager(Vertx.vertx(), vertxConsumer, partitionsConsumed);
         testExecutor.accept(offsetManager, failureFlag);
 
