@@ -23,7 +23,6 @@ import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -160,11 +159,6 @@ public class UnorderedOffsetManagerBenchmark {
 
         @Override
         public Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener) {
-            return null;
-        }
-
-        @Override
-        public Future<Map<TopicPartition, OffsetAndMetadata>> committed(Set<TopicPartition> topicPartitions) {
             return null;
         }
 

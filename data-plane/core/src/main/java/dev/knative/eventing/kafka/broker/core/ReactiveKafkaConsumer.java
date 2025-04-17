@@ -20,11 +20,9 @@ import io.vertx.core.Handler;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
@@ -91,18 +89,6 @@ public interface ReactiveKafkaConsumer<K, V> {
      * @return A future indicating the success or failure of the subscribe operation.
      */
     Future<Void> subscribe(Collection<String> topics, ConsumerRebalanceListener listener);
-
-    /**
-     * Get the last committed offsets for the given partitions (whether the commit happened by this process or
-     * another). The returned offsets will be used as the position for the consumer in the event of a failure.
-     *
-     * @see KafkaConsumer#committed(Set)
-     *
-     * @param topicPartitions partitions to check.
-     * @return The latest committed offsets for the given partitions; {@code null} will be returned for the
-     *         partition if there is no such message.
-     */
-    Future<Map<TopicPartition, OffsetAndMetadata>> committed(final Set<TopicPartition> topicPartitions);
 
     /**
      * Retrieves the underlying Kafka Consumer instance.

@@ -25,7 +25,6 @@ import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -216,21 +215,6 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
                         promise.complete();
                     } catch (Exception e) {
                         promise.tryFail(e);
-                    }
-                },
-                promise);
-        return promise.future();
-    }
-
-    @Override
-    public Future<Map<TopicPartition, OffsetAndMetadata>> committed(final Set<TopicPartition> topicPartitions) {
-        final Promise<Map<TopicPartition, OffsetAndMetadata>> promise = Promise.promise();
-        addTask(
-                () -> {
-                    try {
-                        promise.complete(consumer.committed(topicPartitions));
-                    } catch (Exception e) {
-                        promise.fail(e);
                     }
                 },
                 promise);
