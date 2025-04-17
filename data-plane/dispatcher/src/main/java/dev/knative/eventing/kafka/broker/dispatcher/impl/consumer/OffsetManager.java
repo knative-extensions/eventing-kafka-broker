@@ -27,7 +27,6 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -43,13 +42,15 @@ import org.slf4j.LoggerFactory;
 public final class OffsetManager implements RecordDispatcherListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OffsetManager.class);
+    private static final long OFFSET_TRACKER_CLEANUP_INTERVAL_MS = 1000;
 
     private final ReactiveKafkaConsumer<?, ?> consumer;
 
     private final Map<TopicPartition, OffsetTracker> offsetTrackers;
 
     private final Consumer<Integer> onCommit;
-    private final long timerId;
+    private final long commitTimerId;
+    private final long offsetTrackCleanupTimerId;
     private final Vertx vertx;
     private final PartitionRevokedHandler partitionRevokedHandler;
     private final PartitionAssignedHandler partitionAssignedHandler;
@@ -72,7 +73,7 @@ public final class OffsetManager implements RecordDispatcherListener {
         this.offsetTrackers = new ConcurrentHashMap<>();
         this.onCommit = onCommit;
 
-        this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
+        this.commitTimerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
         this.vertx = vertx;
 
         this.partitionRevokedHandler = partitions -> {
@@ -97,6 +98,16 @@ public final class OffsetManager implements RecordDispatcherListener {
 
             return Future.succeededFuture().mapEmpty();
         };
+
+        this.offsetTrackCleanupTimerId = vertx.setPeriodic(OFFSET_TRACKER_CLEANUP_INTERVAL_MS, h -> {
+            for(var entry : offsetTrackers.entrySet()) {
+                var tp = entry.getKey();
+                if(!assignedPartitions.stream().anyMatch(o -> o.partition() == tp.partition())) {
+                    // partition of offsetTrack is not in partitions list anymore --> remove offsetTracker from list
+                    offsetTrackers.remove(tp);
+                }
+            }
+        });
     }
 
     public PartitionRevokedHandler getPartitionRevokedHandler() {
@@ -225,7 +236,8 @@ public final class OffsetManager implements RecordDispatcherListener {
 
     @Override
     public Future<Void> close() {
-        vertx.cancelTimer(timerId);
+        vertx.cancelTimer(commitTimerId);
+        vertx.cancelTimer(offsetTrackCleanupTimerId);
         return commitAll();
     }
 
