@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.kafka.clients.consumer.MockConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
@@ -126,40 +125,42 @@ public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Test
     public void shouldCommitAfterSendingEventsOrderedOnTheSamePartitionWithInducedFailure() {
-        assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), 0, (offsetStrategy, failureFlag) -> {
-                    offsetStrategy.recordReceived(record("aaa", 0, 0));
-                    failureFlag.set(true);
-                    for (int i = 0; i < 10; i++) {
-                        var rec = record("aaa", 0, i);
-                        offsetStrategy.successfullySentToSubscriber(rec);
-                    }
-                    failureFlag.set(false);
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 10));
-                })
+        assertThatOffsetCommittedWithFailures(
+                        List.of(new TopicPartition("aaa", 0)), 0, (offsetStrategy, failureFlag) -> {
+                            offsetStrategy.recordReceived(record("aaa", 0, 0));
+                            failureFlag.set(true);
+                            for (int i = 0; i < 10; i++) {
+                                var rec = record("aaa", 0, i);
+                                offsetStrategy.successfullySentToSubscriber(rec);
+                            }
+                            failureFlag.set(false);
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 10));
+                        })
                 .containsEntry(new TopicPartition("aaa", 0), 11L);
     }
 
     @Test
     public void shouldCommitInAMixedOrderWithInducedFailure() {
-        assertThatOffsetCommittedWithFailures(List.of(new TopicPartition("aaa", 0)), 0, (offsetStrategy, failureFlag) -> {
-                    offsetStrategy.recordReceived(record("aaa", 0, 0));
+        assertThatOffsetCommittedWithFailures(
+                        List.of(new TopicPartition("aaa", 0)), 0, (offsetStrategy, failureFlag) -> {
+                            offsetStrategy.recordReceived(record("aaa", 0, 0));
 
-                    // Order:
-                    // 0 2 1
-                    // flip failure flag
-                    // 4 3
-                    // flip failure flag
-                    // 6 5
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 0));
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 2));
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1));
-                    failureFlag.set(true);
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 4));
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 3));
-                    failureFlag.set(false);
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 6));
-                    offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 5));
-                })
+                            // Order:
+                            // 0 2 1
+                            // flip failure flag
+                            // 4 3
+                            // flip failure flag
+                            // 6 5
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 0));
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 2));
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 1));
+                            failureFlag.set(true);
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 4));
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 3));
+                            failureFlag.set(false);
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 6));
+                            offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 5));
+                        })
                 .containsEntry(new TopicPartition("aaa", 0), 7L);
     }
 

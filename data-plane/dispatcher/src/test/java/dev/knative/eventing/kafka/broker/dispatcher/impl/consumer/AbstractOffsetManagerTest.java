@@ -28,7 +28,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Map;
@@ -70,11 +69,9 @@ public abstract class AbstractOffsetManagerTest {
         final var mockConsumer = new MockConsumer<String, CloudEvent>(OffsetResetStrategy.NONE);
         mockConsumer.assign(partitionsConsumed);
         if (initialOffset > 0) {
-            mockConsumer.commitSync(
-                    partitionsConsumed.stream()
-                            .map(tp -> new AbstractMap.SimpleEntry<>(tp, new OffsetAndMetadata(initialOffset-1)))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-            );
+            mockConsumer.commitSync(partitionsConsumed.stream()
+                    .map(tp -> new AbstractMap.SimpleEntry<>(tp, new OffsetAndMetadata(initialOffset - 1)))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
 
         // Funky flag to flip in order to induce a failure
