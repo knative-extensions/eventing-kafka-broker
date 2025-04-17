@@ -22,7 +22,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;

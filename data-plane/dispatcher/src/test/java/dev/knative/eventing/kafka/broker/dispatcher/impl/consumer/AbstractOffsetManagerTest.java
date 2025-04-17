@@ -21,7 +21,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
