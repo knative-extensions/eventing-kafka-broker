@@ -1702,6 +1702,9 @@ func TestReconcileKind(t *testing.T) {
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
 			},
+			AreOffsetsInitializedFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (bool, error) {
+				return true, nil
+			},
 			SystemNamespace:                    systemNamespace,
 			AutoscalerConfig:                   "",
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
@@ -1849,6 +1852,9 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			},
 			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
 				return 1, nil
+			},
+			AreOffsetsInitializedFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (bool, error) {
+				return true, nil
 			},
 			SystemNamespace:                    systemNamespace,
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
