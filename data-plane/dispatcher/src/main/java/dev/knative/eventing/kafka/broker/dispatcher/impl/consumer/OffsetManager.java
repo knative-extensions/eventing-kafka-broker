@@ -46,7 +46,7 @@ public final class OffsetManager implements RecordDispatcherListener {
 
     private final Consumer<Integer> onCommit;
     private final long commitTimerId;
-    private final long offsetTrackCleanupTimerId;
+    private final long offsetTrackerCleanupTimerId;
     private final Vertx vertx;
     private final PartitionRevokedHandler partitionRevokedHandler;
     private final PartitionAssignedHandler partitionAssignedHandler;
@@ -96,7 +96,7 @@ public final class OffsetManager implements RecordDispatcherListener {
             return Future.succeededFuture().mapEmpty();
         };
 
-        this.offsetTrackCleanupTimerId = vertx.setPeriodic(OFFSET_TRACKER_CLEANUP_INTERVAL_MS, h -> {
+        this.offsetTrackerCleanupTimerId = vertx.setPeriodic(OFFSET_TRACKER_CLEANUP_INTERVAL_MS, h -> {
             for (var entry : offsetTrackers.entrySet()) {
                 var tp = entry.getKey();
                 if (!assignedPartitions.stream().anyMatch(o -> o.partition() == tp.partition())) {
@@ -235,7 +235,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     @Override
     public Future<Void> close() {
         vertx.cancelTimer(commitTimerId);
-        vertx.cancelTimer(offsetTrackCleanupTimerId);
+        vertx.cancelTimer(offsetTrackerCleanupTimerId);
         return commitAll();
     }
 
