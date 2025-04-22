@@ -34,7 +34,7 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
     private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
 
     public static final String ADDRESS = "resourcesreconciler.core";
-    public static final int RECONCILE_TIMEOUT = 100000;
+    public static final int RECONCILE_TIMEOUT = 10000;
     public static final int RECONCILE_FAILED_RETRY_DELAY = 5000;
 
     private final Vertx vertx;
