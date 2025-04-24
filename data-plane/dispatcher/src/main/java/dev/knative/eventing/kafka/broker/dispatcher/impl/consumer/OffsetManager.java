@@ -99,7 +99,7 @@ public final class OffsetManager implements RecordDispatcherListener {
         this.offsetTrackerCleanupTimerId = vertx.setPeriodic(OFFSET_TRACKER_CLEANUP_INTERVAL_MS, h -> {
             for (var entry : offsetTrackers.entrySet()) {
                 var tp = entry.getKey();
-                if (!assignedPartitions.stream().anyMatch(o -> o.partition() == tp.partition() && o.topic() == tp.topic())) {
+                if (!assignedPartitions.stream().anyMatch(tp::equals)) {
                     // partition of offsetTrack is not in partitions list anymore --> remove offsetTracker from list
                     offsetTrackers.remove(tp);
                 }
@@ -124,7 +124,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
         boolean recordPartitionBelongsToAssignedPartitions =
-                assignedPartitions.stream().anyMatch(o -> o.partition() == record.partition() && o.topic() == record.topic());
+                assignedPartitions.stream().anyMatch(tp::equals);
 
         if (recordPartitionBelongsToAssignedPartitions && !offsetTrackers.containsKey(tp)) {
             // Initialize offset tracker for the given record's topic/partition.
