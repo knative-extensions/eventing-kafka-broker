@@ -123,12 +123,19 @@ public final class OffsetManager implements RecordDispatcherListener {
     @Override
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
+        final var offsetTracker = offsetTrackers.get(tp);
         boolean recordPartitionBelongsToAssignedPartitions =
                 assignedPartitions.stream().anyMatch(tp::equals);
 
-        if (recordPartitionBelongsToAssignedPartitions && !offsetTrackers.containsKey(tp)) {
-            // Initialize offset tracker for the given record's topic/partition.
-            offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
+        if (recordPartitionBelongsToAssignedPartitions) {
+            if (offsetTracker == null) {
+                // Initialize offset tracker for the given record's topic/partition.
+                offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
+            } else {
+                if (record.offset() < offsetTracker.initialOffset) {
+                    logger.debug("Received records offset ({}) is less than offsetTrackers initial offset ({})", record.offset(), offsetTracker.initialOffset);
+                }
+            }
         }
     }
 
@@ -287,6 +294,10 @@ public final class OffsetManager implements RecordDispatcherListener {
         }
 
         synchronized void recordNewOffset(final long offset) {
+            if (offset < initialOffset) {
+                return;
+            }
+
             final var bitSetOffset = (int) (offset - initialOffset);
             committedOffsets.set(bitSetOffset);
             maybeReset(bitSetOffset);
