@@ -22,7 +22,12 @@ import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import java.util.*;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -124,7 +129,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
         final var offsetTracker = offsetTrackers.get(tp);
-        boolean recordPartitionBelongsToAssignedPartitions =
+        final boolean recordPartitionBelongsToAssignedPartitions =
                 assignedPartitions.stream().anyMatch(tp::equals);
 
         if (recordPartitionBelongsToAssignedPartitions) {
