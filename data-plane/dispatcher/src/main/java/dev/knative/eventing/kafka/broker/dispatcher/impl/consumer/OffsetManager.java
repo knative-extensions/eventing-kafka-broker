@@ -129,8 +129,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
         final var offsetTracker = offsetTrackers.get(tp);
-        final boolean recordPartitionBelongsToAssignedPartitions =
-                assignedPartitions.stream().anyMatch(tp::equals);
+        final boolean recordPartitionBelongsToAssignedPartitions = assignedPartitions.stream().anyMatch(tp::equals);
 
         if (recordPartitionBelongsToAssignedPartitions) {
             if (offsetTracker == null) {
