@@ -102,11 +102,8 @@ public final class OffsetManager implements RecordDispatcherListener {
     @Override
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
-        final var offsetTracker = offsetTrackers.get(tp);
-        if (offsetTracker == null) {
-            // Initialize offset tracker for the given record's topic/partition.
-            offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
-        } else {
+        final var offsetTracker = offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
+        if (offsetTracker != null && record.offset() < offsetTracker.initialOffset) {
             if (record.offset() < offsetTracker.initialOffset) {
                 logger.debug(
                         "Received records offset ({}) is less than offsetTrackers initial offset ({})",
