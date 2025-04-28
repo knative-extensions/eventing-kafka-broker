@@ -108,7 +108,10 @@ public final class OffsetManager implements RecordDispatcherListener {
             offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
         } else {
             if (record.offset() < offsetTracker.initialOffset) {
-                logger.debug("Received records offset ({}) is less than offsetTrackers initial offset ({})", record.offset(), offsetTracker.initialOffset);
+                logger.debug(
+                        "Received records offset ({}) is less than offsetTrackers initial offset ({})",
+                        record.offset(),
+                        offsetTracker.initialOffset);
             }
         }
     }
@@ -154,7 +157,12 @@ public final class OffsetManager implements RecordDispatcherListener {
         final var ot = this.offsetTrackers.get(new TopicPartition(record.topic(), record.partition()));
         if (ot != null) {
             if (record.offset() < ot.initialOffset) {
-                logger.debug("Ignoring commit for {}-{} offset {}, offset tracker already on {}", record.topic(), record.partition(), record.offset(), ot.initialOffset);
+                logger.debug(
+                        "Ignoring commit for {}-{} offset {}, offset tracker already on {}",
+                        record.topic(),
+                        record.partition(),
+                        record.offset(),
+                        ot.initialOffset);
                 return;
             }
 
