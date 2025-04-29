@@ -102,9 +102,12 @@ public final class OffsetManager implements RecordDispatcherListener {
     @Override
     public void recordReceived(final ConsumerRecord<?, ?> record) {
         final var tp = new TopicPartition(record.topic(), record.partition());
-        if (!offsetTrackers.containsKey(tp)) {
-            // Initialize offset tracker for the given record's topic/partition.
-            offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
+        final var offsetTracker = offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
+        if (offsetTracker != null && record.offset() < offsetTracker.initialOffset) {
+            logger.debug(
+                    "Received records offset ({}) is less than offsetTrackers initial offset ({})",
+                    record.offset(),
+                    offsetTracker.initialOffset);
         }
     }
 
@@ -148,6 +151,16 @@ public final class OffsetManager implements RecordDispatcherListener {
         // Note: it's not possible to commit offsets of partitions that this a particular consumer instance doesn't own.
         final var ot = this.offsetTrackers.get(new TopicPartition(record.topic(), record.partition()));
         if (ot != null) {
+            if (record.offset() < ot.initialOffset) {
+                logger.debug(
+                        "Ignoring commit for {}-{} offset {}, offset tracker already on {}",
+                        record.topic(),
+                        record.partition(),
+                        record.offset(),
+                        ot.initialOffset);
+                return;
+            }
+
             ot.recordNewOffset(record.offset());
         }
     }
