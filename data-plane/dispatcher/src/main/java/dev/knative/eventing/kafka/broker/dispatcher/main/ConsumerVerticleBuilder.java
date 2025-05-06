@@ -44,6 +44,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsu
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.VertxInternal;
@@ -75,11 +76,22 @@ public class ConsumerVerticleBuilder {
     }
 
     private ConsumerVerticle.Initializer getInitializer() {
-        return (vertx, consumerVerticle) -> consumerVerticleContext
+        return (vertx, consumerVerticle) -> {
+            Promise<Void> promise = Promise.promise();
+            consumerVerticleContext
                 .getAuthProvider()
                 .getCredentials(consumerVerticleContext.getResource())
-                .onSuccess(credentials -> build(vertx, consumerVerticle, credentials))
-                .mapEmpty();
+                .onSuccess(credentials -> {
+                try {
+                    build(vertx, consumerVerticle, credentials);
+                    promise.complete();
+                } catch (Exception e) {
+                    promise.fail(e);
+                    }
+                })
+                .onFailure(promise::fail);
+            return promise.future();
+        };
     }
 
     private void build(final Vertx vertx, final ConsumerVerticle consumerVerticle, final Credentials credentials) {
