@@ -98,7 +98,7 @@ func (cg *ConsumerGroup) MarkAutoscalerSucceeded() {
 }
 
 func (cg *ConsumerGroup) MarkAutoscalerDisabled() {
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrueWithReason(ConditionAutoscaling, "Autoscaler is disabled", "")
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrueWithReason(ConditionAutoscaling, "AutoscalerDisabled", "")
 }
 
 func (cg *ConsumerGroup) MarkAutoscalerFailed(reason string, err error) error {
