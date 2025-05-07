@@ -193,7 +193,11 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         if (this.targetOIDCAudience.isEmpty()) {
             requestToken = Future.succeededFuture(null);
         } else {
-            requestToken = this.tokenProvider.getToken(this.oidcServiceAccount, this.targetOIDCAudience);
+            if (this.oidcServiceAccount.name() == null || this.oidcServiceAccount.name().isEmpty()) {
+                requestToken = Future.failedFuture("can't request an OIDC token, as target has an audience set, but no OIDC service account set in client yet");
+            } else {
+                requestToken = this.tokenProvider.getToken(this.oidcServiceAccount, this.targetOIDCAudience);
+            }
         }
 
         return requestToken
