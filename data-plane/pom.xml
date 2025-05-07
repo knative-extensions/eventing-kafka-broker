@@ -54,8 +54,8 @@
     <net.logstash.logback.encoder.version>8.0</net.logstash.logback.encoder.version>
     <assertj.version>3.27.3</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
-    <junit.jupiter.version>5.10.5</junit.jupiter.version>
-    <mokito.junit.jupiter.version>5.17.0</mokito.junit.jupiter.version>
+    <junit.jupiter.version>5.12.2</junit.jupiter.version>
+    <mockito.junit.jupiter.version>5.17.0</mockito.junit.jupiter.version>
     <fabric8.kubernetes.version>7.1.0</fabric8.kubernetes.version>
     <kafka.version>3.9.0</kafka.version>
     <debezium.version>3.0.7.Final</debezium.version>
@@ -373,7 +373,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
-        <version>${mokito.junit.jupiter.version}</version>
+        <version>${mockito.junit.jupiter.version}</version>
         <scope>test</scope>
         <exclusions>
           <exclusion>
