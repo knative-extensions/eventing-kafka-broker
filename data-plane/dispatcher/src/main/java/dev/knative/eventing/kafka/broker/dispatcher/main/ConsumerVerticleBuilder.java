@@ -79,17 +79,17 @@ public class ConsumerVerticleBuilder {
         return (vertx, consumerVerticle) -> {
             Promise<Void> promise = Promise.promise();
             consumerVerticleContext
-                .getAuthProvider()
-                .getCredentials(consumerVerticleContext.getResource())
-                .onSuccess(credentials -> {
-                try {
-                    build(vertx, consumerVerticle, credentials);
-                    promise.complete();
-                } catch (Exception e) {
-                    promise.fail(e);
-                    }
-                })
-                .onFailure(promise::fail);
+                    .getAuthProvider()
+                    .getCredentials(consumerVerticleContext.getResource())
+                    .onSuccess(credentials -> {
+                        try {
+                            build(vertx, consumerVerticle, credentials);
+                            promise.complete();
+                        } catch (Exception e) {
+                            promise.fail(e);
+                        }
+                    })
+                    .onFailure(promise::fail);
             return promise.future();
         };
     }
