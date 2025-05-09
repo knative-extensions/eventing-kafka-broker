@@ -313,9 +313,13 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventi
 		}
 	}
 	trigger.Status.SubscriberURI = cg.Status.SubscriberURI
+	trigger.Status.SubscriberCACerts = cg.Status.SubscriberCACerts
+	trigger.Status.SubscriberAudience = cg.Status.SubscriberAudience
 	trigger.Status.MarkSubscriberResolvedSucceeded()
 
 	trigger.Status.DeadLetterSinkURI = cg.Status.DeadLetterSinkURI
+	trigger.Status.DeadLetterSinkCACerts = cg.Status.DeadLetterSinkCACerts
+	trigger.Status.DeadLetterSinkAudience = cg.Status.DeadLetterSinkAudience
 	trigger.Status.MarkDeadLetterSinkResolvedSucceeded()
 
 	trigger.Status.PropagateSubscriptionCondition(&apis.Condition{
