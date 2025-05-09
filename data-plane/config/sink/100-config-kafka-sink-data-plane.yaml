@@ -74,7 +74,6 @@ data:
     linger.ms=0
     max.block.ms=60000
     max.request.size=1048576
-    partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
     receive.buffer.bytes=-1
     request.timeout.ms=2000
     enable.idempotence=false
