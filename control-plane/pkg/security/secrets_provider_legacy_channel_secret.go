@@ -38,17 +38,18 @@ func ResolveAuthContextFromLegacySecret(s *corev1.Secret) (*NetSpecAuthContext, 
 	protocolStr, protocolContract := getProtocolFromLegacyChannelSecret(s)
 
 	virtualSecret := s.DeepCopy()
+
 	virtualSecret.Data[ProtocolKey] = []byte(protocolStr)
-	if v, ok := virtualSecret.Data["sasltype"]; ok {
+	if v, ok := virtualSecret.Data[SaslType]; ok {
 		virtualSecret.Data[SaslMechanismKey] = v
 	}
-	if v, ok := virtualSecret.Data["saslType"]; ok {
+	if v, ok := virtualSecret.Data[SaslTypeLegacy]; ok {
 		virtualSecret.Data[SaslMechanismKey] = v
 	}
-	if v, ok := virtualSecret.Data["username"]; ok {
+	if v, ok := virtualSecret.Data[SaslUsernameKey]; ok {
 		virtualSecret.Data[SaslUserKey] = v
 	}
-	if v, ok := virtualSecret.Data["user"]; ok {
+	if v, ok := virtualSecret.Data[SaslUserKey]; ok {
 		virtualSecret.Data[SaslUserKey] = v
 	}
 
