@@ -71,6 +71,8 @@ public class ConsumerVerticleFactoryImplTest {
         producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
         producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
+        final var ceMetadataExtensionPrefix = "knativekafka";
+
         final var verticleFactory = new ConsumerVerticleFactoryImpl(
                 consumerProperties,
                 new WebClientOptions(),
@@ -80,7 +82,8 @@ public class ConsumerVerticleFactoryImplTest {
                 new MockReactiveConsumerFactory<>(),
                 new dev.knative.eventing.kafka.broker.receiver.MockReactiveProducerFactory<>(),
                 mock(EventTypeCreator.class),
-                mock(EventTypeListerFactory.class));
+                mock(EventTypeListerFactory.class),
+                ceMetadataExtensionPrefix);
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
@@ -118,6 +121,8 @@ public class ConsumerVerticleFactoryImplTest {
         producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
         producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
+        final var ceMetadataExtensionPrefix = "knativekafka";
+
         final var verticleFactory = new ConsumerVerticleFactoryImpl(
                 consumerProperties,
                 new WebClientOptions(),
@@ -127,7 +132,8 @@ public class ConsumerVerticleFactoryImplTest {
                 new MockReactiveConsumerFactory<>(),
                 new MockReactiveProducerFactory<>(),
                 mock(EventTypeCreator.class),
-                mock(EventTypeListerFactory.class));
+                mock(EventTypeListerFactory.class),
+                ceMetadataExtensionPrefix);
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
@@ -169,6 +175,8 @@ public class ConsumerVerticleFactoryImplTest {
         producerConfigs.setProperty(VALUE_SERIALIZER_CLASS_CONFIG, CloudEventSerializer.class.getName());
         producerConfigs.setProperty(INTERCEPTOR_CLASSES_CONFIG, PartitionKeyExtensionInterceptor.class.getName());
 
+        final var ceMetadataExtensionPrefix = "knativekafka";
+
         final var verticleFactory = new ConsumerVerticleFactoryImpl(
                 consumerProperties,
                 new WebClientOptions(),
@@ -178,7 +186,8 @@ public class ConsumerVerticleFactoryImplTest {
                 new MockReactiveConsumerFactory<>(),
                 new MockReactiveProducerFactory<>(),
                 mock(EventTypeCreator.class),
-                mock(EventTypeListerFactory.class));
+                mock(EventTypeListerFactory.class),
+                ceMetadataExtensionPrefix);
 
         final var egress = DataPlaneContract.Egress.newBuilder()
                 .setConsumerGroup("1234")
