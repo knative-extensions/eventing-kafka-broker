@@ -98,6 +98,10 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 }
 
 func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData map[string][]byte) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
+	// Make sure secretData is never nil
+	if secretData == nil {
+		secretData = make(map[string][]byte)
+	}
 
 	secret := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
