@@ -59,8 +59,10 @@ data:
     #  for each method starting with `set` there is a property that can be set with the name that follows the `set`
     #  prefix starting with a lowercase letter.
     # For example, there is a method called `setIdleTimeout` and the associated property is `idleTimeout`.
+    # idleTimeoutUnit is optional and defaults to SECONDS if not specified.
     config-kafka-source-webclient.properties: |
       idleTimeout=10000
+      idleTimeoutUnit=MILLISECONDS
   config-kafka-source-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
@@ -157,4 +159,5 @@ data:
     # ssl.trustmanager.algorithm
   config-kafka-source-webclient.properties: |
     idleTimeout=10000
+    idleTimeoutUnit=MILLISECONDS
     maxPoolSize=100
