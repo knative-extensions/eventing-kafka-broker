@@ -62,6 +62,10 @@ func (m MockKafkaClient) Brokers() []*sarama.Broker {
 	panic("implement me")
 }
 
+func (m MockKafkaClient) PartitionNotReadable(topic string, partition int32) bool {
+	panic("implement me")
+}
+
 func (m MockKafkaClient) Broker(brokerID int32) (*sarama.Broker, error) {
 	if m.ShouldFailBrokenPipe {
 		return nil, brokenPipeError{}
