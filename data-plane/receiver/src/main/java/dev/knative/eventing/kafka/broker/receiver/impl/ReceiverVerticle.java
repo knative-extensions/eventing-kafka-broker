@@ -86,9 +86,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     private final IngressRequestHandler ingressRequestHandler;
     private final ReceiverEnv env;
-    private int oidcDiscoveryCallbackId;
 
     private AuthHandler authHandler;
+    private final Handler<HttpServerRequest> handler;
     private HttpServer httpServer;
     private HttpServer httpsServer;
     private MessageConsumer<Object> messageConsumer;
@@ -124,6 +124,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         this.authVerifier = new AuthVerifierImpl(oidcDiscoveryConfigListener);
         this.authHandler = new AuthHandler(this.authVerifier);
+
+        this.handler = new ProbeHandler(
+                env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -154,9 +157,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         }
 
         authVerifier.start(vertx);
-
-        final var handler = new ProbeHandler(
-                env.getLivenessProbePath(), env.getReadinessProbePath(), new MethodNotAllowedHandler(this));
 
         if (this.httpsServer != null) {
             CompositeFuture.all(
@@ -252,14 +252,30 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                         .setCertValue(Buffer.buffer(java.nio.file.Files.readString(this.tlsCrtFile.toPath())))
                         .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(this.tlsKeyFile.toPath())));
 
-                httpsServer
-                        .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
-                        .onSuccess(v -> logger.info("Succeeded to update TLS key pair"))
-                        .onFailure(
-                                e -> logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
+                if (httpsServer == null) {
+                    // receiver was started without an initialized HTTPS server --> initialize and start it now
+                    httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
+                    httpsServer = vertx.createHttpServer(httpsServerOptions);
 
+                    this.httpsServer
+                            .requestHandler(handler)
+                            .exceptionHandler(e -> logger.error("Socket error in HTTPS server", e))
+                            .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost());
+                } else {
+                    httpsServer
+                            .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
+                            .onSuccess(v -> logger.info("Succeeded to update TLS key pair"))
+                            .onFailure(e ->
+                                    logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
+                }
             } catch (IOException e) {
                 logger.error("Failed to read file {}", tlsCrtFile.toPath(), e);
+            }
+        } else {
+            if (httpsServer != null) {
+                // We had a running HTTPS server before and TLS files were removed now --> shutdown HTTPS server again
+                httpsServer.close();
+                httpsServer = null;
             }
         }
     }
