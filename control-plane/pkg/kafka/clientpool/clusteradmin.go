@@ -35,6 +35,11 @@ type clusterAdmin struct {
 	onFatalError func(err error)
 }
 
+func (a *clusterAdmin) Coordinator(group string) (*sarama.Broker, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func clusterAdminFromClient(saramaClient sarama.Client, makeClusterAdmin kafka.NewClusterAdminFromClientFunc) (*clusterAdmin, error) {
 	c, ok := saramaClient.(*client)
 	if !ok {
@@ -62,6 +67,14 @@ func (a *clusterAdmin) CreateTopic(topic string, detail *sarama.TopicDetail, val
 		a.onFatalError(err)
 	}
 	return err
+}
+
+func (a *clusterAdmin) ElectLeaders(electionType sarama.ElectionType, m map[string][]int32) (map[string]map[int32]*sarama.PartitionResult, error) {
+	x, err := a.clusterAdmin.ElectLeaders(electionType, m)
+	if a.isFatalError(err) {
+		a.onFatalError(err)
+	}
+	return x, err
 }
 
 func (a *clusterAdmin) ListTopics() (map[string]sarama.TopicDetail, error) {
