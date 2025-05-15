@@ -240,8 +240,8 @@ func (cg *ConsumerGroup) IsAutoscalerNotDisabled() bool {
 		return true
 	}
 
-	// If condition is True but reason is not "AutoscalerDisabled", then it's actively enabled
-	return condition.Reason != "AutoscalerDisabled"
+	// If condition is True but reason is not "autoscaler is disabled", then it's actively enabled
+	return condition.Reason != AutoscalerDisabled
 }
 
 func (cg *ConsumerGroup) HasDeadLetterSink() bool {
