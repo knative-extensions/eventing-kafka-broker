@@ -26,6 +26,7 @@ const (
 	ConditionConsumerGroupConsumers          apis.ConditionType = "Consumers"
 	ConditionConsumerGroupConsumersScheduled apis.ConditionType = "ConsumersScheduled"
 	ConditionAutoscaling                     apis.ConditionType = "Autoscaler"
+	AutoscalerDisabled                                          = "AutoscalerDisabled"
 	// Labels
 	KafkaChannelNameLabel           = "kafkachannel-name"
 	ConsumerLabelSelector           = "kafka.eventing.knative.dev/metadata.uid"
@@ -98,7 +99,7 @@ func (cg *ConsumerGroup) MarkAutoscalerSucceeded() {
 }
 
 func (cg *ConsumerGroup) MarkAutoscalerDisabled() {
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrueWithReason(ConditionAutoscaling, "AutoscalerDisabled", "")
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkTrueWithReason(ConditionAutoscaling, AutoscalerDisabled, "")
 }
 
 func (cg *ConsumerGroup) MarkAutoscalerFailed(reason string, err error) error {
