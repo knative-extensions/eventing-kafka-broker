@@ -58,7 +58,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeExactFilter()));
+            return AnyFilter.newFilter(List.of(makeExactFilter()));
         }
 
         @Override
@@ -71,7 +71,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
+            return AnyFilter.newFilter(List.of(makeExactFilter(), makePrefixFilter(), makeSuffixFilter()));
         }
 
         @Override
@@ -84,7 +84,8 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()));
+            return AnyFilter.newFilter(
+                    List.of(makePrefixFilterNoMatch(), makeSufficFilterNoMatch(), makeExactFilter()));
         }
 
         @Override
@@ -97,7 +98,8 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()));
+            return AnyFilter.newFilter(
+                    List.of(makeExactFilter(), makePrefixFilterNoMatch(), makeSufficFilterNoMatch()));
         }
 
         @Override
@@ -110,7 +112,7 @@ public class AnyFilterBenchmark {
 
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makePrefixFilter(), makePrefixFilterNoMatch()));
+            return AnyFilter.newFilter(List.of(makePrefixFilter(), makePrefixFilterNoMatch()));
         }
 
         @Override
@@ -122,7 +124,8 @@ public class AnyFilterBenchmark {
     public static class AnyFilter2EventsMatch2DifferentFiltersOneFilterMatchesNeither extends FilterBenchmark {
         @Override
         protected Filter createFilter() {
-            return new AnyFilter(List.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()));
+            return AnyFilter.newFilter(
+                    List.of(makeSufficFilterNoMatch(), makePrefixFilter(), makePrefixFilterNoMatch()));
         }
 
         @Override

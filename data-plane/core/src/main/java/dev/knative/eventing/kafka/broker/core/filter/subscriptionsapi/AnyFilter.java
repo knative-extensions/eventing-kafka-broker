@@ -27,7 +27,15 @@ public class AnyFilter implements Filter {
 
     private final List<Filter> filters;
 
-    public AnyFilter(List<Filter> filters) {
+    public static Filter newFilter(List<Filter> filters) {
+        if (filters.size() == 1) {
+            return filters.getFirst();
+        }
+
+        return new AnyFilter(filters);
+    }
+
+    private AnyFilter(List<Filter> filters) {
         this.filters = filters;
     }
 

@@ -51,25 +51,25 @@ public class AllFilterTest {
 
     static Stream<Arguments> testCases() {
         return Stream.of(
-                Arguments.of(event, new AllFilter(List.of(new ExactFilter(Map.of("id", "123-42")))), true),
+                Arguments.of(event, AllFilter.newFilter(List.of(new ExactFilter(Map.of("id", "123-42")))), true),
                 Arguments.of(
                         event,
-                        new AllFilter(List.of(
+                        AllFilter.newFilter(List.of(
                                 new ExactFilter(Map.of("id", "123-42")),
                                 new ExactFilter(Map.of("source", "/api/some-source")))),
                         true),
                 Arguments.of(
                         event,
-                        new AllFilter(List.of(
+                        AllFilter.newFilter(List.of(
                                 new ExactFilter(Map.of("id", "123")),
                                 new ExactFilter(Map.of("source", "/api/some-source")))),
                         false),
                 Arguments.of(
                         event,
-                        new AllFilter(List.of(
+                        AllFilter.newFilter(List.of(
                                 new ExactFilter(Map.of("id", "123-42")),
                                 new ExactFilter(Map.of("source", "/api/something-else")))),
                         false),
-                Arguments.of(event, new AllFilter(Collections.emptyList()), true));
+                Arguments.of(event, AllFilter.newFilter(Collections.emptyList()), true));
     }
 }
