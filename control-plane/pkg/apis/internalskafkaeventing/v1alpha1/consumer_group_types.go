@@ -232,6 +232,18 @@ func (cg *ConsumerGroup) IsNotScheduled() bool {
 	return cond.IsFalse() || cond.IsUnknown()
 }
 
+func (cg *ConsumerGroup) IsAutoscalerNotDisabled() bool {
+	condition := cg.Status.GetCondition(ConditionAutoscaling)
+
+	// If condition doesn't exist or is not true, it's not in "disabled" state
+	if condition == nil || condition.Status != corev1.ConditionTrue {
+		return true
+	}
+
+	// If condition is True but reason is not "autoscaler is disabled", then it's actively enabled
+	return condition.Reason != AutoscalerDisabled
+}
+
 func (cg *ConsumerGroup) HasDeadLetterSink() bool {
 	return hasDeadLetterSink(cg.Spec.Template.Spec.Delivery)
 }

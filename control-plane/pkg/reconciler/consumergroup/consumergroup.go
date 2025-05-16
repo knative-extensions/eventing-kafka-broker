@@ -211,11 +211,18 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consu
 		}
 		cg.MarkAutoscalerSucceeded()
 	} else {
-		// If KEDA is not installed or autoscaler feature disabled, do nothing
-		cg.MarkAutoscalerDisabled()
-		if err := r.deleteKedaObjects(ctx, cg); err != nil {
-			return err
+
+		// If KEDA autoscaler feature is disabled, we need to check if it was enabled before
+		// check if the conditoion is not yet AutoscalerDisabled, only than delete KEDA objects
+		if cg.IsAutoscalerNotDisabled() {
+			logger.Debugw("Deleting KEDA objects as autoscaler is being disabled")
+			if err := r.deleteKedaObjects(ctx, cg); err != nil {
+				return err
+			}
 		}
+
+		// Mark as disabled after successful deletion, or if the feature was already disabled
+		cg.MarkAutoscalerDisabled()
 	}
 
 	logger.Debugw("Reconciling consumers")
