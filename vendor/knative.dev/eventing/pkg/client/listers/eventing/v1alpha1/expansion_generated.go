@@ -25,3 +25,19 @@ type EventPolicyListerExpansion interface{}
 // EventPolicyNamespaceListerExpansion allows custom methods to be added to
 // EventPolicyNamespaceLister.
 type EventPolicyNamespaceListerExpansion interface{}
+
+// EventTransformListerExpansion allows custom methods to be added to
+// EventTransformLister.
+type EventTransformListerExpansion interface{}
+
+// EventTransformNamespaceListerExpansion allows custom methods to be added to
+// EventTransformNamespaceLister.
+type EventTransformNamespaceListerExpansion interface{}
+
+// RequestReplyListerExpansion allows custom methods to be added to
+// RequestReplyLister.
+type RequestReplyListerExpansion interface{}
+
+// RequestReplyNamespaceListerExpansion allows custom methods to be added to
+// RequestReplyNamespaceLister.
+type RequestReplyNamespaceListerExpansion interface{}

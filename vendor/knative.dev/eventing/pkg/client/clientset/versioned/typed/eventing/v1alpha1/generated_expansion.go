@@ -19,3 +19,7 @@ limitations under the License.
 package v1alpha1
 
 type EventPolicyExpansion interface{}
+
+type EventTransformExpansion interface{}
+
+type RequestReplyExpansion interface{}

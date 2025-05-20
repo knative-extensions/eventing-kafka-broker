@@ -19,10 +19,10 @@ limitations under the License.
 package v1beta2
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
-	v1beta2 "knative.dev/eventing/pkg/apis/sources/v1beta2"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	sourcesv1beta2 "knative.dev/eventing/pkg/apis/sources/v1beta2"
 )
 
 // PingSourceLister helps list PingSources.
@@ -30,7 +30,7 @@ import (
 type PingSourceLister interface {
 	// List lists all PingSources in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta2.PingSource, err error)
+	List(selector labels.Selector) (ret []*sourcesv1beta2.PingSource, err error)
 	// PingSources returns an object that can list and get PingSources.
 	PingSources(namespace string) PingSourceNamespaceLister
 	PingSourceListerExpansion
@@ -38,25 +38,17 @@ type PingSourceLister interface {
 
 // pingSourceLister implements the PingSourceLister interface.
 type pingSourceLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*sourcesv1beta2.PingSource]
 }
 
 // NewPingSourceLister returns a new PingSourceLister.
 func NewPingSourceLister(indexer cache.Indexer) PingSourceLister {
-	return &pingSourceLister{indexer: indexer}
-}
-
-// List lists all PingSources in the indexer.
-func (s *pingSourceLister) List(selector labels.Selector) (ret []*v1beta2.PingSource, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta2.PingSource))
-	})
-	return ret, err
+	return &pingSourceLister{listers.New[*sourcesv1beta2.PingSource](indexer, sourcesv1beta2.Resource("pingsource"))}
 }
 
 // PingSources returns an object that can list and get PingSources.
 func (s *pingSourceLister) PingSources(namespace string) PingSourceNamespaceLister {
-	return pingSourceNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return pingSourceNamespaceLister{listers.NewNamespaced[*sourcesv1beta2.PingSource](s.ResourceIndexer, namespace)}
 }
 
 // PingSourceNamespaceLister helps list and get PingSources.
@@ -64,36 +56,15 @@ func (s *pingSourceLister) PingSources(namespace string) PingSourceNamespaceList
 type PingSourceNamespaceLister interface {
 	// List lists all PingSources in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta2.PingSource, err error)
+	List(selector labels.Selector) (ret []*sourcesv1beta2.PingSource, err error)
 	// Get retrieves the PingSource from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta2.PingSource, error)
+	Get(name string) (*sourcesv1beta2.PingSource, error)
 	PingSourceNamespaceListerExpansion
 }
 
 // pingSourceNamespaceLister implements the PingSourceNamespaceLister
 // interface.
 type pingSourceNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all PingSources in the indexer for a given namespace.
-func (s pingSourceNamespaceLister) List(selector labels.Selector) (ret []*v1beta2.PingSource, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1beta2.PingSource))
-	})
-	return ret, err
-}
-
-// Get retrieves the PingSource from the indexer for a given namespace and name.
-func (s pingSourceNamespaceLister) Get(name string) (*v1beta2.PingSource, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1beta2.Resource("pingsource"), name)
-	}
-	return obj.(*v1beta2.PingSource), nil
+	listers.ResourceIndexer[*sourcesv1beta2.PingSource]
 }

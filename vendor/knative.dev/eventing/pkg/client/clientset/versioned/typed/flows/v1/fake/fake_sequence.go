@@ -19,123 +19,30 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1 "knative.dev/eventing/pkg/apis/flows/v1"
+	flowsv1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/flows/v1"
 )
 
-// FakeSequences implements SequenceInterface
-type FakeSequences struct {
+// fakeSequences implements SequenceInterface
+type fakeSequences struct {
+	*gentype.FakeClientWithList[*v1.Sequence, *v1.SequenceList]
 	Fake *FakeFlowsV1
-	ns   string
 }
 
-var sequencesResource = v1.SchemeGroupVersion.WithResource("sequences")
-
-var sequencesKind = v1.SchemeGroupVersion.WithKind("Sequence")
-
-// Get takes name of the sequence, and returns the corresponding sequence object, and an error if there is any.
-func (c *FakeSequences) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Sequence, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(sequencesResource, c.ns, name), &v1.Sequence{})
-
-	if obj == nil {
-		return nil, err
+func newFakeSequences(fake *FakeFlowsV1, namespace string) flowsv1.SequenceInterface {
+	return &fakeSequences{
+		gentype.NewFakeClientWithList[*v1.Sequence, *v1.SequenceList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("sequences"),
+			v1.SchemeGroupVersion.WithKind("Sequence"),
+			func() *v1.Sequence { return &v1.Sequence{} },
+			func() *v1.SequenceList { return &v1.SequenceList{} },
+			func(dst, src *v1.SequenceList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.SequenceList) []*v1.Sequence { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.SequenceList, items []*v1.Sequence) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1.Sequence), err
-}
-
-// List takes label and field selectors, and returns the list of Sequences that match those selectors.
-func (c *FakeSequences) List(ctx context.Context, opts metav1.ListOptions) (result *v1.SequenceList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(sequencesResource, sequencesKind, c.ns, opts), &v1.SequenceList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.SequenceList{ListMeta: obj.(*v1.SequenceList).ListMeta}
-	for _, item := range obj.(*v1.SequenceList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested sequences.
-func (c *FakeSequences) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(sequencesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a sequence and creates it.  Returns the server's representation of the sequence, and an error, if there is any.
-func (c *FakeSequences) Create(ctx context.Context, sequence *v1.Sequence, opts metav1.CreateOptions) (result *v1.Sequence, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(sequencesResource, c.ns, sequence), &v1.Sequence{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Sequence), err
-}
-
-// Update takes the representation of a sequence and updates it. Returns the server's representation of the sequence, and an error, if there is any.
-func (c *FakeSequences) Update(ctx context.Context, sequence *v1.Sequence, opts metav1.UpdateOptions) (result *v1.Sequence, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(sequencesResource, c.ns, sequence), &v1.Sequence{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Sequence), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeSequences) UpdateStatus(ctx context.Context, sequence *v1.Sequence, opts metav1.UpdateOptions) (*v1.Sequence, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(sequencesResource, "status", c.ns, sequence), &v1.Sequence{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Sequence), err
-}
-
-// Delete takes name of the sequence and deletes it. Returns an error if one occurs.
-func (c *FakeSequences) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(sequencesResource, c.ns, name, opts), &v1.Sequence{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeSequences) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(sequencesResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.SequenceList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched sequence.
-func (c *FakeSequences) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Sequence, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(sequencesResource, c.ns, name, pt, data, subresources...), &v1.Sequence{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Sequence), err
 }

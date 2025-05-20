@@ -30,12 +30,15 @@ import (
 	"knative.dev/pkg/webhook"
 	"knative.dev/pkg/webhook/certificates"
 	"knative.dev/pkg/webhook/resourcesemantics"
+	"knative.dev/pkg/webhook/resourcesemantics/conversion"
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
 	eventingcorev1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 
+	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
+	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
 
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
@@ -43,7 +46,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/core"
 	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 )
 
 const (
@@ -53,7 +56,9 @@ const (
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
 	eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"):    &eventingv1alpha1.KafkaSink{},
 	sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"):    &sourcesv1beta1.KafkaSource{},
+	sourcesv1.SchemeGroupVersion.WithKind("KafkaSource"):         &sourcesv1.KafkaSource{},
 	messagingv1beta1.SchemeGroupVersion.WithKind("KafkaChannel"): &messagingv1beta1.KafkaChannel{},
+	messagingv1.SchemeGroupVersion.WithKind("KafkaChannel"):      &messagingv1.KafkaChannel{},
 	eventingcorev1.SchemeGroupVersion.WithKind("Broker"):         &eventingv1.BrokerStub{},
 	kafkainternals.SchemeGroupVersion.WithKind("ConsumerGroup"):  &kafkainternals.ConsumerGroup{},
 	kafkainternals.SchemeGroupVersion.WithKind("Consumer"):       &kafkainternals.Consumer{},
@@ -144,6 +149,41 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 	)
 }
 
+func NewConversionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
+
+	ctxFunc := func(ctx context.Context) context.Context {
+		return ctx
+	}
+
+	return conversion.NewConversionController(
+		ctx,
+
+		// The path on which to serve the webhook
+		"/resource-conversion",
+
+		map[schema.GroupKind]conversion.GroupKindConversion{
+			sourcesv1.Kind("KafkaSource"): {
+				DefinitionName: "kafkasources.sources.knative.dev",
+				HubVersion:     sourcesv1beta1.SchemeGroupVersion.Version,
+				Zygotes: map[string]conversion.ConvertibleObject{
+					sourcesv1beta1.SchemeGroupVersion.Version: &sourcesv1beta1.KafkaSource{},
+					sourcesv1.SchemeGroupVersion.Version:      &sourcesv1.KafkaSource{},
+				},
+			},
+			messagingv1.Kind("KafkaChannel"): {
+				DefinitionName: "kafkachannels.messaging.knative.dev",
+				HubVersion:     messagingv1beta1.SchemeGroupVersion.Version,
+				Zygotes: map[string]conversion.ConvertibleObject{
+					messagingv1beta1.SchemeGroupVersion.Version: &messagingv1beta1.KafkaChannel{},
+					messagingv1.SchemeGroupVersion.Version:      &messagingv1.KafkaChannel{},
+				},
+			},
+		},
+		// A function that infuses the context passed to ConvertTo/ConvertFrom/SetDefaults with custom metadata.
+		ctxFunc,
+	)
+}
+
 func main() {
 
 	// Set up a signal context with our webhook options
@@ -159,5 +199,6 @@ func main() {
 		NewDefaultingAdmissionController,
 		NewPodDefaultingAdmissionController,
 		NewValidationAdmissionController,
+		NewConversionController,
 	)
 }

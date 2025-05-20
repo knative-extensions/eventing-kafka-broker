@@ -19,123 +19,32 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1 "knative.dev/eventing/pkg/apis/sources/v1"
+	sourcesv1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/sources/v1"
 )
 
-// FakeApiServerSources implements ApiServerSourceInterface
-type FakeApiServerSources struct {
+// fakeApiServerSources implements ApiServerSourceInterface
+type fakeApiServerSources struct {
+	*gentype.FakeClientWithList[*v1.ApiServerSource, *v1.ApiServerSourceList]
 	Fake *FakeSourcesV1
-	ns   string
 }
 
-var apiserversourcesResource = v1.SchemeGroupVersion.WithResource("apiserversources")
-
-var apiserversourcesKind = v1.SchemeGroupVersion.WithKind("ApiServerSource")
-
-// Get takes name of the apiServerSource, and returns the corresponding apiServerSource object, and an error if there is any.
-func (c *FakeApiServerSources) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ApiServerSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(apiserversourcesResource, c.ns, name), &v1.ApiServerSource{})
-
-	if obj == nil {
-		return nil, err
+func newFakeApiServerSources(fake *FakeSourcesV1, namespace string) sourcesv1.ApiServerSourceInterface {
+	return &fakeApiServerSources{
+		gentype.NewFakeClientWithList[*v1.ApiServerSource, *v1.ApiServerSourceList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("apiserversources"),
+			v1.SchemeGroupVersion.WithKind("ApiServerSource"),
+			func() *v1.ApiServerSource { return &v1.ApiServerSource{} },
+			func() *v1.ApiServerSourceList { return &v1.ApiServerSourceList{} },
+			func(dst, src *v1.ApiServerSourceList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.ApiServerSourceList) []*v1.ApiServerSource { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.ApiServerSourceList, items []*v1.ApiServerSource) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1.ApiServerSource), err
-}
-
-// List takes label and field selectors, and returns the list of ApiServerSources that match those selectors.
-func (c *FakeApiServerSources) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ApiServerSourceList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(apiserversourcesResource, apiserversourcesKind, c.ns, opts), &v1.ApiServerSourceList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.ApiServerSourceList{ListMeta: obj.(*v1.ApiServerSourceList).ListMeta}
-	for _, item := range obj.(*v1.ApiServerSourceList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested apiServerSources.
-func (c *FakeApiServerSources) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(apiserversourcesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a apiServerSource and creates it.  Returns the server's representation of the apiServerSource, and an error, if there is any.
-func (c *FakeApiServerSources) Create(ctx context.Context, apiServerSource *v1.ApiServerSource, opts metav1.CreateOptions) (result *v1.ApiServerSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(apiserversourcesResource, c.ns, apiServerSource), &v1.ApiServerSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.ApiServerSource), err
-}
-
-// Update takes the representation of a apiServerSource and updates it. Returns the server's representation of the apiServerSource, and an error, if there is any.
-func (c *FakeApiServerSources) Update(ctx context.Context, apiServerSource *v1.ApiServerSource, opts metav1.UpdateOptions) (result *v1.ApiServerSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(apiserversourcesResource, c.ns, apiServerSource), &v1.ApiServerSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.ApiServerSource), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeApiServerSources) UpdateStatus(ctx context.Context, apiServerSource *v1.ApiServerSource, opts metav1.UpdateOptions) (*v1.ApiServerSource, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(apiserversourcesResource, "status", c.ns, apiServerSource), &v1.ApiServerSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.ApiServerSource), err
-}
-
-// Delete takes name of the apiServerSource and deletes it. Returns an error if one occurs.
-func (c *FakeApiServerSources) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(apiserversourcesResource, c.ns, name, opts), &v1.ApiServerSource{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeApiServerSources) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(apiserversourcesResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.ApiServerSourceList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched apiServerSource.
-func (c *FakeApiServerSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ApiServerSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(apiserversourcesResource, c.ns, name, pt, data, subresources...), &v1.ApiServerSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.ApiServerSource), err
 }

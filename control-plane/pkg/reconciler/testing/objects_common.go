@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -41,7 +41,7 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -616,12 +616,12 @@ func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
 	return p
 }
 
-func PodLabel(value string) PodOption {
+func PodLabel(key, value string) PodOption {
 	return func(pod *corev1.Pod) {
 		if pod.Labels == nil {
 			pod.Labels = make(map[string]string, 2)
 		}
-		pod.Labels["app"] = value
+		pod.Labels[key] = value
 	}
 }
 

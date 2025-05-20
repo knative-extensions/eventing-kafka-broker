@@ -19,10 +19,10 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 )
 
 // TriggerAuthenticationLister helps list TriggerAuthentications.
@@ -30,7 +30,7 @@ import (
 type TriggerAuthenticationLister interface {
 	// List lists all TriggerAuthentications in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.TriggerAuthentication, err error)
+	List(selector labels.Selector) (ret []*kedav1alpha1.TriggerAuthentication, err error)
 	// TriggerAuthentications returns an object that can list and get TriggerAuthentications.
 	TriggerAuthentications(namespace string) TriggerAuthenticationNamespaceLister
 	TriggerAuthenticationListerExpansion
@@ -38,25 +38,17 @@ type TriggerAuthenticationLister interface {
 
 // triggerAuthenticationLister implements the TriggerAuthenticationLister interface.
 type triggerAuthenticationLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*kedav1alpha1.TriggerAuthentication]
 }
 
 // NewTriggerAuthenticationLister returns a new TriggerAuthenticationLister.
 func NewTriggerAuthenticationLister(indexer cache.Indexer) TriggerAuthenticationLister {
-	return &triggerAuthenticationLister{indexer: indexer}
-}
-
-// List lists all TriggerAuthentications in the indexer.
-func (s *triggerAuthenticationLister) List(selector labels.Selector) (ret []*v1alpha1.TriggerAuthentication, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.TriggerAuthentication))
-	})
-	return ret, err
+	return &triggerAuthenticationLister{listers.New[*kedav1alpha1.TriggerAuthentication](indexer, kedav1alpha1.Resource("triggerauthentication"))}
 }
 
 // TriggerAuthentications returns an object that can list and get TriggerAuthentications.
 func (s *triggerAuthenticationLister) TriggerAuthentications(namespace string) TriggerAuthenticationNamespaceLister {
-	return triggerAuthenticationNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return triggerAuthenticationNamespaceLister{listers.NewNamespaced[*kedav1alpha1.TriggerAuthentication](s.ResourceIndexer, namespace)}
 }
 
 // TriggerAuthenticationNamespaceLister helps list and get TriggerAuthentications.
@@ -64,36 +56,15 @@ func (s *triggerAuthenticationLister) TriggerAuthentications(namespace string) T
 type TriggerAuthenticationNamespaceLister interface {
 	// List lists all TriggerAuthentications in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.TriggerAuthentication, err error)
+	List(selector labels.Selector) (ret []*kedav1alpha1.TriggerAuthentication, err error)
 	// Get retrieves the TriggerAuthentication from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.TriggerAuthentication, error)
+	Get(name string) (*kedav1alpha1.TriggerAuthentication, error)
 	TriggerAuthenticationNamespaceListerExpansion
 }
 
 // triggerAuthenticationNamespaceLister implements the TriggerAuthenticationNamespaceLister
 // interface.
 type triggerAuthenticationNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all TriggerAuthentications in the indexer for a given namespace.
-func (s triggerAuthenticationNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.TriggerAuthentication, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.TriggerAuthentication))
-	})
-	return ret, err
-}
-
-// Get retrieves the TriggerAuthentication from the indexer for a given namespace and name.
-func (s triggerAuthenticationNamespaceLister) Get(name string) (*v1alpha1.TriggerAuthentication, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("triggerauthentication"), name)
-	}
-	return obj.(*v1alpha1.TriggerAuthentication), nil
+	listers.ResourceIndexer[*kedav1alpha1.TriggerAuthentication]
 }

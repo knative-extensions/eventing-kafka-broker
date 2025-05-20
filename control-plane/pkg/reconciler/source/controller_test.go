@@ -36,13 +36,14 @@ import (
 	dynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1/kafkasource/fake"
 
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup/fake"
+
+	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
-	_ "knative.dev/pkg/client/injection/kube/informers/core/v1/serviceaccount/fake"
 )
 
 func TestNewController(t *testing.T) {

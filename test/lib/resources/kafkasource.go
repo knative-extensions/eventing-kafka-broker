@@ -21,39 +21,39 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkabindingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
-	kafkasourcev1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )
 
-type KafkaSourceV1Beta1Option func(source *kafkasourcev1beta1.KafkaSource)
+type KafkaSourceOption func(source *sources.KafkaSource)
 
-func WithNameV1Beta1(name string) KafkaSourceV1Beta1Option {
-	return func(source *kafkasourcev1beta1.KafkaSource) {
+func WithName(name string) KafkaSourceOption {
+	return func(source *sources.KafkaSource) {
 		source.Name = name
 	}
 }
 
-func WithConsumerGroupV1Beta1(cg string) KafkaSourceV1Beta1Option {
-	return func(source *kafkasourcev1beta1.KafkaSource) {
+func WithConsumerGroup(cg string) KafkaSourceOption {
+	return func(source *sources.KafkaSource) {
 		source.Spec.ConsumerGroup = cg
 	}
 }
 
-func WithExtensionsV1Beta1(extensions map[string]string) KafkaSourceV1Beta1Option {
-	return func(source *kafkasourcev1beta1.KafkaSource) {
+func WithExtensions(extensions map[string]string) KafkaSourceOption {
+	return func(source *sources.KafkaSource) {
 		source.Spec.CloudEventOverrides = &duckv1.CloudEventOverrides{
 			Extensions: extensions,
 		}
 	}
 }
 
-func KafkaSourceV1Beta1(bootstrapServer string, topicName string, ordering kafkasourcev1beta1.DeliveryOrdering, ref *corev1.ObjectReference, options ...KafkaSourceV1Beta1Option) *kafkasourcev1beta1.KafkaSource {
-	source := &kafkasourcev1beta1.KafkaSource{
+func KafkaSource(bootstrapServer string, topicName string, ordering sources.DeliveryOrdering, ref *corev1.ObjectReference, options ...KafkaSourceOption) *sources.KafkaSource {
+	source := &sources.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-kafka-source",
 		},
-		Spec: kafkasourcev1beta1.KafkaSourceSpec{
-			KafkaAuthSpec: kafkabindingv1beta1.KafkaAuthSpec{
+		Spec: sources.KafkaSourceSpec{
+			KafkaAuthSpec: bindings.KafkaAuthSpec{
 				BootstrapServers: []string{bootstrapServer},
 			},
 			Topics:        []string{topicName},

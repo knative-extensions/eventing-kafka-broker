@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 )
 
 // EventPolicyLister helps list EventPolicies.
@@ -30,7 +30,7 @@ import (
 type EventPolicyLister interface {
 	// List lists all EventPolicies in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.EventPolicy, err error)
+	List(selector labels.Selector) (ret []*eventingv1alpha1.EventPolicy, err error)
 	// EventPolicies returns an object that can list and get EventPolicies.
 	EventPolicies(namespace string) EventPolicyNamespaceLister
 	EventPolicyListerExpansion
@@ -38,25 +38,17 @@ type EventPolicyLister interface {
 
 // eventPolicyLister implements the EventPolicyLister interface.
 type eventPolicyLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*eventingv1alpha1.EventPolicy]
 }
 
 // NewEventPolicyLister returns a new EventPolicyLister.
 func NewEventPolicyLister(indexer cache.Indexer) EventPolicyLister {
-	return &eventPolicyLister{indexer: indexer}
-}
-
-// List lists all EventPolicies in the indexer.
-func (s *eventPolicyLister) List(selector labels.Selector) (ret []*v1alpha1.EventPolicy, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.EventPolicy))
-	})
-	return ret, err
+	return &eventPolicyLister{listers.New[*eventingv1alpha1.EventPolicy](indexer, eventingv1alpha1.Resource("eventpolicy"))}
 }
 
 // EventPolicies returns an object that can list and get EventPolicies.
 func (s *eventPolicyLister) EventPolicies(namespace string) EventPolicyNamespaceLister {
-	return eventPolicyNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return eventPolicyNamespaceLister{listers.NewNamespaced[*eventingv1alpha1.EventPolicy](s.ResourceIndexer, namespace)}
 }
 
 // EventPolicyNamespaceLister helps list and get EventPolicies.
@@ -64,36 +56,15 @@ func (s *eventPolicyLister) EventPolicies(namespace string) EventPolicyNamespace
 type EventPolicyNamespaceLister interface {
 	// List lists all EventPolicies in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.EventPolicy, err error)
+	List(selector labels.Selector) (ret []*eventingv1alpha1.EventPolicy, err error)
 	// Get retrieves the EventPolicy from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.EventPolicy, error)
+	Get(name string) (*eventingv1alpha1.EventPolicy, error)
 	EventPolicyNamespaceListerExpansion
 }
 
 // eventPolicyNamespaceLister implements the EventPolicyNamespaceLister
 // interface.
 type eventPolicyNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all EventPolicies in the indexer for a given namespace.
-func (s eventPolicyNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.EventPolicy, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.EventPolicy))
-	})
-	return ret, err
-}
-
-// Get retrieves the EventPolicy from the indexer for a given namespace and name.
-func (s eventPolicyNamespaceLister) Get(name string) (*v1alpha1.EventPolicy, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("eventpolicy"), name)
-	}
-	return obj.(*v1alpha1.EventPolicy), nil
+	listers.ResourceIndexer[*eventingv1alpha1.EventPolicy]
 }

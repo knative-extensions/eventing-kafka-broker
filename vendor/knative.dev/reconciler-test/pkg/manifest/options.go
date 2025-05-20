@@ -63,22 +63,35 @@ func WithPodAnnotations(additional map[string]interface{}) CfgFn {
 	}
 }
 
-func appendToOriginal(original interface{}, additional map[string]interface{}) {
-	annotations := original.(map[string]interface{})
+// WithPodLabels appends pod labels (usually used by types where pod template is embedded)
+func WithPodLabels(additional map[string]string) CfgFn {
+	return func(cfg map[string]interface{}) {
+		if labels, ok := cfg["podlabels"]; ok {
+			appendToOriginal(labels, additional)
+			return
+		}
+		cfg["podlabels"] = additional
+	}
+}
+
+func appendToOriginal[T any](original interface{}, additional map[string]T) {
+	orig := original.(map[string]T)
 	for k, v := range additional {
 		// Only add the unspecified ones
-		if _, ok := annotations[k]; !ok {
-			annotations[k] = v
+		if _, ok := orig[k]; !ok {
+			orig[k] = v
 		}
 	}
 }
 
 // WithLabels returns a function for configuring labels of the resource
-func WithLabels(labels map[string]string) CfgFn {
+func WithLabels(additional map[string]string) CfgFn {
 	return func(cfg map[string]interface{}) {
-		if labels != nil {
-			cfg["labels"] = labels
+		if labels, ok := cfg["labels"]; ok {
+			appendToOriginal(labels, additional)
+			return
 		}
+		cfg["labels"] = additional
 	}
 }
 
@@ -91,4 +104,13 @@ func WithIstioPodAnnotations(cfg map[string]interface{}) {
 
 	WithAnnotations(podAnnotations)(cfg)
 	WithPodAnnotations(podAnnotations)(cfg)
+}
+
+func WithIstioPodLabels(cfg map[string]interface{}) {
+	podLabels := map[string]string{
+		"sidecar.istio.io/inject": "true",
+	}
+
+	WithLabels(podLabels)(cfg)
+	WithPodLabels(podLabels)(cfg)
 }

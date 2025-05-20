@@ -19,10 +19,10 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
-	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 )
 
 // BrokerLister helps list Brokers.
@@ -30,7 +30,7 @@ import (
 type BrokerLister interface {
 	// List lists all Brokers in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Broker, err error)
+	List(selector labels.Selector) (ret []*eventingv1.Broker, err error)
 	// Brokers returns an object that can list and get Brokers.
 	Brokers(namespace string) BrokerNamespaceLister
 	BrokerListerExpansion
@@ -38,25 +38,17 @@ type BrokerLister interface {
 
 // brokerLister implements the BrokerLister interface.
 type brokerLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*eventingv1.Broker]
 }
 
 // NewBrokerLister returns a new BrokerLister.
 func NewBrokerLister(indexer cache.Indexer) BrokerLister {
-	return &brokerLister{indexer: indexer}
-}
-
-// List lists all Brokers in the indexer.
-func (s *brokerLister) List(selector labels.Selector) (ret []*v1.Broker, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Broker))
-	})
-	return ret, err
+	return &brokerLister{listers.New[*eventingv1.Broker](indexer, eventingv1.Resource("broker"))}
 }
 
 // Brokers returns an object that can list and get Brokers.
 func (s *brokerLister) Brokers(namespace string) BrokerNamespaceLister {
-	return brokerNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return brokerNamespaceLister{listers.NewNamespaced[*eventingv1.Broker](s.ResourceIndexer, namespace)}
 }
 
 // BrokerNamespaceLister helps list and get Brokers.
@@ -64,36 +56,15 @@ func (s *brokerLister) Brokers(namespace string) BrokerNamespaceLister {
 type BrokerNamespaceLister interface {
 	// List lists all Brokers in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Broker, err error)
+	List(selector labels.Selector) (ret []*eventingv1.Broker, err error)
 	// Get retrieves the Broker from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.Broker, error)
+	Get(name string) (*eventingv1.Broker, error)
 	BrokerNamespaceListerExpansion
 }
 
 // brokerNamespaceLister implements the BrokerNamespaceLister
 // interface.
 type brokerNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Brokers in the indexer for a given namespace.
-func (s brokerNamespaceLister) List(selector labels.Selector) (ret []*v1.Broker, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Broker))
-	})
-	return ret, err
-}
-
-// Get retrieves the Broker from the indexer for a given namespace and name.
-func (s brokerNamespaceLister) Get(name string) (*v1.Broker, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("broker"), name)
-	}
-	return obj.(*v1.Broker), nil
+	listers.ResourceIndexer[*eventingv1.Broker]
 }

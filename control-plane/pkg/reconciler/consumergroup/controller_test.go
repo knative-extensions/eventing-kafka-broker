@@ -37,13 +37,13 @@ import (
 	"knative.dev/pkg/configmap"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/sources/v1/kafkasource/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumer/fake"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup/fake"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumer/fake"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/informers/internalskafkaeventing/v1alpha1/consumergroup/fake"
 	_ "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/informers/keda/v1alpha1/scaledobject/fake"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
@@ -52,6 +52,7 @@ import (
 const (
 	RefreshPeriod = "100"
 	PodCapacity   = "20"
+	MinReplicas   = "2"
 	// ConfigKafkaSchedulerName is the name of the ConfigMap to configure the scheduler.
 	ConfigKafkaSchedulerName = "config-kafka-scheduler"
 	// ConfigKafkaDeSchedulerName is the name of the ConfigMap to configure the descheduler.
@@ -63,7 +64,7 @@ const (
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t, func(ctx context.Context) context.Context {
 		return filteredFactory.WithSelectors(ctx,
-			eventing.DispatcherLabelSelectorStr,
+			internalsapi.DispatcherLabelSelectorStr,
 		)
 	})
 	ctx, _ = kedaclient.With(ctx)
@@ -111,6 +112,7 @@ func TestNewController(t *testing.T) {
 
 	t.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
 	t.Setenv("POD_CAPACITY", PodCapacity)
+	t.Setenv("DISPATCHERS_MIN_REPLICAS", MinReplicas)
 	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
 	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
 	t.Setenv("AUTOSCALER_CONFIG", ConfigKafkaAutoscalerName)

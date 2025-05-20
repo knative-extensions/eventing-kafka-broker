@@ -19,7 +19,10 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"strings"
 
+	"github.com/IBM/sarama"
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -30,7 +33,7 @@ import (
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/eventing/pkg/eventingtls"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -68,9 +71,18 @@ func main() {
 	ctx = filteredFactory.WithSelectors(ctx,
 		eventingtls.TrustBundleLabelSelector,
 		auth.OIDCLabelSelector,
-		eventing.DispatcherLabelSelectorStr,
+		kafkainternals.DispatcherLabelSelectorStr,
 	)
-	ctx = clientpool.WithKafkaClientPool(ctx)
+
+	if v := os.Getenv("ENABLE_SARAMA_LOGGER"); strings.EqualFold(v, "true") {
+		sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags|log.Llongfile)
+	}
+	if v := os.Getenv("ENABLE_SARAMA_DEBUG_LOGGER"); strings.EqualFold(v, "true") {
+		sarama.DebugLogger = log.New(os.Stdout, "[sarama][debug] ", log.LstdFlags|log.Llongfile)
+	}
+	if v := os.Getenv("ENABLE_SARAMA_CLIENT_POOL"); v == "" || strings.EqualFold(v, "true") {
+		ctx = clientpool.WithKafkaClientPool(ctx)
+	}
 
 	sharedmain.MainNamed(ctx, component,
 

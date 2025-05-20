@@ -63,6 +63,20 @@ type MockKafkaClusterAdmin struct {
 	T *testing.T
 }
 
+func (m *MockKafkaClusterAdmin) ElectLeaders(electionType sarama.ElectionType, m2 map[string][]int32) (map[string]map[int32]*sarama.PartitionResult, error) {
+	if m.ErrorBrokenPipe {
+		return nil, brokenPipeError{}
+	}
+	panic("implement me")
+}
+
+func (m *MockKafkaClusterAdmin) Coordinator(group string) (*sarama.Broker, error) {
+	if m.ErrorBrokenPipe {
+		return nil, brokenPipeError{}
+	}
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) CreateACLs(acls []*sarama.ResourceAcls) error {
 	if m.ErrorBrokenPipe {
 		return brokenPipeError{}

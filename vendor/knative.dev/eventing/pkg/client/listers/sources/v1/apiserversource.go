@@ -19,10 +19,10 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
-	v1 "knative.dev/eventing/pkg/apis/sources/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	sourcesv1 "knative.dev/eventing/pkg/apis/sources/v1"
 )
 
 // ApiServerSourceLister helps list ApiServerSources.
@@ -30,7 +30,7 @@ import (
 type ApiServerSourceLister interface {
 	// List lists all ApiServerSources in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ApiServerSource, err error)
+	List(selector labels.Selector) (ret []*sourcesv1.ApiServerSource, err error)
 	// ApiServerSources returns an object that can list and get ApiServerSources.
 	ApiServerSources(namespace string) ApiServerSourceNamespaceLister
 	ApiServerSourceListerExpansion
@@ -38,25 +38,17 @@ type ApiServerSourceLister interface {
 
 // apiServerSourceLister implements the ApiServerSourceLister interface.
 type apiServerSourceLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*sourcesv1.ApiServerSource]
 }
 
 // NewApiServerSourceLister returns a new ApiServerSourceLister.
 func NewApiServerSourceLister(indexer cache.Indexer) ApiServerSourceLister {
-	return &apiServerSourceLister{indexer: indexer}
-}
-
-// List lists all ApiServerSources in the indexer.
-func (s *apiServerSourceLister) List(selector labels.Selector) (ret []*v1.ApiServerSource, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ApiServerSource))
-	})
-	return ret, err
+	return &apiServerSourceLister{listers.New[*sourcesv1.ApiServerSource](indexer, sourcesv1.Resource("apiserversource"))}
 }
 
 // ApiServerSources returns an object that can list and get ApiServerSources.
 func (s *apiServerSourceLister) ApiServerSources(namespace string) ApiServerSourceNamespaceLister {
-	return apiServerSourceNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return apiServerSourceNamespaceLister{listers.NewNamespaced[*sourcesv1.ApiServerSource](s.ResourceIndexer, namespace)}
 }
 
 // ApiServerSourceNamespaceLister helps list and get ApiServerSources.
@@ -64,36 +56,15 @@ func (s *apiServerSourceLister) ApiServerSources(namespace string) ApiServerSour
 type ApiServerSourceNamespaceLister interface {
 	// List lists all ApiServerSources in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ApiServerSource, err error)
+	List(selector labels.Selector) (ret []*sourcesv1.ApiServerSource, err error)
 	// Get retrieves the ApiServerSource from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.ApiServerSource, error)
+	Get(name string) (*sourcesv1.ApiServerSource, error)
 	ApiServerSourceNamespaceListerExpansion
 }
 
 // apiServerSourceNamespaceLister implements the ApiServerSourceNamespaceLister
 // interface.
 type apiServerSourceNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ApiServerSources in the indexer for a given namespace.
-func (s apiServerSourceNamespaceLister) List(selector labels.Selector) (ret []*v1.ApiServerSource, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ApiServerSource))
-	})
-	return ret, err
-}
-
-// Get retrieves the ApiServerSource from the indexer for a given namespace and name.
-func (s apiServerSourceNamespaceLister) Get(name string) (*v1.ApiServerSource, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("apiserversource"), name)
-	}
-	return obj.(*v1.ApiServerSource), nil
+	listers.ResourceIndexer[*sourcesv1.ApiServerSource]
 }

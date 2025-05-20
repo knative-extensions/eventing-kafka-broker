@@ -25,20 +25,32 @@ import (
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
 	clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1"
+	fakebindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1/fake"
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1"
 	fakebindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1/fake"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	fakeeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
+	fakeinternalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1/fake"
+	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1"
+	fakemessagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1/fake"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1"
 	fakemessagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1beta1/fake"
+	sourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1"
+	fakesourcesv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1/fake"
 	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
 	fakesourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
 // It's backed by a very simple object tracker that processes creates, updates and deletions as-is,
-// without applying any validations and/or defaults. It shouldn't be considered a replacement
+// without applying any field management, validations and/or defaults. It shouldn't be considered a replacement
 // for a real clientset and is mostly useful in simple unit tests.
+//
+// DEPRECATED: NewClientset replaces this with support for field management, which significantly improves
+// server side apply testing. NewClientset is only available when apply configurations are generated (e.g.
+// via --with-applyconfig).
 func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 	o := testing.NewObjectTracker(scheme, codecs.UniversalDecoder())
 	for _, obj := range objects {
@@ -85,6 +97,11 @@ var (
 	_ testing.FakeClient  = &Clientset{}
 )
 
+// BindingsV1 retrieves the BindingsV1Client
+func (c *Clientset) BindingsV1() bindingsv1.BindingsV1Interface {
+	return &fakebindingsv1.FakeBindingsV1{Fake: &c.Fake}
+}
+
 // BindingsV1beta1 retrieves the BindingsV1beta1Client
 func (c *Clientset) BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface {
 	return &fakebindingsv1beta1.FakeBindingsV1beta1{Fake: &c.Fake}
@@ -95,9 +112,24 @@ func (c *Clientset) EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interfac
 	return &fakeeventingv1alpha1.FakeEventingV1alpha1{Fake: &c.Fake}
 }
 
+// InternalV1alpha1 retrieves the InternalV1alpha1Client
+func (c *Clientset) InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface {
+	return &fakeinternalv1alpha1.FakeInternalV1alpha1{Fake: &c.Fake}
+}
+
+// MessagingV1 retrieves the MessagingV1Client
+func (c *Clientset) MessagingV1() messagingv1.MessagingV1Interface {
+	return &fakemessagingv1.FakeMessagingV1{Fake: &c.Fake}
+}
+
 // MessagingV1beta1 retrieves the MessagingV1beta1Client
 func (c *Clientset) MessagingV1beta1() messagingv1beta1.MessagingV1beta1Interface {
 	return &fakemessagingv1beta1.FakeMessagingV1beta1{Fake: &c.Fake}
+}
+
+// SourcesV1 retrieves the SourcesV1Client
+func (c *Clientset) SourcesV1() sourcesv1.SourcesV1Interface {
+	return &fakesourcesv1.FakeSourcesV1{Fake: &c.Fake}
 }
 
 // SourcesV1beta1 retrieves the SourcesV1beta1Client

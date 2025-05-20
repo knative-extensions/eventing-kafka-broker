@@ -31,6 +31,7 @@ import (
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/bindings"
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/eventing"
 	internalinterfaces "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalinterfaces"
+	internalskafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/internalskafkaeventing"
 	messaging "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/messaging"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/client/informers/externalversions/sources"
 )
@@ -231,6 +232,7 @@ type SharedInformerFactory interface {
 
 	// Start initializes all requested informers. They are handled in goroutines
 	// which run until the stop channel gets closed.
+	// Warning: Start does not block. When run in a go-routine, it will race with a later WaitForCacheSync.
 	Start(stopCh <-chan struct{})
 
 	// Shutdown marks a factory as shutting down. At that point no new
@@ -258,6 +260,7 @@ type SharedInformerFactory interface {
 
 	Bindings() bindings.Interface
 	Eventing() eventing.Interface
+	Internal() internalskafkaeventing.Interface
 	Messaging() messaging.Interface
 	Sources() sources.Interface
 }
@@ -268,6 +271,10 @@ func (f *sharedInformerFactory) Bindings() bindings.Interface {
 
 func (f *sharedInformerFactory) Eventing() eventing.Interface {
 	return eventing.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Internal() internalskafkaeventing.Interface {
+	return internalskafkaeventing.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Messaging() messaging.Interface {

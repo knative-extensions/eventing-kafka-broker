@@ -19,14 +19,13 @@
 package v1alpha1
 
 import (
-	"context"
-	"time"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
-	v1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
+	gentype "k8s.io/client-go/gentype"
+	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	scheme "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned/scheme"
 )
 
@@ -38,141 +37,32 @@ type TriggerAuthenticationsGetter interface {
 
 // TriggerAuthenticationInterface has methods to work with TriggerAuthentication resources.
 type TriggerAuthenticationInterface interface {
-	Create(ctx context.Context, triggerAuthentication *v1alpha1.TriggerAuthentication, opts v1.CreateOptions) (*v1alpha1.TriggerAuthentication, error)
-	Update(ctx context.Context, triggerAuthentication *v1alpha1.TriggerAuthentication, opts v1.UpdateOptions) (*v1alpha1.TriggerAuthentication, error)
+	Create(ctx context.Context, triggerAuthentication *kedav1alpha1.TriggerAuthentication, opts v1.CreateOptions) (*kedav1alpha1.TriggerAuthentication, error)
+	Update(ctx context.Context, triggerAuthentication *kedav1alpha1.TriggerAuthentication, opts v1.UpdateOptions) (*kedav1alpha1.TriggerAuthentication, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.TriggerAuthentication, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.TriggerAuthenticationList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*kedav1alpha1.TriggerAuthentication, error)
+	List(ctx context.Context, opts v1.ListOptions) (*kedav1alpha1.TriggerAuthenticationList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.TriggerAuthentication, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *kedav1alpha1.TriggerAuthentication, err error)
 	TriggerAuthenticationExpansion
 }
 
 // triggerAuthentications implements TriggerAuthenticationInterface
 type triggerAuthentications struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*kedav1alpha1.TriggerAuthentication, *kedav1alpha1.TriggerAuthenticationList]
 }
 
 // newTriggerAuthentications returns a TriggerAuthentications
 func newTriggerAuthentications(c *KedaV1alpha1Client, namespace string) *triggerAuthentications {
 	return &triggerAuthentications{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*kedav1alpha1.TriggerAuthentication, *kedav1alpha1.TriggerAuthenticationList](
+			"triggerauthentications",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *kedav1alpha1.TriggerAuthentication { return &kedav1alpha1.TriggerAuthentication{} },
+			func() *kedav1alpha1.TriggerAuthenticationList { return &kedav1alpha1.TriggerAuthenticationList{} },
+		),
 	}
-}
-
-// Get takes name of the triggerAuthentication, and returns the corresponding triggerAuthentication object, and an error if there is any.
-func (c *triggerAuthentications) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.TriggerAuthentication, err error) {
-	result = &v1alpha1.TriggerAuthentication{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of TriggerAuthentications that match those selectors.
-func (c *triggerAuthentications) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.TriggerAuthenticationList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.TriggerAuthenticationList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested triggerAuthentications.
-func (c *triggerAuthentications) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a triggerAuthentication and creates it.  Returns the server's representation of the triggerAuthentication, and an error, if there is any.
-func (c *triggerAuthentications) Create(ctx context.Context, triggerAuthentication *v1alpha1.TriggerAuthentication, opts v1.CreateOptions) (result *v1alpha1.TriggerAuthentication, err error) {
-	result = &v1alpha1.TriggerAuthentication{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(triggerAuthentication).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a triggerAuthentication and updates it. Returns the server's representation of the triggerAuthentication, and an error, if there is any.
-func (c *triggerAuthentications) Update(ctx context.Context, triggerAuthentication *v1alpha1.TriggerAuthentication, opts v1.UpdateOptions) (result *v1alpha1.TriggerAuthentication, err error) {
-	result = &v1alpha1.TriggerAuthentication{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		Name(triggerAuthentication.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(triggerAuthentication).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the triggerAuthentication and deletes it. Returns an error if one occurs.
-func (c *triggerAuthentications) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *triggerAuthentications) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched triggerAuthentication.
-func (c *triggerAuthentications) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.TriggerAuthentication, err error) {
-	result = &v1alpha1.TriggerAuthentication{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("triggerauthentications").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

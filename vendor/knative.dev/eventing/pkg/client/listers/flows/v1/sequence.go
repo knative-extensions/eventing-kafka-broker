@@ -19,10 +19,10 @@ limitations under the License.
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
-	v1 "knative.dev/eventing/pkg/apis/flows/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	flowsv1 "knative.dev/eventing/pkg/apis/flows/v1"
 )
 
 // SequenceLister helps list Sequences.
@@ -30,7 +30,7 @@ import (
 type SequenceLister interface {
 	// List lists all Sequences in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Sequence, err error)
+	List(selector labels.Selector) (ret []*flowsv1.Sequence, err error)
 	// Sequences returns an object that can list and get Sequences.
 	Sequences(namespace string) SequenceNamespaceLister
 	SequenceListerExpansion
@@ -38,25 +38,17 @@ type SequenceLister interface {
 
 // sequenceLister implements the SequenceLister interface.
 type sequenceLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*flowsv1.Sequence]
 }
 
 // NewSequenceLister returns a new SequenceLister.
 func NewSequenceLister(indexer cache.Indexer) SequenceLister {
-	return &sequenceLister{indexer: indexer}
-}
-
-// List lists all Sequences in the indexer.
-func (s *sequenceLister) List(selector labels.Selector) (ret []*v1.Sequence, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Sequence))
-	})
-	return ret, err
+	return &sequenceLister{listers.New[*flowsv1.Sequence](indexer, flowsv1.Resource("sequence"))}
 }
 
 // Sequences returns an object that can list and get Sequences.
 func (s *sequenceLister) Sequences(namespace string) SequenceNamespaceLister {
-	return sequenceNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return sequenceNamespaceLister{listers.NewNamespaced[*flowsv1.Sequence](s.ResourceIndexer, namespace)}
 }
 
 // SequenceNamespaceLister helps list and get Sequences.
@@ -64,36 +56,15 @@ func (s *sequenceLister) Sequences(namespace string) SequenceNamespaceLister {
 type SequenceNamespaceLister interface {
 	// List lists all Sequences in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Sequence, err error)
+	List(selector labels.Selector) (ret []*flowsv1.Sequence, err error)
 	// Get retrieves the Sequence from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.Sequence, error)
+	Get(name string) (*flowsv1.Sequence, error)
 	SequenceNamespaceListerExpansion
 }
 
 // sequenceNamespaceLister implements the SequenceNamespaceLister
 // interface.
 type sequenceNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Sequences in the indexer for a given namespace.
-func (s sequenceNamespaceLister) List(selector labels.Selector) (ret []*v1.Sequence, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Sequence))
-	})
-	return ret, err
-}
-
-// Get retrieves the Sequence from the indexer for a given namespace and name.
-func (s sequenceNamespaceLister) Get(name string) (*v1.Sequence, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("sequence"), name)
-	}
-	return obj.(*v1.Sequence), nil
+	listers.ResourceIndexer[*flowsv1.Sequence]
 }

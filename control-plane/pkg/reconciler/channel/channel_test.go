@@ -45,7 +45,7 @@ import (
 	"knative.dev/pkg/system"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -62,11 +62,13 @@ import (
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+
 	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
 const (
@@ -478,6 +480,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -551,6 +554,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -625,6 +629,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -684,6 +689,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(NewChannel())),
 					WithConsumerGroupMetaLabels(OwnerAsChannelLabel),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -725,6 +731,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 						)),
 						ConsumerGroupReady,
+						withChannelTopLevelResourceRef(),
 					),
 				},
 			},
@@ -779,6 +786,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -858,6 +866,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 				NewConsumerGroup(
 					WithConsumerGroupName(Subscription2UUID),
@@ -875,6 +884,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 						ConsumerReply(ConsumerNoReply()),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -946,6 +956,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription2URI)),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -967,6 +978,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -1218,6 +1230,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1324,6 +1337,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1429,6 +1443,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReplicas(1),
 					ConsumerGroupReady,
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1528,6 +1543,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
+					withChannelTopLevelResourceRef(),
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -2429,4 +2445,14 @@ func httpsURL(name string, namespace string) *apis.URL {
 		Host:   network.GetServiceHostname(DefaultEnv.IngressName, DefaultEnv.SystemNamespace),
 		Path:   fmt.Sprintf("/%s/%s", namespace, name),
 	}
+}
+
+func withChannelTopLevelResourceRef() ConsumerGroupOption {
+	return WithTopLevelResourceRef(&corev1.ObjectReference{
+		APIVersion: messagingv1beta.SchemeGroupVersion.String(),
+		Kind:       "KafkaChannel",
+		Namespace:  ChannelNamespace,
+		Name:       ChannelName,
+		UID:        ChannelUUID,
+	})
 }

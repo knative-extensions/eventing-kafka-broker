@@ -22,9 +22,20 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+
+	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
+)
+
+const (
+	ExecutionModeEnvVar = "K_EXECUTION_MODE"
+)
+
+type ExecutionMode string
+
+const (
+	ExecutionModeBatch ExecutionMode = "batch"
 )
 
 // +genclient
@@ -49,6 +60,7 @@ var (
 	_ apis.Defaultable   = (*JobSink)(nil)
 	_ apis.HasSpec       = (*JobSink)(nil)
 	_ duckv1.KRShaped    = (*JobSink)(nil)
+	_ apis.Convertible   = (*JobSink)(nil)
 )
 
 // JobSinkSpec defines the desired state of the JobSink.

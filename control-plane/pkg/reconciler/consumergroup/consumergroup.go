@@ -47,19 +47,19 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/eventing/pkg/scheduler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
-	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/typed/eventing/v1alpha1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumergroup"
-	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
+	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
+	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -211,11 +211,18 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consu
 		}
 		cg.MarkAutoscalerSucceeded()
 	} else {
-		// If KEDA is not installed or autoscaler feature disabled, do nothing
-		cg.MarkAutoscalerDisabled()
-		if err := r.deleteKedaObjects(ctx, cg); err != nil {
-			return err
+
+		// If KEDA autoscaler feature is disabled, we need to check if it was enabled before
+		// check if the conditoion is not yet AutoscalerDisabled, only than delete KEDA objects
+		if cg.IsAutoscalerNotDisabled() {
+			logger.Debugw("Deleting KEDA objects as autoscaler is being disabled")
+			if err := r.deleteKedaObjects(ctx, cg); err != nil {
+				return err
+			}
 		}
+
+		// Mark as disabled after successful deletion, or if the feature was already disabled
+		cg.MarkAutoscalerDisabled()
 	}
 
 	logger.Debugw("Reconciling consumers")
@@ -301,8 +308,11 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
 	}
 
-	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
+	if cg.Spec.Template.Spec.Configs.Configs == nil {
+		return fmt.Errorf("unexpected empty configurations")
+	}
 
+	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafakSecret)
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
@@ -449,7 +459,7 @@ func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGr
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
 
-	placements, err := statefulSetScheduler.Schedule(cg)
+	placements, err := statefulSetScheduler.Schedule(ctx, cg)
 	if err != nil {
 		return cg.MarkScheduleConsumerFailed("Schedule", err)
 	}
@@ -766,7 +776,10 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 }
 
 func (r *Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
-	selector := labels.SelectorFromSet(map[string]string{"app": scheduler.StatefulSetName})
+	selector := labels.SelectorFromSet(map[string]string{
+		"app":                    scheduler.StatefulSetName,
+		"app.kubernetes.io/kind": "kafka-dispatcher",
+	})
 	pods, err := r.PodLister.
 		Pods(r.SystemNamespace).
 		List(selector)
@@ -777,7 +790,7 @@ func (r *Reconciler) ensureContractConfigmapsExist(ctx context.Context, schedule
 	sort.Slice(pods, func(i, j int) bool { return pods[i].Name < pods[j].Name })
 
 	for _, p := range pods {
-		cmName, err := eventing.ConfigMapNameFromPod(p)
+		cmName, err := internalsapi.ConfigMapNameFromPod(p)
 		if err != nil {
 			return err
 		}

@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -307,7 +307,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -522,7 +522,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -880,7 +880,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1055,7 +1055,7 @@ metadata:
   name: eventpolicies.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1245,14 +1245,287 @@ spec:
       - knative
       - eventing
   scope: Namespaced
-  conversion:
-    strategy: Webhook
-    webhook:
-      conversionReviewVersions: ["v1", "v1beta1"]
-      clientConfig:
-        service:
-          name: eventing-webhook
-          namespace: knative-eventing
+
+---
+# Copyright 2025 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: eventtransforms.eventing.knative.dev
+  labels:
+    knative.dev/crd-install: "true"
+    app.kubernetes.io/version: "20250516-3788fccf0"
+    app.kubernetes.io/name: knative-eventing
+spec:
+  group: eventing.knative.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              description: Spec defines the desired state of the EventTransform.
+              type: object
+              properties:
+                jsonata:
+                  type: object
+                  properties:
+                    expression:
+                      description: Expression is the JSONata expression (https://jsonata.org/).
+                      type: string
+                reply:
+                  description: |
+                    Reply is the configuration on how to handle responses from Sink. It can only be set if Sink is set.
+                    Only one "type" can be used.
+                    The used type must match the top-level transformation, if you need to mix transformation types, use compositions and chain transformations together to achieve your desired outcome.
+                  type: object
+                  properties:
+                    jsonata:
+                      type: object
+                      properties:
+                        expression:
+                          description: Expression is the JSONata expression (https://jsonata.org/).
+                          type: string
+                    discard:
+                      description: |
+                        Discard discards responses from Sink and return empty response body.
+                        When set to false, it returns the exact sink response body.
+                        When set to true, Discard is mutually exclusive with EventTransformations in the reply
+                        section, it can either be discarded or transformed.
+                        Default: false.
+                      type: boolean
+                sink:
+                  description: 'Sink is a reference to an object that will resolve to a uri to use as the sink.  If not present, the transformation will send back the transformed event as response, this is useful to leverage the built-in Broker reply feature to re-publish a transformed event back to the broker. '
+                  type: object
+                  properties:
+                    CACerts:
+                      description: CACerts are Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468. If set, these CAs are appended to the set of CAs provided by the Addressable target, if any.
+                      type: string
+                    audience:
+                      description: Audience is the OIDC audience. This need only be set, if the target is not an Addressable and thus the Audience can't be received from the Addressable itself. In case the Addressable specifies an Audience too, the Destinations Audience takes preference.
+                      type: string
+                    ref:
+                      description: Ref points to an Addressable.
+                      type: object
+                      properties:
+                        address:
+                          description: Address points to a specific Address Name.
+                          type: string
+                        apiVersion:
+                          description: API version of the referent.
+                          type: string
+                        group:
+                          description: 'Group of the API, without the version of the group. This can be used as an alternative to the APIVersion, and then resolved using ResolveGroup. Note: This API is EXPERIMENTAL and might break anytime. For more details: https://github.com/knative/eventing/issues/5086'
+                          type: string
+                        kind:
+                          description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
+                          type: string
+                    uri:
+                      description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
+                      type: string
+            status:
+              description: Status represents the current state of the EventTransform. This data may be out of date.
+              type: object
+              properties:
+                address:
+                  description: Address is a single Addressable address. If Addresses is present, Address will be ignored by clients.
+                  type: object
+                  required:
+                    - url
+                  properties:
+                    CACerts:
+                      description: CACerts is the Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
+                      type: string
+                    audience:
+                      description: Audience is the OIDC audience for this address.
+                      type: string
+                    name:
+                      description: Name is the name of the address.
+                      type: string
+                    url:
+                      type: string
+                addresses:
+                  description: Addresses is a list of addresses for different protocols (HTTP and HTTPS) If Addresses is present, Address must be ignored by clients.
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - url
+                    properties:
+                      CACerts:
+                        description: CACerts is the Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
+                        type: string
+                      audience:
+                        description: Audience is the OIDC audience for this address.
+                        type: string
+                      name:
+                        description: Name is the name of the address.
+                        type: string
+                      url:
+                        type: string
+                annotations:
+                  description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                auth:
+                  description: Auth defines the attributes that provide the generated service account name in the resource status.
+                  type: object
+                  required:
+                    - serviceAccountName
+                  properties:
+                    serviceAccountName:
+                      description: ServiceAccountName is the name of the generated service account used for this components OIDC authentication.
+                      type: string
+                    serviceAccountNames:
+                      description: ServiceAccountNames is the list of names of the generated service accounts used for this components OIDC authentication. This list can have len() > 1, when the component uses multiple identities (e.g. in case of a Parallel).
+                      type: array
+                      items:
+                        type: string
+                conditions:
+                  description: Conditions the latest available observations of a resource's current state.
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      lastTransitionTime:
+                        description: LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
+                        type: string
+                      message:
+                        description: A human readable message indicating details about the transition.
+                        type: string
+                      reason:
+                        description: The reason for the condition's last transition.
+                        type: string
+                      severity:
+                        description: Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.
+                        type: string
+                      status:
+                        description: Status of the condition, one of True, False, Unknown.
+                        type: string
+                      type:
+                        description: Type of condition.
+                        type: string
+                jsonata:
+                  description: JsonataTransformationStatus is the status associated with JsonataEventTransformationSpec.
+                  type: object
+                  properties:
+                    deployment:
+                      type: object
+                      properties:
+                        availableReplicas:
+                          description: Total number of available pods (ready for at least minReadySeconds) targeted by this deployment.
+                          type: integer
+                          format: int32
+                        collisionCount:
+                          description: Count of hash collisions for the Deployment. The Deployment controller uses this field as a collision avoidance mechanism when it needs to create the name for the newest ReplicaSet.
+                          type: integer
+                          format: int32
+                        conditions:
+                          description: Represents the latest available observations of a deployment's current state.
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              lastTransitionTime:
+                                description: Last time the condition transitioned from one status to another.
+                                type: string
+                              lastUpdateTime:
+                                description: The last time this condition was updated.
+                                type: string
+                              message:
+                                description: A human readable message indicating details about the transition.
+                                type: string
+                              reason:
+                                description: The reason for the condition's last transition.
+                                type: string
+                              status:
+                                description: Status of the condition, one of True, False, Unknown.
+                                type: string
+                              type:
+                                description: Type of deployment condition.
+                                type: string
+                        observedGeneration:
+                          description: The generation observed by the deployment controller.
+                          type: integer
+                          format: int64
+                        readyReplicas:
+                          description: readyReplicas is the number of pods targeted by this Deployment with a Ready Condition.
+                          type: integer
+                          format: int32
+                        replicas:
+                          description: Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+                          type: integer
+                          format: int32
+                        unavailableReplicas:
+                          description: Total number of unavailable pods targeted by this deployment. This is the total number of pods that are still required for the deployment to have 100% available capacity. They may either be pods that are running but not yet available or pods that still have not been created.
+                          type: integer
+                          format: int32
+                        updatedReplicas:
+                          description: Total number of non-terminated pods targeted by this deployment that have the desired template spec.
+                          type: integer
+                          format: int32
+                observedGeneration:
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
+                  type: integer
+                  format: int64
+                sinkAudience:
+                  description: SinkAudience is the OIDC audience of the sink.
+                  type: string
+                sinkCACerts:
+                  description: SinkCACerts are Certification Authority (CA) certificates in PEM format according to https://www.rfc-editor.org/rfc/rfc7468.
+                  type: string
+                sinkUri:
+                  description: SinkURI is the current active sink URI that has been configured for the Source.
+                  type: string
+      additionalPrinterColumns:
+        - name: URL
+          type: string
+          jsonPath: ".status.address.url"
+        - name: Sink
+          type: string
+          jsonPath: ".status.sinkUri"
+        - name: Ready
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+        - name: Reason
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+  names:
+    kind: EventTransform
+    plural: eventtransforms
+    singular: eventtransform
+    categories:
+      - all
+      - knative
+      - eventing
+  scope: Namespaced
 
 ---
 # Copyright 2020 The Knative Authors
@@ -1274,7 +1547,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1663,11 +1936,791 @@ spec:
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
+  name: integrationsinks.sinks.knative.dev
+  labels:
+    knative.dev/crd-install: "true"
+    duck.knative.dev/addressable: "true"
+    app.kubernetes.io/version: "20250516-3788fccf0"
+    app.kubernetes.io/name: knative-eventing
+spec:
+  group: sinks.knative.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          description: 'IntegrationSink sends events to generic event sink'
+          type: object
+          properties:
+            spec:
+              description: Spec defines the desired state of the IntegrationSink.
+              type: object
+              properties:
+                log:
+                  type: object
+                  properties:
+                    loggerName:
+                      type: string
+                      title: Logger Name
+                      description: Name of the logging category to use
+                      default: log-sink
+                    level:
+                      type: string
+                      title: Log Level
+                      description: Logging level to use
+                      default: INFO
+                    logMask:
+                      type: boolean
+                      title: Log Mask
+                      description: Mask sensitive information like password or passphrase in the log
+                      default: false
+                    marker:
+                      type: string
+                      title: Marker
+                      description: An optional Marker name to use
+                    multiline:
+                      type: boolean
+                      title: Multiline
+                      description: If enabled then each information is outputted on a newline
+                      default: false
+                    showAllProperties:
+                      type: boolean
+                      title: Show All Properties
+                      description: Show all of the exchange properties (both internal and custom)
+                      default: false
+                    showBody:
+                      type: boolean
+                      title: Show Body
+                      description: Show the message body
+                      default: true
+                    showBodyType:
+                      type: boolean
+                      title: Show Body Type
+                      description: Show the body Java type
+                      default: true
+                    showExchangePattern:
+                      type: boolean
+                      title: Show Exchange Pattern
+                      description: Shows the Message Exchange Pattern (or MEP for short)
+                      default: true
+                    showHeaders:
+                      type: boolean
+                      title: Show Headers
+                      description: Show the headers received
+                      default: false
+                    showProperties:
+                      type: boolean
+                      title: Show Properties
+                      description: Show the exchange properties (only custom). Use showAllProperties to show both internal and custom properties.
+                      default: false
+                    showStreams:
+                      type: boolean
+                      title: Show Streams
+                      description: Show the stream bodies (they may not be available in following steps)
+                      default: false
+                    showCachedStreams:
+                      type: boolean
+                      title: Show Cached Streams
+                      description: Whether Camel should show cached stream bodies or not.
+                      default: true
+                aws:
+                  type: object
+                  properties:
+                    s3:
+                      type: object
+                      properties:
+                        arn:
+                          type: string
+                          title: Bucket Name
+                          description: The S3 Bucket name or Amazon Resource Name (ARN).
+                        deleteAfterRead:
+                          type: boolean
+                          title: Auto-delete Objects
+                          description: Specifies to delete objects after consuming them.
+                          default: true
+                        moveAfterRead:
+                          type: boolean
+                          title: Move Objects After Delete
+                          description: Move objects from S3 bucket to a different bucket after they have been retrieved.
+                          default: false
+                        destinationBucket:
+                          type: string
+                          title: Destination Bucket
+                          description: Define the destination bucket where an object must be moved when moveAfterRead is set to true.
+                        destinationBucketPrefix:
+                          type: string
+                          title: Destination Bucket Prefix
+                          description: Define the destination bucket prefix to use when an object must be moved, and moveAfterRead is set to true.
+                        destinationBucketSuffix:
+                          type: string
+                          title: Destination Bucket Suffix
+                          description: Define the destination bucket suffix to use when an object must be moved, and moveAfterRead is set to true.
+                        region:
+                          type: string
+                          title: AWS Region
+                          description: The AWS region to access.
+                        autoCreateBucket:
+                          type: boolean
+                          title: Autocreate Bucket
+                          description: Specifies to automatically create the S3 bucket.
+                          default: false
+                        prefix:
+                          type: string
+                          title: Prefix
+                          description: The AWS S3 bucket prefix to consider while searching.
+                          example: folder/
+                        ignoreBody:
+                          type: boolean
+                          title: Ignore Body
+                          description: If true, the S3 Object body is ignored. Setting this to true overrides any behavior defined by the `includeBody` option. If false, the S3 object is put in the body.
+                          default: false
+                        uriEndpointOverride:
+                          type: string
+                          title: Overwrite Endpoint URI
+                          description: The overriding endpoint URI. To use this option, you must also select the `overrideEndpoint` option.
+                        overrideEndpoint:
+                          type: boolean
+                          title: Endpoint Overwrite
+                          description: Select this option to override the endpoint URI. To use this option, you must also provide a URI for the `uriEndpointOverride` option.
+                          default: false
+                        forcePathStyle:
+                          type: boolean
+                          title: Force Path Style
+                          description: Forces path style when accessing AWS S3 buckets.
+                          default: false
+                        delay:
+                          type: integer
+                          title: Delay
+                          description: The number of milliseconds before the next poll of the selected bucket.
+                          default: 500
+                        maxMessagesPerPoll:
+                          type: integer
+                          title: Max Messages Per Poll
+                          description: Gets the maximum number of messages as a limit to poll at each polling. Gets the maximum number of messages as a limit to poll at each polling. The default value is 10. Use 0 or a negative number to set it as unlimited.
+                          default: 10
+                    sqs:
+                      type: object
+                      properties:
+                        arn:
+                          type: string
+                          title: Queue Name
+                          description: The SQS Queue Name or ARN
+                        deleteAfterRead:
+                          type: boolean
+                          title: Auto-delete Messages
+                          description: Delete messages after consuming them
+                          default: true
+                        region:
+                          type: string
+                          title: AWS Region
+                          description: The AWS region to access.
+                        autoCreateQueue:
+                          type: boolean
+                          title: Autocreate Queue
+                          description: Setting the autocreation of the SQS queue.
+                          default: false
+                        host:
+                          type: string
+                          title: AWS Host
+                          description: The hostname of the Amazon AWS cloud.
+                          default: amazonaws.com
+                        protocol:
+                          type: string
+                          title: Protocol
+                          description: The underlying protocol used to communicate with SQS
+                          default: https
+                          example: http or https
+                        queueURL:
+                          type: string
+                          title: Queue URL
+                          description: The full SQS Queue URL (required if using KEDA)
+                        uriEndpointOverride:
+                          type: string
+                          title: Overwrite Endpoint URI
+                          description: The overriding endpoint URI. To use this option, you must also select the `overrideEndpoint` option.
+                        overrideEndpoint:
+                          type: boolean
+                          title: Endpoint Overwrite
+                          description: Select this option to override the endpoint URI. To use this option, you must also provide a URI for the `uriEndpointOverride` option.
+                          default: false
+                        delay:
+                          type: integer
+                          title: Delay
+                          description: The number of milliseconds before the next poll of the selected stream
+                          default: 500
+                        greedy:
+                          type: boolean
+                          title: Greedy Scheduler
+                          description: If greedy is enabled, then the polling will happen immediately again, if the previous run polled 1 or more messages.
+                          default: false
+                        maxMessagesPerPoll:
+                          type: integer
+                          title: Max Messages Per Poll
+                          description: The maximum number of messages to return. Amazon SQS never returns more messages than this value (however, fewer messages might be returned). Valid values 1 to 10. Default 1.
+                          default: 1
+                        waitTimeSeconds:
+                          type: integer
+                          title: Wait Time Seconds
+                          description: The duration (in seconds) for which the call waits for a message to arrive in the queue before returning. If a message is available, the call returns sooner than WaitTimeSeconds. If no messages are available and the wait time expires, the call does not return a message list.
+                        visibilityTimeout:
+                          type: integer
+                          title: Visibility Timeout
+                          description: The duration (in seconds) that the received messages are hidden from subsequent retrieve requests after being retrieved by a ReceiveMessage request.
+                    sns:
+                      type: object
+                      properties:
+                        arn:
+                          type: string
+                          title: Topic Name
+                          description: The SNS topic name name or Amazon Resource Name (ARN).
+                        region:
+                          type: string
+                          title: AWS Region
+                          description: The AWS region to access.
+                        autoCreateTopic:
+                          type: boolean
+                          title: Autocreate Topic
+                          description: Setting the autocreation of the SNS topic.
+                          default: false
+                        uriEndpointOverride:
+                          type: string
+                          title: Overwrite Endpoint URI
+                          description: The overriding endpoint URI. To use this option, you must also select the `overrideEndpoint` option.
+                        overrideEndpoint:
+                          type: boolean
+                          title: Endpoint Overwrite
+                          description: Select this option to override the endpoint URI. To use this option, you must also provide a URI for the `uriEndpointOverride` option.
+                          default: false
+                    auth:
+                      description: 'Auth configurations'
+                      type: object
+                      properties:
+                        secret:
+                          description: 'Auth secret'
+                          type: object
+                          properties:
+                            ref:
+                              description: |
+                                Secret reference.
+                              type: object
+                              required:
+                                - name
+                              properties:
+                                name:
+                                  description: 'Secret name'
+                                  type: string
+            status:
+              description: Status represents the current state of the IntegrationSink. This data may be out of date.
+              type: object
+              properties:
+                address:
+                  description: IntegrationSink is Addressable. It exposes the endpoints as URIs to get events delivered into the used Kamelet.
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    url:
+                      type: string
+                    CACerts:
+                      type: string
+                    audience:
+                      type: string
+                addresses:
+                  description: IntegrationSink is Addressable. It exposes the endpoints as URIs to get events delivered into the used Kamelet.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
+                      audience:
+                        type: string
+                annotations:
+                  description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                policies:
+                  description: List of applied EventPolicies
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      apiVersion:
+                        description: The API version of the applied EventPolicy. This indicates, which version of EventPolicy is supported by the resource.
+                        type: string
+                      name:
+                        description: The name of the applied EventPolicy
+                        type: string
+                conditions:
+                  description: Conditions the latest available observations of a resource's current state.
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      lastTransitionTime:
+                        description: 'LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).'
+                        type: string
+                      message:
+                        description: 'A human readable message indicating details about the transition.'
+                        type: string
+                      reason:
+                        description: 'The reason for the condition''s last transition.'
+                        type: string
+                      severity:
+                        description: 'Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.'
+                        type: string
+                      status:
+                        description: 'Status of the condition, one of True, False, Unknown.'
+                        type: string
+                      type:
+                        description: 'Type of condition.'
+                        type: string
+                observedGeneration:
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
+                  type: integer
+                  format: int64
+      additionalPrinterColumns:
+        - name: URL
+          type: string
+          jsonPath: .status.address.url
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+        - name: Ready
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+        - name: Reason
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+  names:
+    kind: IntegrationSink
+    plural: integrationsinks
+    singular: integrationsink
+    categories:
+      - all
+      - knative
+      - eventing
+      - sink
+  scope: Namespaced
+
+---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    eventing.knative.dev/source: "true"
+    duck.knative.dev/source: "true"
+    knative.dev/crd-install: "true"
+    app.kubernetes.io/version: "20250516-3788fccf0"
+    app.kubernetes.io/name: knative-eventing
+  name: integrationsources.sources.knative.dev
+spec:
+  group: sources.knative.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          description: 'IntegrationSource is an event source that starts a container image which generates events under certain situations and sends messages to a sink URI'
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                ceOverrides:
+                  description: CloudEventOverrides defines overrides to control the output format and modifications of the event sent to the sink.
+                  type: object
+                  properties:
+                    extensions:
+                      description: Extensions specify what attribute are added or overridden on the outbound event. Each `Extensions` key-value pair are set on the event as an attribute extension independently.
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                sink:
+                  description: Sink is a reference to an object that will resolve to a uri to use as the sink.
+                  type: object
+                  properties:
+                    ref:
+                      description: Ref points to an Addressable.
+                      type: object
+                      properties:
+                        apiVersion:
+                          description: API version of the referent.
+                          type: string
+                        kind:
+                          description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
+                          type: string
+                    uri:
+                      description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
+                      type: string
+                    CACerts:
+                      description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
+                      type: string
+                    audience:
+                      description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
+                      type: string
+                timer:
+                  type: object
+                  properties:
+                    period:
+                      type: integer
+                      title: Period
+                      description: The interval (in milliseconds) to wait between producing the next message.
+                      default: 1000
+                    message:
+                      type: string
+                      title: Message
+                      description: The message to generate.
+                      example: hello world
+                    contentType:
+                      type: string
+                      title: Content Type
+                      description: The content type of the generated message.
+                      default: text/plain
+                    repeatCount:
+                      type: integer
+                      title: Repeat Count
+                      description: Specifies a maximum limit of number of fires
+                aws:
+                  type: object
+                  properties:
+                    s3:
+                      type: object
+                      properties:
+                        arn:
+                          type: string
+                          title: Bucket Name
+                          description: The S3 Bucket name or Amazon Resource Name (ARN).
+                        deleteAfterRead:
+                          type: boolean
+                          title: Auto-delete Objects
+                          description: Specifies to delete objects after consuming them.
+                          default: true
+                        moveAfterRead:
+                          type: boolean
+                          title: Move Objects After Delete
+                          description: Move objects from S3 bucket to a different bucket after they have been retrieved.
+                          default: false
+                        destinationBucket:
+                          type: string
+                          title: Destination Bucket
+                          description: Define the destination bucket where an object must be moved when moveAfterRead is set to true.
+                        destinationBucketPrefix:
+                          type: string
+                          title: Destination Bucket Prefix
+                          description: Define the destination bucket prefix to use when an object must be moved, and moveAfterRead is set to true.
+                        destinationBucketSuffix:
+                          type: string
+                          title: Destination Bucket Suffix
+                          description: Define the destination bucket suffix to use when an object must be moved, and moveAfterRead is set to true.
+                        region:
+                          type: string
+                          title: AWS Region
+                          description: The AWS region to access.
+                        autoCreateBucket:
+                          type: boolean
+                          title: Autocreate Bucket
+                          description: Specifies to automatically create the S3 bucket.
+                          default: false
+                        prefix:
+                          type: string
+                          title: Prefix
+                          description: The AWS S3 bucket prefix to consider while searching.
+                          example: folder/
+                        ignoreBody:
+                          type: boolean
+                          title: Ignore Body
+                          description: If true, the S3 Object body is ignored. Setting this to true overrides any behavior defined by the `includeBody` option. If false, the S3 object is put in the body.
+                          default: false
+                        uriEndpointOverride:
+                          type: string
+                          title: Overwrite Endpoint URI
+                          description: The overriding endpoint URI. To use this option, you must also select the `overrideEndpoint` option.
+                        overrideEndpoint:
+                          type: boolean
+                          title: Endpoint Overwrite
+                          description: Select this option to override the endpoint URI. To use this option, you must also provide a URI for the `uriEndpointOverride` option.
+                          default: false
+                        forcePathStyle:
+                          type: boolean
+                          title: Force Path Style
+                          description: Forces path style when accessing AWS S3 buckets.
+                          default: false
+                        delay:
+                          type: integer
+                          title: Delay
+                          description: The number of milliseconds before the next poll of the selected bucket.
+                          default: 500
+                        maxMessagesPerPoll:
+                          type: integer
+                          title: Max Messages Per Poll
+                          description: Gets the maximum number of messages as a limit to poll at each polling. Gets the maximum number of messages as a limit to poll at each polling. The default value is 10. Use 0 or a negative number to set it as unlimited.
+                          default: 10
+                    sqs:
+                      type: object
+                      properties:
+                        arn:
+                          type: string
+                          title: Queue Name
+                          description: The SQS Queue Name or ARN
+                        deleteAfterRead:
+                          type: boolean
+                          title: Auto-delete Messages
+                          description: Delete messages after consuming them
+                          default: true
+                        region:
+                          type: string
+                          title: AWS Region
+                          description: The AWS region to access.
+                        autoCreateQueue:
+                          type: boolean
+                          title: Autocreate Queue
+                          description: Setting the autocreation of the SQS queue.
+                          default: false
+                        host:
+                          type: string
+                          title: AWS Host
+                          description: The hostname of the Amazon AWS cloud.
+                          default: amazonaws.com
+                        protocol:
+                          type: string
+                          title: Protocol
+                          description: The underlying protocol used to communicate with SQS
+                          default: https
+                          example: http or https
+                        queueURL:
+                          type: string
+                          title: Queue URL
+                          description: The full SQS Queue URL (required if using KEDA)
+                        uriEndpointOverride:
+                          type: string
+                          title: Overwrite Endpoint URI
+                          description: The overriding endpoint URI. To use this option, you must also select the `overrideEndpoint` option.
+                        overrideEndpoint:
+                          type: boolean
+                          title: Endpoint Overwrite
+                          description: Select this option to override the endpoint URI. To use this option, you must also provide a URI for the `uriEndpointOverride` option.
+                          default: false
+                        delay:
+                          type: integer
+                          title: Delay
+                          description: The number of milliseconds before the next poll of the selected stream
+                          default: 500
+                        greedy:
+                          type: boolean
+                          title: Greedy Scheduler
+                          description: If greedy is enabled, then the polling will happen immediately again, if the previous run polled 1 or more messages.
+                          default: false
+                        maxMessagesPerPoll:
+                          type: integer
+                          title: Max Messages Per Poll
+                          description: The maximum number of messages to return. Amazon SQS never returns more messages than this value (however, fewer messages might be returned). Valid values 1 to 10. Default 1.
+                          default: 1
+                        waitTimeSeconds:
+                          type: integer
+                          title: Wait Time Seconds
+                          description: The duration (in seconds) for which the call waits for a message to arrive in the queue before returning. If a message is available, the call returns sooner than WaitTimeSeconds. If no messages are available and the wait time expires, the call does not return a message list.
+                        visibilityTimeout:
+                          type: integer
+                          title: Visibility Timeout
+                          description: The duration (in seconds) that the received messages are hidden from subsequent retrieve requests after being retrieved by a ReceiveMessage request.
+                    ddbStreams:
+                      type: object
+                      properties:
+                        table:
+                          type: string
+                          title: Table
+                          description: The name of the DynamoDB table.
+                        region:
+                          type: string
+                          title: AWS Region
+                          description: The AWS region to access.
+                        streamIteratorType:
+                          type: string
+                          title: Stream Iterator Type
+                          description: Defines where in the DynamoDB stream to start getting records. There are two enums and the value can be one of FROM_LATEST and FROM_START. Note that using FROM_START can cause a significant delay before the stream has caught up to real-time.
+                          default: FROM_LATEST
+                        uriEndpointOverride:
+                          type: string
+                          title: Overwrite Endpoint URI
+                          description: The overriding endpoint URI. To use this option, you must also select the `overrideEndpoint` option.
+                        overrideEndpoint:
+                          type: boolean
+                          title: Endpoint Overwrite
+                          description: Select this option to override the endpoint URI. To use this option, you must also provide a URI for the `uriEndpointOverride` option.
+                          default: false
+                        delay:
+                          type: integer
+                          title: Delay
+                          description: The number of milliseconds before the next poll from the database.
+                          default: 500
+                    auth:
+                      description: 'Auth configurations'
+                      type: object
+                      properties:
+                        secret:
+                          description: 'Auth secret'
+                          type: object
+                          properties:
+                            ref:
+                              description: |
+                                Secret reference.
+                              type: object
+                              required:
+                                - name
+                              properties:
+                                name:
+                                  description: 'Secret name'
+                                  type: string
+            status:
+              type: object
+              properties:
+                annotations:
+                  description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                auth:
+                  description: Auth provides the relevant information for OIDC authentication.
+                  type: object
+                  properties:
+                    serviceAccountName:
+                      description: ServiceAccountName is the name of the generated service account used for this components OIDC authentication.
+                      type: string
+                    serviceAccountNames:
+                      description: ServiceAccountNames is the list of names of the generated service accounts used for this components OIDC authentication.
+                      type: array
+                      items:
+                        type: string
+                ceAttributes:
+                  description: CloudEventAttributes are the specific attributes that the Source uses as part of its CloudEvents.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      source:
+                        description: Source is the CloudEvents source attribute.
+                        type: string
+                      type:
+                        description: Type refers to the CloudEvent type attribute.
+                        type: string
+                conditions:
+                  description: Conditions the latest available observations of a resource's current state.
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      lastTransitionTime:
+                        description: LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
+                        type: string
+                      message:
+                        description: A human readable message indicating details about the transition.
+                        type: string
+                      reason:
+                        description: The reason for the condition's last transition.
+                        type: string
+                      severity:
+                        description: Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.
+                        type: string
+                      status:
+                        description: Status of the condition, one of True, False, Unknown.
+                        type: string
+                      type:
+                        description: Type of condition.
+                        type: string
+                observedGeneration:
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
+                  type: integer
+                  format: int64
+                sinkUri:
+                  description: SinkURI is the current active sink URI that has been configured for the Source.
+                  type: string
+                sinkCACerts:
+                  description: CACerts is the Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
+                  type: string
+                sinkAudience:
+                  description: Audience is the OIDC audience of the sink.
+                  type: string
+      additionalPrinterColumns:
+        - name: Sink
+          type: string
+          jsonPath: ".status.sinkUri"
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+        - name: Ready
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+        - name: Reason
+          type: string
+          jsonPath: ".status.conditions[?(@.type=='Ready')].reason"
+  names:
+    categories:
+      - all
+      - knative
+      - sources
+    kind: IntegrationSource
+    plural: integrationsources
+    singular: integrationsource
+  scope: Namespaced
+
+---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
   name: jobsinks.sinks.knative.dev
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -1818,7 +2871,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2346,7 +3399,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -2698,6 +3751,220 @@ spec:
           namespace: knative-eventing
 
 ---
+# Copyright 2024 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: requestreplies.eventing.knative.dev
+  labels:
+    knative.dev/crd-install: "true"
+    app.kubernetes.io/version: "20250516-3788fccf0"
+    app.kubernetes.io/name: knative-eventing
+spec:
+  group: eventing.knative.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              description: Spec defines the desired state of the RequestReply.
+              type: object
+              properties:
+                brokerRef:
+                  description: A KReference referring to the broker this RequestReply forwards events to. CrossNamespace references are not allowed.
+                  type: object
+                  properties:
+                    apiVersion:
+                      description: API Version of the broker.
+                      type: string
+                    kind:
+                      description: 'Kind of the broker. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                      type: string
+                    name:
+                      description: 'Name of the broker. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                      type: string
+                correlationAttribute:
+                  description: The name of the cloudevent attribute where the correlation id will be set on new events.
+                  type: string
+                replyAttribute:
+                  description: The name of the cloudevents attribute which will hold the correlation id for an event which will be treated as a reply.
+                  type: string
+                secrets:
+                  description: A list of the names of one or more secrets used to sign the correlation ids and reply ids. The secrets must be in the same namespace as the requestreply resource.
+                  type: array
+                  items:
+                    type: string
+                timeout:
+                  description: A ISO8601 string representing how long RequestReply holds onto an incoming request before it times out without a reply.
+                  type: string
+                delivery:
+                  description: Delivery contains the delivery spec for each trigger to this Broker. Each trigger delivery spec, if any, overrides this global delivery spec.
+                  type: object
+                  properties:
+                    backoffDelay:
+                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                      type: string
+                    backoffPolicy:
+                      description: BackoffPolicy is the retry backoff policy (linear, exponential).
+                      type: string
+                    deadLetterSink:
+                      description: DeadLetterSink is the sink receiving event that could not be sent to a destination.
+                      type: object
+                      properties:
+                        ref:
+                          description: Ref points to an Addressable.
+                          type: object
+                          properties:
+                            apiVersion:
+                              description: API version of the referent.
+                              type: string
+                            kind:
+                              description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                              type: string
+                            namespace:
+                              description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
+                              type: string
+                        uri:
+                          description: URI can be an absolute URL(non-empty scheme and non-empty host) pointing to the target or a relative URI. Relative URIs will be resolved using the base URI retrieved from Ref.
+                          type: string
+                        CACerts:
+                          description: Certification Authority (CA) certificates in PEM format that the source trusts when sending events to the sink.
+                          type: string
+                        audience:
+                          description: Audience is the OIDC audience. This only needs to be set if the target is not an Addressable and thus the Audience can't be received from the target itself. If specified, it takes precedence over the target's Audience.
+                          type: string
+                    retry:
+                      description: Retry is the minimum number of retries the sender should attempt when sending an event before moving it to the dead letter sink.
+                      type: integer
+                      format: int32
+                  x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
+            status:
+              description: Status represents the current state of the RequestReply. This data may be out of date.
+              type: object
+              properties:
+                annotations:
+                  description: Annotations is additional Status fields for the Resource to save some additional State as well as convey more information to the user. This is roughly akin to Annotations on any k8s resource, just the reconciler conveying richer information outwards.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                conditions:
+                  description: Conditions the latest available observations of a resource's current state.
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      lastTransitionTime:
+                        description: LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
+                        type: string
+                      message:
+                        description: A human readable message indicating details about the transition.
+                        type: string
+                      reason:
+                        description: The reason for the condition's last transition.
+                        type: string
+                      severity:
+                        description: Severity with which to treat failures of this type of condition. When this is not specified, it defaults to Error.
+                        type: string
+                      status:
+                        description: Status of the condition, one of True, False, Unknown.
+                        type: string
+                      type:
+                        description: Type of condition.
+                        type: string
+                address:
+                  description: RequestReply is Addressable. It exposes the endpoint as an URI to get events delivered.
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    url:
+                      type: string
+                    CACerts:
+                      type: string
+                    audience:
+                      type: string
+                addresses:
+                  description: RequestReply is Addressable. It exposes the endpoints as URIs to get events delivered.
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      CACerts:
+                        type: string
+                      audience:
+                        type: string
+                policies:
+                  description: List of applied EventPolicies
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      apiVersion:
+                        description: The API version of the applied EventPolicy. This indicates whichversion of EventPolicy is supported by the resource.
+                        type: string
+                      name:
+                        description: The name of the applied EventPolicy
+                        type: string
+                observedGeneration:
+                  description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
+                  type: integer
+                  format: int64
+      additionalPrinterColumns:
+        - name: URL
+          type: string
+          jsonPath: ".status.address.url"
+        - name: Ready
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+        - name: Reason
+          type: string
+          jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+  names:
+    kind: RequestReply
+    plural: requestreplies
+    singular: requestreply
+    categories:
+      - all
+      - knative
+      - eventing
+  scope: Namespaced
+  conversion:
+    strategy: Webhook
+    webhook:
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: eventing-webhook
+          namespace: knative-eventing
+
+---
 # Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -2718,7 +3985,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -3102,7 +4369,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -3317,7 +4584,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -3579,7 +4846,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20240911-229446dd0"
+    app.kubernetes.io/version: "20250516-3788fccf0"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev

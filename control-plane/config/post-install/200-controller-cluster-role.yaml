@@ -20,4 +20,4 @@ metadata:
   name: knative-kafka-controller-post-install
   labels:
     app.kubernetes.io/version: devel
-rules: []
+rules: null

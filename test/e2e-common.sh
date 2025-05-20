@@ -337,8 +337,14 @@ function delete_chaos() {
 function apply_sacura() {
   kubectl apply -Rf ./test/config/sacura/resources || return $?
 
-  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || return $?
-  kubectl wait --for=condition=ready --timeout=3m -n sacura trigger/trigger || return $?
+  kubectl wait --for=condition=ready --timeout=3m -n sacura broker/broker || {
+    kubectl describe -n sacura broker/broker
+    return $?
+  }
+  kubectl wait --for=condition=ready --timeout=3m -n sacura trigger/trigger || {
+    kubectl describe -n sacura trigger/trigger
+    return $?
+  }
 
   kubectl apply -Rf ./test/config/sacura || return $?
 }
@@ -346,8 +352,14 @@ function apply_sacura() {
 function apply_sacura_sink_source() {
   kubectl apply -Rf ./test/config/sacura-sink-source/resources || return $?
 
-  kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasink/sink || return $?
-  kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasource/source || return $?
+  kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasink/sink || {
+    kubectl describe -n sacura-sink-source kafkasink/sink
+    return $?
+  }
+  kubectl wait --for=condition=ready --timeout=3m -n sacura-sink-source kafkasource/source || {
+    kubectl describe -n sacura-sink-source kafkasource/source
+    return $?
+  }
 
   kubectl apply -Rf ./test/config/sacura-sink-source || return $?
 }
@@ -459,7 +471,6 @@ function create_sasl_secrets() {
     --from-literal=user="my-sasl-user" \
     --from-literal=protocol="SASL_SSL" \
     --from-literal=sasl.mechanism="SCRAM-SHA-512" \
-    --from-literal=saslType="SCRAM-SHA-512" \
     --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 
   kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-secret-legacy \
@@ -474,7 +485,6 @@ function create_sasl_secrets() {
     --from-literal=user="my-sasl-user" \
     --from-literal=protocol="SASL_PLAINTEXT" \
     --from-literal=sasl.mechanism="SCRAM-SHA-512" \
-    --from-literal=saslType="SCRAM-SHA-512" \
     --dry-run=client -o yaml | kubectl apply -n "${SYSTEM_NAMESPACE}" -f -
 
   kubectl create secret --namespace "${SYSTEM_NAMESPACE}" generic strimzi-sasl-plain-secret-legacy \

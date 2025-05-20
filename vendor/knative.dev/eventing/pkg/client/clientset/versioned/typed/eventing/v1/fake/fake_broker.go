@@ -19,123 +19,30 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventingv1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/eventing/v1"
 )
 
-// FakeBrokers implements BrokerInterface
-type FakeBrokers struct {
+// fakeBrokers implements BrokerInterface
+type fakeBrokers struct {
+	*gentype.FakeClientWithList[*v1.Broker, *v1.BrokerList]
 	Fake *FakeEventingV1
-	ns   string
 }
 
-var brokersResource = v1.SchemeGroupVersion.WithResource("brokers")
-
-var brokersKind = v1.SchemeGroupVersion.WithKind("Broker")
-
-// Get takes name of the broker, and returns the corresponding broker object, and an error if there is any.
-func (c *FakeBrokers) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Broker, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(brokersResource, c.ns, name), &v1.Broker{})
-
-	if obj == nil {
-		return nil, err
+func newFakeBrokers(fake *FakeEventingV1, namespace string) eventingv1.BrokerInterface {
+	return &fakeBrokers{
+		gentype.NewFakeClientWithList[*v1.Broker, *v1.BrokerList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("brokers"),
+			v1.SchemeGroupVersion.WithKind("Broker"),
+			func() *v1.Broker { return &v1.Broker{} },
+			func() *v1.BrokerList { return &v1.BrokerList{} },
+			func(dst, src *v1.BrokerList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.BrokerList) []*v1.Broker { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.BrokerList, items []*v1.Broker) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1.Broker), err
-}
-
-// List takes label and field selectors, and returns the list of Brokers that match those selectors.
-func (c *FakeBrokers) List(ctx context.Context, opts metav1.ListOptions) (result *v1.BrokerList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(brokersResource, brokersKind, c.ns, opts), &v1.BrokerList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.BrokerList{ListMeta: obj.(*v1.BrokerList).ListMeta}
-	for _, item := range obj.(*v1.BrokerList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested brokers.
-func (c *FakeBrokers) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(brokersResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a broker and creates it.  Returns the server's representation of the broker, and an error, if there is any.
-func (c *FakeBrokers) Create(ctx context.Context, broker *v1.Broker, opts metav1.CreateOptions) (result *v1.Broker, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(brokersResource, c.ns, broker), &v1.Broker{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Broker), err
-}
-
-// Update takes the representation of a broker and updates it. Returns the server's representation of the broker, and an error, if there is any.
-func (c *FakeBrokers) Update(ctx context.Context, broker *v1.Broker, opts metav1.UpdateOptions) (result *v1.Broker, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(brokersResource, c.ns, broker), &v1.Broker{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Broker), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeBrokers) UpdateStatus(ctx context.Context, broker *v1.Broker, opts metav1.UpdateOptions) (*v1.Broker, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(brokersResource, "status", c.ns, broker), &v1.Broker{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Broker), err
-}
-
-// Delete takes name of the broker and deletes it. Returns an error if one occurs.
-func (c *FakeBrokers) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(brokersResource, c.ns, name, opts), &v1.Broker{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeBrokers) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(brokersResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.BrokerList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched broker.
-func (c *FakeBrokers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Broker, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(brokersResource, c.ns, name, pt, data, subresources...), &v1.Broker{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.Broker), err
 }

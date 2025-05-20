@@ -30,56 +30,11 @@ import (
 	duckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 )
 
-type SchedulerPolicyType string
-
 const (
-	// MAXFILLUP policy type adds vreplicas to existing pods to fill them up before adding to new pods
-	MAXFILLUP SchedulerPolicyType = "MAXFILLUP"
-
 	// PodAnnotationKey is an annotation used by the scheduler to be informed of pods
 	// being evicted and not use it for placing vreplicas
 	PodAnnotationKey = "eventing.knative.dev/unschedulable"
 )
-
-const (
-	ZoneLabel = "topology.kubernetes.io/zone"
-
-	UnknownZone = "unknown"
-)
-
-const (
-	// MaxWeight is the maximum weight that can be assigned for a priority.
-	MaxWeight uint64 = 10
-	// MinWeight is the minimum weight that can be assigned for a priority.
-	MinWeight uint64 = 0
-)
-
-// Policy describes a struct of a policy resource.
-type SchedulerPolicy struct {
-	// Holds the information to configure the fit predicate functions.
-	Predicates []PredicatePolicy `json:"predicates"`
-	// Holds the information to configure the priority functions.
-	Priorities []PriorityPolicy `json:"priorities"`
-}
-
-// PredicatePolicy describes a struct of a predicate policy.
-type PredicatePolicy struct {
-	// Identifier of the predicate policy
-	Name string `json:"name"`
-	// Holds the parameters to configure the given predicate
-	Args interface{} `json:"args"`
-}
-
-// PriorityPolicy describes a struct of a priority policy.
-type PriorityPolicy struct {
-	// Identifier of the priority policy
-	Name string `json:"name"`
-	// The numeric multiplier for the pod scores that the priority function generates
-	// The weight should be a positive integer
-	Weight uint64 `json:"weight"`
-	// Holds the parameters to configure the given priority function
-	Args interface{} `json:"args"`
-}
 
 // VPodLister is the function signature for returning a list of VPods
 type VPodLister func() ([]VPod, error)
@@ -87,28 +42,32 @@ type VPodLister func() ([]VPod, error)
 // Evictor allows for vreplicas to be evicted.
 // For instance, the evictor is used by the statefulset scheduler to
 // move vreplicas to pod with a lower ordinal.
+//
+// pod might be `nil`.
 type Evictor func(pod *corev1.Pod, vpod VPod, from *duckv1alpha1.Placement) error
 
 // Scheduler is responsible for placing VPods into real Kubernetes pods
 type Scheduler interface {
 	// Schedule computes the new set of placements for vpod.
-	Schedule(vpod VPod) ([]duckv1alpha1.Placement, error)
+	Schedule(ctx context.Context, vpod VPod) ([]duckv1alpha1.Placement, error)
 }
 
 // SchedulerFunc type is an adapter to allow the use of
 // ordinary functions as Schedulers. If f is a function
 // with the appropriate signature, SchedulerFunc(f) is a
 // Scheduler that calls f.
-type SchedulerFunc func(vpod VPod) ([]duckv1alpha1.Placement, error)
+type SchedulerFunc func(ctx context.Context, vpod VPod) ([]duckv1alpha1.Placement, error)
 
 // Schedule implements the Scheduler interface.
-func (f SchedulerFunc) Schedule(vpod VPod) ([]duckv1alpha1.Placement, error) {
-	return f(vpod)
+func (f SchedulerFunc) Schedule(ctx context.Context, vpod VPod) ([]duckv1alpha1.Placement, error) {
+	return f(ctx, vpod)
 }
 
 // VPod represents virtual replicas placed into real Kubernetes pods
 // The scheduler is responsible for placing VPods
 type VPod interface {
+	GetDeletionTimestamp() *metav1.Time
+
 	// GetKey returns the VPod key (namespace/name).
 	GetKey() types.NamespacedName
 

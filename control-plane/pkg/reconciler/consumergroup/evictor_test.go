@@ -30,10 +30,10 @@ import (
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
-	kafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	kafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
 func TestNewEvictor(t *testing.T) {
@@ -269,6 +269,6 @@ func TestEvictorEvictConsumerGroupNotFound(t *testing.T) {
 
 func withFilteredSelectors(ctx context.Context) context.Context {
 	return filteredFactory.WithSelectors(ctx,
-		eventing.DispatcherLabelSelectorStr,
+		internalsapi.DispatcherLabelSelectorStr,
 	)
 }

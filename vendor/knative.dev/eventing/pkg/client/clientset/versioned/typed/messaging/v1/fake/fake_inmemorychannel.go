@@ -19,123 +19,32 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gentype "k8s.io/client-go/gentype"
 	v1 "knative.dev/eventing/pkg/apis/messaging/v1"
+	messagingv1 "knative.dev/eventing/pkg/client/clientset/versioned/typed/messaging/v1"
 )
 
-// FakeInMemoryChannels implements InMemoryChannelInterface
-type FakeInMemoryChannels struct {
+// fakeInMemoryChannels implements InMemoryChannelInterface
+type fakeInMemoryChannels struct {
+	*gentype.FakeClientWithList[*v1.InMemoryChannel, *v1.InMemoryChannelList]
 	Fake *FakeMessagingV1
-	ns   string
 }
 
-var inmemorychannelsResource = v1.SchemeGroupVersion.WithResource("inmemorychannels")
-
-var inmemorychannelsKind = v1.SchemeGroupVersion.WithKind("InMemoryChannel")
-
-// Get takes name of the inMemoryChannel, and returns the corresponding inMemoryChannel object, and an error if there is any.
-func (c *FakeInMemoryChannels) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.InMemoryChannel, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(inmemorychannelsResource, c.ns, name), &v1.InMemoryChannel{})
-
-	if obj == nil {
-		return nil, err
+func newFakeInMemoryChannels(fake *FakeMessagingV1, namespace string) messagingv1.InMemoryChannelInterface {
+	return &fakeInMemoryChannels{
+		gentype.NewFakeClientWithList[*v1.InMemoryChannel, *v1.InMemoryChannelList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("inmemorychannels"),
+			v1.SchemeGroupVersion.WithKind("InMemoryChannel"),
+			func() *v1.InMemoryChannel { return &v1.InMemoryChannel{} },
+			func() *v1.InMemoryChannelList { return &v1.InMemoryChannelList{} },
+			func(dst, src *v1.InMemoryChannelList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.InMemoryChannelList) []*v1.InMemoryChannel { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.InMemoryChannelList, items []*v1.InMemoryChannel) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1.InMemoryChannel), err
-}
-
-// List takes label and field selectors, and returns the list of InMemoryChannels that match those selectors.
-func (c *FakeInMemoryChannels) List(ctx context.Context, opts metav1.ListOptions) (result *v1.InMemoryChannelList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(inmemorychannelsResource, inmemorychannelsKind, c.ns, opts), &v1.InMemoryChannelList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.InMemoryChannelList{ListMeta: obj.(*v1.InMemoryChannelList).ListMeta}
-	for _, item := range obj.(*v1.InMemoryChannelList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested inMemoryChannels.
-func (c *FakeInMemoryChannels) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(inmemorychannelsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a inMemoryChannel and creates it.  Returns the server's representation of the inMemoryChannel, and an error, if there is any.
-func (c *FakeInMemoryChannels) Create(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.CreateOptions) (result *v1.InMemoryChannel, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(inmemorychannelsResource, c.ns, inMemoryChannel), &v1.InMemoryChannel{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.InMemoryChannel), err
-}
-
-// Update takes the representation of a inMemoryChannel and updates it. Returns the server's representation of the inMemoryChannel, and an error, if there is any.
-func (c *FakeInMemoryChannels) Update(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.UpdateOptions) (result *v1.InMemoryChannel, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(inmemorychannelsResource, c.ns, inMemoryChannel), &v1.InMemoryChannel{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.InMemoryChannel), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeInMemoryChannels) UpdateStatus(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.UpdateOptions) (*v1.InMemoryChannel, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(inmemorychannelsResource, "status", c.ns, inMemoryChannel), &v1.InMemoryChannel{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.InMemoryChannel), err
-}
-
-// Delete takes name of the inMemoryChannel and deletes it. Returns an error if one occurs.
-func (c *FakeInMemoryChannels) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(inmemorychannelsResource, c.ns, name, opts), &v1.InMemoryChannel{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeInMemoryChannels) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(inmemorychannelsResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.InMemoryChannelList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched inMemoryChannel.
-func (c *FakeInMemoryChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.InMemoryChannel, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(inmemorychannelsResource, c.ns, name, pt, data, subresources...), &v1.InMemoryChannel{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1.InMemoryChannel), err
 }

@@ -19,6 +19,7 @@ package broker
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -26,13 +27,18 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/state"
 
 	duckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/eventing/test/rekt/features"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/channel"
+	"knative.dev/eventing/test/rekt/resources/channel_impl"
 	"knative.dev/eventing/test/rekt/resources/subscription"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 
@@ -41,7 +47,7 @@ import (
 	"knative.dev/pkg/ptr"
 
 	"knative.dev/reconciler-test/pkg/eventshub"
-	eventasssert "knative.dev/reconciler-test/pkg/eventshub/assert"
+	eventassert "knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
@@ -172,7 +178,7 @@ func ManyTriggers() *feature.FeatureSet {
 				eventshub.InputEvent(eventToSend),
 			))
 
-			f.Assert("source sent event", eventasssert.OnStore(source).
+			f.Assert("source sent event", eventassert.OnStore(source).
 				MatchSentEvent(test.HasId(eventToSend.ID())).
 				AtLeast(1),
 			)
@@ -184,7 +190,7 @@ func ManyTriggers() *feature.FeatureSet {
 				// Check on every dumper whether we should expect this event or not
 				if eventFilter.toEventMatcher()(eventToSend) == nil {
 					f.Assert(fmt.Sprintf("%s receive event %s", sink, eventToSend.ID()), func(ctx context.Context, t feature.T) {
-						eventasssert.OnStore(sink).
+						eventassert.OnStore(sink).
 							Match(features.HasKnNamespaceHeader(environment.FromContext(ctx).Namespace())).
 							MatchReceivedEvent(test.HasId(eventToSend.ID())).
 							MatchReceivedEvent(matcher).
@@ -334,12 +340,12 @@ func brokerChannelFlowWithTransformation(createSubscriberFn func(ref *v1.KRefere
 		eventshub.InputEvent(eventToSend),
 	))
 
-	eventMatcher := eventasssert.MatchEvent(
+	eventMatcher := eventassert.MatchEvent(
 		test.HasSource(eventSource),
 		test.HasType(eventType),
 		test.HasData([]byte(eventBody)),
 	)
-	transformEventMatcher := eventasssert.MatchEvent(
+	transformEventMatcher := eventassert.MatchEvent(
 		test.HasSource(transformedEventSource),
 		test.HasType(transformedEventType),
 		test.HasData([]byte(transformedBody)),
@@ -347,19 +353,19 @@ func brokerChannelFlowWithTransformation(createSubscriberFn func(ref *v1.KRefere
 
 	f.Stable("(Trigger1 point to) sink1 has all the events").
 		Must("delivers original events",
-			eventasssert.OnStore(sink1).Match(eventMatcher).AtLeast(1))
+			eventassert.OnStore(sink1).Match(eventMatcher).AtLeast(1))
 
 	f.Stable("(Trigger2 point to) sink2 has all the events").
 		Must("delivers original events",
-			eventasssert.OnStore(sink2).Match(eventMatcher).AtLeast(1)).
+			eventassert.OnStore(sink2).Match(eventMatcher).AtLeast(1)).
 		Must("delivers transformation events",
-			eventasssert.OnStore(sink2).Match(transformEventMatcher).AtLeast(1))
+			eventassert.OnStore(sink2).Match(transformEventMatcher).AtLeast(1))
 
 	f.Stable("(Trigger3 point to) Channel's subscriber just has events after transformation").
 		Must("delivers transformation events",
-			eventasssert.OnStore(sink3).Match(transformEventMatcher).AtLeast(1)).
+			eventassert.OnStore(sink3).Match(transformEventMatcher).AtLeast(1)).
 		Must("delivers original events",
-			eventasssert.OnStore(sink3).Match(eventMatcher).Not())
+			eventassert.OnStore(sink3).Match(eventMatcher).Not())
 
 	return f
 }
@@ -382,8 +388,20 @@ Note: the number denotes the sequence of the event that flows in this test case.
 */
 func brokerEventTransformationForTrigger() *feature.Feature {
 	f := feature.NewFeatureNamed("Broker event transformation for trigger")
+	config := BrokerEventTransformationForTriggerSetup(f)
+	BrokerEventTransformationForTriggerAssert(f, config)
+	return f
+}
 
-	source := feature.MakeRandomK8sName("source")
+type brokerEventTransformationConfig struct {
+	Broker           string
+	Sink1            string
+	Sink2            string
+	EventToSend      cloudevents.Event
+	TransformedEvent cloudevents.Event
+}
+
+func BrokerEventTransformationForTriggerSetup(f *feature.Feature) brokerEventTransformationConfig {
 	sink1 := feature.MakeRandomK8sName("sink1")
 	sink2 := feature.MakeRandomK8sName("sink2")
 
@@ -391,42 +409,43 @@ func brokerEventTransformationForTrigger() *feature.Feature {
 	trigger2 := feature.MakeRandomK8sName("trigger2")
 
 	// Construct original cloudevent message
-	eventType := "type1"
-	eventSource := "http://source1.com"
-	eventBody := `{"msg":"e2e-brokerchannel-body"}`
-	// Construct cloudevent message after transformation
-	transformedEventType := "type2"
-	transformedEventSource := "http://source2.com"
-	transformedBody := `{"msg":"transformed body"}`
-
-	// Construct eventToSend
 	eventToSend := cloudevents.NewEvent()
-	eventToSend.SetID(uuid.New().String())
-	eventToSend.SetType(eventType)
-	eventToSend.SetSource(eventSource)
-	eventToSend.SetData(cloudevents.ApplicationJSON, []byte(eventBody))
+	eventToSend.SetType("type1")
+	eventToSend.SetSource("http://source1.com")
+	eventToSend.SetData(cloudevents.ApplicationJSON, []byte(`{"msg":"e2e-brokerchannel-body"}`))
+
+	// Construct cloudevent message after transformation
+	transformedEvent := cloudevents.NewEvent()
+	transformedEvent.SetType("type2")
+	transformedEvent.SetSource("http://source2.com")
+	transformedEvent.SetData(cloudevents.ApplicationJSON, []byte(`{"msg":"transformed body"}`))
 
 	//Install the broker
 	brokerName := feature.MakeRandomK8sName("broker")
+	f.Setup("Set context variables", func(ctx context.Context, t feature.T) {
+		state.SetOrFail(ctx, t, "brokerName", brokerName)
+		state.SetOrFail(ctx, t, "sink1", sink1)
+		state.SetOrFail(ctx, t, "sink2", sink2)
+	})
 	f.Setup("install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink1", eventshub.Install(sink1,
-		eventshub.ReplyWithTransformedEvent(transformedEventType, transformedEventSource, transformedBody),
+		eventshub.ReplyWithTransformedEvent(transformedEvent.Type(), transformedEvent.Source(), string(transformedEvent.Data())),
 		eventshub.StartReceiver),
 	)
 	f.Setup("install sink2", eventshub.Install(sink2, eventshub.StartReceiver))
 
 	// filter1 filters the original events
 	filter1 := eventingv1.TriggerFilterAttributes{
-		"type":   eventType,
-		"source": eventSource,
+		"type":   eventToSend.Type(),
+		"source": eventToSend.Source(),
 	}
 	// filter2 filters events after transformation
 	filter2 := eventingv1.TriggerFilterAttributes{
-		"type":   transformedEventType,
-		"source": transformedEventSource,
+		"type":   transformedEvent.Type(),
+		"source": transformedEvent.Source(),
 	}
 
 	// Install the trigger1 point to Broker and transform the original events to new events
@@ -446,33 +465,49 @@ func brokerEventTransformationForTrigger() *feature.Feature {
 	))
 	f.Setup("trigger2 goes ready", trigger.IsReady(trigger2))
 
+	return brokerEventTransformationConfig{
+		Broker:           brokerName,
+		Sink1:            sink1,
+		Sink2:            sink2,
+		EventToSend:      eventToSend,
+		TransformedEvent: transformedEvent,
+	}
+}
+
+func BrokerEventTransformationForTriggerAssert(f *feature.Feature,
+	cfg brokerEventTransformationConfig) {
+
+	source := feature.MakeRandomK8sName("source")
+
+	// Set new ID every time we send event to allow calling this function repeatedly
+	cfg.EventToSend.SetID(uuid.New().String())
 	f.Requirement("install source", eventshub.Install(
 		source,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(eventToSend),
+		eventshub.StartSenderToResource(broker.GVR(), cfg.Broker),
+		eventshub.InputEvent(cfg.EventToSend),
 	))
 
-	eventMatcher := eventasssert.MatchEvent(
-		test.HasSource(eventSource),
-		test.HasType(eventType),
-		test.HasData([]byte(eventBody)),
+	eventMatcher := eventassert.MatchEvent(
+		test.HasId(cfg.EventToSend.ID()),
+		test.HasSource(cfg.EventToSend.Source()),
+		test.HasType(cfg.EventToSend.Type()),
+		test.HasData(cfg.EventToSend.Data()),
 	)
-	transformEventMatcher := eventasssert.MatchEvent(
-		test.HasSource(transformedEventSource),
-		test.HasType(transformedEventType),
-		test.HasData([]byte(transformedBody)),
+	transformEventMatcher := eventassert.MatchEvent(
+		test.HasSource(cfg.TransformedEvent.Source()),
+		test.HasType(cfg.TransformedEvent.Type()),
+		test.HasData(cfg.TransformedEvent.Data()),
 	)
 
-	f.Stable("Trigger2 has filtered all transformed events").
-		Must("delivers original events",
-			eventasssert.OnStore(sink2).Match(transformEventMatcher).AtLeast(1))
-
-	f.Stable("Trigger2 has no original events").
-		Must("delivers original events",
-			eventasssert.OnStore(sink2).Match(eventMatcher).Not())
-
-	return f
-
+	f.Stable("Trigger has filtered all transformed events").
+		Must("trigger 1 delivers original events",
+			eventassert.OnStore(cfg.Sink1).Match(eventMatcher).AtLeast(1)).
+		Must("trigger 1 does not deliver transformed events",
+			eventassert.OnStore(cfg.Sink1).Match(transformEventMatcher).Not()).
+		Must("trigger 2 delivers transformed events",
+			eventassert.OnStore(cfg.Sink2).Match(transformEventMatcher).AtLeast(1)).
+		Must("trigger 2 does not deliver original events",
+			eventassert.OnStore(cfg.Sink2).Match(eventMatcher).Not())
 }
 
 func BrokerPreferHeaderCheck() *feature.Feature {
@@ -514,9 +549,109 @@ func BrokerPreferHeaderCheck() *feature.Feature {
 
 	f.Stable("test message without explicit prefer header should have the header").
 		Must("delivers events",
-			eventasssert.OnStore(sink).Match(
-				eventasssert.HasAdditionalHeader("Prefer", "reply"),
+			eventassert.OnStore(sink).Match(
+				eventassert.HasAdditionalHeader("Prefer", "reply"),
 			).AtLeast(1))
+
+	return f
+}
+
+func PropagatesMetadata() *feature.Feature {
+	f := feature.NewFeatureNamed("Broker PreferHeader Check")
+
+	if !broker.EnvCfg.IsMTChannelBasedBroker() {
+		f.Assert("class is not MTChannelBasedBroker, skipping", func(ctx context.Context, t feature.T) {})
+		return f
+	}
+
+	source := feature.MakeRandomK8sName("source")
+	sink := feature.MakeRandomK8sName("sink")
+	via := feature.MakeRandomK8sName("via")
+
+	key := messagingv1.AsyncHandlerAnnotation
+	value := "false"
+
+	event := test.FullEvent()
+	event.SetID(uuid.New().String())
+
+	//Install the broker
+	brokerName := feature.MakeRandomK8sName("broker")
+	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithAnnotations(
+		map[string]interface{}{key: value},
+	))...))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
+
+	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver))
+
+	// Point the Trigger subscriber to the sink svc.
+	cfg := []manifest.CfgFn{trigger.WithSubscriber(service.AsKReference(sink), ""), trigger.WithBrokerName(brokerName)}
+
+	// Install the trigger
+	f.Setup("install trigger", trigger.Install(via, cfg...))
+	f.Setup("trigger goes ready", trigger.IsReady(via))
+
+	f.Requirement("install source", eventshub.Install(
+		source,
+		eventshub.StartSenderToResource(broker.GVR(), brokerName),
+		eventshub.InputEvent(event),
+	))
+
+	f.Assert("channel has annotations and labels", func(ctx context.Context, t feature.T) {
+		d := dynamicclient.Get(ctx)
+		channelsImpls, err := d.Resource(channel_impl.GVR()).
+			Namespace(environment.FromContext(ctx).Namespace()).
+			List(ctx, metav1.ListOptions{})
+		if err != nil {
+			t.Errorf("Failed to list channels (%v): %v", channel_impl.GVR(), err)
+			return
+		}
+
+		channels, err := d.Resource(channel.GVR()).
+			Namespace(environment.FromContext(ctx).Namespace()).
+			List(ctx, metav1.ListOptions{})
+		if err != nil {
+			t.Errorf("Failed to list channels (%v): %v", channel.GVR(), err)
+			return
+		}
+
+		channels.Items = append(channels.Items, channelsImpls.Items...)
+
+		if len(channels.Items) <= 0 {
+			t.Errorf("No channels found for resources: %#v or %#v", channel_impl.GVR(), channel.GVR())
+		}
+
+		found := false
+		for _, ch := range channels.Items {
+			for _, or := range ch.GetOwnerReferences() {
+				if or.Kind == "Broker" && or.Name == brokerName {
+					v, ok := ch.GetAnnotations()[key]
+					if !ok {
+						t.Errorf("Failed to find async handler annotation:\n%#v", ch)
+						return
+					}
+					if v != value {
+						t.Errorf("Failed to find expected '%s' value for annotation '%s':\n%#v", value, key, ch)
+						return
+					}
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			bytes, _ := json.MarshalIndent(channels, "", "  ")
+			t.Errorf("No channel found associated with broker %q\n%#v", brokerName, string(bytes))
+		}
+	})
+	f.Assert("event sent", eventassert.OnStore(source).
+		MatchSentEvent(test.HasId(event.ID())).
+		AtLeast(1),
+	)
+	f.Assert("event received", eventassert.OnStore(sink).
+		MatchReceivedEvent(test.HasId(event.ID())).
+		AtLeast(1),
+	)
 
 	return f
 }
@@ -576,9 +711,9 @@ func brokerRedeliveryFibonacci(retryNum int32) *feature.Feature {
 
 	f.Stable("Broker Redelivery following the fibonacci sequence").
 		Must("delivers events",
-			eventasssert.OnStore(sink).Match(
-				eventasssert.MatchKind(eventasssert.EventReceived),
-				eventasssert.MatchEvent(
+			eventassert.OnStore(sink).Match(
+				eventassert.MatchKind(eventassert.EventReceived),
+				eventassert.MatchEvent(
 					test.HasSource(eventSource),
 					test.HasType(eventType),
 					test.HasData([]byte(eventBody)),
@@ -632,11 +767,11 @@ func brokerRedeliveryDropN(retryNum int32, dropNum uint) *feature.Feature {
 	f.Stable("Broker Redelivery failed the first n events").
 		Must("delivers events",
 			func(ctx context.Context, t feature.T) {
-				eventasssert.OnStore(sink).
+				eventassert.OnStore(sink).
 					Match(features.HasKnNamespaceHeader(environment.FromContext(ctx).Namespace())).
 					Match(
-						eventasssert.MatchKind(eventasssert.EventReceived),
-						eventasssert.MatchEvent(
+						eventassert.MatchKind(eventassert.EventReceived),
+						eventassert.MatchEvent(
 							test.HasSource(eventSource),
 							test.HasType(eventType),
 							test.HasData([]byte(eventBody)),
@@ -704,7 +839,7 @@ func brokerSubscriberUnreachable() *feature.Feature {
 
 	f.Assert("Receives dls extensions when subscriber is unreachable",
 		func(ctx context.Context, t feature.T) {
-			eventasssert.OnStore(sink).
+			eventassert.OnStore(sink).
 				Match(features.HasKnNamespaceHeader(environment.FromContext(ctx).Namespace())).
 				MatchEvent(
 					test.HasExtension("knativeerrordest", subscriberUri),
@@ -850,8 +985,8 @@ func assertEnhancedWithKnativeErrorExtensions(sinkName string, matcherfns ...fun
 			ctx,
 			t,
 			1,
-			eventasssert.MatchKind(eventshub.EventReceived),
-			eventasssert.MatchEvent(matchers...),
+			eventassert.MatchKind(eventshub.EventReceived),
+			eventassert.MatchEvent(matchers...),
 		)
 	}
 }
@@ -906,7 +1041,7 @@ func brokerSubscriberLongMessage() *feature.Feature {
 	))
 
 	f.Assert("receive long event on sink exactly once",
-		eventasssert.OnStore(sink).
+		eventassert.OnStore(sink).
 			MatchEvent(test.HasData([]byte(eventBody))).
 			Exact(1),
 	)
@@ -991,13 +1126,13 @@ func brokerSubscriberLongResponseMessage() *feature.Feature {
 	))
 
 	f.Assert("receive long event on sink1 exactly once",
-		eventasssert.OnStore(sink1).
+		eventassert.OnStore(sink1).
 			MatchEvent(test.HasData([]byte(eventBody))).
 			Exact(1),
 	)
 
 	f.Assert("receive long event on sink2 exactly once",
-		eventasssert.OnStore(sink2).
+		eventassert.OnStore(sink2).
 			MatchEvent(test.HasData([]byte(transformedEventBody))).
 			Exact(1),
 	)

@@ -19,14 +19,13 @@ limitations under the License.
 package v1
 
 import (
-	"context"
-	"time"
+	context "context"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
-	v1 "knative.dev/eventing/pkg/apis/messaging/v1"
+	gentype "k8s.io/client-go/gentype"
+	messagingv1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	scheme "knative.dev/eventing/pkg/client/clientset/versioned/scheme"
 )
 
@@ -38,158 +37,34 @@ type InMemoryChannelsGetter interface {
 
 // InMemoryChannelInterface has methods to work with InMemoryChannel resources.
 type InMemoryChannelInterface interface {
-	Create(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.CreateOptions) (*v1.InMemoryChannel, error)
-	Update(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.UpdateOptions) (*v1.InMemoryChannel, error)
-	UpdateStatus(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.UpdateOptions) (*v1.InMemoryChannel, error)
+	Create(ctx context.Context, inMemoryChannel *messagingv1.InMemoryChannel, opts metav1.CreateOptions) (*messagingv1.InMemoryChannel, error)
+	Update(ctx context.Context, inMemoryChannel *messagingv1.InMemoryChannel, opts metav1.UpdateOptions) (*messagingv1.InMemoryChannel, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, inMemoryChannel *messagingv1.InMemoryChannel, opts metav1.UpdateOptions) (*messagingv1.InMemoryChannel, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.InMemoryChannel, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.InMemoryChannelList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*messagingv1.InMemoryChannel, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*messagingv1.InMemoryChannelList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.InMemoryChannel, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *messagingv1.InMemoryChannel, err error)
 	InMemoryChannelExpansion
 }
 
 // inMemoryChannels implements InMemoryChannelInterface
 type inMemoryChannels struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*messagingv1.InMemoryChannel, *messagingv1.InMemoryChannelList]
 }
 
 // newInMemoryChannels returns a InMemoryChannels
 func newInMemoryChannels(c *MessagingV1Client, namespace string) *inMemoryChannels {
 	return &inMemoryChannels{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*messagingv1.InMemoryChannel, *messagingv1.InMemoryChannelList](
+			"inmemorychannels",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *messagingv1.InMemoryChannel { return &messagingv1.InMemoryChannel{} },
+			func() *messagingv1.InMemoryChannelList { return &messagingv1.InMemoryChannelList{} },
+		),
 	}
-}
-
-// Get takes name of the inMemoryChannel, and returns the corresponding inMemoryChannel object, and an error if there is any.
-func (c *inMemoryChannels) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.InMemoryChannel, err error) {
-	result = &v1.InMemoryChannel{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of InMemoryChannels that match those selectors.
-func (c *inMemoryChannels) List(ctx context.Context, opts metav1.ListOptions) (result *v1.InMemoryChannelList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1.InMemoryChannelList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested inMemoryChannels.
-func (c *inMemoryChannels) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a inMemoryChannel and creates it.  Returns the server's representation of the inMemoryChannel, and an error, if there is any.
-func (c *inMemoryChannels) Create(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.CreateOptions) (result *v1.InMemoryChannel, err error) {
-	result = &v1.InMemoryChannel{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(inMemoryChannel).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a inMemoryChannel and updates it. Returns the server's representation of the inMemoryChannel, and an error, if there is any.
-func (c *inMemoryChannels) Update(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.UpdateOptions) (result *v1.InMemoryChannel, err error) {
-	result = &v1.InMemoryChannel{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		Name(inMemoryChannel.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(inMemoryChannel).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *inMemoryChannels) UpdateStatus(ctx context.Context, inMemoryChannel *v1.InMemoryChannel, opts metav1.UpdateOptions) (result *v1.InMemoryChannel, err error) {
-	result = &v1.InMemoryChannel{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		Name(inMemoryChannel.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(inMemoryChannel).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the inMemoryChannel and deletes it. Returns an error if one occurs.
-func (c *inMemoryChannels) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *inMemoryChannels) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched inMemoryChannel.
-func (c *inMemoryChannels) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.InMemoryChannel, err error) {
-	result = &v1.InMemoryChannel{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("inmemorychannels").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

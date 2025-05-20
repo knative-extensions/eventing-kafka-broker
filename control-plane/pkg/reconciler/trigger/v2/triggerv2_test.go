@@ -26,10 +26,10 @@ import (
 	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -50,7 +50,7 @@ import (
 
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/client/fake"
+	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
 const (
@@ -126,6 +126,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			WantEvents: []string{
@@ -187,6 +188,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -241,6 +243,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
@@ -296,6 +299,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerFilters(NewConsumerSpecFilters()),
 						ConsumerReply(ConsumerTopicReply()),
 					)),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			WantEvents: []string{
@@ -403,6 +407,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
+						withBrokerTopLevelResourceRef(),
 					),
 				},
 			},
@@ -448,6 +453,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupReady,
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key:         testKey,
@@ -472,6 +478,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
+						withBrokerTopLevelResourceRef(),
 					),
 				},
 			},
@@ -515,6 +522,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupOwnerRef(kmeta.NewControllerRef(newTrigger())),
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 					WithConsumerGroupLabels(ConsumerTriggerLabel),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key:         testKey,
@@ -537,6 +545,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerFilters(NewConsumerSpecFilters()),
 							ConsumerReply(ConsumerTopicReply()),
 						)),
+						withBrokerTopLevelResourceRef(),
 					),
 				},
 			},
@@ -597,6 +606,7 @@ func TestReconcileKind(t *testing.T) {
 							},
 						}),
 					)),
+					withBrokerTopLevelResourceRef(),
 				),
 				NewLegacySASLSecret(ConfigMapNamespace, "secret-1"),
 			},
@@ -627,6 +637,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							}),
 						)),
+						withBrokerTopLevelResourceRef(),
 					),
 				},
 			},
@@ -682,6 +693,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReady,
 					ConsumerGroupReplicas(1),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -736,6 +748,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerReply(ConsumerTopicReply()),
 					)),
 					ConsumerGroupReplicas(1),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -791,6 +804,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					WithConsumerGroupFailed("failed", "failed"),
 					ConsumerGroupReplicas(1),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -845,6 +859,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					WithDeadLetterSinkURI(url.String()),
 					ConsumerGroupReplicas(1),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -992,6 +1007,7 @@ func TestReconcileKind(t *testing.T) {
 					WithConsumerGroupMetaLabels(OwnerAsTriggerLabel),
 					WithConsumerGroupLabels(ConsumerTriggerLabel),
 					ConsumerGroupReady,
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key:         testKey,
@@ -1015,6 +1031,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerReply(ConsumerTopicReply()),
 						)),
 						ConsumerGroupReady,
+						withBrokerTopLevelResourceRef(),
 					),
 				},
 			},
@@ -1073,6 +1090,7 @@ func TestReconcileKind(t *testing.T) {
 					)),
 					ConsumerGroupReady,
 					ConsumerGroupReplicas(1),
+					withBrokerTopLevelResourceRef(),
 				),
 			},
 			Key: testKey,
@@ -1171,4 +1189,14 @@ func removeFinalizers() clientgotesting.PatchActionImpl {
 	patch := `{"metadata":{"finalizers":[],"resourceVersion":""}}`
 	action.Patch = []byte(patch)
 	return action
+}
+
+func withBrokerTopLevelResourceRef() ConsumerGroupOption {
+	return WithTopLevelResourceRef(&corev1.ObjectReference{
+		APIVersion: eventing.SchemeGroupVersion.String(),
+		Kind:       "Broker",
+		Namespace:  BrokerNamespace,
+		Name:       BrokerName,
+		UID:        BrokerUUID,
+	})
 }

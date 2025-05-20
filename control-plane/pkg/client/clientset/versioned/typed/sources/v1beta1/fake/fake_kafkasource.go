@@ -19,146 +19,61 @@
 package fake
 
 import (
-	"context"
+	context "context"
 
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
+	gentype "k8s.io/client-go/gentype"
 	testing "k8s.io/client-go/testing"
 	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sourcesv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/sources/v1beta1"
 )
 
-// FakeKafkaSources implements KafkaSourceInterface
-type FakeKafkaSources struct {
+// fakeKafkaSources implements KafkaSourceInterface
+type fakeKafkaSources struct {
+	*gentype.FakeClientWithList[*v1beta1.KafkaSource, *v1beta1.KafkaSourceList]
 	Fake *FakeSourcesV1beta1
-	ns   string
 }
 
-var kafkasourcesResource = v1beta1.SchemeGroupVersion.WithResource("kafkasources")
-
-var kafkasourcesKind = v1beta1.SchemeGroupVersion.WithKind("KafkaSource")
-
-// Get takes name of the kafkaSource, and returns the corresponding kafkaSource object, and an error if there is any.
-func (c *FakeKafkaSources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.KafkaSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(kafkasourcesResource, c.ns, name), &v1beta1.KafkaSource{})
-
-	if obj == nil {
-		return nil, err
+func newFakeKafkaSources(fake *FakeSourcesV1beta1, namespace string) sourcesv1beta1.KafkaSourceInterface {
+	return &fakeKafkaSources{
+		gentype.NewFakeClientWithList[*v1beta1.KafkaSource, *v1beta1.KafkaSourceList](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("kafkasources"),
+			v1beta1.SchemeGroupVersion.WithKind("KafkaSource"),
+			func() *v1beta1.KafkaSource { return &v1beta1.KafkaSource{} },
+			func() *v1beta1.KafkaSourceList { return &v1beta1.KafkaSourceList{} },
+			func(dst, src *v1beta1.KafkaSourceList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.KafkaSourceList) []*v1beta1.KafkaSource { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1beta1.KafkaSourceList, items []*v1beta1.KafkaSource) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.KafkaSource), err
-}
-
-// List takes label and field selectors, and returns the list of KafkaSources that match those selectors.
-func (c *FakeKafkaSources) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.KafkaSourceList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(kafkasourcesResource, kafkasourcesKind, c.ns, opts), &v1beta1.KafkaSourceList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.KafkaSourceList{ListMeta: obj.(*v1beta1.KafkaSourceList).ListMeta}
-	for _, item := range obj.(*v1beta1.KafkaSourceList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested kafkaSources.
-func (c *FakeKafkaSources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(kafkasourcesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a kafkaSource and creates it.  Returns the server's representation of the kafkaSource, and an error, if there is any.
-func (c *FakeKafkaSources) Create(ctx context.Context, kafkaSource *v1beta1.KafkaSource, opts v1.CreateOptions) (result *v1beta1.KafkaSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(kafkasourcesResource, c.ns, kafkaSource), &v1beta1.KafkaSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1beta1.KafkaSource), err
-}
-
-// Update takes the representation of a kafkaSource and updates it. Returns the server's representation of the kafkaSource, and an error, if there is any.
-func (c *FakeKafkaSources) Update(ctx context.Context, kafkaSource *v1beta1.KafkaSource, opts v1.UpdateOptions) (result *v1beta1.KafkaSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(kafkasourcesResource, c.ns, kafkaSource), &v1beta1.KafkaSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1beta1.KafkaSource), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeKafkaSources) UpdateStatus(ctx context.Context, kafkaSource *v1beta1.KafkaSource, opts v1.UpdateOptions) (*v1beta1.KafkaSource, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(kafkasourcesResource, "status", c.ns, kafkaSource), &v1beta1.KafkaSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1beta1.KafkaSource), err
-}
-
-// Delete takes name of the kafkaSource and deletes it. Returns an error if one occurs.
-func (c *FakeKafkaSources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(kafkasourcesResource, c.ns, name, opts), &v1beta1.KafkaSource{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeKafkaSources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(kafkasourcesResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.KafkaSourceList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched kafkaSource.
-func (c *FakeKafkaSources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.KafkaSource, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(kafkasourcesResource, c.ns, name, pt, data, subresources...), &v1beta1.KafkaSource{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1beta1.KafkaSource), err
 }
 
 // GetScale takes name of the kafkaSource, and returns the corresponding scale object, and an error if there is any.
-func (c *FakeKafkaSources) GetScale(ctx context.Context, kafkaSourceName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+func (c *fakeKafkaSources) GetScale(ctx context.Context, kafkaSourceName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(kafkasourcesResource, c.ns, "scale", kafkaSourceName), &autoscalingv1.Scale{})
+		Invokes(testing.NewGetSubresourceActionWithOptions(c.Resource(), c.Namespace(), "scale", kafkaSourceName, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *FakeKafkaSources) UpdateScale(ctx context.Context, kafkaSourceName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+func (c *fakeKafkaSources) UpdateScale(ctx context.Context, kafkaSourceName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(kafkasourcesResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(c.Resource(), "scale", c.Namespace(), scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }

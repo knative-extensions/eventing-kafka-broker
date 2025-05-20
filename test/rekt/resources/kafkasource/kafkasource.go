@@ -33,7 +33,7 @@ import (
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/manifest"
 
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	kafkaclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 )
 
@@ -41,7 +41,7 @@ import (
 var yaml embed.FS
 
 func GVR() schema.GroupVersionResource {
-	return schema.GroupVersionResource{Group: "sources.knative.dev", Version: "v1beta1", Resource: "kafkasources"}
+	return schema.GroupVersionResource{Group: sources.SchemeGroupVersion.Group, Version: sources.SchemeGroupVersion.Version, Resource: "kafkasources"}
 }
 
 // Install will create a KafkaSource resource, using the latest version, augmented with the config fn options.
@@ -66,7 +66,7 @@ func VerifyScale(name string, replicas int32) feature.StepFn {
 		last := &sources.KafkaSource{}
 		err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
 			ks, err := kafkaclientset.Get(ctx).
-				SourcesV1beta1().
+				SourcesV1().
 				KafkaSources(environment.FromContext(ctx).Namespace()).
 				Get(ctx, name, metav1.GetOptions{})
 			if err != nil {

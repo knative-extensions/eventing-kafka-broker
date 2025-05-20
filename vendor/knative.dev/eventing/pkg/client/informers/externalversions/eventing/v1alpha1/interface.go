@@ -26,6 +26,10 @@ import (
 type Interface interface {
 	// EventPolicies returns a EventPolicyInformer.
 	EventPolicies() EventPolicyInformer
+	// EventTransforms returns a EventTransformInformer.
+	EventTransforms() EventTransformInformer
+	// RequestReplies returns a RequestReplyInformer.
+	RequestReplies() RequestReplyInformer
 }
 
 type version struct {
@@ -42,4 +46,14 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // EventPolicies returns a EventPolicyInformer.
 func (v *version) EventPolicies() EventPolicyInformer {
 	return &eventPolicyInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// EventTransforms returns a EventTransformInformer.
+func (v *version) EventTransforms() EventTransformInformer {
+	return &eventTransformInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// RequestReplies returns a RequestReplyInformer.
+func (v *version) RequestReplies() RequestReplyInformer {
+	return &requestReplyInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
