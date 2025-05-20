@@ -212,6 +212,14 @@ type saramaClientMock struct {
 	closed            bool
 }
 
+func (s *saramaClientMock) ElectLeaders(electionType sarama.ElectionType, m map[string][]int32) (map[string]map[int32]*sarama.PartitionResult, error) {
+	panic("implement me")
+}
+
+func (s *saramaClientMock) PartitionNotReadable(topic string, partition int32) bool {
+	panic("implement me")
+}
+
 func (s *saramaClientMock) CreateACLs(acls []*sarama.ResourceAcls) error {
 	panic("implement me")
 }

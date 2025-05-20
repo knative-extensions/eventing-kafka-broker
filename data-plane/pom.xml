@@ -44,7 +44,7 @@
     <!-- dependencies version -->
     <vertx.version>4.5.14</vertx.version>
     <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
-    <micrometer.version>1.14.6</micrometer.version>
+    <micrometer.version>1.14.7</micrometer.version>
     <opentelemetry.version>1.42.1</opentelemetry.version>
     <jackson.version>2.14.1</jackson.version>
     <protobuf.version>3.25.5</protobuf.version>
@@ -60,7 +60,7 @@
     <kafka.version>3.9.0</kafka.version>
     <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.5</jib.version>
-    <quarkus.version>3.22.2</quarkus.version>
+    <quarkus.version>3.22.3</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
     <palantirJavaFormat.version>2.38.0</palantirJavaFormat.version>

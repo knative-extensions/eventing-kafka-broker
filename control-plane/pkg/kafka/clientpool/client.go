@@ -79,6 +79,10 @@ func (c *client) Topics() ([]string, error) {
 	return x, err
 }
 
+func (c *client) PartitionNotReadable(topic string, partition int32) bool {
+	return c.client.PartitionNotReadable(topic, partition)
+}
+
 func (c *client) Partitions(topic string) ([]int32, error) {
 	x, err := c.client.Partitions(topic)
 	if c.isFatalError(err) {
