@@ -55,11 +55,6 @@ import (
 
 const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
-	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>).
-	TopicPrefix = "knative-broker-"
-
-	// ExternalTopicAnnotation for using external kafka topic for the broker
-	ExternalTopicAnnotation = "kafka.eventing.knative.dev/external.topic"
 )
 
 type Reconciler struct {
