@@ -242,6 +242,22 @@ func TestKafkaSourceKedaScaling(t *testing.T) {
 
 }
 
+func TestKafkaSourceKedaScalingSASL(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceSASLScalesToZeroWithKeda())
+
+}
+
 func TestKafkaSourceScaledObject(t *testing.T) {
 	t.Parallel()
 
