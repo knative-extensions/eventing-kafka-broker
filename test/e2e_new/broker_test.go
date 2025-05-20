@@ -356,3 +356,33 @@ func TestBrokerDispatcherKedaScaling(t *testing.T) {
 
 	env.Test(ctx, t, features.TriggerScalesToZeroWithKeda())
 }
+
+func TestBrokerDispatcherKedaScalingSASL(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.TriggerSASLScalesToZeroWithKeda())
+}
+
+func TestBrokerDispatcherKedaScalingSSL(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.TriggerSSLScalesToZeroWithKeda())
+}
