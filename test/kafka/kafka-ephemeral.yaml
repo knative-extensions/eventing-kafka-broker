@@ -41,6 +41,20 @@ spec:
         tls: true
         authentication:
           type: scram-sha-512
+      # protocol=SASL_SSL
+      # sasl.mechanism=SCRAM-SHA-512
+      # TLS Certificate signed by knative-eventing-ca-issuer ClusterIssuer
+      - name: cmsasltls
+        port: 9194
+        type: internal
+        tls: true
+        authentication:
+          type: scram-sha-512
+        configuration:
+          brokerCertChainAndKey:
+            certificate: tls.crt
+            key: tls.key
+            secretName: my-cluster-kafka-certmanager-cert
       # protocol=SASL_PLAINTEXT
       # sasl.mechanism=SCRAM-SHA-512
       - name: saslplain

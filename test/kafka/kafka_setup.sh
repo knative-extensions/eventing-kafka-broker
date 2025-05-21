@@ -26,6 +26,9 @@ kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
 header "Applying Strimzi Cluster Operator file"
 cat $(dirname $0)/strimzi-cluster-operator.yaml | sed 's/namespace: .*/namespace: kafka/' | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
 
+echo "Create Kafka Certificate"
+kubectl -n kafka apply -f $(dirname $0)/kafka-certificate.yaml
+
 sleep 10
 
 kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml || kubectl -n kafka apply -f $(dirname $0)/kafka-ephemeral.yaml
