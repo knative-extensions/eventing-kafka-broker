@@ -22,6 +22,7 @@ import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.OIDCTokenRequestException;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.auth.TokenProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
@@ -159,6 +160,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                                     return retry(retryCounter, event);
                                 }
                                 return Future.failedFuture(cause);
+                            } else if (cause instanceof OIDCTokenRequestException) {
+                                return Future.failedFuture(cause);
                             }
 
                             if (retryCounter
@@ -193,7 +196,14 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         if (this.targetOIDCAudience.isEmpty()) {
             requestToken = Future.succeededFuture(null);
         } else {
-            requestToken = this.tokenProvider.getToken(this.oidcServiceAccount, this.targetOIDCAudience);
+            if (this.oidcServiceAccount.name() == null
+                    || this.oidcServiceAccount.name().isEmpty()) {
+                requestToken = Future.failedFuture(
+                        new OIDCTokenRequestException(
+                                "can't request an OIDC token, as target has an audience set, but no OIDC service account set in client yet"));
+            } else {
+                requestToken = this.tokenProvider.getToken(this.oidcServiceAccount, this.targetOIDCAudience);
+            }
         }
 
         return requestToken
