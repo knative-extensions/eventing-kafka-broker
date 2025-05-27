@@ -1230,7 +1230,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/trace
-# knative.dev/eventing v0.45.1-0.20250516143849-5eb1a5fa62b6
+# knative.dev/eventing v0.45.1-0.20250526160117-40bac3cce0e6
 ## explicit; go 1.23.0
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1387,6 +1387,7 @@ knative.dev/eventing/test/rekt/resources/addressable
 knative.dev/eventing/test/rekt/resources/broker
 knative.dev/eventing/test/rekt/resources/channel
 knative.dev/eventing/test/rekt/resources/channel_impl
+knative.dev/eventing/test/rekt/resources/configmap
 knative.dev/eventing/test/rekt/resources/containersource
 knative.dev/eventing/test/rekt/resources/delivery
 knative.dev/eventing/test/rekt/resources/eventpolicy
