@@ -27,6 +27,9 @@ header "Applying Strimzi Cluster Operator file"
 cat $(dirname $0)/strimzi-cluster-operator.yaml | sed 's/namespace: .*/namespace: kafka/' | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
 
 echo "Create Kafka Certificate"
+# create the cluster-issuer, as the certificate links to this cluster-issuer
+kubectl apply -f "$(dirname $0)/../../vendor/knative.dev/eventing/test/config/tls/eventing-ca-issuer.yaml"
+kubectl apply -f "$(dirname $0)/../../vendor/knative.dev/eventing/test/config/tls/selfsigned-issuer.yaml"
 kubectl -n kafka apply -f $(dirname $0)/kafka-certificate.yaml
 
 sleep 10
