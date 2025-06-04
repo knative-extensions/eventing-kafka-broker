@@ -138,9 +138,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
-		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, ks.Spec.Topic, topicConfig)
-		if err != nil {
-			return statusConditionManager.FailedToCreateTopic(topic, err)
+		if statusConditionManager.IsTopicNotReady() {
+			topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, ks.Spec.Topic, topicConfig)
+			if err != nil {
+				return statusConditionManager.FailedToCreateTopic(topic, err)
+			}
 		}
 	} else {
 

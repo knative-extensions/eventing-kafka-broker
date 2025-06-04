@@ -166,6 +166,16 @@ func (manager *StatusConditionManager) FailedToCreateTopic(topic string, err err
 	return fmt.Errorf("failed to create topic: %s: %w", topic, err)
 }
 
+func (manager *StatusConditionManager) IsTopicNotReady() bool {
+
+	condition := manager.Object.GetStatus().GetCondition(ConditionTopicReady)
+
+	if condition == nil || condition.Status != corev1.ConditionTrue {
+		return true
+	}
+	return false
+}
+
 func (manager *StatusConditionManager) TopicReady(topic string) {
 
 	if owner, ok := manager.Object.GetStatus().Annotations[TopicOwnerAnnotation]; ok {

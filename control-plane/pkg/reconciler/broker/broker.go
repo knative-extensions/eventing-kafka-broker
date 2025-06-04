@@ -339,9 +339,11 @@ func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.
 			}
 		}
 
-		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
-		if err != nil {
-			return "", statusConditionManager.FailedToCreateTopic(topic, err)
+		if statusConditionManager.IsTopicNotReady() {
+			topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
+			if err != nil {
+				return "", statusConditionManager.FailedToCreateTopic(topic, err)
+			}
 		}
 	}
 
