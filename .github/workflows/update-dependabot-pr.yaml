@@ -21,6 +21,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: ./src/github.com/${{ github.repository }}
+          token: ${{ secrets.AUTOMATION_PAT }}
           fetch-depth: 0
 
       - name: Setup Golang
@@ -32,14 +33,47 @@ jobs:
         working-directory: ./src/github.com/${{ github.repository }}
         run: ./hack/update-codegen.sh
 
-      - name: git push
+
+      - name: Commit and Push Changes
         working-directory: ./src/github.com/${{ github.repository }}
         run: |
-          if ! git diff --exit-code --quiet
-          then
+          echo "DEBUG: Current git status before diff check:"
+          git status -s
+
+          # Check for changes. git diff --quiet exits with 1 if there are differences.
+          # Using HEAD explicitly compares against the last commit.
+          if ! git diff --quiet HEAD; then
+            echo "DEBUG: Changes detected by 'git diff --quiet HEAD'."
             git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git config --local user.name "github-actions[bot]"
+            
+            echo "DEBUG: Staging all changes..."
             git add .
+            
+            echo "DEBUG: Git status after add:"
+            git status -s
+            
+            echo "DEBUG: Git diff --staged:"
+            git diff --staged --quiet || git diff --staged # Show staged diff if any
+            
             git commit -m "Run ./hack/update-codegen.sh"
-            git push
+            
+            echo "DEBUG: Attempting git push to origin/${{ github.head_ref }}..."
+            # Pushing to 'origin' which is now the fork, and specifically to the PR's branch
+            git push origin ${{ github.head_ref }}
+            echo "DEBUG: Git push completed."
+          else
+            echo "DEBUG: No changes detected by 'git diff --quiet HEAD' to commit."
           fi
+
+      # - name: git push
+      #   working-directory: ./src/github.com/${{ github.repository }}
+      #   run: |
+      #     if ! git diff --exit-code --quiet
+      #     then
+      #       git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      #       git config --local user.name "github-actions[bot]"
+      #       git add .
+      #       git commit -m "Run ./hack/update-codegen.sh"
+      #       git push
+      #     fi
