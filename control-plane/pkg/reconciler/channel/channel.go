@@ -200,12 +200,15 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	defer kafkaClusterAdminClient.Close()
 
 	// create the topic
-	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
-	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topic, err)
+	var topic string
+	if statusConditionManager.IsTopicNotReady() {
+		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
+		if err != nil {
+			return statusConditionManager.FailedToCreateTopic(topic, err)
+		}
+		logger.Debug("Topic created", zap.Any("topic", topic))
+		statusConditionManager.TopicReady(topic)
 	}
-	logger.Debug("Topic created", zap.Any("topic", topic))
-	statusConditionManager.TopicReady(topic)
 
 	// Get data plane config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
