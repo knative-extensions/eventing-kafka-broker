@@ -57,7 +57,7 @@
     <junit.jupiter.version>5.12.2</junit.jupiter.version>
     <mockito.junit.jupiter.version>5.18.0</mockito.junit.jupiter.version>
     <fabric8.kubernetes.version>7.1.0</fabric8.kubernetes.version>
-    <kafka.version>3.9.0</kafka.version>
+    <kafka.version>3.9.1</kafka.version>
     <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.5</jib.version>
     <quarkus.version>3.23.2</quarkus.version>
