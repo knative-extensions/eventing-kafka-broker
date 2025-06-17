@@ -225,6 +225,15 @@ rules:
       - update
 
   - apiGroups:
+      - "eventing.knative.dev"
+    resources:
+      - "eventtransforms"
+      - "eventtransforms/status"
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
       - "sinks.knative.dev"
     resources:
       - "jobsinks"
