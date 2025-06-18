@@ -7,7 +7,6 @@ require (
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.15.2
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/go-cmp v0.7.0
-	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/errwrap v1.1.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -41,6 +40,7 @@ require (
 	knative.dev/pkg v0.0.0-20250617121757-fd105c6320da
 	knative.dev/reconciler-test v0.0.0-20250602074324-9a20896ca854
 	sigs.k8s.io/controller-runtime v0.19.0
+	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -142,6 +142,5 @@ require (
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
 	sigs.k8s.io/gateway-api v1.1.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
-	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
 )
