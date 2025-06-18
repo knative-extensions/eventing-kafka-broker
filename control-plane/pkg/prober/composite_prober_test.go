@@ -32,12 +32,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/eventing/pkg/eventingtls"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake"
 	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 )
 

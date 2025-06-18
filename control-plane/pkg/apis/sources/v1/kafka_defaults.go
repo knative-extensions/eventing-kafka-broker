@@ -18,8 +18,9 @@ package v1
 
 import (
 	"context"
-	"knative.dev/pkg/ptr"
 	"strconv"
+
+	"knative.dev/pkg/ptr"
 
 	"github.com/google/uuid"
 

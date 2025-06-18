@@ -39,11 +39,11 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/dynamic"
-	pointer "knative.dev/pkg/ptr"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	testlib "knative.dev/eventing/test/lib"
+	pointer "knative.dev/pkg/ptr"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"

@@ -20,8 +20,8 @@ import (
 	"context"
 	"testing"
 
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/apis"
+	pointer "knative.dev/pkg/ptr"
 )
 
 func TestKafkaSink_Validate(t *testing.T) {

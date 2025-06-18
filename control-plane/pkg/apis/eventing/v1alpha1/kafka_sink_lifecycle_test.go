@@ -20,9 +20,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 )
 
 func TestKafkaSinkStatusSetAddress(t *testing.T) {

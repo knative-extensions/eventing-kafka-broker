@@ -19,8 +19,8 @@ package v1alpha1
 import (
 	"context"
 
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/apis"
+	pointer "knative.dev/pkg/ptr"
 )
 
 var (

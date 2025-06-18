@@ -28,9 +28,9 @@ import (
 
 	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
+	pointer "knative.dev/pkg/ptr"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/multierr"

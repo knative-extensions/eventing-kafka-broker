@@ -30,11 +30,11 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	pointer "knative.dev/pkg/ptr"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"

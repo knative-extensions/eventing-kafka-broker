@@ -23,11 +23,11 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	pointer "knative.dev/pkg/ptr"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"

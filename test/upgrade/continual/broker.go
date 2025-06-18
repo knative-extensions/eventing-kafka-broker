@@ -22,7 +22,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	pointer "knative.dev/pkg/ptr"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	testlib "knative.dev/eventing/test/lib"
@@ -31,6 +30,7 @@ import (
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"

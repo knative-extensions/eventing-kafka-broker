@@ -38,12 +38,12 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	pointer "knative.dev/pkg/ptr"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/metrics"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 

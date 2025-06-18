@@ -35,8 +35,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/controller"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 

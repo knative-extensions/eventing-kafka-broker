@@ -36,10 +36,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	pointer "knative.dev/pkg/ptr"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 
 	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"

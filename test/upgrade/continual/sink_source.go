@@ -22,10 +22,10 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	pointer "knative.dev/pkg/ptr"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
