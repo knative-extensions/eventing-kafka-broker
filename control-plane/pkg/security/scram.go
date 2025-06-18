@@ -40,11 +40,11 @@ type xdgScramClient struct {
 }
 
 func (x *xdgScramClient) Begin(userName, password, authzID string) (err error) {
-	x.Client, err = x.HashGeneratorFcn.NewClient(userName, password, authzID)
+	x.Client, err = x.NewClient(userName, password, authzID)
 	if err != nil {
 		return err
 	}
-	x.ClientConversation = x.Client.NewConversation()
+	x.ClientConversation = x.NewConversation()
 	return nil
 }
 

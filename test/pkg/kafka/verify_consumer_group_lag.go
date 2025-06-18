@@ -24,7 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	testlib "knative.dev/eventing/test/lib"
 	pkgtest "knative.dev/pkg/test"
 )

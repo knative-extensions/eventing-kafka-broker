@@ -26,7 +26,7 @@ import (
 
 	"knative.dev/eventing/pkg/auth"
 
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"

@@ -74,7 +74,7 @@ func MakeK8sService(kc *v1beta1.KafkaChannel, opts ...ServiceOption) (*corev1.Se
 			Kind:       "Service",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      MakeChannelServiceName(kc.ObjectMeta.Name),
+			Name:      MakeChannelServiceName(kc.Name),
 			Namespace: kc.Namespace,
 			Labels: map[string]string{
 				MessagingRoleLabel: MessagingRole,

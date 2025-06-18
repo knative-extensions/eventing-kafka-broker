@@ -157,13 +157,14 @@ func (p *consumerGroupLagProvider) getPartitionLag(partition int32, topic string
 		// When we receive an invalid consumer offset, it means no offset has yet been committed.
 		offsetCommitted = false
 
-		if p.offsetStrategy == sarama.OffsetOldest {
+		switch p.offsetStrategy {
+		case sarama.OffsetOldest:
 			// Set consumer offset to the first offset.
 			consumerOffset = 0
-		} else if p.offsetStrategy == sarama.OffsetNewest {
+		case sarama.OffsetNewest:
 			// Set consumer offset to the offset that will be produced next.
 			consumerOffset = latestOffset
-		} else {
+		default:
 			return PartitionLag{}, fmt.Errorf(
 				"received invalid offset (%d) and unknown offset strategy (%d) configured",
 				consumerOffset, p.offsetStrategy,
@@ -217,16 +218,16 @@ func (cgl ConsumerGroupLag) String() string {
 	header := "partition: lag\n"
 	n := len(header)
 
-	sb.WriteString(fmt.Sprintf("Topic: %s\n", cgl.Topic))
-	sb.WriteString(fmt.Sprintf("Consumer group: %s\n", cgl.ConsumerGroup))
+	fmt.Fprintf(sb, "Topic: %s\n", cgl.Topic)
+	fmt.Fprintf(sb, "Consumer group: %s\n", cgl.ConsumerGroup)
 	writeSeparator(n, sb)
 	sb.WriteString(header)
 	writeSeparator(n, sb)
 
 	for p, l := range cgl.ByPartition {
-		sb.WriteString(fmt.Sprintf("%d: %s\n", p, l))
+		fmt.Fprintf(sb, "%d: %s\n", p, l)
 	}
-	sb.WriteString(fmt.Sprintf("Total lag: %d\n", cgl.Total()))
+	fmt.Fprintf(sb, "Total lag: %d\n", cgl.Total())
 	return sb.String()
 }
 

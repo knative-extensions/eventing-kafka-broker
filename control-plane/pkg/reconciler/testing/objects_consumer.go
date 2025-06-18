@@ -23,7 +23,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/apis"
@@ -136,7 +136,7 @@ func NewConsumerSpecDeliveryDeadLetterSink() DeliverySpecOption {
 		if spec.DeliverySpec == nil {
 			spec.DeliverySpec = &eventingduck.DeliverySpec{}
 		}
-		spec.DeliverySpec.DeadLetterSink = &duckv1.Destination{URI: ConsumerDeadLetterSinkURI}
+		spec.DeadLetterSink = &duckv1.Destination{URI: ConsumerDeadLetterSinkURI}
 	}
 }
 
@@ -145,7 +145,7 @@ func NewConsumerRetry(r int32) DeliverySpecOption {
 		if spec.DeliverySpec == nil {
 			spec.DeliverySpec = &eventingduck.DeliverySpec{}
 		}
-		spec.DeliverySpec.Retry = &r
+		spec.Retry = &r
 	}
 }
 
@@ -154,7 +154,7 @@ func NewConsumerBackoffPolicy(policy eventingduck.BackoffPolicyType) DeliverySpe
 		if spec.DeliverySpec == nil {
 			spec.DeliverySpec = &eventingduck.DeliverySpec{}
 		}
-		spec.DeliverySpec.BackoffPolicy = &policy
+		spec.BackoffPolicy = &policy
 	}
 }
 
@@ -163,7 +163,7 @@ func NewConsumerBackoffDelay(delay string) DeliverySpecOption {
 		if spec.DeliverySpec == nil {
 			spec.DeliverySpec = &eventingduck.DeliverySpec{}
 		}
-		spec.DeliverySpec.BackoffDelay = &delay
+		spec.BackoffDelay = &delay
 	}
 }
 
@@ -172,7 +172,7 @@ func NewConsumerTimeout(timeout string) DeliverySpecOption {
 		if spec.DeliverySpec == nil {
 			spec.DeliverySpec = &eventingduck.DeliverySpec{}
 		}
-		spec.DeliverySpec.Timeout = &timeout
+		spec.Timeout = &timeout
 	}
 }
 

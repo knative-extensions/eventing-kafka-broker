@@ -43,7 +43,7 @@ func (ks *KafkaSinkStatus) GetConditionSet() apis.ConditionSet {
 // SetAddress makes this Kafka Sink addressable by setting the URI. It also
 // sets the ConditionAddressable to true.
 func (ks *KafkaSinkStatus) SetAddress(addr *duckv1.Addressable) {
-	ks.AddressStatus.Address = addr
+	ks.Address = addr
 	if addr != nil {
 		ks.GetConditionSet().Manage(ks).MarkTrue(ConditionAddressable)
 	} else {

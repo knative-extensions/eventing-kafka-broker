@@ -22,7 +22,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 )

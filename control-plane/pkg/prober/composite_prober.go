@@ -46,9 +46,10 @@ func (c *compositeProber) Probe(ctx context.Context, addressable ProberAddressab
 			ResourceKey: addressable.ResourceKey,
 			Address:     addr.URL.URL(),
 		}
-		if addr.URL.Scheme == "https" {
+		switch addr.URL.Scheme {
+		case "https":
 			status = c.httpsProber.probe(ctx, oldAddressable, expected)
-		} else if addr.URL.Scheme == "http" {
+		case "http":
 			status = c.httpProber.probe(ctx, oldAddressable, expected)
 		}
 		if status != expected {

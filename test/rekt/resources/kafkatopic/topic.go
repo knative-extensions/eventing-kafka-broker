@@ -80,7 +80,7 @@ func HasReplicationFactor(name string, replicationFactor int, timings ...time.Du
 	return func(ctx context.Context, t feature.T) {
 		interval, timeout := k8s.PollTimings(ctx, timings)
 
-		err := wait.PollImmediate(interval, timeout, func() (bool, error) {
+		err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx2 context.Context) (bool, error) {
 			ut, err := dynamicclient.Get(ctx).
 				Resource(GVR()).
 				Namespace(kafkaNamespace).
@@ -119,7 +119,7 @@ func HasNumPartitions(name string, numPartitions int, timings ...time.Duration) 
 	return func(ctx context.Context, t feature.T) {
 		interval, timeout := k8s.PollTimings(ctx, timings)
 
-		err := wait.PollImmediate(interval, timeout, func() (bool, error) {
+		err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx2 context.Context) (bool, error) {
 			ut, err := dynamicclient.Get(ctx).
 				Resource(GVR()).
 				Namespace(kafkaNamespace).

@@ -27,8 +27,8 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/pkg/ptr"
 
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 )
@@ -456,8 +456,8 @@ func TestTopicConfigFromConfigMap(t *testing.T) {
 					NumPartitions:     5,
 					ReplicationFactor: 8,
 					ConfigEntries: map[string]*string{
-						"retention.ms":      pointer.String("3600"),
-						"max.message.bytes": pointer.String("68000"),
+						"retention.ms":      ptr.String("3600"),
+						"max.message.bytes": ptr.String("68000"),
 					},
 				},
 				BootstrapServers: []string{"server1:9092", "server2:9092"},

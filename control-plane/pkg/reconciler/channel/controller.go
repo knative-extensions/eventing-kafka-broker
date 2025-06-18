@@ -129,7 +129,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			}
 		})
 
-	globalResync = func(obj interface{}) {
+	globalResync = func(obj interface{}) { //nolint:unparam
 		impl.GlobalResync(channelInformer.Informer())
 	}
 

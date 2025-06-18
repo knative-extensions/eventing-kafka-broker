@@ -32,7 +32,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
@@ -124,7 +124,7 @@ func DeleteBroker(name string) feature.StepFn {
 
 		interval, timeout := environment.PollTimingsFromContext(ctx)
 
-		err = wait.PollImmediate(interval, timeout, func() (bool, error) {
+		err = wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx2 context.Context) (bool, error) {
 			br, err := eventingclient.Get(ctx).
 				EventingV1().
 				Brokers(ns).

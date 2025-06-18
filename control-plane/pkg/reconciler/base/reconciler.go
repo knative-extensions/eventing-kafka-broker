@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
 
@@ -174,8 +174,8 @@ func PodOwnerReference(p *corev1.Pod) ConfigMapOption {
 		Kind:               "Pod",
 		Name:               p.Name,
 		UID:                p.UID,
-		Controller:         pointer.Bool(true),
-		BlockOwnerDeletion: pointer.Bool(true),
+		Controller:         ptr.To(true),
+		BlockOwnerDeletion: ptr.To(true),
 	}
 	return func(cm *corev1.ConfigMap) {
 		for _, or := range cm.OwnerReferences {

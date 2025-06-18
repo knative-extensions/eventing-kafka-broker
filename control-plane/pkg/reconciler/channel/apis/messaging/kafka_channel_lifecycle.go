@@ -75,11 +75,12 @@ func MarkDispatcherUnknown(kcs *messaging.KafkaChannelStatus, reason, messageFor
 func PropagateDispatcherStatus(kcs *messaging.KafkaChannelStatus, ds *appsv1.DeploymentStatus) {
 	for _, cond := range ds.Conditions {
 		if cond.Type == appsv1.DeploymentAvailable {
-			if cond.Status == corev1.ConditionTrue {
+			switch cond.Status {
+			case corev1.ConditionTrue:
 				kcs.GetConditionSet().Manage(kcs).MarkTrue(KafkaChannelConditionDispatcherReady)
-			} else if cond.Status == corev1.ConditionFalse {
+			case corev1.ConditionFalse:
 				MarkDispatcherFailed(kcs, "DispatcherDeploymentFalse", "The status of Dispatcher Deployment is False: %s : %s", cond.Reason, cond.Message)
-			} else if cond.Status == corev1.ConditionUnknown {
+			case corev1.ConditionUnknown:
 				MarkDispatcherUnknown(kcs, "DispatcherDeploymentUnknown", "The status of Dispatcher Deployment is Unknown: %s : %s", cond.Reason, cond.Message)
 			}
 		}

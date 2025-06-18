@@ -20,7 +20,7 @@ import (
 	"context"
 	"testing"
 
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/apis"
 )
 

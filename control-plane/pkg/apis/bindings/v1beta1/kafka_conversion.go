@@ -75,6 +75,4 @@ func (sink *KafkaAuthSpec) ConvertFromV1(source *v1.KafkaAuthSpec) {
 	sink.Net.TLS.Key.SecretKeyRef = source.Net.TLS.Key.SecretKeyRef
 	sink.Net.TLS.Cert.SecretKeyRef = source.Net.TLS.Cert.SecretKeyRef
 	sink.Net.TLS.CACert.SecretKeyRef = source.Net.TLS.CACert.SecretKeyRef
-
-	return
 }

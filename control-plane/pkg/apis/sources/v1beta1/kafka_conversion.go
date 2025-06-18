@@ -33,7 +33,7 @@ func (source *KafkaSource) ConvertTo(ctx context.Context, to apis.Convertible) e
 		source.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
 		sink.Spec = v1.KafkaSourceSpec{
 			Consumers:     source.Spec.Consumers,
-			KafkaAuthSpec: *source.Spec.KafkaAuthSpec.ConvertToV1(ctx),
+			KafkaAuthSpec: *source.Spec.ConvertToV1(ctx),
 			Topics:        source.Spec.Topics,
 			ConsumerGroup: source.Spec.ConsumerGroup,
 			InitialOffset: v1.Offset(source.Spec.InitialOffset),

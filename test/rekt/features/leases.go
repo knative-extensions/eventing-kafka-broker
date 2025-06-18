@@ -50,7 +50,7 @@ func KafkaSourceLease() *feature.Feature {
 
 func verifyLeaseAcquired(name string) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
-		err := wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(ctx2 context.Context) (done bool, err error) {
 			lease, err := kubeclient.Get(ctx).
 				CoordinationV1().
 				Leases(system.Namespace()).

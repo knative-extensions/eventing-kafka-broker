@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	"knative.dev/pkg/apis"
@@ -513,7 +513,7 @@ func TestReconcileKind(t *testing.T) {
 						c.MarkReconcileContractSucceeded()
 						c.MarkBindSucceeded()
 						c.Status.SubscriberURI, _ = apis.ParseURL(ServiceURL)
-						c.Status.DeliveryStatus.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
+						c.Status.DeadLetterSinkURI = ConsumerDeadLetterSinkURI
 						return c
 					}(),
 				},

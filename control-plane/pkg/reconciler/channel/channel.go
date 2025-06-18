@@ -28,7 +28,7 @@ import (
 
 	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
 
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/eventing/pkg/auth"
 	"knative.dev/pkg/logging"
 
@@ -302,7 +302,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	var addressableStatus duckv1.AddressStatus
-	channelHttpsHost := network.GetServiceHostname(r.Env.IngressName, r.SystemNamespace)
+	channelHttpsHost := network.GetServiceHostname(r.IngressName, r.SystemNamespace)
 	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
 	if featureFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
@@ -769,9 +769,9 @@ func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	// TODO: do we want to support namespaced channels? they're not supported at the moment.
 
 	namespace := r.DataPlaneNamespace
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
+	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.GeneralConfigMapName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
+		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.GeneralConfigMapName, err)
 	}
 
 	return cm, nil
@@ -848,10 +848,7 @@ func (r *Reconciler) setTrustBundles(ct *contract.Contract) (bool, error) {
 		return false, fmt.Errorf("failed to get trust bundles: %w", err)
 	}
 
-	changed := false
-	if !equality.Semantic.DeepEqual(tb, ct.TrustBundles) {
-		changed = true
-	}
+	changed := !equality.Semantic.DeepEqual(tb, ct.TrustBundles)
 
 	ct.TrustBundles = tb
 	return changed, nil

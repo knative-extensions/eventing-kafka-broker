@@ -28,20 +28,20 @@ func (s *SecretLocator) SecretName() (string, bool) {
 	if s.hasNoSecret() {
 		return "", false
 	}
-	return s.Consumer.Spec.Auth.SecretSpec.Ref.Name, true
+	return s.Spec.Auth.SecretSpec.Ref.Name, true
 }
 
 func (s *SecretLocator) hasNoSecret() bool {
-	return s.Consumer.Spec.Auth == nil ||
-		s.Consumer.Spec.Auth.SecretSpec == nil ||
-		s.Consumer.Spec.Auth.SecretSpec.Ref == nil ||
-		s.Consumer.Spec.Auth.SecretSpec.Ref.Name == "" ||
-		s.Consumer.Spec.Auth.SecretSpec.Ref.Namespace == ""
+	return s.Spec.Auth == nil ||
+		s.Spec.Auth.SecretSpec == nil ||
+		s.Spec.Auth.SecretSpec.Ref == nil ||
+		s.Spec.Auth.SecretSpec.Ref.Name == "" ||
+		s.Spec.Auth.SecretSpec.Ref.Namespace == ""
 }
 
 func (s *SecretLocator) SecretNamespace() (string, bool) {
 	if s.hasNoSecret() {
 		return "", false
 	}
-	return s.Consumer.Spec.Auth.SecretSpec.Ref.Namespace, true
+	return s.Spec.Auth.SecretSpec.Ref.Namespace, true
 }

@@ -60,16 +60,16 @@ type NetSpecSecretLocator struct {
 }
 
 func (sl *NetSpecSecretLocator) SecretName() (string, bool) {
-	if !hasNetSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
+	if !hasNetSpecAuthConfig(sl.Spec.Template.Spec.Auth) {
 		return "", false
 	}
 	// KafkaSource uses a secret provider `security.NetSpecSecretProviderFunc` that ignores name and namespace.
 	// so there is no need to return a name here.
-	return "", hasNetSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
+	return "", hasNetSpecAuthConfig(sl.Spec.Template.Spec.Auth)
 }
 
 func (sl *NetSpecSecretLocator) SecretNamespace() (string, bool) {
-	return sl.Namespace, hasNetSpecAuthConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
+	return sl.Namespace, hasNetSpecAuthConfig(sl.Spec.Template.Spec.Auth)
 }
 
 func hasSecretSpecConfig(auth *kafkainternals.Auth) bool {
@@ -97,17 +97,17 @@ type SecretSpecSecretLocator struct {
 }
 
 func (sl *SecretSpecSecretLocator) SecretNamespace() (string, bool) {
-	if !hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
+	if !hasSecretSpecConfig(sl.Spec.Template.Spec.Auth) {
 		return "", false
 	}
-	namespace := sl.ConsumerGroup.Spec.Template.Spec.Auth.SecretSpec.Ref.Namespace
-	return namespace, hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
+	namespace := sl.Spec.Template.Spec.Auth.SecretSpec.Ref.Namespace
+	return namespace, hasSecretSpecConfig(sl.Spec.Template.Spec.Auth)
 }
 
 func (sl *SecretSpecSecretLocator) SecretName() (string, bool) {
-	if !hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth) {
+	if !hasSecretSpecConfig(sl.Spec.Template.Spec.Auth) {
 		return "", false
 	}
-	name := sl.ConsumerGroup.Spec.Template.Spec.Auth.SecretSpec.Ref.Name
-	return name, hasSecretSpecConfig(sl.ConsumerGroup.Spec.Template.Spec.Auth)
+	name := sl.Spec.Template.Spec.Auth.SecretSpec.Ref.Name
+	return name, hasSecretSpecConfig(sl.Spec.Template.Spec.Auth)
 }

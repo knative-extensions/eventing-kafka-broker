@@ -29,7 +29,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -3358,7 +3358,7 @@ func makeTLSSecret() *corev1.Secret {
 			Name:      brokerIngressTLSSecretName,
 		},
 		Data: map[string][]byte{
-			"ca.crt": []byte(eventingtlstesting.CA),
+			"ca.crt": eventingtlstesting.CA,
 		},
 		Type: corev1.SecretTypeTLS,
 	}

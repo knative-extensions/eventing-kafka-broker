@@ -18,10 +18,10 @@ package v1
 
 import (
 	"context"
+	"knative.dev/pkg/ptr"
 	"strconv"
 
 	"github.com/google/uuid"
-	"k8s.io/utils/pointer"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/config"
 	"knative.dev/pkg/apis"
@@ -47,7 +47,7 @@ func (k *KafkaSource) SetDefaults(ctx context.Context) {
 	}
 
 	if k.Spec.Consumers == nil {
-		k.Spec.Consumers = pointer.Int32(1)
+		k.Spec.Consumers = ptr.Int32(1)
 	}
 
 	if k.Spec.InitialOffset == "" {

@@ -11,6 +11,18 @@ linters:
     - unparam
   disable:
     - errcheck
+  settings:
+    gosec:
+      excludes:
+        - G115
+    staticcheck:
+      checks:
+        - all
+        - "-ST1019"
+        - "-ST1003"
+        - "-ST1012"
+        - "-ST1016"
+        - "-ST1001"
   exclusions:
     generated: lax
     presets:
@@ -26,7 +38,7 @@ linters:
     paths:
       - control-plane/pkg/client
       - data-plane
-      - third_party$
+      - third_party
       - builtin$
       - examples$
 formatters:

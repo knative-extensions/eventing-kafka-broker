@@ -64,7 +64,7 @@ func VerifyScale(name string, replicas int32) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		interval, timeout := environment.PollTimingsFromContext(ctx)
 		last := &sources.KafkaSource{}
-		err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx2 context.Context) (done bool, err error) {
 			ks, err := kafkaclientset.Get(ctx).
 				SourcesV1().
 				KafkaSources(environment.FromContext(ctx).Namespace()).

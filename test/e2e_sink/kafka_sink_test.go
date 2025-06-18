@@ -22,7 +22,7 @@ package e2e_sink
 import (
 	"testing"
 
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	. "knative.dev/eventing-kafka-broker/test/pkg"

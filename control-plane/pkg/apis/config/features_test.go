@@ -58,11 +58,11 @@ func TestGetFlags(t *testing.T) {
 	require.True(t, flags.IsDispatcherOrderedExecutorMetricsEnabled())
 	require.True(t, flags.IsControllerAutoscalerEnabled())
 	require.True(t, flags.IsControllerAutoscalerEnabled())
-	require.Len(t, flags.features.TriggersConsumerGroupTemplate.Tree.Root.Nodes, 4)
+	require.Len(t, flags.features.TriggersConsumerGroupTemplate.Root.Nodes, 4)
 	require.Equal(t, flags.features.TriggersConsumerGroupTemplate.Name(), "triggers.consumergroup.template")
-	require.Len(t, flags.features.BrokersTopicTemplate.Tree.Root.Nodes, 4)
+	require.Len(t, flags.features.BrokersTopicTemplate.Root.Nodes, 4)
 	require.Equal(t, flags.features.BrokersTopicTemplate.Name(), "brokers.topic.template")
-	require.Len(t, flags.features.ChannelsTopicTemplate.Tree.Root.Nodes, 4)
+	require.Len(t, flags.features.ChannelsTopicTemplate.Root.Nodes, 4)
 	require.Equal(t, flags.features.ChannelsTopicTemplate.Name(), "channels.topic.template")
 
 }

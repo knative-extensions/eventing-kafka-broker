@@ -50,7 +50,7 @@ func verifyJobSucceeded(
 	gvr, _ := meta.UnsafeGuessKindToResource(job.GroupVersionKind())
 	tracker.Add(gvr.Group, gvr.Version, gvr.Resource, namespacedName.Namespace, namespacedName.Name)
 
-	return wait.PollImmediate(interval, timeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx2 context.Context) (bool, error) {
 		job, err := client.BatchV1().Jobs(namespacedName.Namespace).Get(ctx, namespacedName.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, fmt.Errorf("failed to get job: %w", err)

@@ -39,7 +39,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"

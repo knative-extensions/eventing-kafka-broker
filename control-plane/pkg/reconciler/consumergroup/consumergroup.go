@@ -38,7 +38,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/controller"
@@ -556,14 +556,14 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 			if c.Status.SubscriberAudience != nil {
 				cg.Status.SubscriberAudience = c.Status.SubscriberAudience
 			}
-			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
-				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
+			if c.Status.DeadLetterSinkURI != nil {
+				cg.Status.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
 			}
-			if c.Status.DeliveryStatus.DeadLetterSinkCACerts != nil {
-				cg.Status.DeliveryStatus.DeadLetterSinkCACerts = c.Status.DeadLetterSinkCACerts
+			if c.Status.DeadLetterSinkCACerts != nil {
+				cg.Status.DeadLetterSinkCACerts = c.Status.DeadLetterSinkCACerts
 			}
-			if c.Status.DeliveryStatus.DeadLetterSinkAudience != nil {
-				cg.Status.DeliveryStatus.DeadLetterSinkAudience = c.Status.DeadLetterSinkAudience
+			if c.Status.DeadLetterSinkAudience != nil {
+				cg.Status.DeadLetterSinkAudience = c.Status.DeadLetterSinkAudience
 			}
 		} else if condition == nil { // Propagate only a single false condition
 			cond := c.GetConditionSet().Manage(c.GetStatus()).GetTopLevelCondition()
@@ -919,7 +919,7 @@ func (r *Reconciler) deleteKedaObjects(ctx context.Context, cg *kafkainternals.C
 
 	// if there is a trigger authentication tight to the consumer group, delete it, and then delete the scaled object
 	if metav1.IsControlledBy(scaledObject, cg) {
-		if len(cg.ObjectMeta.OwnerReferences) == 0 {
+		if len(cg.OwnerReferences) == 0 {
 			return fmt.Errorf("failed to delete Keda objects, missing owners reference: %w", err)
 		}
 		triggerAuthName := string(cg.ObjectMeta.OwnerReferences[0].UID)

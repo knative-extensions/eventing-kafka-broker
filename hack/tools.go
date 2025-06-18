@@ -25,6 +25,8 @@ import (
 	_ "knative.dev/pkg/configmap/hash-gen"
 	_ "knative.dev/pkg/hack"
 
+	_ "k8s.io/code-generator/cmd/validation-gen"
+
 	// Needed for the storage version migration.
 	_ "knative.dev/pkg/apiextensions/storageversion/cmd/migrate"
 

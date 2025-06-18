@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -254,7 +254,7 @@ type CMOption func(cm *corev1.ConfigMap)
 
 func WithConfigMapNamespace(namespace string) CMOption {
 	return func(cm *corev1.ConfigMap) {
-		cm.ObjectMeta.Namespace = namespace
+		cm.Namespace = namespace
 	}
 }
 

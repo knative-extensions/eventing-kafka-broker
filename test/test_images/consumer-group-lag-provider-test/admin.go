@@ -84,7 +84,7 @@ func main() {
 		}
 		// Send message might fail with:
 		// "kafka server: Request was for a topic or partition that does not exist on this broker."
-		err := wait.PollImmediateUntil(time.Minute, func() (done bool, err error) {
+		err := wait.PollUntilContextCancel(ctx, time.Minute, true, func(context.Context) (done bool, err error) {
 			partition, offset, err := producer.SendMessage(msg)
 			if err != nil {
 				return false, nil
@@ -95,7 +95,7 @@ func main() {
 			}
 			lastOffset = offset
 			return true, nil
-		}, ctx.Done())
+		})
 		mustBeNil(err)
 	}
 	if int64(n) != lastOffset+1 { // Consistency check
@@ -137,7 +137,7 @@ func main() {
 	mustBeNil(err)
 
 	// Wait for propagation of the committed offset
-	err = wait.PollImmediateUntil(time.Minute, func() (done bool, err error) {
+	err = wait.PollUntilContextCancel(ctx, time.Minute, true, func(context.Context) (done bool, err error) {
 		log.Println("Starting consumer group lag provider")
 
 		consumerGroupLagProvider := kafka.NewConsumerGroupLagProvider(client, sarama.NewClusterAdminFromClient, sarama.OffsetOldest)
@@ -176,7 +176,7 @@ func main() {
 			return false, nil
 		}
 		return true, nil
-	}, ctx.Done())
+	})
 	mustBeNil(err)
 }
 

@@ -29,7 +29,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -176,12 +176,12 @@ func (r *Reconciler) reconcileContractEgress(ctx context.Context, c *kafkaintern
 		}
 	}
 	if egressConfig != nil {
-		c.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
+		c.Status.DeadLetterSinkURI, _ = apis.ParseURL(egressConfig.DeadLetter)
 		if egressConfig.DeadLetterCACerts != "" {
-			c.Status.DeliveryStatus.DeadLetterSinkCACerts = pointer.String(egressConfig.DeadLetterCACerts)
+			c.Status.DeadLetterSinkCACerts = pointer.String(egressConfig.DeadLetterCACerts)
 		}
 		if egressConfig.DeadLetterAudience != "" {
-			c.Status.DeliveryStatus.DeadLetterSinkAudience = pointer.String(egressConfig.DeadLetterAudience)
+			c.Status.DeadLetterSinkAudience = pointer.String(egressConfig.DeadLetterAudience)
 		}
 	}
 
