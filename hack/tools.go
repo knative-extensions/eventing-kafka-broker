@@ -56,4 +56,7 @@ import (
 
 	// We copy them into third_party, so we need them.
 	_ "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
+
+	// K8s code generation tools
+	_ "k8s.io/code-generator/cmd/validation-gen"
 )
