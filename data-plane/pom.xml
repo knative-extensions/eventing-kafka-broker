@@ -56,11 +56,11 @@
     <awaitility.version>4.2.0</awaitility.version>
     <junit.jupiter.version>5.12.2</junit.jupiter.version>
     <mockito.junit.jupiter.version>5.18.0</mockito.junit.jupiter.version>
-    <fabric8.kubernetes.version>7.1.0</fabric8.kubernetes.version>
-    <kafka.version>3.9.0</kafka.version>
+    <fabric8.kubernetes.version>7.2.0</fabric8.kubernetes.version>
+    <kafka.version>3.9.1</kafka.version>
     <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.5</jib.version>
-    <quarkus.version>3.22.3</quarkus.version>
+    <quarkus.version>3.23.3</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
     <palantirJavaFormat.version>2.38.0</palantirJavaFormat.version>
