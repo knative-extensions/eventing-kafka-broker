@@ -104,7 +104,7 @@ func (b *BrokerStub) DeepCopyObject() runtime.Object {
 		TypeMeta: b.TypeMeta, //simple struct
 	}
 
-	b.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	b.DeepCopyInto(&out.ObjectMeta)
 	b.Spec.DeepCopyInto(&out.Spec)
 	b.Status.DeepCopyInto(&out.Status)
 

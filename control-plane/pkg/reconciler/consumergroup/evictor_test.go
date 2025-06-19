@@ -24,10 +24,10 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
+	"knative.dev/pkg/ptr"
 	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
 	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
@@ -55,7 +55,7 @@ func TestEvictorNilPodNoPanic(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements: []eventingduckv1alpha1.Placement{
 					{PodName: "name", VReplicas: 1},
 					{PodName: pod1.GetName(), VReplicas: 1},
@@ -91,7 +91,7 @@ func TestEvictorEvictSuccess(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements: []eventingduckv1alpha1.Placement{
 					{PodName: pod.GetName(), VReplicas: 1},
 					{PodName: pod1.GetName(), VReplicas: 1},
@@ -128,7 +128,7 @@ func TestEvictorNoEvictionEmptyPlacement(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements:          []eventingduckv1alpha1.Placement{},
 			}},
 		},
@@ -162,7 +162,7 @@ func TestEvictorNoEviction(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements: []eventingduckv1alpha1.Placement{
 					{PodName: pod.GetName(), VReplicas: 1},
 				},
@@ -193,7 +193,7 @@ func TestEvictorEvictSuccessConsumerGroupSchedulingInProgress(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements: []eventingduckv1alpha1.Placement{
 					{PodName: pod.GetName(), VReplicas: 1},
 				},
@@ -224,7 +224,7 @@ func TestEvictorEvictPodNotFound(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements: []eventingduckv1alpha1.Placement{
 					{PodName: pod.GetName(), VReplicas: 1},
 				},
@@ -250,7 +250,7 @@ func TestEvictorEvictConsumerGroupNotFound(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns-1", Name: "cg-name"},
 		Status: kafkainternals.ConsumerGroupStatus{
 			PlaceableStatus: eventingduckv1alpha1.PlaceableStatus{Placeable: eventingduckv1alpha1.Placeable{
-				MaxAllowedVReplicas: pointer.Int32(1),
+				MaxAllowedVReplicas: ptr.Int32(1),
 				Placements: []eventingduckv1alpha1.Placement{
 					{PodName: pod.GetName(), VReplicas: 1},
 				},

@@ -22,7 +22,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	testlib "knative.dev/eventing/test/lib"
@@ -31,6 +30,7 @@ import (
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -58,22 +58,22 @@ func (o *KafkaBrokerTestOptions) setDefaults() {
 			Class: kafka.BrokerClass,
 		}
 	}
-	if o.Broker.ReplicationOptions == nil {
-		o.Broker.ReplicationOptions = defaultReplicationOptions()
+	if o.ReplicationOptions == nil {
+		o.ReplicationOptions = defaultReplicationOptions()
 	}
 	if o.RetryOptions == nil {
-		o.Broker.RetryOptions = defaultRetryOptions()
+		o.RetryOptions = defaultRetryOptions()
 	}
 	if o.Triggers == nil {
 		o.Triggers = &Triggers{
 			Triggers: sut.Triggers{},
 		}
 	}
-	if o.Triggers.Prefix == "" {
-		o.Triggers.Prefix = "trigger-upgrade"
+	if o.Prefix == "" {
+		o.Prefix = "trigger-upgrade"
 	}
-	if o.Triggers.Types == nil {
-		o.Triggers.Types = eventTypes
+	if o.Types == nil {
+		o.Types = eventTypes
 	}
 }
 
@@ -103,7 +103,7 @@ func (k kafkaBrokerSut) Deploy(ctx sut.Context, destination duckv1.Destination) 
 }
 
 func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
-	namespace := ctx.Client.Namespace
+	namespace := ctx.Namespace
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "kafka-broker-upgrade-config",
@@ -120,14 +120,14 @@ func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
 		ctx.T.Fatalf("Failed to create ConfigMap %s/%s: %v", namespace, cm.GetName(), err)
 	}
 
-	ctx.Client.CreateBrokerOrFail(k.Broker.Name,
+	ctx.CreateBrokerOrFail(k.Name,
 		resources.WithConfigForBroker(&duckv1.KReference{
 			Kind:       "ConfigMap",
 			Namespace:  cm.GetNamespace(),
 			Name:       cm.GetName(),
 			APIVersion: "v1",
 		}),
-		resources.WithBrokerClassForBroker(k.Broker.Class),
+		resources.WithBrokerClassForBroker(k.Class),
 		resources.WithDeliveryForBroker(&eventingduckv1.DeliverySpec{
 			Retry:         pointer.Int32(int32(k.RetryCount)),
 			BackoffPolicy: &k.BackoffPolicy,
@@ -137,36 +137,36 @@ func (k kafkaBrokerSut) deployBroker(ctx sut.Context) {
 }
 
 func (k *kafkaBrokerSut) fetchURL(ctx sut.Context) *apis.URL {
-	namespace := ctx.Client.Namespace
-	ctx.Log.Debugf("Fetching \"%s\" broker URL for ns %s", k.Broker.Name, namespace)
+	namespace := ctx.Namespace
+	ctx.Log.Debugf("Fetching \"%s\" broker URL for ns %s", k.Name, namespace)
 
 	meta := resources.NewMetaResource(
-		k.Broker.Name, namespace, testlib.BrokerTypeMeta,
+		k.Name, namespace, testlib.BrokerTypeMeta,
 	)
-	err := duck.WaitForResourceReady(ctx.Client.Dynamic, meta)
+	err := duck.WaitForResourceReady(ctx.Dynamic, meta)
 	if err != nil {
 		ctx.T.Fatal(err)
 	}
 
 	br, err := ctx.Client.Eventing.EventingV1().Brokers(namespace).Get(
-		ctx.Ctx, k.Broker.Name, metav1.GetOptions{},
+		ctx.Ctx, k.Name, metav1.GetOptions{},
 	)
 	if err != nil {
 		ctx.T.Fatal(err)
 	}
 
 	url := br.Status.Address.URL
-	ctx.Log.Debugf("\"%s\" broker URL for ns %s is %v", k.Broker.Name, namespace, url)
+	ctx.Log.Debugf("\"%s\" broker URL for ns %s is %v", k.Name, namespace, url)
 	return url
 }
 
 func (k *kafkaBrokerSut) deployTriggers(ctx sut.Context, dest duckv1.Destination) {
-	for _, eventType := range k.Triggers.Types {
+	for _, eventType := range k.Types {
 		name := fmt.Sprintf("%s-%s", k.Prefix, eventType)
 		ctx.Log.Debugf("Creating trigger \"%s\" for type %s to route to %#v", name, eventType, dest)
-		ctx.Client.CreateTriggerOrFail(
+		ctx.CreateTriggerOrFail(
 			name,
-			resources.WithBroker(k.Broker.Name),
+			resources.WithBroker(k.Name),
 			resources.WithAttributesTriggerFilter(eventing.TriggerAnyFilter, eventType, nil),
 			resources.WithSubscriberDestination(func(t *eventing.Trigger) duckv1.Destination { return dest }),
 		)

@@ -27,12 +27,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	v1 "knative.dev/eventing/pkg/apis/messaging/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
@@ -143,7 +143,7 @@ func WithChannelDelivery(d *eventingduckv1.DeliverySpec) KRShapedOption {
 func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta1.KafkaChannel)
-		ch.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(uri)
+		ch.Status.DeadLetterSinkURI, _ = apis.ParseURL(uri)
 	}
 }
 

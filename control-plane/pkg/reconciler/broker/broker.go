@@ -36,12 +36,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -258,7 +258,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("could not update Broker status with EventPolicies: %v", err)
 	}
 
-	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.DataPlaneNamespace)
+	ingressHost := network.GetServiceHostname(r.IngressName, r.DataPlaneNamespace)
 
 	var addressableStatus duckv1.AddressStatus
 	if features.IsPermissiveTransportEncryption() {
@@ -368,7 +368,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 
 	broker.Status.Address = nil
 
-	ingressHost := network.GetServiceHostname(r.Env.IngressName, r.Reconciler.DataPlaneNamespace)
+	ingressHost := network.GetServiceHostname(r.IngressName, r.DataPlaneNamespace)
 
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.

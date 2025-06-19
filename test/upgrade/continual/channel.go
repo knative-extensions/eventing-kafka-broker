@@ -146,7 +146,7 @@ func (k kafkaChannelSut) Deploy(ctx sut.Context, destination duckv1.Destination)
 	c.CreateSubscriptionOrFail(
 		name, name, k.channelTypeMeta,
 		withDestinationForSubscription(&destination),
-		k.RetryOptions.subscriptionOption(),
+		k.subscriptionOption(),
 	)
 
 	return sutUrl

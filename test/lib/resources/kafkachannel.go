@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 
@@ -64,7 +64,7 @@ func WithInitKafkaChannelConditions(nc *v1beta1.KafkaChannel) {
 
 func WithKafkaChannelDeleted(nc *v1beta1.KafkaChannel) {
 	deleteTime := metav1.NewTime(time.Unix(1e9, 0))
-	nc.ObjectMeta.SetDeletionTimestamp(&deleteTime)
+	nc.SetDeletionTimestamp(&deleteTime)
 }
 
 func WithKafkaChannelTopicReady() KafkaChannelOption {

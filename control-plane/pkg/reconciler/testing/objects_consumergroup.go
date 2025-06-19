@@ -24,9 +24,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler"
@@ -138,25 +138,25 @@ func WithConsumerGroupFailed(reason string, msg string) ConsumerGroupOption {
 
 func WithConsumerGroupName(name string) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.ObjectMeta.Name = name
+		cg.Name = name
 	}
 }
 
 func WithConsumerGroupNamespace(namespace string) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.ObjectMeta.Namespace = namespace
+		cg.Namespace = namespace
 	}
 }
 
 func WithConsumerGroupOwnerRef(ownerref *metav1.OwnerReference) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+		cg.OwnerReferences = []metav1.OwnerReference{*ownerref}
 	}
 }
 
 func WithConsumerGroupAnnotations(annots map[string]string) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.ObjectMeta.Annotations = annots
+		cg.Annotations = annots
 	}
 }
 
@@ -245,7 +245,7 @@ func WithDeletedTimeStampConsumeGroup(cg *kafkainternals.ConsumerGroup) {
 
 func WithConfigmapOwnerRef(ownerref *metav1.OwnerReference) reconcilertesting.ConfigMapOption {
 	return func(cg *corev1.ConfigMap) {
-		cg.ObjectMeta.OwnerReferences = []metav1.OwnerReference{*ownerref}
+		cg.OwnerReferences = []metav1.OwnerReference{*ownerref}
 	}
 }
 

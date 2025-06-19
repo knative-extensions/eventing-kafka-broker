@@ -24,8 +24,8 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/ptr"
 )
 
 const (
@@ -104,7 +104,7 @@ func buildTopicConfigFromConfigMap(cm *corev1.ConfigMap) (*TopicConfig, error) {
 			if topicDetail.ConfigEntries == nil {
 				topicDetail.ConfigEntries = make(map[string]*string)
 			}
-			topicDetail.ConfigEntries[s] = pointer.String(v)
+			topicDetail.ConfigEntries[s] = ptr.String(v)
 		}
 	}
 

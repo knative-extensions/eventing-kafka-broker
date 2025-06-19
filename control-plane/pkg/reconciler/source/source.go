@@ -30,11 +30,11 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/utils/pointer"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
@@ -181,7 +181,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 						"bootstrap.servers": strings.Join(ks.Spec.BootstrapServers, ","),
 					}},
 					Auth: &internalscg.Auth{
-						NetSpec: &ks.Spec.KafkaAuthSpec.Net,
+						NetSpec: &ks.Spec.Net,
 					},
 					Delivery:   deliverySpec,
 					Subscriber: ks.Spec.Sink,

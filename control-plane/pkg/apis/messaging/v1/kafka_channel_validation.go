@@ -72,7 +72,7 @@ func (kcs *KafkaChannelSpec) Validate(ctx context.Context) *apis.FieldError {
 		errs = errs.Also(fe)
 	}
 
-	for i, subscriber := range kcs.SubscribableSpec.Subscribers {
+	for i, subscriber := range kcs.Subscribers {
 		if subscriber.ReplyURI == nil && subscriber.SubscriberURI == nil {
 			fe := apis.ErrMissingField("replyURI", "subscriberURI")
 			fe.Details = "expected at least one of, got none"

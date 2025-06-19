@@ -82,7 +82,7 @@ func (cg *ConsumerGroup) GetPlacements() []eventingduckv1alpha1.Placement {
 }
 
 func (cg *ConsumerGroup) GetResourceVersion() string {
-	return cg.ObjectMeta.ResourceVersion
+	return cg.ResourceVersion
 }
 
 type ConsumerGroupSpec struct {
@@ -250,6 +250,6 @@ func (cg *ConsumerGroup) HasDeadLetterSink() bool {
 
 func hasDeadLetterSink(d *DeliverySpec) bool {
 	return d != nil && d.DeliverySpec != nil &&
-		d.DeliverySpec.DeadLetterSink != nil &&
-		(d.DeliverySpec.DeadLetterSink.Ref != nil || d.DeliverySpec.DeadLetterSink.URI != nil)
+		d.DeadLetterSink != nil &&
+		(d.DeadLetterSink.Ref != nil || d.DeadLetterSink.URI != nil)
 }

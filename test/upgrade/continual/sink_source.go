@@ -22,10 +22,10 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"knative.dev/eventing/test/upgrade/prober/sut"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	pointer "knative.dev/pkg/ptr"
 	pkgupgrade "knative.dev/pkg/test/upgrade"
 
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
@@ -106,7 +106,7 @@ func (k kafkaSinkSourceSut) deploySink(ctx sut.Context) {
 	require.Nil(ctx.T, err)
 
 	s := types.NamespacedName{
-		Namespace: ctx.Client.Namespace,
+		Namespace: ctx.Namespace,
 		Name:      k.Sink.Name,
 	}
 	if _, err = sink.CreatorV1Alpha1(clientSet, k.Sink.Spec)(s); err != nil {
@@ -119,7 +119,7 @@ func (k kafkaSinkSourceSut) deploySource(ctx sut.Context, destination duckv1.Des
 		TypeMeta: metav1.TypeMeta{Kind: "KafkaSource", APIVersion: sources.SchemeGroupVersion.String()},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      k.Source.Name,
-			Namespace: ctx.Client.Namespace,
+			Namespace: ctx.Namespace,
 		},
 		Spec: *k.Source.Spec.DeepCopy(),
 	}
@@ -132,8 +132,8 @@ func (k kafkaSinkSourceSut) fetchUrl(ctx sut.Context) *apis.URL {
 		Kind:       "KafkaSink",
 		APIVersion: eventing.SchemeGroupVersion.String(),
 	}
-	ctx.Client.WaitForResourceReadyOrFail(k.Sink.Name, tm)
-	address, err := ctx.Client.GetAddressableURI(k.Sink.Name, tm)
+	ctx.WaitForResourceReadyOrFail(k.Sink.Name, tm)
+	address, err := ctx.GetAddressableURI(k.Sink.Name, tm)
 	require.Nil(ctx.T, err, "Failed to get address from sink %s", k.Sink.Name)
 
 	url, _ := apis.ParseURL(address)

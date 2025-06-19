@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 )
 
 func TestGetGroupVersionKind(t *testing.T) {

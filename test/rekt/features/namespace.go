@@ -64,7 +64,7 @@ func CleanupNamespace(name string) *feature.Feature {
 	})
 
 	f.Assert(fmt.Sprintf("wait for namespace %s to be deleted", name), func(ctx context.Context, t feature.T) {
-		err := wait.PollImmediate(100*time.Millisecond, time.Minute, func() (done bool, err error) {
+		err := wait.PollUntilContextTimeout(ctx, 100*time.Millisecond, time.Minute, true, func(context.Context) (done bool, err error) {
 			_, err = kubeclient.Get(ctx).CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 			if err != nil && apierrors.IsNotFound(err) {
 				return true, nil

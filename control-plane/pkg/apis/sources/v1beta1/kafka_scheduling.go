@@ -41,12 +41,12 @@ func (k *KafkaSource) GetVReplicas() int32 {
 }
 
 func (k *KafkaSource) GetPlacements() []v1alpha1.Placement {
-	if k.Status.Placeable.Placements == nil {
+	if k.Status.Placements == nil {
 		return nil
 	}
-	return k.Status.Placeable.Placements
+	return k.Status.Placements
 }
 
 func (k *KafkaSource) GetResourceVersion() string {
-	return k.ObjectMeta.ResourceVersion
+	return k.ResourceVersion
 }

@@ -17,10 +17,10 @@ limitations under the License.
 package v1
 
 import (
-	fuzz "github.com/google/gofuzz"
 	"k8s.io/apimachinery/pkg/api/apitesting/fuzzer"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	pkgfuzzer "knative.dev/pkg/apis/testing/fuzzer"
+	"sigs.k8s.io/randfill"
 )
 
 // FuzzerFuncs includes fuzzing funcs for bindings.knative.dev v1 types
@@ -30,11 +30,11 @@ import (
 var FuzzerFuncs = fuzzer.MergeFuzzerFuncs(
 	func(codecs serializer.CodecFactory) []interface{} {
 		return []interface{}{
-			func(s *KafkaBindingStatus, c fuzz.Continue) {
-				c.FuzzNoCustom(s) // fuzz the status object
+			func(s *KafkaBindingStatus, c randfill.Continue) {
+				c.FillNoCustom(s) // fuzz the status object
 
 				// Clear the random fuzzed condition
-				s.Status.SetConditions(nil)
+				s.SetConditions(nil)
 
 				// Fuzz the known conditions except their type value
 				s.InitializeConditions()

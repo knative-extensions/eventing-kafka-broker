@@ -36,7 +36,7 @@ import (
 	appslisters "k8s.io/client-go/listers/apps/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	rbaclisters "k8s.io/client-go/listers/rbac/v1"
-	"k8s.io/utils/pointer"
+	pointer "knative.dev/pkg/ptr"
 
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
@@ -122,7 +122,7 @@ func (r *NamespacedReconciler) reconcileDataPlane(ctx context.Context, broker *e
 
 	r.IPsLister.Register(
 		types.NamespacedName{Namespace: broker.Namespace, Name: broker.Name},
-		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.Env.IngressName}),
+		prober.GetIPForService(types.NamespacedName{Namespace: broker.Namespace, Name: r.IngressName}),
 	)
 
 	manifest, err := r.getManifest(ctx, broker)
@@ -220,15 +220,15 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 
 	return &Reconciler{
 		Reconciler: &base.Reconciler{
-			KubeClient:                   r.Reconciler.KubeClient,
-			PodLister:                    r.Reconciler.PodLister,
-			SecretLister:                 r.Reconciler.SecretLister,
-			Tracker:                      r.Reconciler.Tracker,
+			KubeClient:                   r.KubeClient,
+			PodLister:                    r.PodLister,
+			SecretLister:                 r.SecretLister,
+			Tracker:                      r.Tracker,
 			DataPlaneConfigConfigMapName: r.Reconciler.DataPlaneConfigConfigMapName,
 			ContractConfigMapName:        r.Reconciler.ContractConfigMapName,
 			ContractConfigMapFormat:      r.Reconciler.ContractConfigMapFormat,
-			DispatcherLabel:              r.Reconciler.DispatcherLabel,
-			ReceiverLabel:                r.Reconciler.ReceiverLabel,
+			DispatcherLabel:              r.DispatcherLabel,
+			ReceiverLabel:                r.ReceiverLabel,
 
 			DataPlaneNamespace:          broker.Namespace,
 			DataPlaneConfigMapNamespace: broker.Namespace,

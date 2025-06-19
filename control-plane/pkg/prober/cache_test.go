@@ -85,11 +85,11 @@ func testCache(t *testing.T, ctx context.Context, c Cache[string, Status, int], 
 	case <-ctx.Done():
 		t.Errorf("Timeout waiting for wait group to be done")
 	case err := <-errors:
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	case <-done:
 		// Wait expiration
-		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { _, ok := c.Get("key1"); return !ok, nil }))
-		require.Nil(t, wait.PollImmediate(d, d*2, func() (done bool, err error) { _, ok := c.Get("key2"); return !ok, nil }))
+		require.Nil(t, wait.PollUntilContextTimeout(context.TODO(), d, d*2, true, func(ctx2 context.Context) (done bool, err error) { _, ok := c.Get("key1"); return !ok, nil }))
+		require.Nil(t, wait.PollUntilContextTimeout(context.TODO(), d, d*2, true, func(ctx2 context.Context) (done bool, err error) { _, ok := c.Get("key2"); return !ok, nil }))
 	}
 }
 

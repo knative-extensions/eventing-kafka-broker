@@ -39,7 +39,7 @@ func ExistsContract(ctx context.Context, t feature.T) {
 func Exists(name string, namespace string) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		interval, timeout := k8s.PollTimings(ctx, []time.Duration{})
-		err := wait.PollImmediate(interval, timeout, func() (bool, error) {
+		err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx2 context.Context) (bool, error) {
 			client := kubeclient.Get(ctx)
 			_, err := client.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
 			if err != nil {

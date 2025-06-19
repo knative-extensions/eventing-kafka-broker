@@ -30,10 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -122,8 +122,8 @@ func SinkAddressable(configs *config.Env) func(obj duckv1.KRShaped) {
 
 	return func(obj duckv1.KRShaped) {
 		sink := obj.(*eventing.KafkaSink)
-		sink.Status.AddressStatus.Address = &duckv1.Addressable{}
-		sink.Status.AddressStatus.Address.URL = &apis.URL{
+		sink.Status.Address = &duckv1.Addressable{}
+		sink.Status.Address.URL = &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", sink.Namespace, sink.Name),

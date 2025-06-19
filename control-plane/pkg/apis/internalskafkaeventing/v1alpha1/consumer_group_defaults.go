@@ -19,8 +19,8 @@ package v1alpha1
 import (
 	"context"
 
-	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
+	pointer "knative.dev/pkg/ptr"
 )
 
 var (
@@ -38,7 +38,7 @@ func (cg *ConsumerGroup) SetDefaults(ctx context.Context) {
 	}
 	// Selector is a label query over consumers that should match the Replicas count.
 	// If Selector is empty, it is defaulted to the labels present on the template.
-	if cg.Spec.Selector == nil || len(cg.Spec.Selector) == 0 {
+	if len(cg.Spec.Selector) == 0 {
 		cg.Spec.Selector = cg.Spec.Template.Labels
 	}
 
