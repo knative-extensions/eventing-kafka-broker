@@ -224,16 +224,6 @@ rules:
     verbs:
       - update
 
-  - apiGroups:
-      - "sinks.knative.dev"
-    resources:
-      - "jobsinks"
-      - "jobsinks/status"
-    verbs:
-      - get
-      - list
-      - watch
-
   # resources needed to grant eventtype autocreate rbac to namespaced data plane component
   - apiGroups:
       - "eventing.knative.dev"
