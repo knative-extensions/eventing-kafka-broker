@@ -35,13 +35,13 @@ require (
 	k8s.io/client-go v0.33.1
 	k8s.io/code-generator v0.33.1
 	k8s.io/utils v0.0.0-20241210054802-24370beab758
-	knative.dev/eventing v0.45.1-0.20250618074058-d56ee683bb7a
+	knative.dev/eventing v0.45.1-0.20250625134405-5bcf8011acc8
 	knative.dev/hack v0.0.0-20250514121446-f525e187efdc
-	knative.dev/pkg v0.0.0-20250617121757-fd105c6320da
+	knative.dev/pkg v0.0.0-20250625154605-4ec554b5af30
 	knative.dev/reconciler-test v0.0.0-20250602074324-9a20896ca854
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/randfill v1.0.0
-	sigs.k8s.io/yaml v1.4.0
+	sigs.k8s.io/yaml v1.5.0
 )
 
 require (
@@ -116,6 +116,7 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/mod v0.25.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
