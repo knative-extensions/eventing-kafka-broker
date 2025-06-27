@@ -43,7 +43,7 @@
 
     <!-- dependencies version -->
     <vertx.version>4.5.14</vertx.version>
-    <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
+    <cloudevents.sdk.version>4.1.0-SNAPSHOT</cloudevents.sdk.version>
     <micrometer.version>1.14.7</micrometer.version>
     <opentelemetry.version>1.42.1</opentelemetry.version>
     <jackson.version>2.14.1</jackson.version>
@@ -103,10 +103,11 @@
 
   <repositories>
     <repository>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <id>sonatype</id>
+      <name>Central Portal Snapshots</name>
+      <id>central-portal-snapshots</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
       <releases>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </releases>
       <snapshots>
         <enabled>true</enabled>
@@ -519,7 +520,10 @@
               <rules>
                 <dependencyConvergence/>
                 <requireReleaseDeps>
-                  <excludes>dev.knative.eventing.kafka.broker:*</excludes>
+                  <excludes>
+                    <exclude>dev.knative.eventing.kafka.broker:*</exclude>
+                    <exclude>io.cloudevents:*</exclude>
+                  </excludes>
                   <failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
                 </requireReleaseDeps>
               </rules>
