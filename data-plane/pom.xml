@@ -42,7 +42,7 @@
     <spotless.plugin.version>2.38.0</spotless.plugin.version>
 
     <!-- dependencies version -->
-    <vertx.version>4.5.14</vertx.version>
+    <vertx.version>5.0.1</vertx.version>
     <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
     <micrometer.version>1.14.7</micrometer.version>
     <opentelemetry.version>1.42.1</opentelemetry.version>
