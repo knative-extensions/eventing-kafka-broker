@@ -39,7 +39,7 @@
     <maven.enforcer.plugin.version>3.5.0</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.0.0</maven.license.plugin.version>
     <mycila.license.plugin.version>4.1</mycila.license.plugin.version>
-    <spotless.plugin.version>2.38.0</spotless.plugin.version>
+    <spotless.plugin.version>2.44.5</spotless.plugin.version>
 
     <!-- dependencies version -->
     <vertx.version>4.5.14</vertx.version>
