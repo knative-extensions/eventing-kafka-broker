@@ -50,7 +50,6 @@ public class ExactFilterTest {
         final var event = CloudEventBuilder.v1()
                 .withId("123")
                 .withType("type")
-                .withSubject("")
                 .withSource(URI.create("/api/source"))
                 .build();
 
@@ -71,7 +70,6 @@ public class ExactFilterTest {
         final var event = CloudEventBuilder.v1()
                 .withId("123")
                 .withType("type")
-                .withSubject("")
                 .withSource(URI.create("/api/source"))
                 .withExtension("extension2", "valueExtension2")
                 .build();
@@ -94,7 +92,6 @@ public class ExactFilterTest {
         final var event = CloudEventBuilder.v1()
                 .withId("123")
                 .withType("type")
-                .withSubject("")
                 .withSource(URI.create("/api/source"))
                 .withExtension("extension2", "valueExtension2")
                 .build();
