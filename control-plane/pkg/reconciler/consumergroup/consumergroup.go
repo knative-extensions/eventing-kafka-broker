@@ -40,9 +40,9 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	"knative.dev/pkg/apis"
-	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/metrics"
+	"knative.dev/pkg/metrics/metricskey"
 	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -71,6 +71,10 @@ var (
 	ErrNoSubscriberURI     = errors.New("no subscriber URI resolved")
 	ErrNoDeadLetterSinkURI = errors.New("no dead letter sink URI resolved")
 
+	// NamespaceTagKey marks metrics with a namespace.
+	// Taken from knative/pkg/controller temporarily to keep deps working during opencensus -> otel migration
+	NamespaceTagKey = tag.MustNewKey(metricskey.LabelNamespaceName)
+
 	scheduleLatencyStat = stats.Int64("schedule_latency", "Latency of consumer group schedule operations", stats.UnitMilliseconds)
 	// scheduleDistribution defines the bucket boundaries for the histogram of schedule latency metric.
 	// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
@@ -97,25 +101,25 @@ func init() {
 	views := []*view.View{
 		{
 			Description: "Latency of consumer group schedule operations",
-			TagKeys:     []tag.Key{controller.NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
+			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
 			Measure:     scheduleLatencyStat,
 			Aggregation: scheduleDistribution,
 		},
 		{
 			Description: "Latency of consumer group offsets initialization operations",
-			TagKeys:     []tag.Key{controller.NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
+			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
 			Measure:     initializeOffsetsLatencyStat,
 			Aggregation: initializeOffsetsDistribution,
 		},
 		{
 			Description: "Number of expected consumer group replicas",
-			TagKeys:     []tag.Key{controller.NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
+			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
 			Measure:     expectedReplicasNum,
 			Aggregation: expectedReplicasGauge,
 		},
 		{
 			Description: "Number of expected consumer group replicas",
-			TagKeys:     []tag.Key{controller.NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
+			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
 			Measure:     readyReplicasNum,
 			Aggregation: readyReplicasGauge,
 		},
@@ -889,7 +893,7 @@ func metricTagsOf(ctx context.Context, cg *kafkainternals.ConsumerGroup) (contex
 	uf := cg.GetUserFacingResourceRef()
 	return tag.New(
 		ctx,
-		tag.Insert(controller.NamespaceTagKey, cg.Namespace),
+		tag.Insert(NamespaceTagKey, cg.Namespace),
 		tag.Insert(ConsumerNameTagKey, uf.Name),
 		tag.Insert(ConsumerKindTagKey, uf.Kind),
 	)
