@@ -1346,7 +1346,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/trace
-# knative.dev/eventing v0.45.1-0.20250708155102-50d5a2666dfb
+# knative.dev/eventing v0.45.1-0.20250716223301-c9821a9395d6
 ## explicit; go 1.24.0
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1460,13 +1460,13 @@ knative.dev/eventing/pkg/eventtype
 knative.dev/eventing/pkg/kncloudevents
 knative.dev/eventing/pkg/kncloudevents/attributes
 knative.dev/eventing/pkg/metrics
+knative.dev/eventing/pkg/observability
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
 knative.dev/eventing/pkg/reconciler/testing/v1
 knative.dev/eventing/pkg/scheduler
 knative.dev/eventing/pkg/scheduler/state
 knative.dev/eventing/pkg/scheduler/statefulset
-knative.dev/eventing/pkg/tracing
 knative.dev/eventing/pkg/utils
 knative.dev/eventing/test
 knative.dev/eventing/test/config/tls
@@ -1533,7 +1533,7 @@ knative.dev/eventing/test/upgrade/prober/wathola/sender
 # knative.dev/hack v0.0.0-20250708013849-70d4b00da6ba
 ## explicit; go 1.21
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20250708013613-d3550d4350f9
+# knative.dev/pkg v0.0.0-20250716115900-19d3cc2da0b9
 ## explicit; go 1.24.0
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1670,7 +1670,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20250708152404-d97d9007b8d3
+# knative.dev/reconciler-test v0.0.0-20250716152301-806fb6ae0da7
 ## explicit; go 1.24.0
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
