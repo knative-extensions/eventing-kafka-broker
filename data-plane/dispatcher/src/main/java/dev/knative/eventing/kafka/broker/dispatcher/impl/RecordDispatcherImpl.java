@@ -71,6 +71,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
     // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
     private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
+    private static final Tag OFFSET_SKIPPING_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "OffsetSkippingCloudEvent");
 
     private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
     private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
@@ -456,6 +457,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private Tags getTags(final ConsumerRecordContext recordContext) {
         if (recordContext.getRecord().value() instanceof InvalidCloudEvent) {
             return this.consumerVerticleContext.getTags().and(INVALID_EVENT_TYPE_TAG);
+        }
+        if (recordContext.getRecord().value() instanceof OffsetSkippingCloudEvent) {
+            return this.consumerVerticleContext.getTags().and(OFFSET_SKIPPING_TYPE_TAG);
         }
         return this.consumerVerticleContext
                 .getTags()
