@@ -132,6 +132,12 @@ public class Metrics {
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+     * @see Metrics#skippedOffsetCount(io.micrometer.core.instrument.Tags)
+     */
+    public static final String SKIPPED_OFFSET_COUNT = "skipped_offset_count";
+
+    /**
+     * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#executorQueueLatency(io.micrometer.core.instrument.Tags)
      */
     public static final String EXECUTOR_QUEUE_LATENCY = "executor_queue_latencies";
@@ -348,6 +354,13 @@ public class Metrics {
     public static Counter.Builder discardedEventCount(final io.micrometer.core.instrument.Tags tags) {
         return Counter.builder(DISCARDED_EVENTS_COUNT)
                 .description("Number of invalid events discarded")
+                .tags(tags)
+                .baseUnit(Metrics.Units.DIMENSIONLESS);
+    }
+
+    public static Counter.Builder skippedOffsetCount(final io.micrometer.core.instrument.Tags tags) {
+        return Counter.builder(SKIPPED_OFFSET_COUNT)
+                .description("Number of skipped offsets")
                 .tags(tags)
                 .baseUnit(Metrics.Units.DIMENSIONLESS);
     }

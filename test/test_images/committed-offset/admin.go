@@ -27,12 +27,17 @@ import (
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 )
 
+type CommittedOffsetConfig struct {
+	kafkatest.AdminConfig
+	ExpectedLag uint64 `json:"expectedLag" required:"false" split_words:"true" default:"0"`
+}
+
 func main() {
 
 	adminConfig := sarama.NewConfig()
 	adminConfig.Version = sarama.V2_0_0_0
 
-	envConfig := &kafkatest.AdminConfig{}
+	envConfig := &CommittedOffsetConfig{}
 
 	if err := envconfig.Process("", envConfig); err != nil {
 		log.Fatal("Failed to process environment variables", err)
@@ -53,7 +58,7 @@ func main() {
 		log.Fatal("Failed to get lag", err)
 	}
 
-	if lag.Total() != 0 {
-		log.Fatal("Lag is not 0", lag)
+	if lag.Total() != envConfig.ExpectedLag {
+		log.Fatal("Lag is not as expected", lag, envConfig.ExpectedLag)
 	}
 }

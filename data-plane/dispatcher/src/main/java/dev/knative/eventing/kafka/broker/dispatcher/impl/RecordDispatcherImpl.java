@@ -28,6 +28,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetSkippingCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -171,6 +172,17 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                     "Invalid record received topic %s, partition %d, offset %d",
                     record.topic(), record.partition(), record.offset());
             logger.error(msg);
+            recordDispatcherListener.recordReceived(record);
+            recordDispatcherListener.recordDiscarded(record);
+            return Future.failedFuture(msg);
+        }
+
+        if (record.value() instanceof OffsetSkippingCloudEvent) {
+            incrementSkippedOffset(recordContext);
+            final var msg = String.format(
+                    "Skipping offset topic %s, partition %d, offset %d",
+                    record.topic(), record.partition(), record.offset());
+            logger.debug(msg);
             recordDispatcherListener.recordReceived(record);
             recordDispatcherListener.recordDiscarded(record);
             return Future.failedFuture(msg);
@@ -389,6 +401,14 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private void incrementDiscardedRecord(final ConsumerRecordContext recordContext) {
         if (meterRegistry != null) {
             Metrics.discardedEventCount(getTags(recordContext))
+                    .register(meterRegistry)
+                    .increment();
+        }
+    }
+
+    private void incrementSkippedOffset(final ConsumerRecordContext recordContext) {
+        if (meterRegistry != null) {
+            Metrics.skippedOffsetCount(getTags(recordContext))
                     .register(meterRegistry)
                     .increment();
         }

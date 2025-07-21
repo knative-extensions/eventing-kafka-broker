@@ -54,7 +54,7 @@ var (
 	ImcGVR   = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1", Resource: "inmemorychannels"}       //nolinte:unused
 )
 
-func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, value string) {
+func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, transactionalId string, value string) {
 	cgName := topic + "-" + key + "z"
 
 	payload := value
@@ -85,6 +85,9 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	client.Tracker.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "configmap", client.Namespace, cgName)
 
 	args := []string{"-P", "-T", "-b", bootstrapServer, "-t", topic}
+	if transactionalId != "" {
+		args = append(args, "-X", "transactional.id="+transactionalId)
+	}
 	if key != "" {
 		args = append(args, "-K=")
 	}
