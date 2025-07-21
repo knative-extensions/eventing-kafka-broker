@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.SpecVersion;
-
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Set;
@@ -29,8 +28,7 @@ import java.util.Set;
  * <p>
  */
 public class OffsetSkippingCloudEvent implements CloudEvent {
-    public OffsetSkippingCloudEvent() {
-    }
+    public OffsetSkippingCloudEvent() {}
 
     @Override
     public CloudEventData getData() {

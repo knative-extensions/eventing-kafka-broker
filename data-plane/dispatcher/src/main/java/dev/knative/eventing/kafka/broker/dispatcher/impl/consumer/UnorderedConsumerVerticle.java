@@ -155,8 +155,11 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
             // Handle skipped offsets first, we dispatch an OffsetSkippingCloudEvent in stead of the missing offsets
             if (lastOffsets.containsKey(topicPartition)) {
-                for (long skipOffset = lastOffsets.get(topicPartition) + 1; skipOffset < record.offset(); skipOffset++) {
-                  recordDispatcherFutures.add(this.recordDispatcher.dispatch(new ConsumerRecord<>(record.topic(), record.partition(), skipOffset, null, new OffsetSkippingCloudEvent())));
+                for (long skipOffset = lastOffsets.get(topicPartition) + 1;
+                        skipOffset < record.offset();
+                        skipOffset++) {
+                    recordDispatcherFutures.add(this.recordDispatcher.dispatch(new ConsumerRecord<>(
+                            record.topic(), record.partition(), skipOffset, null, new OffsetSkippingCloudEvent())));
                 }
             }
 

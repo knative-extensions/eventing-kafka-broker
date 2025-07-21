@@ -74,7 +74,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
         }
 
         this.recordDispatcherExecutors = new ConcurrentHashMap<>();
-        this.lastOffsets = new  ConcurrentHashMap<>();
+        this.lastOffsets = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
         this.isPollInFlight = new AtomicBoolean(false);
         this.pollTimer = new AtomicLong(-1);
@@ -195,9 +195,16 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
             // Handle skipped offsets first, we dispatch an OffsetSkippingCloudEvent in stead of the missing offsets
             if (lastOffsets.containsKey(topicPartition)) {
-                for (long skipOffset = lastOffsets.get(topicPartition) + 1; skipOffset < record.offset(); skipOffset++) {
+                for (long skipOffset = lastOffsets.get(topicPartition) + 1;
+                        skipOffset < record.offset();
+                        skipOffset++) {
                     final long skipOffsetFinal = skipOffset;
-                    executor.offer(() -> dispatch(new ConsumerRecord<>(record.topic(), record.partition(), skipOffsetFinal, null, new OffsetSkippingCloudEvent())));
+                    executor.offer(() -> dispatch(new ConsumerRecord<>(
+                            record.topic(),
+                            record.partition(),
+                            skipOffsetFinal,
+                            null,
+                            new OffsetSkippingCloudEvent())));
                 }
             }
 
