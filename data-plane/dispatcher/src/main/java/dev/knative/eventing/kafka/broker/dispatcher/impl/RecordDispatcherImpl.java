@@ -186,7 +186,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             logger.debug(msg);
             recordDispatcherListener.recordReceived(record);
             recordDispatcherListener.recordDiscarded(record);
-            return Future.failedFuture(msg);
+            return Future.succeededFuture();
         }
 
         try {
