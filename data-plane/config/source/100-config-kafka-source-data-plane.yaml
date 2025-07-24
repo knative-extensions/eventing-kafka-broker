@@ -112,7 +112,7 @@ data:
     enable.auto.commit=false
     exclude.internal.topics=true
     fetch.max.bytes=52428800
-    isolation.level=read_uncommitted
+    isolation.level=read_committed
     max.poll.interval.ms=300000
     max.poll.records=50
     partition.assignment.strategy=org.apache.kafka.clients.consumer.StickyAssignor
