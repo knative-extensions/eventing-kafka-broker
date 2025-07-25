@@ -23,12 +23,18 @@ import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,11 +55,23 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
     private final AtomicInteger inFlightRecords;
     private final AtomicBoolean isPollInFlight;
 
+    private final PartitionRevokedHandler partitionRevokedHandler;
+
+    private final Map<TopicPartition, Long> lastOffsets;
+
     public UnorderedConsumerVerticle(final ConsumerVerticleContext context, final Initializer initializer) {
         super(context, initializer);
         this.inFlightRecords = new AtomicInteger(0);
         this.closed = new AtomicBoolean(false);
         this.isPollInFlight = new AtomicBoolean(false);
+        this.lastOffsets = new ConcurrentHashMap<>();
+
+        this.partitionRevokedHandler = partitions -> {
+            for (final TopicPartition partition : partitions) {
+                lastOffsets.remove(partition);
+            }
+            return Future.succeededFuture();
+        };
     }
 
     @Override
@@ -130,7 +148,26 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
         isPollInFlight.compareAndSet(true, false);
 
         for (var record : records) {
-            this.recordDispatcher.dispatch(record).onComplete(v -> {
+
+            final var topicPartition = new TopicPartition(record.topic(), record.partition());
+
+            final List<Future<Void>> recordDispatcherFutures = new ArrayList<>();
+
+            // Handle skipped offsets first, we dispatch an OffsetSkippingCloudEvent in stead of the missing offsets
+            if (lastOffsets.containsKey(topicPartition)) {
+                for (long skipOffset = lastOffsets.get(topicPartition) + 1;
+                        skipOffset < record.offset();
+                        skipOffset++) {
+                    recordDispatcherFutures.add(this.recordDispatcher.dispatch(new ConsumerRecord<>(
+                            record.topic(), record.partition(), skipOffset, null, new OffsetSkippingCloudEvent())));
+                }
+            }
+
+            lastOffsets.put(topicPartition, record.offset());
+
+            recordDispatcherFutures.add(this.recordDispatcher.dispatch(record));
+
+            Future.all(recordDispatcherFutures).onComplete(v -> {
                 this.inFlightRecords.decrementAndGet();
                 poll();
             });
@@ -148,6 +185,6 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
     @Override
     public PartitionRevokedHandler getPartitionRevokedHandler() {
-        return partitions -> Future.succeededFuture();
+        return partitionRevokedHandler;
     }
 }
