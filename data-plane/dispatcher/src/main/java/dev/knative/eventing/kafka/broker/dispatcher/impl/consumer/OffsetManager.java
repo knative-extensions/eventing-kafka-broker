@@ -97,7 +97,9 @@ public final class OffsetManager implements RecordDispatcherListener {
                     consumer.unwrap().commitSync(offsetAndMetadataMap);
 
                     for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : offsetAndMetadataMap.entrySet()) {
-                        offsetTrackers.get(entry.getKey()).setCommitted(entry.getValue().offset());
+                        offsetTrackers
+                                .get(entry.getKey())
+                                .setCommitted(entry.getValue().offset());
                         if (onCommit != null) {
                             onCommit.accept((int) entry.getValue().offset());
                         }
