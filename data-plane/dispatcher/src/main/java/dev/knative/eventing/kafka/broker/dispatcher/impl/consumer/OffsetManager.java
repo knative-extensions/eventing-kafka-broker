@@ -25,6 +25,7 @@ import io.vertx.core.Vertx;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,11 +75,40 @@ public final class OffsetManager implements RecordDispatcherListener {
 
         partitionRevokedHandler = partitions -> {
             try {
-                // Async commit offsets.
-                final var commitFuture = commit(partitions);
+                // Commit revoked partitions synchronously
+                Map<TopicPartition, OffsetAndMetadata> offsetAndMetadataMap = new HashMap<>();
+                for (Map.Entry<TopicPartition, OffsetTracker> entry : offsetTrackers.entrySet()) {
+                    TopicPartition topicPartition = entry.getKey();
+                    if (partitions.contains(topicPartition)) {
+                        OffsetTracker tracker = entry.getValue();
+                        long newOffset = tracker.offsetToCommit();
+                        if (newOffset > tracker.getCommitted()) {
+                            offsetAndMetadataMap.put(topicPartition, new OffsetAndMetadata(newOffset, ""));
+                            logger.debug(
+                                    "Committing offset for {} offset {} from partition revoked handler",
+                                    keyValue("topicPartition", topicPartition),
+                                    keyValue("offset", newOffset));
+                        }
+                    }
+                }
+
+                if (!offsetAndMetadataMap.isEmpty()) {
+                    // partition revoked handler is invoked from within poll, so this should be safe
+                    consumer.unwrap().commitSync(offsetAndMetadataMap);
+
+                    for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : offsetAndMetadataMap.entrySet()) {
+                        offsetTrackers
+                                .get(entry.getKey())
+                                .setCommitted(entry.getValue().offset());
+                        if (onCommit != null) {
+                            onCommit.accept((int) entry.getValue().offset());
+                        }
+                    }
+                }
+
                 // Remove revoked partitions.
                 partitions.forEach(offsetTrackers::remove);
-                return commitFuture;
+                return Future.succeededFuture();
             } catch (final Exception ex) {
                 logger.warn("Failed to commit revoked partitions offsets {}", keyValue("partitions", partitions), ex);
                 return Future.failedFuture(ex);
