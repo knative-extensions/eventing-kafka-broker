@@ -244,7 +244,6 @@ func TriggerSASLScalesToZeroWithKeda() *feature.Feature {
 	))
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
-	f.Setup("install broker", broker.Install(brokerName))
 	f.Setup("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sinkName), "")))
 
 	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
@@ -290,7 +289,6 @@ func TriggerSSLScalesToZeroWithKeda() *feature.Feature {
 	))
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
-	f.Setup("install broker", broker.Install(brokerName))
 	f.Setup("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sinkName), "")))
 
 	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
