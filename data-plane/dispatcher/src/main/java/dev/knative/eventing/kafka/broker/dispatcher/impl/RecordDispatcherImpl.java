@@ -28,6 +28,7 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KafkaConsumerRecordUtils;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OffsetSkippingCloudEvent;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -70,6 +71,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
     // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
     private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
+    private static final Tag OFFSET_SKIPPING_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "OffsetSkippingCloudEvent");
 
     private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
     private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
@@ -174,6 +176,17 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             recordDispatcherListener.recordReceived(record);
             recordDispatcherListener.recordDiscarded(record);
             return Future.failedFuture(msg);
+        }
+
+        if (record.value() instanceof OffsetSkippingCloudEvent) {
+            incrementSkippedOffset(recordContext);
+            final var msg = String.format(
+                    "Skipping offset topic %s, partition %d, offset %d",
+                    record.topic(), record.partition(), record.offset());
+            logger.debug(msg);
+            recordDispatcherListener.recordReceived(record);
+            recordDispatcherListener.recordDiscarded(record);
+            return Future.succeededFuture();
         }
 
         try {
@@ -394,6 +407,14 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         }
     }
 
+    private void incrementSkippedOffset(final ConsumerRecordContext recordContext) {
+        if (meterRegistry != null) {
+            Metrics.skippedOffsetCount(getTags(recordContext))
+                    .register(meterRegistry)
+                    .increment();
+        }
+    }
+
     private void recordDispatchLatency(final HttpResponse<?> response, final ConsumerRecordContext recordContext) {
         final var latency = recordContext.performLatency();
         logger.debug(
@@ -436,6 +457,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private Tags getTags(final ConsumerRecordContext recordContext) {
         if (recordContext.getRecord().value() instanceof InvalidCloudEvent) {
             return this.consumerVerticleContext.getTags().and(INVALID_EVENT_TYPE_TAG);
+        }
+        if (recordContext.getRecord().value() instanceof OffsetSkippingCloudEvent) {
+            return this.consumerVerticleContext.getTags().and(OFFSET_SKIPPING_TYPE_TAG);
         }
         return this.consumerVerticleContext
                 .getTags()

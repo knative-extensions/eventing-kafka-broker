@@ -35,7 +35,7 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
 
     @Override
     public CloudEvent apply(ConsumerRecord<Object, CloudEvent> record) {
-        if (record.value() instanceof InvalidCloudEvent) {
+        if (record.value() instanceof InvalidCloudEvent || record.value() instanceof OffsetSkippingCloudEvent) {
             return record.value();
         }
         final var builder = CloudEventBuilder.from(record.value());

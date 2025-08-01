@@ -50,6 +50,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
     private static final Duration POLLING_TIMEOUT = Duration.ofMillis(1000L);
 
     private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
+    private final Map<TopicPartition, Long> lastOffsets;
     private final PartitionRevokedHandler partitionRevokedHandler;
     private final Bucket bucket;
 
@@ -73,6 +74,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
         }
 
         this.recordDispatcherExecutors = new ConcurrentHashMap<>();
+        this.lastOffsets = new ConcurrentHashMap<>();
         this.closed = new AtomicBoolean(false);
         this.isPollInFlight = new AtomicBoolean(false);
         this.pollTimer = new AtomicLong(-1);
@@ -80,6 +82,7 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
         partitionRevokedHandler = partitions -> {
             // Stop executors associated with revoked partitions.
             for (final TopicPartition partition : partitions) {
+                lastOffsets.remove(partition);
                 final var executor = recordDispatcherExecutors.remove(partition);
                 if (executor != null) {
                     logger.info(
@@ -186,7 +189,27 @@ public class OrderedConsumerVerticle extends ConsumerVerticle {
 
         // Put records in internal per-partition queues.
         for (var record : records) {
-            final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
+            final var topicPartition = new TopicPartition(record.topic(), record.partition());
+
+            final var executor = executorFor(topicPartition);
+
+            // Handle skipped offsets first, we dispatch an OffsetSkippingCloudEvent in stead of the missing offsets
+            if (lastOffsets.containsKey(topicPartition)) {
+                for (long skipOffset = lastOffsets.get(topicPartition) + 1;
+                        skipOffset < record.offset();
+                        skipOffset++) {
+                    final long skipOffsetFinal = skipOffset;
+                    executor.offer(() -> dispatch(new ConsumerRecord<>(
+                            record.topic(),
+                            record.partition(),
+                            skipOffsetFinal,
+                            null,
+                            new OffsetSkippingCloudEvent())));
+                }
+            }
+
+            lastOffsets.put(topicPartition, record.offset());
+
             executor.offer(() -> dispatch(record));
         }
     }
