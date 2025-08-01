@@ -42,7 +42,7 @@
     <spotless.plugin.version>2.44.5</spotless.plugin.version>
 
     <!-- dependencies version -->
-    <vertx.version>4.5.14</vertx.version>
+    <vertx.version>4.5.16</vertx.version>
     <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
     <micrometer.version>1.15.2</micrometer.version>
     <opentelemetry.version>1.42.1</opentelemetry.version>
@@ -56,7 +56,7 @@
     <awaitility.version>4.2.0</awaitility.version>
     <junit.jupiter.version>5.13.2</junit.jupiter.version>
     <mockito.junit.jupiter.version>5.18.0</mockito.junit.jupiter.version>
-    <fabric8.kubernetes.version>7.2.0</fabric8.kubernetes.version>
+    <fabric8.kubernetes.version>7.3.1</fabric8.kubernetes.version>
     <kafka.version>3.9.1</kafka.version>
     <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.6</jib.version>
