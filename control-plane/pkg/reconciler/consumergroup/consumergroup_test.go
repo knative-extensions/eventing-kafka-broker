@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
+	"go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -1672,6 +1674,9 @@ func TestReconcileKind(t *testing.T) {
 		store := configapis.NewStore(ctx)
 		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
 		store.OnConfigChanged(exampleConfig)
+		reader := sdkmetric.NewManualReader()
+		mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader))
+		meter := mp.Meter("knative.dev/eventing-kafka-broker/pkg/reconciler/consumergroup")
 
 		r := &Reconciler{
 			SchedulerFunc: func(s string) (Scheduler, bool) {
@@ -1708,6 +1713,12 @@ func TestReconcileKind(t *testing.T) {
 			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 			EnqueueKey:                         func(key string) {},
 		}
+
+		r.ScheduleLatency, _ = meter.Int64Histogram("kn.eventing.schedule.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
+		r.InitializeOffsetLatency, _ = meter.Int64Histogram("kn.eventing.initialize_offset.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
+		r.ExpectedReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.expected")
+		r.ReadyReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.ready")
+		r.KafkaFeatureFlags = configapis.DefaultFeaturesConfig()
 
 		r.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
 
@@ -1824,6 +1835,10 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 
 		ctx, _ = kedaclient.With(ctx)
 
+		reader := sdkmetric.NewManualReader()
+		mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader))
+		meter := mp.Meter("knative.dev/eventing-kafka-broker/pkg/reconciler/consumergroup")
+
 		r := &Reconciler{
 			SchedulerFunc: func(s string) (Scheduler, bool) {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
@@ -1856,6 +1871,10 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			EnqueueKey:                         func(key string) {},
 		}
 
+		r.ScheduleLatency, _ = meter.Int64Histogram("kn.eventing.schedule.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
+		r.InitializeOffsetLatency, _ = meter.Int64Histogram("kn.eventing.initialize_offset.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
+		r.ExpectedReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.expected")
+		r.ReadyReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.ready")
 		r.KafkaFeatureFlags = configapis.DefaultFeaturesConfig()
 
 		return consumergroup.NewReconciler(
@@ -2314,6 +2333,10 @@ func TestFinalizeKind(t *testing.T) {
 
 		errorOnDeleteKafkaCG := row.OtherTestData[kafkatesting.ErrorOnDeleteConsumerGroupTestKey]
 
+		reader := sdkmetric.NewManualReader()
+		mp := sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader))
+		meter := mp.Meter("knative.dev/eventing-kafka-broker/pkg/reconciler/consumergroup")
+
 		r := &Reconciler{
 			SchedulerFunc: func(s string) (Scheduler, bool) {
 				if noScheduler, ok := row.OtherTestData[noTestScheduler]; ok && noScheduler.(bool) == true {
@@ -2342,6 +2365,11 @@ func TestFinalizeKind(t *testing.T) {
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 		}
+
+		r.ScheduleLatency, _ = meter.Int64Histogram("kn.eventing.schedule.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
+		r.InitializeOffsetLatency, _ = meter.Int64Histogram("kn.eventing.initialize_offset.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
+		r.ExpectedReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.expected")
+		r.ReadyReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.ready")
 
 		return consumergroup.NewReconciler(
 			ctx,
