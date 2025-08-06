@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 	v1 "k8s.io/client-go/informers/core/v1"
 
 	"github.com/kelseyhightower/envconfig"
@@ -119,6 +121,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName, dispatcherPodInformer),
 	}
 
+	mp := otel.GetMeterProvider()
+	meter := mp.Meter("knative.dev/eventing-kafka-broker/pkg/reconciler/consumergroup")
+
 	r := &Reconciler{
 		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
 		ConsumerLister:                     consumer.Get(ctx).Lister(),
@@ -135,6 +140,43 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
 		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, 20*time.Minute),
+	}
+
+	var err error
+	r.ScheduleLatency, err = meter.Int64Histogram(
+		"kn.eventing.schedule.latency",
+		metric.WithDescription("The latency to schedule the consumers"),
+		metric.WithUnit("ms"),
+		metric.WithExplicitBucketBoundaries(latencyBoundsMs...),
+	)
+	if err != nil {
+		logger.Panicw("failed to initialize kn.eventing.schedule.latency metric", zap.Error(err))
+	}
+
+	r.InitializeOffsetLatency, err = meter.Int64Histogram(
+		"kn.eventing.initialize_offset.latency",
+		metric.WithDescription("The latency to initialize consumer group offsets"),
+		metric.WithUnit("ms"),
+		metric.WithExplicitBucketBoundaries(latencyBoundsMs...),
+	)
+	if err != nil {
+		logger.Panicw("failed to initialize kn.eventing.initialize_offset.latency metric", zap.Error(err))
+	}
+
+	r.ReadyReplicas, err = meter.Int64Gauge(
+		"kn.eventing.replicas.ready",
+		metric.WithDescription("The number of ready replicas"),
+	)
+	if err != nil {
+		logger.Panicw("failed to initialize kn.eventing.replicas.ready metric", zap.Error(err))
+	}
+
+	r.ExpectedReplicas, err = meter.Int64Gauge(
+		"kn.eventing.replicas.expected",
+		metric.WithDescription("The number of expected replicas"),
+	)
+	if err != nil {
+		logger.Panicw("failed to initialize kn.eventing.replicas.expected metric", zap.Error(err))
 	}
 
 	clientPool := clientpool.Get(ctx)

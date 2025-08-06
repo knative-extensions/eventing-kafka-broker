@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/IBM/sarama"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -39,10 +39,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/observability"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/metrics"
-	"knative.dev/pkg/metrics/metricskey"
+	"knative.dev/pkg/observability/attributekey"
 	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
@@ -71,63 +71,18 @@ var (
 	ErrNoSubscriberURI     = errors.New("no subscriber URI resolved")
 	ErrNoDeadLetterSinkURI = errors.New("no dead letter sink URI resolved")
 
-	// NamespaceTagKey marks metrics with a namespace.
-	// Taken from knative/pkg/controller temporarily to keep deps working during opencensus -> otel migration
-	NamespaceTagKey = tag.MustNewKey(metricskey.LabelNamespaceName)
-
-	scheduleLatencyStat = stats.Int64("schedule_latency", "Latency of consumer group schedule operations", stats.UnitMilliseconds)
 	// scheduleDistribution defines the bucket boundaries for the histogram of schedule latency metric.
 	// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
-	scheduleDistribution = view.Distribution(10, 100, 1000, 10000, 30000, 60000)
+	latencyBoundsMs = []float64{10, 100, 1000, 10000, 30000, 60000}
 
-	initializeOffsetsLatencyStat = stats.Int64("initialize_offsets_latency", "Latency of consumer group offsets initialization operations", stats.UnitMilliseconds)
 	// initializeOffsetsDistribution defines the bucket boundaries for the histogram of initialize offsets latency metric.
 	// Bucket boundaries are 10ms, 100ms, 1s, 10s, 30s and 60s.
-	initializeOffsetsDistribution = view.Distribution(10, 100, 1000, 10000, 30000, 60000)
-
-	expectedReplicasNum   = stats.Int64("consumer_group_expected_replicas", "Number of expected consumer group replicas", stats.UnitDimensionless)
-	expectedReplicasGauge = view.LastValue()
-
-	readyReplicasNum   = stats.Int64("consumer_group_ready_replicas", "Number of ready consumer group replicas", stats.UnitDimensionless)
-	readyReplicasGauge = view.LastValue()
 )
 
 var (
-	ConsumerNameTagKey = tag.MustNewKey("consumer_name")
-	ConsumerKindTagKey = tag.MustNewKey("consumer_kind")
+	TriggerNameKey      = attributekey.String("kn.trigger.name")
+	TriggerNamespaceKey = attributekey.String("kn.trigger.namespace")
 )
-
-func init() {
-	views := []*view.View{
-		{
-			Description: "Latency of consumer group schedule operations",
-			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
-			Measure:     scheduleLatencyStat,
-			Aggregation: scheduleDistribution,
-		},
-		{
-			Description: "Latency of consumer group offsets initialization operations",
-			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
-			Measure:     initializeOffsetsLatencyStat,
-			Aggregation: initializeOffsetsDistribution,
-		},
-		{
-			Description: "Number of expected consumer group replicas",
-			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
-			Measure:     expectedReplicasNum,
-			Aggregation: expectedReplicasGauge,
-		},
-		{
-			Description: "Number of expected consumer group replicas",
-			TagKeys:     []tag.Key{NamespaceTagKey, ConsumerNameTagKey, ConsumerKindTagKey},
-			Measure:     readyReplicasNum,
-			Aggregation: readyReplicasGauge,
-		},
-	}
-	if err := view.Register(views...); err != nil {
-		panic(err)
-	}
-}
 
 type NoSchedulerFoundError struct{}
 
@@ -186,13 +141,18 @@ type Reconciler struct {
 	InitOffsetLatestInitialOffsetCache prober.Cache[string, prober.Status, struct{}]
 
 	EnqueueKey func(key string)
+
+	ScheduleLatency         metric.Int64Histogram
+	InitializeOffsetLatency metric.Int64Histogram
+	ExpectedReplicas        metric.Int64Gauge
+	ReadyReplicas           metric.Int64Gauge
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 	logger := logging.FromContext(ctx)
 	logger.Debugw("Reconciling consumergroup")
 
-	recordExpectedReplicasMetric(ctx, cg)
+	r.recordExpectedReplicasMetric(ctx, cg)
 
 	r.reconcileStatusSelector(cg)
 
@@ -444,7 +404,7 @@ func (r *Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkaintern
 
 func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	startTime := time.Now()
-	defer recordScheduleLatency(ctx, cg, startTime)
+	defer r.recordScheduleLatency(ctx, cg, startTime)
 
 	resourceRef := cg.GetUserFacingResourceRef()
 	if resourceRef == nil {
@@ -578,7 +538,7 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 	}
 	cg.Status.Replicas = pointer.Int32(count)
 
-	recordReadyReplicasMetric(ctx, cg)
+	r.recordReadyReplicasMetric(ctx, cg)
 
 	if cg.Spec.Replicas != nil && *cg.Spec.Replicas == 0 {
 		subscriber, err := r.Resolver.AddressableFromDestinationV1(ctx, cg.Spec.Template.Spec.Subscriber, cg)
@@ -595,7 +555,7 @@ func (r *Reconciler) propagateStatus(ctx context.Context, cg *kafkainternals.Con
 
 func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	startTime := time.Now()
-	defer recordInitializeOffsetsLatency(ctx, cg, startTime)
+	defer r.recordInitializeOffsetsLatency(ctx, cg, startTime)
 
 	if cg.Spec.Template.Spec.Delivery == nil || cg.Spec.Template.Spec.Delivery.InitialOffset == sources.OffsetEarliest {
 		return nil
@@ -847,55 +807,72 @@ var (
 	_ consumergroup.Finalizer = &Reconciler{}
 )
 
-func recordScheduleLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
-	ctx, err := metricTagsOf(ctx, cg)
-	if err != nil {
-		return
-	}
-	metrics.Record(ctx, scheduleLatencyStat.M(time.Since(startTime).Milliseconds()))
-}
-
-func recordInitializeOffsetsLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
-	ctx, err := metricTagsOf(ctx, cg)
-	if err != nil {
-		return
-	}
-	metrics.Record(ctx, initializeOffsetsLatencyStat.M(time.Since(startTime).Milliseconds()))
-}
-
-func recordExpectedReplicasMetric(ctx context.Context, cg *kafkainternals.ConsumerGroup) {
-	ctx, err := metricTagsOf(ctx, cg)
-	if err != nil {
-		return
-	}
-
-	r := int32(0)
-	if cg.Spec.Replicas != nil {
-		r = *cg.Spec.Replicas
-	}
-	metrics.Record(ctx, expectedReplicasNum.M(int64(r)))
-}
-
-func recordReadyReplicasMetric(ctx context.Context, cg *kafkainternals.ConsumerGroup) {
-	ctx, err := metricTagsOf(ctx, cg)
-	if err != nil {
-		return
-	}
-
-	r := int32(0)
-	if cg.Status.Replicas != nil {
-		r = *cg.Status.Replicas
-	}
-	metrics.Record(ctx, readyReplicasNum.M(int64(r)))
-}
-
-func metricTagsOf(ctx context.Context, cg *kafkainternals.ConsumerGroup) (context.Context, error) {
+func getMetricAttributes(cg *kafkainternals.ConsumerGroup) []attribute.KeyValue {
 	uf := cg.GetUserFacingResourceRef()
-	return tag.New(
+	if uf == nil {
+		return []attribute.KeyValue{}
+	}
+	attributes := []attribute.KeyValue{}
+	switch strings.ToLower(uf.Kind) {
+	case "trigger":
+		attributes = []attribute.KeyValue{TriggerNameKey.With(uf.Name), TriggerNamespaceKey.With(cg.Namespace)}
+	case "kafkachannel":
+		attributes = []attribute.KeyValue{observability.ChannelName.With(uf.Name), observability.ChannelNamespace.With(cg.Namespace)}
+	case "kafkasource":
+		attributes = []attribute.KeyValue{observability.SourceName.With(uf.Name), observability.SourceNamespace.With(cg.Namespace)}
+	default:
+		return []attribute.KeyValue{}
+	}
+
+	return attributes
+}
+
+func (r *Reconciler) recordScheduleLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
+	r.ScheduleLatency.Record(
 		ctx,
-		tag.Insert(NamespaceTagKey, cg.Namespace),
-		tag.Insert(ConsumerNameTagKey, uf.Name),
-		tag.Insert(ConsumerKindTagKey, uf.Kind),
+		time.Since(startTime).Milliseconds(),
+		metric.WithAttributes(
+			getMetricAttributes(cg)...,
+		),
+	)
+}
+
+func (r *Reconciler) recordInitializeOffsetsLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
+	r.InitializeOffsetLatency.Record(
+		ctx,
+		time.Since(startTime).Milliseconds(),
+		metric.WithAttributes(
+			getMetricAttributes(cg)...,
+		),
+	)
+}
+
+func (r *Reconciler) recordExpectedReplicasMetric(ctx context.Context, cg *kafkainternals.ConsumerGroup) {
+	replicas := int32(0)
+	if cg.Spec.Replicas != nil {
+		replicas = *cg.Spec.Replicas
+	}
+
+	r.ExpectedReplicas.Record(
+		ctx,
+		int64(replicas),
+		metric.WithAttributes(
+			getMetricAttributes(cg)...,
+		),
+	)
+}
+
+func (r *Reconciler) recordReadyReplicasMetric(ctx context.Context, cg *kafkainternals.ConsumerGroup) {
+	replicas := int32(0)
+	if cg.Status.Replicas != nil {
+		replicas = *cg.Status.Replicas
+	}
+
+	r.ReadyReplicas.Record(
+		ctx,
+		int64(replicas),
+		metric.WithAttributes(getMetricAttributes(cg)...,
+		),
 	)
 }
 
