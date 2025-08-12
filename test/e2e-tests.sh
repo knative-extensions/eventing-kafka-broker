@@ -10,7 +10,6 @@ fi
 if ! ${LOCAL_DEVELOPMENT}; then
   scale_controlplane kafka-controller kafka-webhook-eventing eventing-webhook eventing-controller
   apply_sacura                            || fail_test "Failed to apply Sacura"
-  apply_sacura_sink_source || fail_test "Failed to apply Sacura (Source, Sink, Broker, Channel)"
   apply_chaos                             || fail_test "Failed to apply chaos"
 fi
 
@@ -44,6 +43,7 @@ go_test_e2e -timeout=1h ./test/e2e_channel/... -channels=messaging.knative.dev/v
 go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite failed (directory: ./e2e/...)"
 
 if ! ${LOCAL_DEVELOPMENT}; then
+  apply_sacura_sink_source || fail_test "Failed to apply Sacura (Source, Sink, Broker, Channel)"
   go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed (directory: ./e2e/...)"
 fi
 
