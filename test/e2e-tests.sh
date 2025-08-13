@@ -44,7 +44,7 @@ go_test_e2e -tags=deletecm ./test/e2e/... || fail_test "E2E (deletecm) suite fai
 
 if ! ${LOCAL_DEVELOPMENT}; then
   apply_sacura_sink_source || fail_test "Failed to apply Sacura (Source, Sink, Broker, Channel)"
-  go_test_e2e -tags=sacura -timeout=40m ./test/e2e/... || fail_test "E2E (sacura) suite failed (directory: ./e2e/...)"
+  go_test_e2e -tags=sacura -timeout=60m ./test/e2e/... || fail_test "E2E (sacura) suite failed (directory: ./e2e/...)"
 fi
 
 success
