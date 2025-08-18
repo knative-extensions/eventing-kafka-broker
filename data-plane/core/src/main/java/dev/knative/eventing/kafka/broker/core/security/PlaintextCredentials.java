@@ -58,4 +58,9 @@ public class PlaintextCredentials implements Credentials {
     public String SASLPassword() {
         return null;
     }
+
+    @Override
+    public String SASLTokenProvider() {
+        return null;
+    }
 }

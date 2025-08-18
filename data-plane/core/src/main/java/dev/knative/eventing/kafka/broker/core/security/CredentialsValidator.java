@@ -47,7 +47,7 @@ class CredentialsValidator {
         if (is(SecurityProtocol.SASL_PLAINTEXT, securityProtocol)) {
             if (SASLMechanism != null && isInvalidSASLMechanism(SASLMechanism)) {
                 return "Security protocol " + securityProtocol.name
-                        + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got "
+                        + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER or PLAIN got "
                         + SASLMechanism;
             }
             if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())) {
@@ -59,11 +59,15 @@ class CredentialsValidator {
         if (is(SecurityProtocol.SASL_SSL, securityProtocol)) {
             if (SASLMechanism != null && isInvalidSASLMechanism(SASLMechanism)) {
                 return "Security protocol " + securityProtocol.name
-                        + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got "
+                        + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER or PLAIN got "
                         + SASLMechanism;
             }
-            if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())) {
+            if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword()) && SASLMechanism != null
+                    && !"OAUTHBEARER".equals(SASLMechanism)) {
                 return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
+            }
+            if (anyBlank(credentials.SASLTokenProvider()) && SASLMechanism != null && "OAUTHBEARER".equals(SASLMechanism)) {
+                return "Security protocol " + securityProtocol.name + ":  invalid SASL token provider";
             }
             return null;
         }
@@ -85,6 +89,7 @@ class CredentialsValidator {
     private static boolean isInvalidSASLMechanism(final String SASLMechanism) {
         return !(is("SCRAM-SHA-256", SASLMechanism)
                 || is("SCRAM-SHA-512", SASLMechanism)
+                || is("OAUTHBEARER", SASLMechanism)
                 || is("PLAIN", SASLMechanism));
     }
 
