@@ -57,7 +57,12 @@ type KafkaSASLSpec struct {
 	// +optional
 	Password SecretValueFromSource `json:"password,omitempty"`
 
-	// Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256)
+	// Token Provider is the Kubernetes secret containing the OAUTHBEARER
+	// token provider function. Only used if saslType is OAUTHBEARER.
+	// +optional
+	TokenProvider SecretValueFromSource `json:"tokenProvider,omitempty"`
+
+	// Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256 or OAUTHBEARER).
 	// +optional
 	Type SecretValueFromSource `json:"type,omitempty"`
 }

@@ -93,21 +93,32 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 				Name:  "KAFKA_NET_SASL_ENABLE",
 				Value: "true",
 			}, corev1.EnvVar{
-				Name: "KAFKA_NET_SASL_USER",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.SASL.User.SecretKeyRef,
-				},
-			}, corev1.EnvVar{
-				Name: "KAFKA_NET_SASL_PASSWORD",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
-				},
-			}, corev1.EnvVar{
 				Name: "KAFKA_NET_SASL_TYPE",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: kfb.Spec.Net.SASL.Type.SecretKeyRef,
 				},
 			})
+			if kfb.Spec.Net.SASL.User.SecretKeyRef != nil {
+				spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_USER",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.User.SecretKeyRef,
+					},
+				}, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
+					},
+				})
+			}
+			if kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
+				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_TOKEN_PROVIDER",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
+					},
+				})
+			}
 		}
 		if kfb.Spec.Net.TLS.Enable {
 			spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
@@ -143,21 +154,32 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 				Name:  "KAFKA_NET_SASL_ENABLE",
 				Value: "true",
 			}, corev1.EnvVar{
-				Name: "KAFKA_NET_SASL_USER",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.SASL.User.SecretKeyRef,
-				},
-			}, corev1.EnvVar{
-				Name: "KAFKA_NET_SASL_PASSWORD",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
-				},
-			}, corev1.EnvVar{
 				Name: "KAFKA_NET_SASL_TYPE",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: kfb.Spec.Net.SASL.Type.SecretKeyRef,
 				},
 			})
+			if kfb.Spec.Net.SASL.User.SecretKeyRef != nil {
+				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_USER",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.User.SecretKeyRef,
+					},
+				}, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_PASSWORD",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
+					},
+				})
+			}
+			if kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
+				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_TOKEN_PROVIDER",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
+					},
+				})
+			}
 		}
 		if kfb.Spec.Net.TLS.Enable {
 			spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{

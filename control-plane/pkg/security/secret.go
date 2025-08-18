@@ -38,12 +38,13 @@ const (
 	UserKey         = "user.key"
 	UserSkip        = "user.skip" // default: false
 
-	SaslMechanismKey = "sasl.mechanism"
-	SaslUserKey      = "user"
-	SaslPasswordKey  = "password"
-	SaslType         = "sasltype"
-	SaslTypeLegacy   = "saslType" // legacy secrets
-	SaslUsernameKey  = "username" // legacy secrets
+	SaslMechanismKey     = "sasl.mechanism"
+	SaslUserKey          = "user"
+	SaslPasswordKey      = "password"
+	SaslType             = "sasltype"
+	SaslTokenProviderKey = "tokenProvider"
+	SaslTypeLegacy       = "saslType" // legacy secrets
+	SaslUsernameKey      = "username" // legacy secrets
 
 	ProtocolPlaintext     = "PLAINTEXT"
 	ProtocolSASLPlaintext = "SASL_PLAINTEXT"
@@ -53,6 +54,7 @@ const (
 	SaslPlain       = "PLAIN"
 	SaslScramSha256 = "SCRAM-SHA-256"
 	SaslScramSha512 = "SCRAM-SHA-512"
+	SaslOAuth       = "OAUTHBEARER"
 
 	// Legacy Channel config to enable TLS, see https://github.com/knative-extensions/eventing-kafka-broker/issues/2231
 	SSLLegacyEnabled = "tls.enabled"
@@ -104,11 +106,28 @@ func secretData(data map[string][]byte) kafka.ConfigOption {
 func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
-		// Supported mechanism SASL/PLAIN (default if not specified) or SASL/SCRAM.
+		// Supported mechanism SASL/PLAIN (default if not specified), SASL/SCRAM, or SASL/OAUTHBEARER.
 		saslMechanism := SaslPlain
 		givenSASLMechanism, ok := data[SaslMechanismKey]
 		if ok {
 			saslMechanism = string(givenSASLMechanism)
+		}
+
+		if saslMechanism == SaslOAuth {
+			config.Net.SASL.Enable = true
+			config.Net.SASL.Mechanism = sarama.SASLTypeOAuth
+			tokenProvider, ok := data[SaslTokenProviderKey]
+			if !ok || len(tokenProvider) == 0 {
+				return fmt.Errorf("[protocol %s] OAUTHBEARER token provider required (key: %s)", protocol, SaslTokenProviderKey)
+			}
+			tokenProviderStr := string(tokenProvider)
+			switch tokenProviderStr {
+			case "MSKAccessTokenProvider":
+				config.Net.SASL.TokenProvider = MSKAccessTokenProviderGeneratorFunc()
+			default:
+				return fmt.Errorf("[protocol %s] unsupported OAUTHBEARER token provider (key: %s), supported: MSKAccessTokenProvider", protocol, SaslTokenProviderKey)
+			}
+			return nil
 		}
 
 		user, ok := data[SaslUserKey]
