@@ -263,6 +263,8 @@ enum SecretField {
   USER_KEY = 3;
   USER = 4;
   PASSWORD = 5;
+  TYPE = 6;
+  TOKEN_PROVIDER = 7;
 }
 
 message SecretReference {
@@ -338,12 +340,14 @@ message Resource {
     // Secret format:
     //
     //   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-    //   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+    //   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
     //   ca.crt: <CA PEM certificate>
     //   user.crt: <User PEM certificate>
     //   user.key: <User PEM key>
     //   user: <SASL username>
     //   password: <SASL password>
+    //   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+    //   tokenProvider: <OIDC token provider>
     //
     // Validation:
     //   - protocol=PLAINTEXT
