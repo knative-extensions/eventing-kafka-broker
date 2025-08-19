@@ -76,8 +76,8 @@ spec:
             - mountPath: /etc/logging
               name: kafka-config-logging
               readOnly: true
-            - mountPath: /etc/tracing
-              name: config-tracing
+            - mountPath: /etc/observability
+              name: config-observability
               readOnly: true
           ports:
             - containerPort: 9090
@@ -104,16 +104,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.uid
-            - name: METRICS_PATH
-              value: /metrics
-            - name: METRICS_PORT
-              value: "9090"
             - name: METRICS_PUBLISH_QUANTILES
               value: "false"
             - name: METRICS_JVM_ENABLED
               value: "false"
-            - name: CONFIG_TRACING_PATH
-              value: "/etc/tracing"
+            - name: CONFIG_OBSERVABILITY_PATH
+              value: "/etc/observability"
             # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
@@ -169,9 +165,9 @@ spec:
         - name: kafka-config-logging
           configMap:
             name: kafka-config-logging
-        - name: config-tracing
+        - name: config-observability
           configMap:
-            name: config-tracing
+            name: config-observability
       restartPolicy: Always
       dnsConfig:
         options:
