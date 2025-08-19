@@ -17,7 +17,7 @@ package dev.knative.eventing.kafka.broker.receiverloom;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.core.tracing.kafka.ProducerTracer;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.kafka.ProducerTracer;
 import io.opentelemetry.context.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;

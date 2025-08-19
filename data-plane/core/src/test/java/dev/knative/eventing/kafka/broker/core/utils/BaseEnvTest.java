@@ -24,9 +24,8 @@ public class BaseEnvTest {
 
     private static final Function<String, String> provider = s -> switch (s) {
         case "PRODUCER_CONFIG_FILE_PATH" -> "/tmp/config";
+        case "CONFIG_OBSERVABILITY_PATH" -> "/etc/observability";
         case "DATA_PLANE_CONFIG_FILE_PATH" -> "/tmp/config-data";
-        case "METRICS_PORT" -> "9092";
-        case "METRICS_PATH" -> "/path";
         case "METRICS_PUBLISH_QUANTILES" -> "TRUE";
         case "CONFIG_TRACING_PATH" -> "/etc/tracing";
         case "METRICS_JVM_ENABLED" -> "false";
@@ -35,31 +34,10 @@ public class BaseEnvTest {
     };
 
     @Test
-    public void shouldGetMetricsPort() {
-        final var metricsConfigs = new BaseEnv(provider);
-        final var port = metricsConfigs.getMetricsPort();
-        assertThat(port).isEqualTo(9092);
-    }
-
-    @Test
-    public void shouldGetMetricsPath() {
-        final var metricsConfigs = new BaseEnv(provider);
-        final var path = metricsConfigs.getMetricsPath();
-        assertThat(path).isEqualTo("/path");
-    }
-
-    @Test
     public void shouldGetIsPublishQuantiles() {
         final var metricsConfigs = new BaseEnv(provider);
         final var isPublishQuantiles = metricsConfigs.isPublishQuantilesEnabled();
         assertThat(isPublishQuantiles).isEqualTo(true);
-    }
-
-    @Test
-    public void shouldGetConfigTracingPath() {
-        final var metricsConfigs = new BaseEnv(provider);
-        final var configTracingPath = metricsConfigs.getConfigTracingPath();
-        assertThat(configTracingPath).isEqualTo("/etc/tracing");
     }
 
     @Test
@@ -84,5 +62,11 @@ public class BaseEnvTest {
     public void shouldGetHttpServerMetricsDisabled() {
         final var metricsConfigs = new BaseEnv(provider);
         assertThat(metricsConfigs.isMetricsHTTPServerEnabled()).isFalse();
+    }
+
+    @Test
+    public void shouldGetObservabilityConfig() {
+        final var metricsConfigs = new BaseEnv(provider);
+        assertThat(metricsConfigs.getConfigObservabilityPath()).isEqualTo("/etc/observability");
     }
 }
