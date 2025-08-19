@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveKafkaConsumer;
