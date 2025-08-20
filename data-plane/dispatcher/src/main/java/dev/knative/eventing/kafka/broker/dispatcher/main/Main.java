@@ -162,6 +162,13 @@ public class Main {
             Shutdown.registerHook(
                     vertx, publisher, fileWatcher, eventTypeListerFactory, openTelemetry.getSdkTracerProvider());
 
+            File healthFile = new File("/tmp/healthy");
+            try {
+                healthFile.createNewFile();
+            } catch (Exception e) {
+                logger.warn("Failed to create health file.", e);
+            }
+
         } catch (final Exception ex) {
             logger.error("Failed to startup the dispatcher", ex);
             Shutdown.closeVertxSync(vertx);

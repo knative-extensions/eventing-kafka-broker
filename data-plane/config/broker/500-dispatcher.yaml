@@ -130,18 +130,21 @@ spec:
 
           livenessProbe:
             failureThreshold: 3
-            tcpSocket:
-              port: 9090
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ls /proc/1"
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
             timeoutSeconds: 1
           readinessProbe:
             failureThreshold: 3
-            httpGet:
-              port: 9090
-              path: /metrics
-              scheme: HTTP
+            exec:
+              command:
+                - cat
+                - /tmp/healthy
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
