@@ -204,7 +204,7 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 			password := kedav1alpha1.AuthSecretTargetRef{Parameter: "password", Name: secret.Name, Key: security.SaslPasswordKey}
 			secretTargetRefs = append(secretTargetRefs, password)
 
-			typeRef := kedav1alpha1.AuthSecretTargetRef{Parameter: "type", Name: secret.Name, Key: security.SaslTypeKey}
+			typeRef := kedav1alpha1.AuthSecretTargetRef{Parameter: "type", Name: secret.Name, Key: security.SaslType}
 			secretTargetRefs = append(secretTargetRefs, typeRef)
 
 			tokenProvider := kedav1alpha1.AuthSecretTargetRef{Parameter: "tokenProvider", Name: secret.Name, Key: security.SaslTokenProviderKey}
