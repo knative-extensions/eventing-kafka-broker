@@ -21,9 +21,9 @@ spec:
   dnsNames:
     - my-cluster-kafka-bootstrap.kafka
     - my-cluster-kafka-bootstrap.kafka.svc
-    - my-cluster-kafka-0.my-cluster-kafka-brokers.kafka.svc
-    - my-cluster-kafka-1.my-cluster-kafka-brokers.kafka.svc
-    - my-cluster-kafka-2.my-cluster-kafka-brokers.kafka.svc
+    - my-cluster-broker-0.my-cluster-kafka-brokers.kafka.svc
+    - my-cluster-broker-1.my-cluster-kafka-brokers.kafka.svc
+    - my-cluster-broker-2.my-cluster-kafka-brokers.kafka.svc
   issuerRef:
     name: knative-eventing-ca-issuer
     kind: ClusterIssuer
