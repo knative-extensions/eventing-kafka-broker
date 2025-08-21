@@ -14,7 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Update release labels
-export TAG=${TAG:-$(git rev-parse HEAD)}
-echo "Updating release labels to app.kubernetes.io/version: \"${TAG}\""
-export LABEL_YAML_CMD=(sed -e "s|app.kubernetes.io/version: devel|app.kubernetes.io/version: \"${TAG}\"|")
+GIT_HASH="$(git rev-parse HEAD)"
+
+function LABEL_YAML_CMD() {
+  local version
+  if [[ -n "${TAG:-}" ]]; then
+    version="${TAG#v}"
+  else
+    version="$GIT_HASH"
+    export TAG="$GIT_HASH"
+  fi
+
+  sed -e "s|app.kubernetes.io/version: devel|app.kubernetes.io/version: \"${version}\"|"
+}
