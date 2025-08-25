@@ -18,6 +18,7 @@ readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 export KO_FLAGS="${KO_FLAGS:-}"
+export TAG="$(git rev-parse HEAD)"
 
 repo_root_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..
 
