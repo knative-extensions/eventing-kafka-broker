@@ -409,7 +409,7 @@ func (r *NamespacedReconciler) deploymentsFromSystemNamespace(broker *eventing.B
 func (r *NamespacedReconciler) configMapsFromSystemNamespace(broker *eventing.Broker) ([]unstructured.Unstructured, error) {
 	configMaps := []string{
 		"config-kafka-broker-data-plane",
-		"config-tracing",
+		"config-observability",
 		"config-features",
 		"kafka-config-logging",
 	}

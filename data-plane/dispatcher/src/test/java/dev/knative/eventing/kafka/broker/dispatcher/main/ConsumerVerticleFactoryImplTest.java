@@ -30,7 +30,7 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolic
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.MockReactiveConsumerFactory;

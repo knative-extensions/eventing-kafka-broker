@@ -22,9 +22,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.SERVICE_UNAVAILABLE
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.TracingProvider;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.RequestContext;
@@ -50,20 +50,16 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
     static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
 
     static final int MAPPER_FAILED = BAD_REQUEST.code();
-    static final Tags MAPPER_FAILED_COMMON_TAGS = Tags.of(
-            Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "4xx"),
-            Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(MAPPER_FAILED)),
-            UNKNOWN_EVENT_TYPE_TAG);
+    static final Tags MAPPER_FAILED_COMMON_TAGS =
+            Tags.of(Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(MAPPER_FAILED)), UNKNOWN_EVENT_TYPE_TAG);
 
     static final int RECORD_PRODUCED = ACCEPTED.code();
-    static final Tags RECORD_PRODUCED_COMMON_TAGS = Tags.of(
-            Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(RECORD_PRODUCED)),
-            Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "2xx"));
+    static final Tags RECORD_PRODUCED_COMMON_TAGS =
+            Tags.of(Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(RECORD_PRODUCED)));
 
     static final int FAILED_TO_PRODUCE = SERVICE_UNAVAILABLE.code();
-    static final Tags FAILED_TO_PRODUCE_COMMON_TAGS = Tags.of(
-            Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(FAILED_TO_PRODUCE)),
-            Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx"));
+    static final Tags FAILED_TO_PRODUCE_COMMON_TAGS =
+            Tags.of(Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(FAILED_TO_PRODUCE)));
 
     private static final Logger logger = LoggerFactory.getLogger(IngressRequestHandlerImpl.class);
 
@@ -86,7 +82,6 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
 
             final var tags = MAPPER_FAILED_COMMON_TAGS.and(resourceTags);
             Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
-            Metrics.eventCount(tags).register(meterRegistry).increment();
 
             logger.warn(
                     "Failed to get cloudevent from request {}",
@@ -104,7 +99,7 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                         "Received event {} {}",
                         keyValue("event", record.value()),
                         keyValue(
-                                TracingConfig.TRACE_ID_KEY,
+                                TracingProvider.TRACE_ID_KEY,
                                 span.getSpanContext().getTraceId()));
             } else {
                 logger.debug("Received event {}", keyValue("event", record.value()));
@@ -127,7 +122,6 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                     final var tags =
                             RECORD_PRODUCED_COMMON_TAGS.and(resourceTags).and(eventTypeTag);
                     Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
-                    Metrics.eventCount(tags).register(meterRegistry).increment();
                 })
                 .onFailure(cause -> {
                     requestContext
@@ -139,7 +133,6 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
                     final var tags =
                             FAILED_TO_PRODUCE_COMMON_TAGS.and(resourceTags).and(eventTypeTag);
                     Metrics.eventDispatchLatency(tags).register(meterRegistry).record(requestContext.performLatency());
-                    Metrics.eventCount(tags).register(meterRegistry).increment();
 
                     logger.warn(
                             "Failed to produce record {}",

@@ -22,16 +22,13 @@ package e2e_new_channel
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"testing"
 
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"knative.dev/eventing/test/rekt/resources/channel_impl"
-
 	_ "knative.dev/pkg/system/testing"
-	"knative.dev/pkg/test/zipkin"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 
@@ -53,10 +50,6 @@ func TestMain(m *testing.M) {
 
 	// Run the tests.
 	os.Exit(func() int {
-		// Any tests may SetupZipkinTracing, it will only actually be done once. This should be the ONLY
-		// place that cleans it up. If an individual test calls this instead, then it will break other
-		// tests that need the tracing in place.
-		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
 		ctx, _ := global.Environment()
 		// make sure that this context only cancels after the tests finish running
 		ctx = context.WithoutCancel(ctx)

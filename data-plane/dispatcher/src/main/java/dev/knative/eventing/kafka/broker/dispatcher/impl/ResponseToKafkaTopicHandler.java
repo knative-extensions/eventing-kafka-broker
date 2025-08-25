@@ -19,7 +19,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;

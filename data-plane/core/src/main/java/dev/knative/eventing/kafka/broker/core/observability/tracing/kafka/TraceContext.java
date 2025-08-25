@@ -19,7 +19,7 @@
  * The original source code can be found here:
  * https://github.com/vert-x3/vertx-kafka-client/blob/a0e349fca33d3bb4f003ac53e6e0def42a76e8ab/src/main/java/io/vertx/kafka/client/common/tracing/TraceContext.java
  */
-package dev.knative.eventing.kafka.broker.core.tracing.kafka;
+package dev.knative.eventing.kafka.broker.core.observability.tracing.kafka;
 
 /**
  * TraceContext holds some context for tracing during a message writing / reading process

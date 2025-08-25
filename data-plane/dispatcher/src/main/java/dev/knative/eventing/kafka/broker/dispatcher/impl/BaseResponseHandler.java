@@ -20,7 +20,7 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;

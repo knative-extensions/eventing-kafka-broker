@@ -23,7 +23,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.InvalidCloudEventInterceptor;
@@ -117,11 +117,9 @@ public class ConsumerVerticleContext {
         }
 
         this.tags = Tags.of(
-                // Resource tags
-                Tag.of(Metrics.Tags.RESOURCE_NAME, resource.getReference().getName()),
-                Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, resource.getReference().getNamespace()),
-                // Egress tags
-                Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName()));
+                        // Egress tags
+                        Tag.of(Metrics.Tags.CONSUMER_NAME, egress.getReference().getName()))
+                .and(Metrics.resourceRefTags(egress.getReference()));
 
         return this;
     }

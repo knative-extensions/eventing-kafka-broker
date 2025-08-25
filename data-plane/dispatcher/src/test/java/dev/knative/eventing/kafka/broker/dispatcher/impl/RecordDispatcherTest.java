@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSenderMock;
@@ -111,7 +111,6 @@ public class RecordDispatcherTest {
         verify(receiver, never()).successfullySentToDeadLetterSink(any());
         verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
 
-        assertNoEventCount();
         assertNoEventDispatchLatency();
         assertEventProcessingLatency();
         assertNoDiscardedEventCount();
@@ -151,7 +150,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -191,7 +189,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -231,7 +228,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -290,7 +286,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -355,7 +350,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -415,7 +409,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -466,7 +459,6 @@ public class RecordDispatcherTest {
 
         assertEventDispatchLatency();
         assertEventProcessingLatency();
-        assertEventCount();
         assertNoDiscardedEventCount();
     }
 
@@ -528,7 +520,6 @@ public class RecordDispatcherTest {
         verify(receiver, never()).failedToSendToDeadLetterSink(any(), any());
 
         assertDiscardedEventCount();
-        assertNoEventCount();
         assertNoEventDispatchLatency();
     }
 
@@ -544,27 +535,6 @@ public class RecordDispatcherTest {
         final var m = mock(RecordDispatcherListener.class);
         when(m.close()).thenReturn(Future.succeededFuture());
         return m;
-    }
-
-    private void assertNoEventCount() {
-        var counterNotFound = false;
-        try {
-            assertThat(registry.get(Metrics.EVENTS_COUNT).counters().stream()
-                            .reduce((a, b) -> b)
-                            .isEmpty())
-                    .isTrue();
-        } catch (MeterNotFoundException ignored) {
-            counterNotFound = true;
-        }
-        assertThat(counterNotFound).isTrue();
-    }
-
-    private void assertEventCount() {
-        assertThat(registry.get(Metrics.EVENTS_COUNT).counters().stream()
-                        .reduce((a, b) -> b)
-                        .get()
-                        .count())
-                .isGreaterThan(0);
     }
 
     private void assertNoEventDispatchLatency() {

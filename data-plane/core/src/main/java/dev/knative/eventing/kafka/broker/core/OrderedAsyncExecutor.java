@@ -16,7 +16,7 @@
 package dev.knative.eventing.kafka.broker.core;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -56,10 +56,10 @@ public class OrderedAsyncExecutor {
 
         if (meterRegistry != null && egress != null && egress.getFeatureFlags().getEnableOrderedExecutorMetrics()) {
             final var tags = Tags.of(
-                    Metrics.Tags.PARTITION_ID, topicPartition.partition() + "",
-                    Metrics.Tags.TOPIC_ID, topicPartition.topic(),
-                    Metrics.Tags.CONSUMER_NAME, egress.getReference().getName(),
-                    Metrics.Tags.RESOURCE_NAMESPACE, egress.getReference().getNamespace());
+                            Metrics.Tags.PARTITION_ID, topicPartition.partition() + "",
+                            Metrics.Tags.DESTINATION_NAME, topicPartition.topic(),
+                            Metrics.Tags.CONSUMER_NAME, egress.getReference().getName())
+                    .and(Metrics.resourceRefTags(egress.getReference()));
             this.executorLatency = Metrics.executorQueueLatency(tags).register(meterRegistry);
             this.executorQueueLength =
                     Metrics.queueLength(tags, this.queue::size).register(meterRegistry);

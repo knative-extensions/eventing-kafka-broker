@@ -31,7 +31,6 @@ import (
 	pkgTest "knative.dev/pkg/test"
 
 	_ "knative.dev/pkg/system/testing"
-	"knative.dev/pkg/test/zipkin"
 	"knative.dev/reconciler-test/pkg/environment"
 
 	"knative.dev/eventing-kafka-broker/test/pkg/logging"
@@ -69,7 +68,6 @@ func TestMain(m *testing.M) {
 
 	// Run the tests.
 	os.Exit(func() int {
-		defer zipkin.CleanupZipkinTracingSetup(log.Printf)
 		defer cancel()
 		return m.Run()
 	}())
