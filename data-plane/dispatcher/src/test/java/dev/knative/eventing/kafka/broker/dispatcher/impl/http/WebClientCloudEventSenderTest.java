@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.NamespacedName;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.dispatcher.main.FakeConsumerVerticleContext;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.micrometer.core.instrument.Tags;

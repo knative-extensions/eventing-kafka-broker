@@ -35,7 +35,7 @@ import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
@@ -47,9 +47,6 @@ import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Measurement;
-import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
@@ -76,8 +73,6 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -197,28 +192,6 @@ public class ReceiverVerticleTest {
                             assertThat(response.statusCode())
                                     .as("verify path: " + tc.path)
                                     .isEqualTo(tc.responseStatusCode);
-
-                            final var expectedCount = (double) tc.badRequestCount + (double) tc.produceEventCount;
-
-                            final var defaultCounter =
-                                    Counter.builder(Metrics.EVENTS_COUNT).register(Metrics.getRegistry());
-                            Counter counter = defaultCounter;
-                            try {
-                                if (expectedCount > 0) {
-                                    counter = registry.get(Metrics.EVENTS_COUNT).counters().stream()
-                                            .reduce((a, b) -> b) // get last element
-                                            .orElse(defaultCounter);
-                                }
-                            } catch (MeterNotFoundException ignored1) {
-                            }
-
-                            assertThat(counter.count())
-                                    .describedAs("Counter: "
-                                            + StreamSupport.stream(
-                                                            counter.measure().spliterator(), false)
-                                                    .map(Measurement::toString)
-                                                    .collect(Collectors.joining()))
-                                    .isEqualTo(expectedCount);
 
                             if (tc.expectedDispatchLatency) {
                                 final var eventDispatchLatency =

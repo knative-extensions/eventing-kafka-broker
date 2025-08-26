@@ -23,9 +23,10 @@ import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.TracingProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigListener;
@@ -71,8 +72,9 @@ public class Main {
             throws IOException, ExecutionException, InterruptedException {
         ReceiverEnv env = new ReceiverEnv(System::getenv);
 
-        OpenTelemetrySdk openTelemetry =
-                TracingConfig.fromDir(env.getConfigTracingPath()).setup();
+        ObservabilityConfig observabilityConfig = ObservabilityConfig.fromDir(env.getConfigObservabilityPath());
+
+        OpenTelemetrySdk openTelemetry = new TracingProvider(observabilityConfig.getTracingConfig()).setup();
 
         // Read producer properties and override some defaults
         Properties producerConfigs = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
@@ -85,7 +87,7 @@ public class Main {
 
         // Start Vertx
         Vertx vertx = Vertx.vertx(new VertxOptions()
-                .setMetricsOptions(Metrics.getOptions(env))
+                .setMetricsOptions(Metrics.getOptions(env, observabilityConfig))
                 .setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
         // Register Contract message codec

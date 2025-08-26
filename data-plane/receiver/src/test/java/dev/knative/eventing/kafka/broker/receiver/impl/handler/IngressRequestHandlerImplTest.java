@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventType;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.MockReactiveKafkaProducer;
