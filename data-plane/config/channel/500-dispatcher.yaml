@@ -132,7 +132,7 @@ spec:
             failureThreshold: 3
             exec:
               command:
-                - /bin/bash
+                - /bin/sh
                 - -c
                 - "ls /proc/1"
             initialDelaySeconds: 10
