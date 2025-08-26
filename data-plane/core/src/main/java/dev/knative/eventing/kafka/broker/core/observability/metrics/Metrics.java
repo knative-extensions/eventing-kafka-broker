@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.metrics;
+package dev.knative.eventing.kafka.broker.core.observability.metrics;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
+import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.micrometer.core.instrument.search.Search;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import io.micrometer.registry.otlp.OtlpConfig;
+import io.micrometer.registry.otlp.OtlpMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerOptions;
@@ -102,63 +101,67 @@ public class Metrics {
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
-     * @see Metrics#eventCount(io.micrometer.core.instrument.Tags)
-     */
-    public static final String EVENTS_COUNT = "event_count";
-
-    /**
-     * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
      */
-    public static final String EVENT_DISPATCH_LATENCY = "event_dispatch_latencies";
+    public static final String EVENT_DISPATCH_LATENCY = "kn.eventing.dispatch.latency";
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#eventDispatchInFlightCount(io.micrometer.core.instrument.Tags, Supplier)
      */
-    public static final String EVENT_DISPATCH_IN_FLIGHT_REQUESTS_LATENCY = "event_dispatch_in_flight_count";
+    public static final String EVENT_DISPATCH_IN_FLIGHT_REQUESTS = "kn.eventing.dispatch.in_flight_requests";
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
      */
-    public static final String EVENT_PROCESSING_LATENCY = "event_processing_latencies";
+    public static final String EVENT_PROCESSING_LATENCY = "kn.eventing.process.latency";
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#discardedEventCount(io.micrometer.core.instrument.Tags)
      */
-    public static final String DISCARDED_EVENTS_COUNT = "discarded_invalid_event_count";
+    public static final String DISCARDED_EVENTS_COUNT = "kn.eventing.kafka.discarded_events";
+
+    /**
+     * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
+     * @see Metrics#skippedOffsetCount(io.micrometer.core.instrument.Tags)
+     */
+    public static final String SKIPPED_OFFSET_COUNT = "kn.eventing.kafka.skipped_offsets";
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#executorQueueLatency(io.micrometer.core.instrument.Tags)
      */
-    public static final String EXECUTOR_QUEUE_LATENCY = "executor_queue_latencies";
+    public static final String EXECUTOR_QUEUE_LATENCY = "kn.eventing.kafka.executor_queue.latency";
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      * @see Metrics#queueLength(io.micrometer.core.instrument.Tags, Supplier)
      */
-    public static final String QUEUE_LENGTH = "queue_length";
+    public static final String EXECUTOR_QUEUE_LENGTH = "kn.eventing.kafka.executor_queue.length";
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
      */
     public static class Tags {
-        public static final String RESPONSE_CODE = "response_code";
-        public static final String RESPONSE_CODE_CLASS = "response_code_class";
-        public static final String EVENT_TYPE = "event_type";
+        public static final String RESPONSE_CODE = "http.response.status_code";
+        public static final String EVENT_TYPE = "cloudevents.type";
 
-        public static final String RESOURCE_NAME = "name";
-        public static final String RESOURCE_NAMESPACE = "namespace_name";
-        public static final String CONSUMER_NAME = "consumer_name";
-        public static final String SENDER_CONTEXT = "sender_context";
-        public static final String PARTITION_ID = "partition";
-        public static final String TOPIC_ID = "topic";
+        public static final String RESOURCE_NAME_TEMPLATE = "kn.eventing.%s.name";
+        public static final String RESOURCE_NAMESPACE_TEMPLATE = "kn.eventing.%s.namespace";
+        public static final String CONSUMER_NAME = "messaging.consumer.group.name";
+        public static final String PARTITION_ID = "messaging.destination.partition.id";
+        public static final String DESTINATION_NAME = "messaging.destination.name";
+        public static final String DESTINATION_TEMPLATE = "messaging.destination.template";
+        public static final String OPERATION_TYPE = "messaging.operation.type";
+        public static final String OPERATION_NAME = "messaging.operation.name";
 
-        public static io.micrometer.core.instrument.Tags senderContext(final String value) {
-            return io.micrometer.core.instrument.Tags.of(SENDER_CONTEXT, value);
+        public static io.micrometer.core.instrument.Tags resourceTags(
+                final String resourceKind, final String resourceName, final String resourceNamespace) {
+            return io.micrometer.core.instrument.Tags.of(
+                    Tag.of(String.format(RESOURCE_NAME_TEMPLATE, resourceKind), resourceName),
+                    Tag.of(String.format(RESOURCE_NAMESPACE_TEMPLATE, resourceKind), resourceNamespace));
         }
     }
 
@@ -178,8 +181,7 @@ public class Metrics {
      * @param metricsConfigs Metrics configurations.
      * @return Metrics options.
      */
-    public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
-        final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    public static MetricsOptions getOptions(final BaseEnv metricsConfigs, ObservabilityConfig observabilityConfig) {
         final var options = new MicrometerMetricsOptions()
                 .setEnabled(true)
                 .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
@@ -192,18 +194,25 @@ public class Metrics {
                 .setMetricsNaming(MetricsNaming.v4Names())
                 .setRegistryName(METRICS_REGISTRY_NAME)
                 .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
-                .setMicrometerRegistry(registry)
-                .setPrometheusOptions(new VertxPrometheusOptions()
-                        .setEmbeddedServerOptions(new HttpServerOptions()
-                                .setPort(metricsConfigs.getMetricsPort())
-                                .setTracingPolicy(TracingPolicy.IGNORE)
-                                .setSsl(pemKeyCertOptions != null)
-                                .setPemKeyCertOptions(pemKeyCertOptions)
-                                .setHost(host))
-                        .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
-                        .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
-                        .setStartEmbeddedServer(true)
-                        .setEnabled(true));
+                .setMicrometerRegistry(getRegistryFromConfig(
+                        observabilityConfig)); // TODO: switch to using the MicroMeterFactory when we switch to
+        // vertx 5.x.y:
+        // https://vertx.io/docs/guides/vertx-5-migration-guide/#_remove_setting_a_registry_on_options
+
+        if (observabilityConfig.getMetricsConfig().protocol() == ObservabilityConfig.MetricsProtocol.PROMETHEUS) {
+            options.setPrometheusOptions(new VertxPrometheusOptions()
+                    .setEmbeddedServerOptions(new HttpServerOptions()
+                            .setPort(observabilityConfig.getMetricsConfig().getMetricsPort())
+                            .setTracingPolicy(TracingPolicy.IGNORE)
+                            .setSsl(pemKeyCertOptions != null)
+                            .setPemKeyCertOptions(pemKeyCertOptions)
+                            .setHost(host))
+                    .setEmbeddedServerEndpoint(
+                            observabilityConfig.getMetricsConfig().getMetricsPath())
+                    .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
+                    .setStartEmbeddedServer(true)
+                    .setEnabled(true));
+        }
 
         if (!metricsConfigs.isMetricsHTTPClientEnabled()) {
             options.addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT);
@@ -215,6 +224,34 @@ public class Metrics {
         }
 
         return options;
+    }
+
+    private static MeterRegistry getRegistryFromConfig(final ObservabilityConfig observabilityConfig) {
+        return switch (observabilityConfig.getMetricsConfig().protocol()) {
+            case NONE -> new SimpleMeterRegistry();
+            case OTLP_HTTP -> {
+                OtlpConfig otlpConfig = new OtlpConfig() {
+                    @Override
+                    public String get(String key) {
+                        return switch (key) {
+                            case "url" -> observabilityConfig.getMetricsConfig().endpoint();
+                            case "step" -> observabilityConfig
+                                    .getMetricsConfig()
+                                    .exportInterval();
+                            default -> "";
+                        };
+                    }
+                };
+
+                yield new OtlpMeterRegistry(otlpConfig, Clock.SYSTEM);
+            }
+            case OTLP_GRPC -> {
+                logger.warn(
+                        "Grpc format is not supported for metrics-protocol, falling back to noop. Please use http/protobuf instead. ");
+                yield new SimpleMeterRegistry();
+            }
+            case PROMETHEUS -> new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        };
     }
 
     /**
@@ -304,13 +341,6 @@ public class Metrics {
         return host;
     }
 
-    public static Counter.Builder eventCount(final io.micrometer.core.instrument.Tags tags) {
-        return Counter.builder(EVENTS_COUNT)
-                .description("Number of events received")
-                .tags(tags)
-                .baseUnit(Metrics.Units.DIMENSIONLESS);
-    }
-
     public static Collection<Meter> searchResourceMeters(
             final MeterRegistry registry, final DataPlaneContract.Reference ref) {
         return Search.in(registry).tags(resourceRefTags(ref)).meters();
@@ -331,7 +361,7 @@ public class Metrics {
 
     public static Gauge.Builder<Supplier<Number>> eventDispatchInFlightCount(
             final io.micrometer.core.instrument.Tags tags, final Supplier<Number> supplier) {
-        return Gauge.builder(EVENT_DISPATCH_IN_FLIGHT_REQUESTS_LATENCY, supplier)
+        return Gauge.builder(EVENT_DISPATCH_IN_FLIGHT_REQUESTS, supplier)
                 .description("Number of events currently dispatched to a destination waiting to be processed")
                 .tags(tags)
                 .baseUnit(Units.DIMENSIONLESS);
@@ -349,7 +379,14 @@ public class Metrics {
         return Counter.builder(DISCARDED_EVENTS_COUNT)
                 .description("Number of invalid events discarded")
                 .tags(tags)
-                .baseUnit(Metrics.Units.DIMENSIONLESS);
+                .baseUnit(Units.DIMENSIONLESS);
+    }
+
+    public static Counter.Builder skippedOffsetCount(final io.micrometer.core.instrument.Tags tags) {
+        return Counter.builder(SKIPPED_OFFSET_COUNT)
+                .description("Number of skipped offsets")
+                .tags(tags)
+                .baseUnit(Units.DIMENSIONLESS);
     }
 
     public static DistributionSummary.Builder executorQueueLatency(final io.micrometer.core.instrument.Tags tags) {
@@ -362,21 +399,18 @@ public class Metrics {
 
     public static Gauge.Builder<Supplier<Number>> queueLength(
             final io.micrometer.core.instrument.Tags tags, final Supplier<Number> queueSize) {
-        return Gauge.builder(QUEUE_LENGTH, queueSize)
+        return Gauge.builder(EXECUTOR_QUEUE_LENGTH, queueSize)
                 .description("Number of events in executor queue per partition")
                 .tags(tags)
-                .baseUnit(Metrics.Units.DIMENSIONLESS);
+                .baseUnit(Units.DIMENSIONLESS);
     }
 
     public static io.micrometer.core.instrument.Tags resourceRefTags(final DataPlaneContract.Reference ref) {
         return io.micrometer.core.instrument.Tags.of(
-                Tag.of(Metrics.Tags.RESOURCE_NAME, ref.getName()),
-                Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
+                Tags.resourceTags(ref.getKind(), ref.getName(), ref.getNamespace()));
     }
 
     public static io.micrometer.core.instrument.Tags egressRefTags(final DataPlaneContract.Reference ref) {
-        return io.micrometer.core.instrument.Tags.of(
-                Tag.of(Metrics.Tags.CONSUMER_NAME, ref.getName()),
-                Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, ref.getNamespace()));
+        return resourceRefTags(ref).and(Tag.of(Tags.CONSUMER_NAME, ref.getName()));
     }
 }

@@ -29,7 +29,7 @@ class ReceiverEnvTest {
     private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
     private static final String DATA_PLANE_CONFIG_FILE_PATH = "/etc/brokers";
     private static final String HTTPSERVER_CONFIG_FILE_PATH = "/etc/http-server-config";
-    private static final String TRACING_CONFIG_PATH = "/etc/tracing";
+    private static final String OBSERVABILITY_CONFIG_PATH = "/etc/observability";
     private static final String METRICS_JVM_ENABLED = "true";
     public static final int WAIT_STARTUP_SECONDS = 8;
 
@@ -44,9 +44,7 @@ class ReceiverEnvTest {
             case BaseEnv.PRODUCER_CONFIG_FILE_PATH -> PRODUCER_CONFIG_PATH;
             case BaseEnv.DATA_PLANE_CONFIG_FILE_PATH -> DATA_PLANE_CONFIG_FILE_PATH;
             case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
-            case BaseEnv.METRICS_PORT -> "9092";
-            case BaseEnv.METRICS_PATH -> "/path";
-            case BaseEnv.CONFIG_TRACING_PATH -> TRACING_CONFIG_PATH;
+            case BaseEnv.CONFIG_OBSERVABILITY_PATH -> OBSERVABILITY_CONFIG_PATH;
             case BaseEnv.METRICS_JVM_ENABLED -> METRICS_JVM_ENABLED;
             case BaseEnv.WAIT_STARTUP_SECONDS -> Integer.valueOf(WAIT_STARTUP_SECONDS)
                     .toString();
@@ -60,7 +58,7 @@ class ReceiverEnvTest {
         assertThat(env.getProducerConfigFilePath()).isEqualTo(PRODUCER_CONFIG_PATH);
         assertThat(env.getDataPlaneConfigFilePath()).isEqualTo(DATA_PLANE_CONFIG_FILE_PATH);
         assertThat(env.getHttpServerConfigFilePath()).isEqualTo(HTTPSERVER_CONFIG_FILE_PATH);
-        assertThat(env.getConfigTracingPath()).isEqualTo(TRACING_CONFIG_PATH);
+        assertThat(env.getConfigObservabilityPath()).isEqualTo(OBSERVABILITY_CONFIG_PATH);
         assertThat(env.isMetricsJvmEnabled()).isEqualTo(Boolean.valueOf(METRICS_JVM_ENABLED));
         assertThat(env.getWaitStartupSeconds()).isEqualTo(WAIT_STARTUP_SECONDS);
 

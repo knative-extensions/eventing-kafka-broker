@@ -18,6 +18,8 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
@@ -42,7 +44,11 @@ public class MetricsTest {
 
     @Test
     public void get() {
-        final var metricsOptions = Metrics.getOptions(new BaseEnv(s -> "1"));
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.NONE, "", ""),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
 
@@ -63,45 +69,45 @@ public class MetricsTest {
 
         final var registry = Metrics.getRegistry();
 
-        Metrics.eventCount(Tags.of(
-                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")))
-                .register(registry)
-                .increment();
-
-        Metrics.eventDispatchLatency(Tags.of(
-                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-                        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")))
+        Metrics.eventDispatchLatency(
+                        Tags.of(Tag.of(Metrics.Tags.EVENT_TYPE, "type"), Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"))
+                                .and(Metrics.resourceRefTags(DataPlaneContract.Reference.newBuilder()
+                                        .setKind("kind")
+                                        .setName("cname")
+                                        .setNamespace("namespace")
+                                        .build())))
                 .register(registry)
                 .record(10);
 
-        Metrics.eventProcessingLatency(Tags.of(
-                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-                        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "namespace")))
+        Metrics.eventProcessingLatency(
+                        Tags.of(Tag.of(Metrics.Tags.EVENT_TYPE, "type"), Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"))
+                                .and(Metrics.resourceRefTags(DataPlaneContract.Reference.newBuilder()
+                                        .setKind("kind")
+                                        .setName("cname")
+                                        .setNamespace("namespace")
+                                        .build())))
                 .register(registry)
                 .record(10);
 
-        Metrics.eventDispatchLatency(Tags.of(
-                        Tag.of(Metrics.Tags.EVENT_TYPE, "type"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAME, "name"),
-                        Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"),
-                        Tag.of(Metrics.Tags.RESOURCE_NAMESPACE, "other-namespace")))
+        Metrics.eventDispatchLatency(
+                        Tags.of(Tag.of(Metrics.Tags.EVENT_TYPE, "type"), Tag.of(Metrics.Tags.CONSUMER_NAME, "cname"))
+                                .and(Metrics.resourceRefTags(DataPlaneContract.Reference.newBuilder()
+                                        .setKind("kind")
+                                        .setName("cname")
+                                        .setNamespace("namespace")
+                                        .build())))
                 .register(registry)
                 .record(10);
 
-        final var expectedResourceMetersCount = 3;
+        final var expectedResourceMetersCount = 2;
         final var expectedEgressMetersCount = 2;
 
         final var resourceMeters = Metrics.searchResourceMeters(
                 registry,
                 DataPlaneContract.Reference.newBuilder()
-                        .setName("name")
+                        .setName("cname")
                         .setNamespace("namespace")
+                        .setKind("kind")
                         .build());
 
         final var egressMeters = Metrics.searchEgressMeters(
@@ -109,15 +115,12 @@ public class MetricsTest {
                 DataPlaneContract.Reference.newBuilder()
                         .setName("cname")
                         .setNamespace("namespace")
+                        .setKind("kind")
                         .build());
 
         Assertions.assertThat(resourceMeters).hasSize(expectedResourceMetersCount);
         Assertions.assertThat(egressMeters).hasSize(expectedEgressMetersCount);
 
-        Assertions.assertThat(resourceMeters.stream()
-                        .filter(m -> m.getId().getName().equals(Metrics.EVENTS_COUNT))
-                        .collect(Collectors.toList()))
-                .hasSize(1);
         Assertions.assertThat(resourceMeters.stream()
                         .filter(m -> m.getId().getName().equals(Metrics.EVENT_DISPATCH_LATENCY))
                         .collect(Collectors.toList()))
