@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.core.tracing;
+package dev.knative.eventing.kafka.broker.core.observability.tracing;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 

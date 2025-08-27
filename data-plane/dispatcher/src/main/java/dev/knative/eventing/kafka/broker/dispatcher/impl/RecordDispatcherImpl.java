@@ -19,8 +19,8 @@ import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
-import dev.knative.eventing.kafka.broker.core.tracing.kafka.ConsumerTracer;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.kafka.ConsumerTracer;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher;
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
@@ -64,10 +64,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
     private static final CloudEventDeserializer cloudEventDeserializer = new CloudEventDeserializer();
 
-    // When we don't have an HTTP response, due to other errors for networking, etc,
-    // we only add the code class tag in the "error" class (5xx).
-    private static final Tag NO_RESPONSE_CODE_CLASS_TAG = Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, "5xx");
-
     // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
     private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
 
@@ -85,8 +81,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private final ConsumerTracer consumerTracer;
     private final MeterRegistry meterRegistry;
     private final ConsumerVerticleContext consumerVerticleContext;
-
-    private final Tags noResponseResourceTags;
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicInteger inFlightEvents = new AtomicInteger(0);
@@ -127,8 +121,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                 subscriberSender, deadLetterSinkSender, recordDispatcherListener, responseHandler);
         this.consumerTracer = consumerTracer;
         this.meterRegistry = meterRegistry;
-
-        this.noResponseResourceTags = this.consumerVerticleContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
     }
 
     /**
@@ -252,7 +244,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             final HttpResponse<?> response, final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
         logDebug("Successfully sent event to subscriber", recordContext.getRecord());
 
-        incrementEventCount(response, recordContext);
         recordDispatchLatency(response, recordContext);
 
         recordDispatcherListener.successfullySentToSubscriber(recordContext.getRecord());
@@ -263,7 +254,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             final Throwable failure, final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
 
         var response = getResponse(failure);
-        incrementEventCount(response, recordContext);
         recordDispatchLatency(response, recordContext);
 
         if (response == null && failure instanceof ResponseFailureException) {
@@ -377,15 +367,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                         .map(v -> res));
     }
 
-    private void incrementEventCount(
-            @Nullable final HttpResponse<?> response, final ConsumerRecordContext recordContext) {
-        if (meterRegistry != null) {
-            Metrics.eventCount(getTags(response, recordContext))
-                    .register(meterRegistry)
-                    .increment();
-        }
-    }
-
     private void incrementDiscardedRecord(final ConsumerRecordContext recordContext) {
         if (meterRegistry != null) {
             Metrics.discardedEventCount(getTags(recordContext))
@@ -418,13 +399,12 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private Tags getTags(HttpResponse<?> response, ConsumerRecordContext recordContext) {
         Tags tags;
         if (response == null) {
-            tags = this.noResponseResourceTags.and(Tag.of(
-                    Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType()));
+            tags = Tags.of(
+                    Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType());
         } else {
             tags = this.consumerVerticleContext
                     .getTags()
                     .and(
-                            Tag.of(Metrics.Tags.RESPONSE_CODE_CLASS, response.statusCode() / 100 + "xx"),
                             Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())),
                             Tag.of(
                                     Metrics.Tags.EVENT_TYPE,

@@ -98,14 +98,18 @@
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-sdk</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-exporter-zipkin</artifactId>
-    </dependency>
+      <dependency>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-exporter-otlp</artifactId>
+      </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-logging</artifactId>
     </dependency>
+      <dependency>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
+      </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-extension-trace-propagators</artifactId>
@@ -150,6 +154,10 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-micrometer-metrics</artifactId>
     </dependency>
+      <dependency>
+          <groupId>io.micrometer</groupId>
+          <artifactId>micrometer-registry-otlp</artifactId>
+      </dependency>
 
     <dependency>
       <groupId>io.vertx</groupId>
@@ -183,6 +191,10 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus-simpleclient</artifactId>
     </dependency>
+      <dependency>
+          <groupId>io.micrometer</groupId>
+          <artifactId>micrometer-registry-prometheus</artifactId>
+      </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
