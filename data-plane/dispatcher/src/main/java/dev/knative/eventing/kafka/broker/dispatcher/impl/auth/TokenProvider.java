@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.authentication.TokenRequestBuilder;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.vertx.VertxHttpClientFactory;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +46,7 @@ public class TokenProvider {
         this.vertx = vertx;
         this.kubernetesClient = new KubernetesClientBuilder()
                 .withConfig(new ConfigBuilder().build())
+                .withHttpClientFactory(new VertxHttpClientFactory(vertx))
                 .build();
         this.tokenCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(CACHE_EXPIRATION_TIME_SECONDS, TimeUnit.SECONDS)
