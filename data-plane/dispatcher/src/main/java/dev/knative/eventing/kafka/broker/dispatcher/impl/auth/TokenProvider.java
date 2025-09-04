@@ -25,9 +25,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import java.io.Closeable;
 import java.util.concurrent.TimeUnit;
 
-public class TokenProvider {
+public class TokenProvider implements Closeable {
 
     private static final long TOKEN_EXPIRATION_SECONDS = 3600L; // 1 hour
     private static final long EXPIRATION_BUFFER_TIME_SECONDS = 300L; // 5 minutes
@@ -107,5 +108,12 @@ public class TokenProvider {
 
     private String generateCacheKey(NamespacedName serviceAccount, String audience) {
         return serviceAccount.namespace() + "/" + serviceAccount.name() + "/" + audience;
+    }
+
+    @Override
+    public void close() {
+        if (kubernetesClient != null) {
+            kubernetesClient.close();
+        }
     }
 }
