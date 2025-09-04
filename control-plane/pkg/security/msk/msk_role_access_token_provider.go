@@ -33,7 +33,7 @@ func (m *MSKRoleAccessTokenProvider) Token() (*sarama.AccessToken, error) {
 	awsRegion := os.Getenv("AWS_REGION")
 	if awsRegion == "" {
 		// Fallback to AWS_DEFAULT_REGION if AWS_REGION is not set
-		awsRegion := os.Getenv("AWS_DEFAULT_REGION")
+		awsRegion = os.Getenv("AWS_DEFAULT_REGION")
 		if awsRegion == "" {
 			awsRegion = "us-east-1"
 		}
