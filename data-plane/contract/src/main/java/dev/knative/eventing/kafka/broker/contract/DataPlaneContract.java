@@ -817,6 +817,41 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Empty(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Empty_descriptor;
         }
@@ -843,7 +878,7 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -852,7 +887,7 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -868,7 +903,7 @@ public final class DataPlaneContract {
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty other =
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) obj;
 
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -879,7 +914,7 @@ public final class DataPlaneContract {
             }
             int hash = 41;
             hash = (19 * hash) + getDescriptor().hashCode();
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -1003,10 +1038,17 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
@@ -1087,7 +1129,7 @@ public final class DataPlaneContract {
             public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty other) {
                 if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance())
                     return this;
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -1102,30 +1144,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -1160,18 +1190,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Empty(input, extensionRegistry);
                     }
                 };
 
@@ -1215,11 +1234,7 @@ public final class DataPlaneContract {
         /**
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
-        /* nullable */
-        java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue);
+        java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue);
         /**
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
@@ -1249,6 +1264,55 @@ public final class DataPlaneContract {
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
+        }
+
+        private Exact(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                attributes_ = com.google.protobuf.MapField.newMapField(
+                                        AttributesDefaultEntryHolder.defaultEntry);
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
+                                    input.readMessage(
+                                            AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
+                                            extensionRegistry);
+                            attributes_.getMutableMap().put(attributes__.getKey(), attributes__.getValue());
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
         }
 
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
@@ -1287,7 +1351,6 @@ public final class DataPlaneContract {
                             "");
         }
 
-        @SuppressWarnings("serial")
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> attributes_;
 
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetAttributes() {
@@ -1306,7 +1369,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public boolean containsAttributes(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             return internalGetAttributes().getMap().containsKey(key);
         }
@@ -1329,12 +1392,9 @@ public final class DataPlaneContract {
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
         @java.lang.Override
-        public /* nullable */ java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue) {
+        public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -1346,7 +1406,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public java.lang.String getAttributesOrThrow(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -1372,7 +1432,7 @@ public final class DataPlaneContract {
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
                     output, internalGetAttributes(), AttributesDefaultEntryHolder.defaultEntry, 1);
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -1391,7 +1451,7 @@ public final class DataPlaneContract {
                                 .build();
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, attributes__);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -1408,7 +1468,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) obj;
 
             if (!internalGetAttributes().equals(other.internalGetAttributes())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -1423,7 +1483,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
                 hash = (53 * hash) + internalGetAttributes().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -1559,16 +1619,22 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 internalGetMutableAttributes().clear();
                 return this;
             }
@@ -1596,19 +1662,11 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                int from_bitField0_ = bitField0_;
+                result.attributes_ = internalGetAttributes();
+                result.attributes_.makeImmutable();
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.attributes_ = internalGetAttributes();
-                    result.attributes_.makeImmutable();
-                }
             }
 
             @java.lang.Override
@@ -1657,8 +1715,7 @@ public final class DataPlaneContract {
                 if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.getDefaultInstance())
                     return this;
                 internalGetMutableAttributes().mergeFrom(other.internalGetAttributes());
-                bitField0_ |= 0x00000001;
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -1673,41 +1730,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
-                                        input.readMessage(
-                                                AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
-                                                extensionRegistry);
-                                internalGetMutableAttributes()
-                                        .getMutableMap()
-                                        .put(attributes__.getKey(), attributes__.getValue());
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -1723,14 +1757,14 @@ public final class DataPlaneContract {
             }
 
             private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableAttributes() {
+                onChanged();
+                ;
                 if (attributes_ == null) {
                     attributes_ = com.google.protobuf.MapField.newMapField(AttributesDefaultEntryHolder.defaultEntry);
                 }
                 if (!attributes_.isMutable()) {
                     attributes_ = attributes_.copy();
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
                 return attributes_;
             }
 
@@ -1743,7 +1777,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public boolean containsAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 return internalGetAttributes().getMap().containsKey(key);
             }
@@ -1766,12 +1800,9 @@ public final class DataPlaneContract {
              * <code>map&lt;string, string&gt; attributes = 1;</code>
              */
             @java.lang.Override
-            public /* nullable */ java.lang.String getAttributesOrDefault(
-                    java.lang.String key,
-                    /* nullable */
-                    java.lang.String defaultValue) {
+            public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -1783,7 +1814,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public java.lang.String getAttributesOrThrow(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -1794,7 +1825,6 @@ public final class DataPlaneContract {
             }
 
             public Builder clearAttributes() {
-                bitField0_ = (bitField0_ & ~0x00000001);
                 internalGetMutableAttributes().getMutableMap().clear();
                 return this;
             }
@@ -1803,7 +1833,7 @@ public final class DataPlaneContract {
              */
             public Builder removeAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().remove(key);
                 return this;
@@ -1813,7 +1843,6 @@ public final class DataPlaneContract {
              */
             @java.lang.Deprecated
             public java.util.Map<java.lang.String, java.lang.String> getMutableAttributes() {
-                bitField0_ |= 0x00000001;
                 return internalGetMutableAttributes().getMutableMap();
             }
             /**
@@ -1821,13 +1850,12 @@ public final class DataPlaneContract {
              */
             public Builder putAttributes(java.lang.String key, java.lang.String value) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 if (value == null) {
-                    throw new NullPointerException("map value");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().put(key, value);
-                bitField0_ |= 0x00000001;
                 return this;
             }
             /**
@@ -1835,7 +1863,6 @@ public final class DataPlaneContract {
              */
             public Builder putAllAttributes(java.util.Map<java.lang.String, java.lang.String> values) {
                 internalGetMutableAttributes().getMutableMap().putAll(values);
-                bitField0_ |= 0x00000001;
                 return this;
             }
 
@@ -1870,18 +1897,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Exact(input, extensionRegistry);
                     }
                 };
 
@@ -1925,11 +1941,7 @@ public final class DataPlaneContract {
         /**
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
-        /* nullable */
-        java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue);
+        java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue);
         /**
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
@@ -1959,6 +1971,55 @@ public final class DataPlaneContract {
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
+        }
+
+        private Prefix(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                attributes_ = com.google.protobuf.MapField.newMapField(
+                                        AttributesDefaultEntryHolder.defaultEntry);
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
+                                    input.readMessage(
+                                            AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
+                                            extensionRegistry);
+                            attributes_.getMutableMap().put(attributes__.getKey(), attributes__.getValue());
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
         }
 
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
@@ -1998,7 +2059,6 @@ public final class DataPlaneContract {
                             "");
         }
 
-        @SuppressWarnings("serial")
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> attributes_;
 
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetAttributes() {
@@ -2017,7 +2077,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public boolean containsAttributes(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             return internalGetAttributes().getMap().containsKey(key);
         }
@@ -2040,12 +2100,9 @@ public final class DataPlaneContract {
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
         @java.lang.Override
-        public /* nullable */ java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue) {
+        public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -2057,7 +2114,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public java.lang.String getAttributesOrThrow(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -2083,7 +2140,7 @@ public final class DataPlaneContract {
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
                     output, internalGetAttributes(), AttributesDefaultEntryHolder.defaultEntry, 1);
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -2102,7 +2159,7 @@ public final class DataPlaneContract {
                                 .build();
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, attributes__);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -2119,7 +2176,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) obj;
 
             if (!internalGetAttributes().equals(other.internalGetAttributes())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -2134,7 +2191,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
                 hash = (53 * hash) + internalGetAttributes().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -2271,16 +2328,22 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 internalGetMutableAttributes().clear();
                 return this;
             }
@@ -2308,19 +2371,11 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                int from_bitField0_ = bitField0_;
+                result.attributes_ = internalGetAttributes();
+                result.attributes_.makeImmutable();
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.attributes_ = internalGetAttributes();
-                    result.attributes_.makeImmutable();
-                }
             }
 
             @java.lang.Override
@@ -2369,8 +2424,7 @@ public final class DataPlaneContract {
                 if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.getDefaultInstance())
                     return this;
                 internalGetMutableAttributes().mergeFrom(other.internalGetAttributes());
-                bitField0_ |= 0x00000001;
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -2385,41 +2439,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
-                                        input.readMessage(
-                                                AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
-                                                extensionRegistry);
-                                internalGetMutableAttributes()
-                                        .getMutableMap()
-                                        .put(attributes__.getKey(), attributes__.getValue());
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -2435,14 +2466,14 @@ public final class DataPlaneContract {
             }
 
             private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableAttributes() {
+                onChanged();
+                ;
                 if (attributes_ == null) {
                     attributes_ = com.google.protobuf.MapField.newMapField(AttributesDefaultEntryHolder.defaultEntry);
                 }
                 if (!attributes_.isMutable()) {
                     attributes_ = attributes_.copy();
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
                 return attributes_;
             }
 
@@ -2455,7 +2486,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public boolean containsAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 return internalGetAttributes().getMap().containsKey(key);
             }
@@ -2478,12 +2509,9 @@ public final class DataPlaneContract {
              * <code>map&lt;string, string&gt; attributes = 1;</code>
              */
             @java.lang.Override
-            public /* nullable */ java.lang.String getAttributesOrDefault(
-                    java.lang.String key,
-                    /* nullable */
-                    java.lang.String defaultValue) {
+            public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -2495,7 +2523,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public java.lang.String getAttributesOrThrow(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -2506,7 +2534,6 @@ public final class DataPlaneContract {
             }
 
             public Builder clearAttributes() {
-                bitField0_ = (bitField0_ & ~0x00000001);
                 internalGetMutableAttributes().getMutableMap().clear();
                 return this;
             }
@@ -2515,7 +2542,7 @@ public final class DataPlaneContract {
              */
             public Builder removeAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().remove(key);
                 return this;
@@ -2525,7 +2552,6 @@ public final class DataPlaneContract {
              */
             @java.lang.Deprecated
             public java.util.Map<java.lang.String, java.lang.String> getMutableAttributes() {
-                bitField0_ |= 0x00000001;
                 return internalGetMutableAttributes().getMutableMap();
             }
             /**
@@ -2533,13 +2559,12 @@ public final class DataPlaneContract {
              */
             public Builder putAttributes(java.lang.String key, java.lang.String value) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 if (value == null) {
-                    throw new NullPointerException("map value");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().put(key, value);
-                bitField0_ |= 0x00000001;
                 return this;
             }
             /**
@@ -2547,7 +2572,6 @@ public final class DataPlaneContract {
              */
             public Builder putAllAttributes(java.util.Map<java.lang.String, java.lang.String> values) {
                 internalGetMutableAttributes().getMutableMap().putAll(values);
-                bitField0_ |= 0x00000001;
                 return this;
             }
 
@@ -2582,18 +2606,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Prefix(input, extensionRegistry);
                     }
                 };
 
@@ -2637,11 +2650,7 @@ public final class DataPlaneContract {
         /**
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
-        /* nullable */
-        java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue);
+        java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue);
         /**
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
@@ -2671,6 +2680,55 @@ public final class DataPlaneContract {
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
+        }
+
+        private Suffix(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                attributes_ = com.google.protobuf.MapField.newMapField(
+                                        AttributesDefaultEntryHolder.defaultEntry);
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
+                                    input.readMessage(
+                                            AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
+                                            extensionRegistry);
+                            attributes_.getMutableMap().put(attributes__.getKey(), attributes__.getValue());
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
         }
 
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
@@ -2710,7 +2768,6 @@ public final class DataPlaneContract {
                             "");
         }
 
-        @SuppressWarnings("serial")
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> attributes_;
 
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetAttributes() {
@@ -2729,7 +2786,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public boolean containsAttributes(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             return internalGetAttributes().getMap().containsKey(key);
         }
@@ -2752,12 +2809,9 @@ public final class DataPlaneContract {
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
         @java.lang.Override
-        public /* nullable */ java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue) {
+        public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -2769,7 +2823,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public java.lang.String getAttributesOrThrow(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -2795,7 +2849,7 @@ public final class DataPlaneContract {
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
                     output, internalGetAttributes(), AttributesDefaultEntryHolder.defaultEntry, 1);
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -2814,7 +2868,7 @@ public final class DataPlaneContract {
                                 .build();
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, attributes__);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -2831,7 +2885,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) obj;
 
             if (!internalGetAttributes().equals(other.internalGetAttributes())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -2846,7 +2900,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
                 hash = (53 * hash) + internalGetAttributes().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -2983,16 +3037,22 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 internalGetMutableAttributes().clear();
                 return this;
             }
@@ -3020,19 +3080,11 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                int from_bitField0_ = bitField0_;
+                result.attributes_ = internalGetAttributes();
+                result.attributes_.makeImmutable();
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.attributes_ = internalGetAttributes();
-                    result.attributes_.makeImmutable();
-                }
             }
 
             @java.lang.Override
@@ -3081,8 +3133,7 @@ public final class DataPlaneContract {
                 if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.getDefaultInstance())
                     return this;
                 internalGetMutableAttributes().mergeFrom(other.internalGetAttributes());
-                bitField0_ |= 0x00000001;
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -3097,41 +3148,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
-                                        input.readMessage(
-                                                AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
-                                                extensionRegistry);
-                                internalGetMutableAttributes()
-                                        .getMutableMap()
-                                        .put(attributes__.getKey(), attributes__.getValue());
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -3147,14 +3175,14 @@ public final class DataPlaneContract {
             }
 
             private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableAttributes() {
+                onChanged();
+                ;
                 if (attributes_ == null) {
                     attributes_ = com.google.protobuf.MapField.newMapField(AttributesDefaultEntryHolder.defaultEntry);
                 }
                 if (!attributes_.isMutable()) {
                     attributes_ = attributes_.copy();
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
                 return attributes_;
             }
 
@@ -3167,7 +3195,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public boolean containsAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 return internalGetAttributes().getMap().containsKey(key);
             }
@@ -3190,12 +3218,9 @@ public final class DataPlaneContract {
              * <code>map&lt;string, string&gt; attributes = 1;</code>
              */
             @java.lang.Override
-            public /* nullable */ java.lang.String getAttributesOrDefault(
-                    java.lang.String key,
-                    /* nullable */
-                    java.lang.String defaultValue) {
+            public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -3207,7 +3232,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public java.lang.String getAttributesOrThrow(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -3218,7 +3243,6 @@ public final class DataPlaneContract {
             }
 
             public Builder clearAttributes() {
-                bitField0_ = (bitField0_ & ~0x00000001);
                 internalGetMutableAttributes().getMutableMap().clear();
                 return this;
             }
@@ -3227,7 +3251,7 @@ public final class DataPlaneContract {
              */
             public Builder removeAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().remove(key);
                 return this;
@@ -3237,7 +3261,6 @@ public final class DataPlaneContract {
              */
             @java.lang.Deprecated
             public java.util.Map<java.lang.String, java.lang.String> getMutableAttributes() {
-                bitField0_ |= 0x00000001;
                 return internalGetMutableAttributes().getMutableMap();
             }
             /**
@@ -3245,13 +3268,12 @@ public final class DataPlaneContract {
              */
             public Builder putAttributes(java.lang.String key, java.lang.String value) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 if (value == null) {
-                    throw new NullPointerException("map value");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().put(key, value);
-                bitField0_ |= 0x00000001;
                 return this;
             }
             /**
@@ -3259,7 +3281,6 @@ public final class DataPlaneContract {
              */
             public Builder putAllAttributes(java.util.Map<java.lang.String, java.lang.String> values) {
                 internalGetMutableAttributes().getMutableMap().putAll(values);
-                bitField0_ |= 0x00000001;
                 return this;
             }
 
@@ -3294,18 +3315,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Suffix(input, extensionRegistry);
                     }
                 };
 
@@ -3380,6 +3390,57 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private All(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                filters_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            filters_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    filters_ = java.util.Collections.unmodifiableList(filters_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_All_descriptor;
         }
@@ -3393,8 +3454,6 @@ public final class DataPlaneContract {
         }
 
         public static final int FILTERS_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_;
         /**
          * <code>repeated .DialectedFilter filters = 1;</code>
@@ -3453,7 +3512,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < filters_.size(); i++) {
                 output.writeMessage(1, filters_.get(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -3465,7 +3524,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < filters_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, filters_.get(i));
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -3482,7 +3541,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) obj;
 
             if (!getFiltersList().equals(other.getFiltersList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -3497,7 +3556,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + FILTERS_FIELD_NUMBER;
                 hash = (53 * hash) + getFiltersList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -3613,23 +3672,30 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getFiltersFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 if (filtersBuilder_ == null) {
                     filters_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    filters_ = null;
                     filtersBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000001);
                 return this;
             }
 
@@ -3656,16 +3722,7 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All result) {
+                int from_bitField0_ = bitField0_;
                 if (filtersBuilder_ == null) {
                     if (((bitField0_ & 0x00000001) != 0)) {
                         filters_ = java.util.Collections.unmodifiableList(filters_);
@@ -3675,10 +3732,8 @@ public final class DataPlaneContract {
                 } else {
                     result.filters_ = filtersBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All result) {
-                int from_bitField0_ = bitField0_;
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -3752,7 +3807,7 @@ public final class DataPlaneContract {
                         }
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -3767,44 +3822,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .DialectedFilter.parser(),
-                                                extensionRegistry);
-                                if (filtersBuilder_ == null) {
-                                    ensureFiltersIsMutable();
-                                    filters_.add(m);
-                                } else {
-                                    filtersBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage =
+                            (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -4107,18 +4136,7 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws com.google.protobuf.InvalidProtocolBufferException {
-                Builder builder = newBuilder();
-                try {
-                    builder.mergeFrom(input, extensionRegistry);
-                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                    throw e.setUnfinishedMessage(builder.buildPartial());
-                } catch (com.google.protobuf.UninitializedMessageException e) {
-                    throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                } catch (java.io.IOException e) {
-                    throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                            .setUnfinishedMessage(builder.buildPartial());
-                }
-                return builder.buildPartial();
+                return new All(input, extensionRegistry);
             }
         };
 
@@ -4193,6 +4211,57 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Any(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                filters_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            filters_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    filters_ = java.util.Collections.unmodifiableList(filters_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Any_descriptor;
         }
@@ -4206,8 +4275,6 @@ public final class DataPlaneContract {
         }
 
         public static final int FILTERS_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_;
         /**
          * <code>repeated .DialectedFilter filters = 1;</code>
@@ -4266,7 +4333,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < filters_.size(); i++) {
                 output.writeMessage(1, filters_.get(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -4278,7 +4345,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < filters_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, filters_.get(i));
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -4295,7 +4362,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) obj;
 
             if (!getFiltersList().equals(other.getFiltersList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -4310,7 +4377,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + FILTERS_FIELD_NUMBER;
                 hash = (53 * hash) + getFiltersList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -4426,23 +4493,30 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getFiltersFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 if (filtersBuilder_ == null) {
                     filters_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    filters_ = null;
                     filtersBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000001);
                 return this;
             }
 
@@ -4469,16 +4543,7 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any result) {
+                int from_bitField0_ = bitField0_;
                 if (filtersBuilder_ == null) {
                     if (((bitField0_ & 0x00000001) != 0)) {
                         filters_ = java.util.Collections.unmodifiableList(filters_);
@@ -4488,10 +4553,8 @@ public final class DataPlaneContract {
                 } else {
                     result.filters_ = filtersBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any result) {
-                int from_bitField0_ = bitField0_;
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -4565,7 +4628,7 @@ public final class DataPlaneContract {
                         }
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -4580,44 +4643,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .DialectedFilter.parser(),
-                                                extensionRegistry);
-                                if (filtersBuilder_ == null) {
-                                    ensureFiltersIsMutable();
-                                    filters_.add(m);
-                                } else {
-                                    filtersBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage =
+                            (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -4920,18 +4957,7 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws com.google.protobuf.InvalidProtocolBufferException {
-                Builder builder = newBuilder();
-                try {
-                    builder.mergeFrom(input, extensionRegistry);
-                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                    throw e.setUnfinishedMessage(builder.buildPartial());
-                } catch (com.google.protobuf.UninitializedMessageException e) {
-                    throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                } catch (java.io.IOException e) {
-                    throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                            .setUnfinishedMessage(builder.buildPartial());
-                }
-                return builder.buildPartial();
+                return new Any(input, extensionRegistry);
             }
         };
 
@@ -4996,6 +5022,58 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Not(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
+                                    subBuilder = null;
+                            if (filter_ != null) {
+                                subBuilder = filter_.toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                            .parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Not_descriptor;
         }
@@ -5034,9 +5112,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder
                 getFilterOrBuilder() {
-            return filter_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.getDefaultInstance()
-                    : filter_;
+            return getFilter();
         }
 
         private byte memoizedIsInitialized = -1;
@@ -5056,7 +5132,7 @@ public final class DataPlaneContract {
             if (filter_ != null) {
                 output.writeMessage(1, getFilter());
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -5068,7 +5144,7 @@ public final class DataPlaneContract {
             if (filter_ != null) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getFilter());
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -5088,7 +5164,7 @@ public final class DataPlaneContract {
             if (hasFilter()) {
                 if (!getFilter().equals(other.getFilter())) return false;
             }
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -5103,7 +5179,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + FILTER_FIELD_NUMBER;
                 hash = (53 * hash) + getFilter().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -5219,19 +5295,26 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
-                filter_ = null;
-                if (filterBuilder_ != null) {
-                    filterBuilder_.dispose();
+                if (filterBuilder_ == null) {
+                    filter_ = null;
+                } else {
+                    filter_ = null;
                     filterBuilder_ = null;
                 }
                 return this;
@@ -5260,18 +5343,13 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
+                if (filterBuilder_ == null) {
+                    result.filter_ = filter_;
+                } else {
+                    result.filter_ = filterBuilder_.build();
                 }
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.filter_ = filterBuilder_ == null ? filter_ : filterBuilder_.build();
-                }
             }
 
             @java.lang.Override
@@ -5322,7 +5400,7 @@ public final class DataPlaneContract {
                 if (other.hasFilter()) {
                     mergeFilter(other.getFilter());
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -5337,39 +5415,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                input.readMessage(getFilterFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage =
+                            (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter filter_;
             private com.google.protobuf.SingleFieldBuilderV3<
@@ -5382,7 +5441,7 @@ public final class DataPlaneContract {
              * @return Whether the filter field is set.
              */
             public boolean hasFilter() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return filterBuilder_ != null || filter_ != null;
             }
             /**
              * <code>.DialectedFilter filter = 1;</code>
@@ -5408,11 +5467,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     filter_ = value;
+                    onChanged();
                 } else {
                     filterBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
+
                 return this;
             }
             /**
@@ -5423,11 +5482,11 @@ public final class DataPlaneContract {
                             builderForValue) {
                 if (filterBuilder_ == null) {
                     filter_ = builderForValue.build();
+                    onChanged();
                 } else {
                     filterBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
+
                 return this;
             }
             /**
@@ -5436,33 +5495,34 @@ public final class DataPlaneContract {
             public Builder mergeFilter(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter value) {
                 if (filterBuilder_ == null) {
-                    if (((bitField0_ & 0x00000001) != 0)
-                            && filter_ != null
-                            && filter_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
-                                            .getDefaultInstance()) {
-                        getFilterBuilder().mergeFrom(value);
+                    if (filter_ != null) {
+                        filter_ =
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.newBuilder(
+                                                filter_)
+                                        .mergeFrom(value)
+                                        .buildPartial();
                     } else {
                         filter_ = value;
                     }
+                    onChanged();
                 } else {
                     filterBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
+
                 return this;
             }
             /**
              * <code>.DialectedFilter filter = 1;</code>
              */
             public Builder clearFilter() {
-                bitField0_ = (bitField0_ & ~0x00000001);
-                filter_ = null;
-                if (filterBuilder_ != null) {
-                    filterBuilder_.dispose();
+                if (filterBuilder_ == null) {
+                    filter_ = null;
+                    onChanged();
+                } else {
+                    filter_ = null;
                     filterBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -5470,7 +5530,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder
                     getFilterBuilder() {
-                bitField0_ |= 0x00000001;
+
                 onChanged();
                 return getFilterFieldBuilder().getBuilder();
             }
@@ -5537,18 +5597,7 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws com.google.protobuf.InvalidProtocolBufferException {
-                Builder builder = newBuilder();
-                try {
-                    builder.mergeFrom(input, extensionRegistry);
-                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                    throw e.setUnfinishedMessage(builder.buildPartial());
-                } catch (com.google.protobuf.UninitializedMessageException e) {
-                    throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                } catch (java.io.IOException e) {
-                    throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                            .setUnfinishedMessage(builder.buildPartial());
-                }
-                return builder.buildPartial();
+                return new Not(input, extensionRegistry);
             }
         };
 
@@ -5611,6 +5660,47 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private CESQL(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            expression_ = s;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_CESQL_descriptor;
         }
@@ -5624,9 +5714,7 @@ public final class DataPlaneContract {
         }
 
         public static final int EXPRESSION_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object expression_ = "";
+        private volatile java.lang.Object expression_;
         /**
          * <code>string expression = 1;</code>
          * @return The expression.
@@ -5673,10 +5761,10 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(expression_)) {
+            if (!getExpressionBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, expression_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -5685,10 +5773,10 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(expression_)) {
+            if (!getExpressionBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, expression_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -5705,7 +5793,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) obj;
 
             if (!getExpression().equals(other.getExpression())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -5718,7 +5806,7 @@ public final class DataPlaneContract {
             hash = (19 * hash) + getDescriptor().hashCode();
             hash = (37 * hash) + EXPRESSION_FIELD_NUMBER;
             hash = (53 * hash) + getExpression().hashCode();
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -5834,17 +5922,24 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 expression_ = "";
+
                 return this;
             }
 
@@ -5871,18 +5966,9 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                result.expression_ = expression_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.expression_ = expression_;
-                }
             }
 
             @java.lang.Override
@@ -5932,10 +6018,9 @@ public final class DataPlaneContract {
                     return this;
                 if (!other.getExpression().isEmpty()) {
                     expression_ = other.expression_;
-                    bitField0_ |= 0x00000001;
                     onChanged();
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -5950,39 +6035,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                expression_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private java.lang.Object expression_ = "";
             /**
@@ -6024,8 +6090,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 expression_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -6034,8 +6100,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearExpression() {
+
                 expression_ = getDefaultInstance().getExpression();
-                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -6049,8 +6115,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 expression_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -6086,18 +6152,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new CESQL(input, extensionRegistry);
                     }
                 };
 
@@ -6252,6 +6307,171 @@ public final class DataPlaneContract {
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
+        }
+
+        private DialectedFilter(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder subBuilder =
+                                    null;
+                            if (filterCase_ == 1) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 1;
+                            break;
+                        }
+                        case 18: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder subBuilder =
+                                    null;
+                            if (filterCase_ == 2) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 2;
+                            break;
+                        }
+                        case 26: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.Builder subBuilder =
+                                    null;
+                            if (filterCase_ == 3) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Suffix) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 3;
+                            break;
+                        }
+                        case 34: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.Builder subBuilder = null;
+                            if (filterCase_ == 4) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.All) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 4;
+                            break;
+                        }
+                        case 42: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.Builder subBuilder = null;
+                            if (filterCase_ == 5) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Any) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 5;
+                            break;
+                        }
+                        case 50: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.Builder subBuilder = null;
+                            if (filterCase_ == 6) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Not) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 6;
+                            break;
+                        }
+                        case 58: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.Builder subBuilder =
+                                    null;
+                            if (filterCase_ == 7) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL)
+                                                filter_)
+                                        .toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+                            filterCase_ = 7;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
         }
 
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
@@ -6581,7 +6801,7 @@ public final class DataPlaneContract {
             if (filterCase_ == 7) {
                 output.writeMessage(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -6618,7 +6838,7 @@ public final class DataPlaneContract {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(
                         7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CESQL) filter_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -6660,7 +6880,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -6703,7 +6923,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -6822,37 +7042,22 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
-                if (exactBuilder_ != null) {
-                    exactBuilder_.clear();
-                }
-                if (prefixBuilder_ != null) {
-                    prefixBuilder_.clear();
-                }
-                if (suffixBuilder_ != null) {
-                    suffixBuilder_.clear();
-                }
-                if (allBuilder_ != null) {
-                    allBuilder_.clear();
-                }
-                if (anyBuilder_ != null) {
-                    anyBuilder_.clear();
-                }
-                if (notBuilder_ != null) {
-                    notBuilder_.clear();
-                }
-                if (cesqlBuilder_ != null) {
-                    cesqlBuilder_.clear();
-                }
                 filterCase_ = 0;
                 filter_ = null;
                 return this;
@@ -6884,44 +7089,58 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
+                if (filterCase_ == 1) {
+                    if (exactBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = exactBuilder_.build();
+                    }
                 }
-                buildPartialOneofs(result);
+                if (filterCase_ == 2) {
+                    if (prefixBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = prefixBuilder_.build();
+                    }
+                }
+                if (filterCase_ == 3) {
+                    if (suffixBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = suffixBuilder_.build();
+                    }
+                }
+                if (filterCase_ == 4) {
+                    if (allBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = allBuilder_.build();
+                    }
+                }
+                if (filterCase_ == 5) {
+                    if (anyBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = anyBuilder_.build();
+                    }
+                }
+                if (filterCase_ == 6) {
+                    if (notBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = notBuilder_.build();
+                    }
+                }
+                if (filterCase_ == 7) {
+                    if (cesqlBuilder_ == null) {
+                        result.filter_ = filter_;
+                    } else {
+                        result.filter_ = cesqlBuilder_.build();
+                    }
+                }
+                result.filterCase_ = filterCase_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter result) {
-                int from_bitField0_ = bitField0_;
-            }
-
-            private void buildPartialOneofs(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter result) {
-                result.filterCase_ = filterCase_;
-                result.filter_ = this.filter_;
-                if (filterCase_ == 1 && exactBuilder_ != null) {
-                    result.filter_ = exactBuilder_.build();
-                }
-                if (filterCase_ == 2 && prefixBuilder_ != null) {
-                    result.filter_ = prefixBuilder_.build();
-                }
-                if (filterCase_ == 3 && suffixBuilder_ != null) {
-                    result.filter_ = suffixBuilder_.build();
-                }
-                if (filterCase_ == 4 && allBuilder_ != null) {
-                    result.filter_ = allBuilder_.build();
-                }
-                if (filterCase_ == 5 && anyBuilder_ != null) {
-                    result.filter_ = anyBuilder_.build();
-                }
-                if (filterCase_ == 6 && notBuilder_ != null) {
-                    result.filter_ = notBuilder_.build();
-                }
-                if (filterCase_ == 7 && cesqlBuilder_ != null) {
-                    result.filter_ = cesqlBuilder_.build();
-                }
             }
 
             @java.lang.Override
@@ -7005,7 +7224,7 @@ public final class DataPlaneContract {
                         break;
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -7020,65 +7239,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                input.readMessage(getExactFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 1;
-                                break;
-                            } // case 10
-                            case 18: {
-                                input.readMessage(getPrefixFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 2;
-                                break;
-                            } // case 18
-                            case 26: {
-                                input.readMessage(getSuffixFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 3;
-                                break;
-                            } // case 26
-                            case 34: {
-                                input.readMessage(getAllFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 4;
-                                break;
-                            } // case 34
-                            case 42: {
-                                input.readMessage(getAnyFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 5;
-                                break;
-                            } // case 42
-                            case 50: {
-                                input.readMessage(getNotFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 6;
-                                break;
-                            } // case 50
-                            case 58: {
-                                input.readMessage(getCesqlFieldBuilder().getBuilder(), extensionRegistry);
-                                filterCase_ = 7;
-                                break;
-                            } // case 58
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -7095,8 +7267,6 @@ public final class DataPlaneContract {
                 onChanged();
                 return this;
             }
-
-            private int bitField0_;
 
             private com.google.protobuf.SingleFieldBuilderV3<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact,
@@ -7179,9 +7349,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 1) {
                         exactBuilder_.mergeFrom(value);
-                    } else {
-                        exactBuilder_.setMessage(value);
                     }
+                    exactBuilder_.setMessage(value);
                 }
                 filterCase_ = 1;
                 return this;
@@ -7249,6 +7418,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 1;
                 onChanged();
+                ;
                 return exactBuilder_;
             }
 
@@ -7333,9 +7503,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 2) {
                         prefixBuilder_.mergeFrom(value);
-                    } else {
-                        prefixBuilder_.setMessage(value);
                     }
+                    prefixBuilder_.setMessage(value);
                 }
                 filterCase_ = 2;
                 return this;
@@ -7404,6 +7573,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 2;
                 onChanged();
+                ;
                 return prefixBuilder_;
             }
 
@@ -7488,9 +7658,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 3) {
                         suffixBuilder_.mergeFrom(value);
-                    } else {
-                        suffixBuilder_.setMessage(value);
                     }
+                    suffixBuilder_.setMessage(value);
                 }
                 filterCase_ = 3;
                 return this;
@@ -7559,6 +7728,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 3;
                 onChanged();
+                ;
                 return suffixBuilder_;
             }
 
@@ -7643,9 +7813,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 4) {
                         allBuilder_.mergeFrom(value);
-                    } else {
-                        allBuilder_.setMessage(value);
                     }
+                    allBuilder_.setMessage(value);
                 }
                 filterCase_ = 4;
                 return this;
@@ -7712,6 +7881,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 4;
                 onChanged();
+                ;
                 return allBuilder_;
             }
 
@@ -7796,9 +7966,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 5) {
                         anyBuilder_.mergeFrom(value);
-                    } else {
-                        anyBuilder_.setMessage(value);
                     }
+                    anyBuilder_.setMessage(value);
                 }
                 filterCase_ = 5;
                 return this;
@@ -7865,6 +8034,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 5;
                 onChanged();
+                ;
                 return anyBuilder_;
             }
 
@@ -7949,9 +8119,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 6) {
                         notBuilder_.mergeFrom(value);
-                    } else {
-                        notBuilder_.setMessage(value);
                     }
+                    notBuilder_.setMessage(value);
                 }
                 filterCase_ = 6;
                 return this;
@@ -8018,6 +8187,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 6;
                 onChanged();
+                ;
                 return notBuilder_;
             }
 
@@ -8103,9 +8273,8 @@ public final class DataPlaneContract {
                 } else {
                     if (filterCase_ == 7) {
                         cesqlBuilder_.mergeFrom(value);
-                    } else {
-                        cesqlBuilder_.setMessage(value);
                     }
+                    cesqlBuilder_.setMessage(value);
                 }
                 filterCase_ = 7;
                 return this;
@@ -8173,6 +8342,7 @@ public final class DataPlaneContract {
                 }
                 filterCase_ = 7;
                 onChanged();
+                ;
                 return cesqlBuilder_;
             }
 
@@ -8209,18 +8379,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new DialectedFilter(input, extensionRegistry);
                     }
                 };
 
@@ -8297,11 +8456,7 @@ public final class DataPlaneContract {
          *
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
-        /* nullable */
-        java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue);
+        java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue);
         /**
          * <pre>
          * attributes filters events by exact match on event context attributes.
@@ -8341,6 +8496,55 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Filter(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                attributes_ = com.google.protobuf.MapField.newMapField(
+                                        AttributesDefaultEntryHolder.defaultEntry);
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
+                                    input.readMessage(
+                                            AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
+                                            extensionRegistry);
+                            attributes_.getMutableMap().put(attributes__.getKey(), attributes__.getValue());
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Filter_descriptor;
         }
@@ -8378,7 +8582,6 @@ public final class DataPlaneContract {
                             "");
         }
 
-        @SuppressWarnings("serial")
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> attributes_;
 
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetAttributes() {
@@ -8405,7 +8608,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public boolean containsAttributes(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             return internalGetAttributes().getMap().containsKey(key);
         }
@@ -8444,12 +8647,9 @@ public final class DataPlaneContract {
          * <code>map&lt;string, string&gt; attributes = 1;</code>
          */
         @java.lang.Override
-        public /* nullable */ java.lang.String getAttributesOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue) {
+        public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -8469,7 +8669,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public java.lang.String getAttributesOrThrow(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetAttributes().getMap();
@@ -8495,7 +8695,7 @@ public final class DataPlaneContract {
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
                     output, internalGetAttributes(), AttributesDefaultEntryHolder.defaultEntry, 1);
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -8514,7 +8714,7 @@ public final class DataPlaneContract {
                                 .build();
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, attributes__);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -8531,7 +8731,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter) obj;
 
             if (!internalGetAttributes().equals(other.internalGetAttributes())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -8546,7 +8746,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + ATTRIBUTES_FIELD_NUMBER;
                 hash = (53 * hash) + internalGetAttributes().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -8683,16 +8883,22 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 internalGetMutableAttributes().clear();
                 return this;
             }
@@ -8720,19 +8926,11 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                int from_bitField0_ = bitField0_;
+                result.attributes_ = internalGetAttributes();
+                result.attributes_.makeImmutable();
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.attributes_ = internalGetAttributes();
-                    result.attributes_.makeImmutable();
-                }
             }
 
             @java.lang.Override
@@ -8781,8 +8979,7 @@ public final class DataPlaneContract {
                 if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance())
                     return this;
                 internalGetMutableAttributes().mergeFrom(other.internalGetAttributes());
-                bitField0_ |= 0x00000001;
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -8797,41 +8994,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                com.google.protobuf.MapEntry<java.lang.String, java.lang.String> attributes__ =
-                                        input.readMessage(
-                                                AttributesDefaultEntryHolder.defaultEntry.getParserForType(),
-                                                extensionRegistry);
-                                internalGetMutableAttributes()
-                                        .getMutableMap()
-                                        .put(attributes__.getKey(), attributes__.getValue());
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -8847,14 +9021,14 @@ public final class DataPlaneContract {
             }
 
             private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableAttributes() {
+                onChanged();
+                ;
                 if (attributes_ == null) {
                     attributes_ = com.google.protobuf.MapField.newMapField(AttributesDefaultEntryHolder.defaultEntry);
                 }
                 if (!attributes_.isMutable()) {
                     attributes_ = attributes_.copy();
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
                 return attributes_;
             }
 
@@ -8875,7 +9049,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public boolean containsAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 return internalGetAttributes().getMap().containsKey(key);
             }
@@ -8914,12 +9088,9 @@ public final class DataPlaneContract {
              * <code>map&lt;string, string&gt; attributes = 1;</code>
              */
             @java.lang.Override
-            public /* nullable */ java.lang.String getAttributesOrDefault(
-                    java.lang.String key,
-                    /* nullable */
-                    java.lang.String defaultValue) {
+            public java.lang.String getAttributesOrDefault(java.lang.String key, java.lang.String defaultValue) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -8939,7 +9110,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public java.lang.String getAttributesOrThrow(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetAttributes().getMap();
@@ -8950,7 +9121,6 @@ public final class DataPlaneContract {
             }
 
             public Builder clearAttributes() {
-                bitField0_ = (bitField0_ & ~0x00000001);
                 internalGetMutableAttributes().getMutableMap().clear();
                 return this;
             }
@@ -8967,7 +9137,7 @@ public final class DataPlaneContract {
              */
             public Builder removeAttributes(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().remove(key);
                 return this;
@@ -8977,7 +9147,6 @@ public final class DataPlaneContract {
              */
             @java.lang.Deprecated
             public java.util.Map<java.lang.String, java.lang.String> getMutableAttributes() {
-                bitField0_ |= 0x00000001;
                 return internalGetMutableAttributes().getMutableMap();
             }
             /**
@@ -8993,13 +9162,12 @@ public final class DataPlaneContract {
              */
             public Builder putAttributes(java.lang.String key, java.lang.String value) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 if (value == null) {
-                    throw new NullPointerException("map value");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableAttributes().getMutableMap().put(key, value);
-                bitField0_ |= 0x00000001;
                 return this;
             }
             /**
@@ -9015,7 +9183,6 @@ public final class DataPlaneContract {
              */
             public Builder putAllAttributes(java.util.Map<java.lang.String, java.lang.String> values) {
                 internalGetMutableAttributes().getMutableMap().putAll(values);
-                bitField0_ |= 0x00000001;
                 return this;
             }
 
@@ -9050,18 +9217,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Filter(input, extensionRegistry);
                     }
                 };
 
@@ -9141,6 +9297,79 @@ public final class DataPlaneContract {
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
+        }
+
+        private TokenMatcher(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.Builder subBuilder =
+                                    null;
+                            if (matcherCase_ == 1) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact)
+                                                matcher_)
+                                        .toBuilder();
+                            }
+                            matcher_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact) matcher_);
+                                matcher_ = subBuilder.buildPartial();
+                            }
+                            matcherCase_ = 1;
+                            break;
+                        }
+                        case 18: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.Builder subBuilder =
+                                    null;
+                            if (matcherCase_ == 2) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix)
+                                                matcher_)
+                                        .toBuilder();
+                            }
+                            matcher_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) matcher_);
+                                matcher_ = subBuilder.buildPartial();
+                            }
+                            matcherCase_ = 2;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
         }
 
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
@@ -9284,7 +9513,7 @@ public final class DataPlaneContract {
             if (matcherCase_ == 2) {
                 output.writeMessage(2, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) matcher_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -9301,7 +9530,7 @@ public final class DataPlaneContract {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(
                         2, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Prefix) matcher_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -9328,7 +9557,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -9351,7 +9580,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -9470,22 +9699,22 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
-                if (exactBuilder_ != null) {
-                    exactBuilder_.clear();
-                }
-                if (prefixBuilder_ != null) {
-                    prefixBuilder_.clear();
-                }
                 matcherCase_ = 0;
                 matcher_ = null;
                 return this;
@@ -9516,29 +9745,23 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
+                if (matcherCase_ == 1) {
+                    if (exactBuilder_ == null) {
+                        result.matcher_ = matcher_;
+                    } else {
+                        result.matcher_ = exactBuilder_.build();
+                    }
                 }
-                buildPartialOneofs(result);
+                if (matcherCase_ == 2) {
+                    if (prefixBuilder_ == null) {
+                        result.matcher_ = matcher_;
+                    } else {
+                        result.matcher_ = prefixBuilder_.build();
+                    }
+                }
+                result.matcherCase_ = matcherCase_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher result) {
-                int from_bitField0_ = bitField0_;
-            }
-
-            private void buildPartialOneofs(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher result) {
-                result.matcherCase_ = matcherCase_;
-                result.matcher_ = this.matcher_;
-                if (matcherCase_ == 1 && exactBuilder_ != null) {
-                    result.matcher_ = exactBuilder_.build();
-                }
-                if (matcherCase_ == 2 && prefixBuilder_ != null) {
-                    result.matcher_ = prefixBuilder_.build();
-                }
             }
 
             @java.lang.Override
@@ -9600,7 +9823,7 @@ public final class DataPlaneContract {
                         break;
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -9615,40 +9838,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                input.readMessage(getExactFieldBuilder().getBuilder(), extensionRegistry);
-                                matcherCase_ = 1;
-                                break;
-                            } // case 10
-                            case 18: {
-                                input.readMessage(getPrefixFieldBuilder().getBuilder(), extensionRegistry);
-                                matcherCase_ = 2;
-                                break;
-                            } // case 18
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -9665,8 +9866,6 @@ public final class DataPlaneContract {
                 onChanged();
                 return this;
             }
-
-            private int bitField0_;
 
             private com.google.protobuf.SingleFieldBuilderV3<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Exact,
@@ -9749,9 +9948,8 @@ public final class DataPlaneContract {
                 } else {
                     if (matcherCase_ == 1) {
                         exactBuilder_.mergeFrom(value);
-                    } else {
-                        exactBuilder_.setMessage(value);
                     }
+                    exactBuilder_.setMessage(value);
                 }
                 matcherCase_ = 1;
                 return this;
@@ -9819,6 +10017,7 @@ public final class DataPlaneContract {
                 }
                 matcherCase_ = 1;
                 onChanged();
+                ;
                 return exactBuilder_;
             }
 
@@ -9903,9 +10102,8 @@ public final class DataPlaneContract {
                 } else {
                     if (matcherCase_ == 2) {
                         prefixBuilder_.mergeFrom(value);
-                    } else {
-                        prefixBuilder_.setMessage(value);
                     }
+                    prefixBuilder_.setMessage(value);
                 }
                 matcherCase_ = 2;
                 return this;
@@ -9974,6 +10172,7 @@ public final class DataPlaneContract {
                 }
                 matcherCase_ = 2;
                 onChanged();
+                ;
                 return prefixBuilder_;
             }
 
@@ -10008,18 +10207,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new TokenMatcher(input, extensionRegistry);
                     }
                 };
 
@@ -10159,6 +10347,71 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private EventPolicy(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                tokenMatchers_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            tokenMatchers_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher.parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        case 18: {
+                            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                                filters_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                                mutable_bitField0_ |= 0x00000002;
+                            }
+                            filters_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    tokenMatchers_ = java.util.Collections.unmodifiableList(tokenMatchers_);
+                }
+                if (((mutable_bitField0_ & 0x00000002) != 0)) {
+                    filters_ = java.util.Collections.unmodifiableList(filters_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EventPolicy_descriptor;
         }
@@ -10173,8 +10426,6 @@ public final class DataPlaneContract {
         }
 
         public static final int TOKENMATCHERS_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher>
                 tokenMatchers_;
         /**
@@ -10238,8 +10489,6 @@ public final class DataPlaneContract {
         }
 
         public static final int FILTERS_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter> filters_;
         /**
          * <pre>
@@ -10321,7 +10570,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < filters_.size(); i++) {
                 output.writeMessage(2, filters_.get(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -10336,7 +10585,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < filters_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, filters_.get(i));
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -10354,7 +10603,7 @@ public final class DataPlaneContract {
 
             if (!getTokenMatchersList().equals(other.getTokenMatchersList())) return false;
             if (!getFiltersList().equals(other.getFiltersList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -10373,7 +10622,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + FILTERS_FIELD_NUMBER;
                 hash = (53 * hash) + getFiltersList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -10491,30 +10740,37 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getTokenMatchersFieldBuilder();
+                    getFiltersFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 if (tokenMatchersBuilder_ == null) {
                     tokenMatchers_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    tokenMatchers_ = null;
                     tokenMatchersBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000001);
                 if (filtersBuilder_ == null) {
                     filters_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000002);
                 } else {
-                    filters_ = null;
                     filtersBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000002);
                 return this;
             }
 
@@ -10543,16 +10799,7 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy result) {
+                int from_bitField0_ = bitField0_;
                 if (tokenMatchersBuilder_ == null) {
                     if (((bitField0_ & 0x00000001) != 0)) {
                         tokenMatchers_ = java.util.Collections.unmodifiableList(tokenMatchers_);
@@ -10571,11 +10818,8 @@ public final class DataPlaneContract {
                 } else {
                     result.filters_ = filtersBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy result) {
-                int from_bitField0_ = bitField0_;
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -10676,7 +10920,7 @@ public final class DataPlaneContract {
                         }
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -10691,58 +10935,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.TokenMatcher m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .TokenMatcher.parser(),
-                                                extensionRegistry);
-                                if (tokenMatchersBuilder_ == null) {
-                                    ensureTokenMatchersIsMutable();
-                                    tokenMatchers_.add(m);
-                                } else {
-                                    tokenMatchersBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 10
-                            case 18: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .DialectedFilter.parser(),
-                                                extensionRegistry);
-                                if (filtersBuilder_ == null) {
-                                    ensureFiltersIsMutable();
-                                    filters_.add(m);
-                                } else {
-                                    filtersBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 18
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -11452,18 +11656,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new EventPolicy(input, extensionRegistry);
                     }
                 };
 
@@ -11646,6 +11839,83 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private EgressConfig(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            deadLetter_ = s;
+                            break;
+                        }
+                        case 16: {
+                            retry_ = input.readUInt32();
+                            break;
+                        }
+                        case 24: {
+                            int rawValue = input.readEnum();
+
+                            backoffPolicy_ = rawValue;
+                            break;
+                        }
+                        case 32: {
+                            backoffDelay_ = input.readUInt64();
+                            break;
+                        }
+                        case 40: {
+                            timeout_ = input.readUInt64();
+                            break;
+                        }
+                        case 50: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            deadLetterCACerts_ = s;
+                            break;
+                        }
+                        case 58: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            deadLetterAudience_ = s;
+                            break;
+                        }
+                        case 66: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            format_ = s;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressConfig_descriptor;
         }
@@ -11660,9 +11930,7 @@ public final class DataPlaneContract {
         }
 
         public static final int DEADLETTER_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object deadLetter_ = "";
+        private volatile java.lang.Object deadLetter_;
         /**
          * <pre>
          * Dead letter is where the event is sent when something goes wrong
@@ -11704,9 +11972,7 @@ public final class DataPlaneContract {
         }
 
         public static final int DEADLETTERCACERTS_FIELD_NUMBER = 6;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object deadLetterCACerts_ = "";
+        private volatile java.lang.Object deadLetterCACerts_;
         /**
          * <pre>
          * Dead Letter CA Cert is the CA Cert used for HTTPS communication through dead letter
@@ -11748,9 +12014,7 @@ public final class DataPlaneContract {
         }
 
         public static final int DEADLETTERAUDIENCE_FIELD_NUMBER = 7;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object deadLetterAudience_ = "";
+        private volatile java.lang.Object deadLetterAudience_;
         /**
          * <pre>
          * Dead Letter Audience is the OIDC audience of the dead letter
@@ -11792,9 +12056,7 @@ public final class DataPlaneContract {
         }
 
         public static final int FORMAT_FIELD_NUMBER = 8;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object format_ = "";
+        private volatile java.lang.Object format_;
         /**
          * <pre>
          * format is the format used to deliver the event. Can be one of "json" or "binary"
@@ -11836,7 +12098,7 @@ public final class DataPlaneContract {
         }
 
         public static final int RETRY_FIELD_NUMBER = 2;
-        private int retry_ = 0;
+        private int retry_;
         /**
          * <pre>
          * retry is the minimum number of retries the sender should attempt when
@@ -11853,7 +12115,7 @@ public final class DataPlaneContract {
         }
 
         public static final int BACKOFFPOLICY_FIELD_NUMBER = 3;
-        private int backoffPolicy_ = 0;
+        private int backoffPolicy_;
         /**
          * <pre>
          * backoffPolicy is the retry backoff policy (linear, exponential).
@@ -11876,16 +12138,16 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy() {
+            @SuppressWarnings("deprecation")
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy result =
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.forNumber(
-                            backoffPolicy_);
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.valueOf(backoffPolicy_);
             return result == null
                     ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.UNRECOGNIZED
                     : result;
         }
 
         public static final int BACKOFFDELAY_FIELD_NUMBER = 4;
-        private long backoffDelay_ = 0L;
+        private long backoffDelay_;
         /**
          * <pre>
          * backoffDelay is the delay before retrying in milliseconds.
@@ -11900,7 +12162,7 @@ public final class DataPlaneContract {
         }
 
         public static final int TIMEOUT_FIELD_NUMBER = 5;
-        private long timeout_ = 0L;
+        private long timeout_;
         /**
          * <pre>
          * timeout is the single request timeout (not the overall retry timeout)
@@ -11928,7 +12190,7 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(deadLetter_)) {
+            if (!getDeadLetterBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, deadLetter_);
             }
             if (retry_ != 0) {
@@ -11945,16 +12207,16 @@ public final class DataPlaneContract {
             if (timeout_ != 0L) {
                 output.writeUInt64(5, timeout_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(deadLetterCACerts_)) {
+            if (!getDeadLetterCACertsBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 6, deadLetterCACerts_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(deadLetterAudience_)) {
+            if (!getDeadLetterAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 7, deadLetterAudience_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(format_)) {
+            if (!getFormatBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 8, format_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -11963,7 +12225,7 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(deadLetter_)) {
+            if (!getDeadLetterBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, deadLetter_);
             }
             if (retry_ != 0) {
@@ -11980,16 +12242,16 @@ public final class DataPlaneContract {
             if (timeout_ != 0L) {
                 size += com.google.protobuf.CodedOutputStream.computeUInt64Size(5, timeout_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(deadLetterCACerts_)) {
+            if (!getDeadLetterCACertsBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, deadLetterCACerts_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(deadLetterAudience_)) {
+            if (!getDeadLetterAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, deadLetterAudience_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(format_)) {
+            if (!getFormatBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, format_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -12013,7 +12275,7 @@ public final class DataPlaneContract {
             if (backoffPolicy_ != other.backoffPolicy_) return false;
             if (getBackoffDelay() != other.getBackoffDelay()) return false;
             if (getTimeout() != other.getTimeout()) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -12040,7 +12302,7 @@ public final class DataPlaneContract {
             hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getBackoffDelay());
             hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
             hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTimeout());
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -12159,24 +12421,38 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 deadLetter_ = "";
+
                 deadLetterCACerts_ = "";
+
                 deadLetterAudience_ = "";
+
                 format_ = "";
+
                 retry_ = 0;
+
                 backoffPolicy_ = 0;
+
                 backoffDelay_ = 0L;
+
                 timeout_ = 0L;
+
                 return this;
             }
 
@@ -12205,40 +12481,16 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                result.deadLetter_ = deadLetter_;
+                result.deadLetterCACerts_ = deadLetterCACerts_;
+                result.deadLetterAudience_ = deadLetterAudience_;
+                result.format_ = format_;
+                result.retry_ = retry_;
+                result.backoffPolicy_ = backoffPolicy_;
+                result.backoffDelay_ = backoffDelay_;
+                result.timeout_ = timeout_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.deadLetter_ = deadLetter_;
-                }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.deadLetterCACerts_ = deadLetterCACerts_;
-                }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.deadLetterAudience_ = deadLetterAudience_;
-                }
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.format_ = format_;
-                }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    result.retry_ = retry_;
-                }
-                if (((from_bitField0_ & 0x00000020) != 0)) {
-                    result.backoffPolicy_ = backoffPolicy_;
-                }
-                if (((from_bitField0_ & 0x00000040) != 0)) {
-                    result.backoffDelay_ = backoffDelay_;
-                }
-                if (((from_bitField0_ & 0x00000080) != 0)) {
-                    result.timeout_ = timeout_;
-                }
             }
 
             @java.lang.Override
@@ -12289,22 +12541,18 @@ public final class DataPlaneContract {
                                 .getDefaultInstance()) return this;
                 if (!other.getDeadLetter().isEmpty()) {
                     deadLetter_ = other.deadLetter_;
-                    bitField0_ |= 0x00000001;
                     onChanged();
                 }
                 if (!other.getDeadLetterCACerts().isEmpty()) {
                     deadLetterCACerts_ = other.deadLetterCACerts_;
-                    bitField0_ |= 0x00000002;
                     onChanged();
                 }
                 if (!other.getDeadLetterAudience().isEmpty()) {
                     deadLetterAudience_ = other.deadLetterAudience_;
-                    bitField0_ |= 0x00000004;
                     onChanged();
                 }
                 if (!other.getFormat().isEmpty()) {
                     format_ = other.format_;
-                    bitField0_ |= 0x00000008;
                     onChanged();
                 }
                 if (other.getRetry() != 0) {
@@ -12319,7 +12567,7 @@ public final class DataPlaneContract {
                 if (other.getTimeout() != 0L) {
                     setTimeout(other.getTimeout());
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -12334,74 +12582,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                deadLetter_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            case 16: {
-                                retry_ = input.readUInt32();
-                                bitField0_ |= 0x00000010;
-                                break;
-                            } // case 16
-                            case 24: {
-                                backoffPolicy_ = input.readEnum();
-                                bitField0_ |= 0x00000020;
-                                break;
-                            } // case 24
-                            case 32: {
-                                backoffDelay_ = input.readUInt64();
-                                bitField0_ |= 0x00000040;
-                                break;
-                            } // case 32
-                            case 40: {
-                                timeout_ = input.readUInt64();
-                                bitField0_ |= 0x00000080;
-                                break;
-                            } // case 40
-                            case 50: {
-                                deadLetterCACerts_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000002;
-                                break;
-                            } // case 50
-                            case 58: {
-                                deadLetterAudience_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000004;
-                                break;
-                            } // case 58
-                            case 66: {
-                                format_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000008;
-                                break;
-                            } // case 66
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private java.lang.Object deadLetter_ = "";
             /**
@@ -12455,8 +12649,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 deadLetter_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -12469,8 +12663,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDeadLetter() {
+
                 deadLetter_ = getDefaultInstance().getDeadLetter();
-                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -12488,8 +12682,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 deadLetter_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -12546,8 +12740,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 deadLetterCACerts_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -12560,8 +12754,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDeadLetterCACerts() {
+
                 deadLetterCACerts_ = getDefaultInstance().getDeadLetterCACerts();
-                bitField0_ = (bitField0_ & ~0x00000002);
                 onChanged();
                 return this;
             }
@@ -12579,8 +12773,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 deadLetterCACerts_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -12637,8 +12831,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 deadLetterAudience_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -12651,8 +12845,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDeadLetterAudience() {
+
                 deadLetterAudience_ = getDefaultInstance().getDeadLetterAudience();
-                bitField0_ = (bitField0_ & ~0x00000004);
                 onChanged();
                 return this;
             }
@@ -12670,8 +12864,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 deadLetterAudience_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -12728,8 +12922,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 format_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -12742,8 +12936,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearFormat() {
+
                 format_ = getDefaultInstance().getFormat();
-                bitField0_ = (bitField0_ & ~0x00000008);
                 onChanged();
                 return this;
             }
@@ -12761,8 +12955,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 format_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -12796,7 +12990,6 @@ public final class DataPlaneContract {
             public Builder setRetry(int value) {
 
                 retry_ = value;
-                bitField0_ |= 0x00000010;
                 onChanged();
                 return this;
             }
@@ -12811,7 +13004,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearRetry() {
-                bitField0_ = (bitField0_ & ~0x00000010);
+
                 retry_ = 0;
                 onChanged();
                 return this;
@@ -12840,8 +13033,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder setBackoffPolicyValue(int value) {
+
                 backoffPolicy_ = value;
-                bitField0_ |= 0x00000020;
                 onChanged();
                 return this;
             }
@@ -12855,8 +13048,9 @@ public final class DataPlaneContract {
              */
             @java.lang.Override
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy() {
+                @SuppressWarnings("deprecation")
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy result =
-                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.forNumber(
+                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.valueOf(
                                 backoffPolicy_);
                 return result == null
                         ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.UNRECOGNIZED
@@ -12876,7 +13070,7 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
-                bitField0_ |= 0x00000020;
+
                 backoffPolicy_ = value.getNumber();
                 onChanged();
                 return this;
@@ -12890,7 +13084,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearBackoffPolicy() {
-                bitField0_ = (bitField0_ & ~0x00000020);
+
                 backoffPolicy_ = 0;
                 onChanged();
                 return this;
@@ -12921,7 +13115,6 @@ public final class DataPlaneContract {
             public Builder setBackoffDelay(long value) {
 
                 backoffDelay_ = value;
-                bitField0_ |= 0x00000040;
                 onChanged();
                 return this;
             }
@@ -12934,7 +13127,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearBackoffDelay() {
-                bitField0_ = (bitField0_ & ~0x00000040);
+
                 backoffDelay_ = 0L;
                 onChanged();
                 return this;
@@ -12965,7 +13158,6 @@ public final class DataPlaneContract {
             public Builder setTimeout(long value) {
 
                 timeout_ = value;
-                bitField0_ |= 0x00000080;
                 onChanged();
                 return this;
             }
@@ -12978,7 +13170,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearTimeout() {
-                bitField0_ = (bitField0_ & ~0x00000080);
+
                 timeout_ = 0L;
                 onChanged();
                 return this;
@@ -13015,18 +13207,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new EgressConfig(input, extensionRegistry);
                     }
                 };
 
@@ -13542,6 +13723,232 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Egress(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            consumerGroup_ = s;
+                            break;
+                        }
+                        case 18: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            destination_ = s;
+                            break;
+                        }
+                        case 26: {
+                            java.lang.String s = input.readStringRequireUtf8();
+                            replyStrategyCase_ = 3;
+                            replyStrategy_ = s;
+                            break;
+                        }
+                        case 34: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder =
+                                    null;
+                            if (replyStrategyCase_ == 4) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty)
+                                                replyStrategy_)
+                                        .toBuilder();
+                            }
+                            replyStrategy_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty)
+                                                replyStrategy_);
+                                replyStrategy_ = subBuilder.buildPartial();
+                            }
+                            replyStrategyCase_ = 4;
+                            break;
+                        }
+                        case 42: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder subBuilder =
+                                    null;
+                            if (filter_ != null) {
+                                subBuilder = filter_.toBuilder();
+                            }
+                            filter_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(filter_);
+                                filter_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 50: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            uid_ = s;
+                            break;
+                        }
+                        case 58: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder
+                                    subBuilder = null;
+                            if (egressConfig_ != null) {
+                                subBuilder = egressConfig_.toBuilder();
+                            }
+                            egressConfig_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(egressConfig_);
+                                egressConfig_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 64: {
+                            int rawValue = input.readEnum();
+
+                            deliveryOrder_ = rawValue;
+                            break;
+                        }
+                        case 74: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder =
+                                    null;
+                            if (replyStrategyCase_ == 9) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty)
+                                                replyStrategy_)
+                                        .toBuilder();
+                            }
+                            replyStrategy_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty)
+                                                replyStrategy_);
+                                replyStrategy_ = subBuilder.buildPartial();
+                            }
+                            replyStrategyCase_ = 9;
+                            break;
+                        }
+                        case 80: {
+                            int rawValue = input.readEnum();
+
+                            keyType_ = rawValue;
+                            break;
+                        }
+                        case 90: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder =
+                                    null;
+                            if (reference_ != null) {
+                                subBuilder = reference_.toBuilder();
+                            }
+                            reference_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(reference_);
+                                reference_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 98: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                dialectedFilter_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            dialectedFilter_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        case 104: {
+                            vReplicas_ = input.readInt32();
+                            break;
+                        }
+                        case 114: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder
+                                    subBuilder = null;
+                            if (featureFlags_ != null) {
+                                subBuilder = featureFlags_.toBuilder();
+                            }
+                            featureFlags_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags
+                                            .parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(featureFlags_);
+                                featureFlags_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 122: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            destinationCACerts_ = s;
+                            break;
+                        }
+                        case 130: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            replyUrlCACerts_ = s;
+                            break;
+                        }
+                        case 138: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            destinationAudience_ = s;
+                            break;
+                        }
+                        case 146: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            replyUrlAudience_ = s;
+                            break;
+                        }
+                        case 154: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            oidcServiceAccountName_ = s;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    dialectedFilter_ = java.util.Collections.unmodifiableList(dialectedFilter_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Egress_descriptor;
         }
@@ -13605,9 +14012,7 @@ public final class DataPlaneContract {
         }
 
         public static final int CONSUMERGROUP_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object consumerGroup_ = "";
+        private volatile java.lang.Object consumerGroup_;
         /**
          * <pre>
          * consumer group name
@@ -13649,9 +14054,7 @@ public final class DataPlaneContract {
         }
 
         public static final int DESTINATION_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object destination_ = "";
+        private volatile java.lang.Object destination_;
         /**
          * <pre>
          * destination is the sink where events are sent.
@@ -13693,9 +14096,7 @@ public final class DataPlaneContract {
         }
 
         public static final int DESTINATIONCACERTS_FIELD_NUMBER = 15;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object destinationCACerts_ = "";
+        private volatile java.lang.Object destinationCACerts_;
         /**
          * <pre>
          * destination CA Cert is the CA Cert used for HTTPS communication through destination
@@ -13737,9 +14138,7 @@ public final class DataPlaneContract {
         }
 
         public static final int DESTINATIONAUDIENCE_FIELD_NUMBER = 17;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object destinationAudience_ = "";
+        private volatile java.lang.Object destinationAudience_;
         /**
          * <pre>
          * OIDC audience of the destination
@@ -13928,9 +14327,7 @@ public final class DataPlaneContract {
         }
 
         public static final int REPLYURLCACERTS_FIELD_NUMBER = 16;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object replyUrlCACerts_ = "";
+        private volatile java.lang.Object replyUrlCACerts_;
         /**
          * <pre>
          * replyUrl CA Cert is the CA Cert used for HTTPS communication through replyUrl
@@ -13972,9 +14369,7 @@ public final class DataPlaneContract {
         }
 
         public static final int REPLYURLAUDIENCE_FIELD_NUMBER = 18;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object replyUrlAudience_ = "";
+        private volatile java.lang.Object replyUrlAudience_;
         /**
          * <pre>
          * OIDC audience of the replyUrl
@@ -14052,15 +14447,11 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FilterOrBuilder getFilterOrBuilder() {
-            return filter_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.getDefaultInstance()
-                    : filter_;
+            return getFilter();
         }
 
         public static final int UID_FIELD_NUMBER = 6;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object uid_ = "";
+        private volatile java.lang.Object uid_;
         /**
          * <pre>
          * Id of the egress
@@ -14144,13 +14535,11 @@ public final class DataPlaneContract {
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder
                 getEgressConfigOrBuilder() {
-            return egressConfig_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance()
-                    : egressConfig_;
+            return getEgressConfig();
         }
 
         public static final int DELIVERYORDER_FIELD_NUMBER = 8;
-        private int deliveryOrder_ = 0;
+        private int deliveryOrder_;
         /**
          * <pre>
          * Delivery guarantee to use
@@ -14175,16 +14564,16 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder() {
+            @SuppressWarnings("deprecation")
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder result =
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.forNumber(
-                            deliveryOrder_);
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.valueOf(deliveryOrder_);
             return result == null
                     ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED
                     : result;
         }
 
         public static final int KEYTYPE_FIELD_NUMBER = 10;
-        private int keyType_ = 0;
+        private int keyType_;
         /**
          * <pre>
          * Kafka record key type.
@@ -14207,8 +14596,9 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType() {
+            @SuppressWarnings("deprecation")
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType result =
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.forNumber(keyType_);
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.valueOf(keyType_);
             return result == null
                     ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.UNRECOGNIZED
                     : result;
@@ -14260,14 +14650,10 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
-            return reference_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance()
-                    : reference_;
+            return getReference();
         }
 
         public static final int DIALECTEDFILTER_FIELD_NUMBER = 12;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>
                 dialectedFilter_;
         /**
@@ -14332,7 +14718,7 @@ public final class DataPlaneContract {
         }
 
         public static final int VREPLICAS_FIELD_NUMBER = 13;
-        private int vReplicas_ = 0;
+        private int vReplicas_;
         /**
          * <pre>
          * Number of virtual replicas.
@@ -14385,16 +14771,11 @@ public final class DataPlaneContract {
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlagsOrBuilder
                 getFeatureFlagsOrBuilder() {
-            return featureFlags_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags
-                            .getDefaultInstance()
-                    : featureFlags_;
+            return getFeatureFlags();
         }
 
         public static final int OIDCSERVICEACCOUNTNAME_FIELD_NUMBER = 19;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object oidcServiceAccountName_ = "";
+        private volatile java.lang.Object oidcServiceAccountName_;
         /**
          * <pre>
          * Name of the service account to use for OIDC authentication.
@@ -14449,10 +14830,10 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(consumerGroup_)) {
+            if (!getConsumerGroupBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, consumerGroup_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(destination_)) {
+            if (!getDestinationBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, destination_);
             }
             if (replyStrategyCase_ == 3) {
@@ -14465,7 +14846,7 @@ public final class DataPlaneContract {
             if (filter_ != null) {
                 output.writeMessage(5, getFilter());
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(uid_)) {
+            if (!getUidBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 6, uid_);
             }
             if (egressConfig_ != null) {
@@ -14495,22 +14876,22 @@ public final class DataPlaneContract {
             if (featureFlags_ != null) {
                 output.writeMessage(14, getFeatureFlags());
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(destinationCACerts_)) {
+            if (!getDestinationCACertsBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 15, destinationCACerts_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(replyUrlCACerts_)) {
+            if (!getReplyUrlCACertsBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 16, replyUrlCACerts_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(destinationAudience_)) {
+            if (!getDestinationAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 17, destinationAudience_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(replyUrlAudience_)) {
+            if (!getReplyUrlAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 18, replyUrlAudience_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(oidcServiceAccountName_)) {
+            if (!getOidcServiceAccountNameBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 19, oidcServiceAccountName_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -14519,10 +14900,10 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(consumerGroup_)) {
+            if (!getConsumerGroupBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, consumerGroup_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(destination_)) {
+            if (!getDestinationBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, destination_);
             }
             if (replyStrategyCase_ == 3) {
@@ -14535,7 +14916,7 @@ public final class DataPlaneContract {
             if (filter_ != null) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getFilter());
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(uid_)) {
+            if (!getUidBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, uid_);
             }
             if (egressConfig_ != null) {
@@ -14565,22 +14946,22 @@ public final class DataPlaneContract {
             if (featureFlags_ != null) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(14, getFeatureFlags());
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(destinationCACerts_)) {
+            if (!getDestinationCACertsBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(15, destinationCACerts_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(replyUrlCACerts_)) {
+            if (!getReplyUrlCACertsBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(16, replyUrlCACerts_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(destinationAudience_)) {
+            if (!getDestinationAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(17, destinationAudience_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(replyUrlAudience_)) {
+            if (!getReplyUrlAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(18, replyUrlAudience_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(oidcServiceAccountName_)) {
+            if (!getOidcServiceAccountNameBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(19, oidcServiceAccountName_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -14638,7 +15019,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -14707,7 +15088,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -14824,60 +15205,76 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getDialectedFilterFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 consumerGroup_ = "";
+
                 destination_ = "";
+
                 destinationCACerts_ = "";
+
                 destinationAudience_ = "";
-                if (replyToOriginalTopicBuilder_ != null) {
-                    replyToOriginalTopicBuilder_.clear();
-                }
-                if (discardReplyBuilder_ != null) {
-                    discardReplyBuilder_.clear();
-                }
+
                 replyUrlCACerts_ = "";
+
                 replyUrlAudience_ = "";
-                filter_ = null;
-                if (filterBuilder_ != null) {
-                    filterBuilder_.dispose();
+
+                if (filterBuilder_ == null) {
+                    filter_ = null;
+                } else {
+                    filter_ = null;
                     filterBuilder_ = null;
                 }
                 uid_ = "";
-                egressConfig_ = null;
-                if (egressConfigBuilder_ != null) {
-                    egressConfigBuilder_.dispose();
+
+                if (egressConfigBuilder_ == null) {
+                    egressConfig_ = null;
+                } else {
+                    egressConfig_ = null;
                     egressConfigBuilder_ = null;
                 }
                 deliveryOrder_ = 0;
+
                 keyType_ = 0;
-                reference_ = null;
-                if (referenceBuilder_ != null) {
-                    referenceBuilder_.dispose();
+
+                if (referenceBuilder_ == null) {
+                    reference_ = null;
+                } else {
+                    reference_ = null;
                     referenceBuilder_ = null;
                 }
                 if (dialectedFilterBuilder_ == null) {
                     dialectedFilter_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    dialectedFilter_ = null;
                     dialectedFilterBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00008000);
                 vReplicas_ = 0;
-                featureFlags_ = null;
-                if (featureFlagsBuilder_ != null) {
-                    featureFlagsBuilder_.dispose();
+
+                if (featureFlagsBuilder_ == null) {
+                    featureFlags_ = null;
+                } else {
+                    featureFlags_ = null;
                     featureFlagsBuilder_ = null;
                 }
                 oidcServiceAccountName_ = "";
+
                 replyStrategyCase_ = 0;
                 replyStrategy_ = null;
                 return this;
@@ -14906,87 +15303,67 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
+                int from_bitField0_ = bitField0_;
+                result.consumerGroup_ = consumerGroup_;
+                result.destination_ = destination_;
+                result.destinationCACerts_ = destinationCACerts_;
+                result.destinationAudience_ = destinationAudience_;
+                if (replyStrategyCase_ == 3) {
+                    result.replyStrategy_ = replyStrategy_;
                 }
-                buildPartialOneofs(result);
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result) {
+                if (replyStrategyCase_ == 4) {
+                    if (replyToOriginalTopicBuilder_ == null) {
+                        result.replyStrategy_ = replyStrategy_;
+                    } else {
+                        result.replyStrategy_ = replyToOriginalTopicBuilder_.build();
+                    }
+                }
+                if (replyStrategyCase_ == 9) {
+                    if (discardReplyBuilder_ == null) {
+                        result.replyStrategy_ = replyStrategy_;
+                    } else {
+                        result.replyStrategy_ = discardReplyBuilder_.build();
+                    }
+                }
+                result.replyUrlCACerts_ = replyUrlCACerts_;
+                result.replyUrlAudience_ = replyUrlAudience_;
+                if (filterBuilder_ == null) {
+                    result.filter_ = filter_;
+                } else {
+                    result.filter_ = filterBuilder_.build();
+                }
+                result.uid_ = uid_;
+                if (egressConfigBuilder_ == null) {
+                    result.egressConfig_ = egressConfig_;
+                } else {
+                    result.egressConfig_ = egressConfigBuilder_.build();
+                }
+                result.deliveryOrder_ = deliveryOrder_;
+                result.keyType_ = keyType_;
+                if (referenceBuilder_ == null) {
+                    result.reference_ = reference_;
+                } else {
+                    result.reference_ = referenceBuilder_.build();
+                }
                 if (dialectedFilterBuilder_ == null) {
-                    if (((bitField0_ & 0x00008000) != 0)) {
+                    if (((bitField0_ & 0x00000001) != 0)) {
                         dialectedFilter_ = java.util.Collections.unmodifiableList(dialectedFilter_);
-                        bitField0_ = (bitField0_ & ~0x00008000);
+                        bitField0_ = (bitField0_ & ~0x00000001);
                     }
                     result.dialectedFilter_ = dialectedFilter_;
                 } else {
                     result.dialectedFilter_ = dialectedFilterBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.consumerGroup_ = consumerGroup_;
+                result.vReplicas_ = vReplicas_;
+                if (featureFlagsBuilder_ == null) {
+                    result.featureFlags_ = featureFlags_;
+                } else {
+                    result.featureFlags_ = featureFlagsBuilder_.build();
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.destination_ = destination_;
-                }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.destinationCACerts_ = destinationCACerts_;
-                }
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.destinationAudience_ = destinationAudience_;
-                }
-                if (((from_bitField0_ & 0x00000080) != 0)) {
-                    result.replyUrlCACerts_ = replyUrlCACerts_;
-                }
-                if (((from_bitField0_ & 0x00000100) != 0)) {
-                    result.replyUrlAudience_ = replyUrlAudience_;
-                }
-                if (((from_bitField0_ & 0x00000200) != 0)) {
-                    result.filter_ = filterBuilder_ == null ? filter_ : filterBuilder_.build();
-                }
-                if (((from_bitField0_ & 0x00000400) != 0)) {
-                    result.uid_ = uid_;
-                }
-                if (((from_bitField0_ & 0x00000800) != 0)) {
-                    result.egressConfig_ = egressConfigBuilder_ == null ? egressConfig_ : egressConfigBuilder_.build();
-                }
-                if (((from_bitField0_ & 0x00001000) != 0)) {
-                    result.deliveryOrder_ = deliveryOrder_;
-                }
-                if (((from_bitField0_ & 0x00002000) != 0)) {
-                    result.keyType_ = keyType_;
-                }
-                if (((from_bitField0_ & 0x00004000) != 0)) {
-                    result.reference_ = referenceBuilder_ == null ? reference_ : referenceBuilder_.build();
-                }
-                if (((from_bitField0_ & 0x00010000) != 0)) {
-                    result.vReplicas_ = vReplicas_;
-                }
-                if (((from_bitField0_ & 0x00020000) != 0)) {
-                    result.featureFlags_ = featureFlagsBuilder_ == null ? featureFlags_ : featureFlagsBuilder_.build();
-                }
-                if (((from_bitField0_ & 0x00040000) != 0)) {
-                    result.oidcServiceAccountName_ = oidcServiceAccountName_;
-                }
-            }
-
-            private void buildPartialOneofs(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result) {
+                result.oidcServiceAccountName_ = oidcServiceAccountName_;
                 result.replyStrategyCase_ = replyStrategyCase_;
-                result.replyStrategy_ = this.replyStrategy_;
-                if (replyStrategyCase_ == 4 && replyToOriginalTopicBuilder_ != null) {
-                    result.replyStrategy_ = replyToOriginalTopicBuilder_.build();
-                }
-                if (replyStrategyCase_ == 9 && discardReplyBuilder_ != null) {
-                    result.replyStrategy_ = discardReplyBuilder_.build();
-                }
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -15036,32 +15413,26 @@ public final class DataPlaneContract {
                     return this;
                 if (!other.getConsumerGroup().isEmpty()) {
                     consumerGroup_ = other.consumerGroup_;
-                    bitField0_ |= 0x00000001;
                     onChanged();
                 }
                 if (!other.getDestination().isEmpty()) {
                     destination_ = other.destination_;
-                    bitField0_ |= 0x00000002;
                     onChanged();
                 }
                 if (!other.getDestinationCACerts().isEmpty()) {
                     destinationCACerts_ = other.destinationCACerts_;
-                    bitField0_ |= 0x00000004;
                     onChanged();
                 }
                 if (!other.getDestinationAudience().isEmpty()) {
                     destinationAudience_ = other.destinationAudience_;
-                    bitField0_ |= 0x00000008;
                     onChanged();
                 }
                 if (!other.getReplyUrlCACerts().isEmpty()) {
                     replyUrlCACerts_ = other.replyUrlCACerts_;
-                    bitField0_ |= 0x00000080;
                     onChanged();
                 }
                 if (!other.getReplyUrlAudience().isEmpty()) {
                     replyUrlAudience_ = other.replyUrlAudience_;
-                    bitField0_ |= 0x00000100;
                     onChanged();
                 }
                 if (other.hasFilter()) {
@@ -15069,7 +15440,6 @@ public final class DataPlaneContract {
                 }
                 if (!other.getUid().isEmpty()) {
                     uid_ = other.uid_;
-                    bitField0_ |= 0x00000400;
                     onChanged();
                 }
                 if (other.hasEgressConfig()) {
@@ -15088,7 +15458,7 @@ public final class DataPlaneContract {
                     if (!other.dialectedFilter_.isEmpty()) {
                         if (dialectedFilter_.isEmpty()) {
                             dialectedFilter_ = other.dialectedFilter_;
-                            bitField0_ = (bitField0_ & ~0x00008000);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                         } else {
                             ensureDialectedFilterIsMutable();
                             dialectedFilter_.addAll(other.dialectedFilter_);
@@ -15101,7 +15471,7 @@ public final class DataPlaneContract {
                             dialectedFilterBuilder_.dispose();
                             dialectedFilterBuilder_ = null;
                             dialectedFilter_ = other.dialectedFilter_;
-                            bitField0_ = (bitField0_ & ~0x00008000);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                             dialectedFilterBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                                     ? getDialectedFilterFieldBuilder()
                                     : null;
@@ -15118,7 +15488,6 @@ public final class DataPlaneContract {
                 }
                 if (!other.getOidcServiceAccountName().isEmpty()) {
                     oidcServiceAccountName_ = other.oidcServiceAccountName_;
-                    bitField0_ |= 0x00040000;
                     onChanged();
                 }
                 switch (other.getReplyStrategyCase()) {
@@ -15140,7 +15509,7 @@ public final class DataPlaneContract {
                         break;
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -15155,136 +15524,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                consumerGroup_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            case 18: {
-                                destination_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000002;
-                                break;
-                            } // case 18
-                            case 26: {
-                                java.lang.String s = input.readStringRequireUtf8();
-                                replyStrategyCase_ = 3;
-                                replyStrategy_ = s;
-                                break;
-                            } // case 26
-                            case 34: {
-                                input.readMessage(
-                                        getReplyToOriginalTopicFieldBuilder().getBuilder(), extensionRegistry);
-                                replyStrategyCase_ = 4;
-                                break;
-                            } // case 34
-                            case 42: {
-                                input.readMessage(getFilterFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000200;
-                                break;
-                            } // case 42
-                            case 50: {
-                                uid_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000400;
-                                break;
-                            } // case 50
-                            case 58: {
-                                input.readMessage(getEgressConfigFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000800;
-                                break;
-                            } // case 58
-                            case 64: {
-                                deliveryOrder_ = input.readEnum();
-                                bitField0_ |= 0x00001000;
-                                break;
-                            } // case 64
-                            case 74: {
-                                input.readMessage(getDiscardReplyFieldBuilder().getBuilder(), extensionRegistry);
-                                replyStrategyCase_ = 9;
-                                break;
-                            } // case 74
-                            case 80: {
-                                keyType_ = input.readEnum();
-                                bitField0_ |= 0x00002000;
-                                break;
-                            } // case 80
-                            case 90: {
-                                input.readMessage(getReferenceFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00004000;
-                                break;
-                            } // case 90
-                            case 98: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .DialectedFilter.parser(),
-                                                extensionRegistry);
-                                if (dialectedFilterBuilder_ == null) {
-                                    ensureDialectedFilterIsMutable();
-                                    dialectedFilter_.add(m);
-                                } else {
-                                    dialectedFilterBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 98
-                            case 104: {
-                                vReplicas_ = input.readInt32();
-                                bitField0_ |= 0x00010000;
-                                break;
-                            } // case 104
-                            case 114: {
-                                input.readMessage(getFeatureFlagsFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00020000;
-                                break;
-                            } // case 114
-                            case 122: {
-                                destinationCACerts_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000004;
-                                break;
-                            } // case 122
-                            case 130: {
-                                replyUrlCACerts_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000080;
-                                break;
-                            } // case 130
-                            case 138: {
-                                destinationAudience_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000008;
-                                break;
-                            } // case 138
-                            case 146: {
-                                replyUrlAudience_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000100;
-                                break;
-                            } // case 146
-                            case 154: {
-                                oidcServiceAccountName_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00040000;
-                                break;
-                            } // case 154
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -15356,8 +15607,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 consumerGroup_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -15370,8 +15621,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearConsumerGroup() {
+
                 consumerGroup_ = getDefaultInstance().getConsumerGroup();
-                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -15389,8 +15640,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 consumerGroup_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -15447,8 +15698,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 destination_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -15461,8 +15712,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDestination() {
+
                 destination_ = getDefaultInstance().getDestination();
-                bitField0_ = (bitField0_ & ~0x00000002);
                 onChanged();
                 return this;
             }
@@ -15480,8 +15731,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 destination_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -15538,8 +15789,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 destinationCACerts_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -15552,8 +15803,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDestinationCACerts() {
+
                 destinationCACerts_ = getDefaultInstance().getDestinationCACerts();
-                bitField0_ = (bitField0_ & ~0x00000004);
                 onChanged();
                 return this;
             }
@@ -15571,8 +15822,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 destinationCACerts_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -15629,8 +15880,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 destinationAudience_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -15643,8 +15894,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDestinationAudience() {
+
                 destinationAudience_ = getDefaultInstance().getDestinationAudience();
-                bitField0_ = (bitField0_ & ~0x00000008);
                 onChanged();
                 return this;
             }
@@ -15662,8 +15913,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 destinationAudience_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -15888,9 +16139,8 @@ public final class DataPlaneContract {
                 } else {
                     if (replyStrategyCase_ == 4) {
                         replyToOriginalTopicBuilder_.mergeFrom(value);
-                    } else {
-                        replyToOriginalTopicBuilder_.setMessage(value);
                     }
+                    replyToOriginalTopicBuilder_.setMessage(value);
                 }
                 replyStrategyCase_ = 4;
                 return this;
@@ -15976,6 +16226,7 @@ public final class DataPlaneContract {
                 }
                 replyStrategyCase_ = 4;
                 onChanged();
+                ;
                 return replyToOriginalTopicBuilder_;
             }
 
@@ -16081,9 +16332,8 @@ public final class DataPlaneContract {
                 } else {
                     if (replyStrategyCase_ == 9) {
                         discardReplyBuilder_.mergeFrom(value);
-                    } else {
-                        discardReplyBuilder_.setMessage(value);
                     }
+                    discardReplyBuilder_.setMessage(value);
                 }
                 replyStrategyCase_ = 9;
                 return this;
@@ -16168,6 +16418,7 @@ public final class DataPlaneContract {
                 }
                 replyStrategyCase_ = 9;
                 onChanged();
+                ;
                 return discardReplyBuilder_;
             }
 
@@ -16223,8 +16474,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 replyUrlCACerts_ = value;
-                bitField0_ |= 0x00000080;
                 onChanged();
                 return this;
             }
@@ -16237,8 +16488,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearReplyUrlCACerts() {
+
                 replyUrlCACerts_ = getDefaultInstance().getReplyUrlCACerts();
-                bitField0_ = (bitField0_ & ~0x00000080);
                 onChanged();
                 return this;
             }
@@ -16256,8 +16507,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 replyUrlCACerts_ = value;
-                bitField0_ |= 0x00000080;
                 onChanged();
                 return this;
             }
@@ -16314,8 +16565,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 replyUrlAudience_ = value;
-                bitField0_ |= 0x00000100;
                 onChanged();
                 return this;
             }
@@ -16328,8 +16579,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearReplyUrlAudience() {
+
                 replyUrlAudience_ = getDefaultInstance().getReplyUrlAudience();
-                bitField0_ = (bitField0_ & ~0x00000100);
                 onChanged();
                 return this;
             }
@@ -16347,8 +16598,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 replyUrlAudience_ = value;
-                bitField0_ |= 0x00000100;
                 onChanged();
                 return this;
             }
@@ -16368,7 +16619,7 @@ public final class DataPlaneContract {
              * @return Whether the filter field is set.
              */
             public boolean hasFilter() {
-                return ((bitField0_ & 0x00000200) != 0);
+                return filterBuilder_ != null || filter_ != null;
             }
             /**
              * <pre>
@@ -16400,11 +16651,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     filter_ = value;
+                    onChanged();
                 } else {
                     filterBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000200;
-                onChanged();
+
                 return this;
             }
             /**
@@ -16418,11 +16669,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder builderForValue) {
                 if (filterBuilder_ == null) {
                     filter_ = builderForValue.build();
+                    onChanged();
                 } else {
                     filterBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000200;
-                onChanged();
+
                 return this;
             }
             /**
@@ -16434,20 +16685,19 @@ public final class DataPlaneContract {
              */
             public Builder mergeFilter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter value) {
                 if (filterBuilder_ == null) {
-                    if (((bitField0_ & 0x00000200) != 0)
-                            && filter_ != null
-                            && filter_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter
-                                            .getDefaultInstance()) {
-                        getFilterBuilder().mergeFrom(value);
+                    if (filter_ != null) {
+                        filter_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.newBuilder(
+                                        filter_)
+                                .mergeFrom(value)
+                                .buildPartial();
                     } else {
                         filter_ = value;
                     }
+                    onChanged();
                 } else {
                     filterBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000200;
-                onChanged();
+
                 return this;
             }
             /**
@@ -16458,13 +16708,14 @@ public final class DataPlaneContract {
              * <code>.Filter filter = 5;</code>
              */
             public Builder clearFilter() {
-                bitField0_ = (bitField0_ & ~0x00000200);
-                filter_ = null;
-                if (filterBuilder_ != null) {
-                    filterBuilder_.dispose();
+                if (filterBuilder_ == null) {
+                    filter_ = null;
+                    onChanged();
+                } else {
+                    filter_ = null;
                     filterBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -16475,7 +16726,7 @@ public final class DataPlaneContract {
              * <code>.Filter filter = 5;</code>
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter.Builder getFilterBuilder() {
-                bitField0_ |= 0x00000200;
+
                 onChanged();
                 return getFilterFieldBuilder().getBuilder();
             }
@@ -16573,8 +16824,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 uid_ = value;
-                bitField0_ |= 0x00000400;
                 onChanged();
                 return this;
             }
@@ -16588,8 +16839,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearUid() {
+
                 uid_ = getDefaultInstance().getUid();
-                bitField0_ = (bitField0_ & ~0x00000400);
                 onChanged();
                 return this;
             }
@@ -16608,8 +16859,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 uid_ = value;
-                bitField0_ |= 0x00000400;
                 onChanged();
                 return this;
             }
@@ -16630,7 +16881,7 @@ public final class DataPlaneContract {
              * @return Whether the egressConfig field is set.
              */
             public boolean hasEgressConfig() {
-                return ((bitField0_ & 0x00000800) != 0);
+                return egressConfigBuilder_ != null || egressConfig_ != null;
             }
             /**
              * <pre>
@@ -16666,11 +16917,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     egressConfig_ = value;
+                    onChanged();
                 } else {
                     egressConfigBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000800;
-                onChanged();
+
                 return this;
             }
             /**
@@ -16685,11 +16936,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder builderForValue) {
                 if (egressConfigBuilder_ == null) {
                     egressConfig_ = builderForValue.build();
+                    onChanged();
                 } else {
                     egressConfigBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000800;
-                onChanged();
+
                 return this;
             }
             /**
@@ -16703,20 +16954,20 @@ public final class DataPlaneContract {
             public Builder mergeEgressConfig(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
                 if (egressConfigBuilder_ == null) {
-                    if (((bitField0_ & 0x00000800) != 0)
-                            && egressConfig_ != null
-                            && egressConfig_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
-                                            .getDefaultInstance()) {
-                        getEgressConfigBuilder().mergeFrom(value);
+                    if (egressConfig_ != null) {
+                        egressConfig_ =
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.newBuilder(
+                                                egressConfig_)
+                                        .mergeFrom(value)
+                                        .buildPartial();
                     } else {
                         egressConfig_ = value;
                     }
+                    onChanged();
                 } else {
                     egressConfigBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000800;
-                onChanged();
+
                 return this;
             }
             /**
@@ -16728,13 +16979,14 @@ public final class DataPlaneContract {
              * <code>.EgressConfig egressConfig = 7;</code>
              */
             public Builder clearEgressConfig() {
-                bitField0_ = (bitField0_ & ~0x00000800);
-                egressConfig_ = null;
-                if (egressConfigBuilder_ != null) {
-                    egressConfigBuilder_.dispose();
+                if (egressConfigBuilder_ == null) {
+                    egressConfig_ = null;
+                    onChanged();
+                } else {
+                    egressConfig_ = null;
                     egressConfigBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -16747,7 +16999,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder
                     getEgressConfigBuilder() {
-                bitField0_ |= 0x00000800;
+
                 onChanged();
                 return getEgressConfigFieldBuilder().getBuilder();
             }
@@ -16819,8 +17071,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder setDeliveryOrderValue(int value) {
+
                 deliveryOrder_ = value;
-                bitField0_ |= 0x00001000;
                 onChanged();
                 return this;
             }
@@ -16835,8 +17087,9 @@ public final class DataPlaneContract {
              */
             @java.lang.Override
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder() {
+                @SuppressWarnings("deprecation")
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder result =
-                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.forNumber(
+                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.valueOf(
                                 deliveryOrder_);
                 return result == null
                         ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder.UNRECOGNIZED
@@ -16857,7 +17110,7 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
-                bitField0_ |= 0x00001000;
+
                 deliveryOrder_ = value.getNumber();
                 onChanged();
                 return this;
@@ -16872,7 +17125,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearDeliveryOrder() {
-                bitField0_ = (bitField0_ & ~0x00001000);
+
                 deliveryOrder_ = 0;
                 onChanged();
                 return this;
@@ -16901,8 +17154,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder setKeyTypeValue(int value) {
+
                 keyType_ = value;
-                bitField0_ |= 0x00002000;
                 onChanged();
                 return this;
             }
@@ -16916,8 +17169,9 @@ public final class DataPlaneContract {
              */
             @java.lang.Override
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType getKeyType() {
+                @SuppressWarnings("deprecation")
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType result =
-                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.forNumber(keyType_);
+                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.valueOf(keyType_);
                 return result == null
                         ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyType.UNRECOGNIZED
                         : result;
@@ -16935,7 +17189,7 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
-                bitField0_ |= 0x00002000;
+
                 keyType_ = value.getNumber();
                 onChanged();
                 return this;
@@ -16949,7 +17203,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearKeyType() {
-                bitField0_ = (bitField0_ & ~0x00002000);
+
                 keyType_ = 0;
                 onChanged();
                 return this;
@@ -16973,7 +17227,7 @@ public final class DataPlaneContract {
              * @return Whether the reference field is set.
              */
             public boolean hasReference() {
-                return ((bitField0_ & 0x00004000) != 0);
+                return referenceBuilder_ != null || reference_ != null;
             }
             /**
              * <pre>
@@ -17012,11 +17266,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     reference_ = value;
+                    onChanged();
                 } else {
                     referenceBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00004000;
-                onChanged();
+
                 return this;
             }
             /**
@@ -17033,11 +17287,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
                 if (referenceBuilder_ == null) {
                     reference_ = builderForValue.build();
+                    onChanged();
                 } else {
                     referenceBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00004000;
-                onChanged();
+
                 return this;
             }
             /**
@@ -17053,20 +17307,19 @@ public final class DataPlaneContract {
             public Builder mergeReference(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
                 if (referenceBuilder_ == null) {
-                    if (((bitField0_ & 0x00004000) != 0)
-                            && reference_ != null
-                            && reference_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference
-                                            .getDefaultInstance()) {
-                        getReferenceBuilder().mergeFrom(value);
+                    if (reference_ != null) {
+                        reference_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(
+                                        reference_)
+                                .mergeFrom(value)
+                                .buildPartial();
                     } else {
                         reference_ = value;
                     }
+                    onChanged();
                 } else {
                     referenceBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00004000;
-                onChanged();
+
                 return this;
             }
             /**
@@ -17080,13 +17333,14 @@ public final class DataPlaneContract {
              * <code>.Reference reference = 11;</code>
              */
             public Builder clearReference() {
-                bitField0_ = (bitField0_ & ~0x00004000);
-                reference_ = null;
-                if (referenceBuilder_ != null) {
-                    referenceBuilder_.dispose();
+                if (referenceBuilder_ == null) {
+                    reference_ = null;
+                    onChanged();
+                } else {
+                    reference_ = null;
                     referenceBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -17101,7 +17355,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder
                     getReferenceBuilder() {
-                bitField0_ |= 0x00004000;
+
                 onChanged();
                 return getReferenceFieldBuilder().getBuilder();
             }
@@ -17156,11 +17410,11 @@ public final class DataPlaneContract {
                     dialectedFilter_ = java.util.Collections.emptyList();
 
             private void ensureDialectedFilterIsMutable() {
-                if (!((bitField0_ & 0x00008000) != 0)) {
+                if (!((bitField0_ & 0x00000001) != 0)) {
                     dialectedFilter_ = new java.util.ArrayList<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter>(
                             dialectedFilter_);
-                    bitField0_ |= 0x00008000;
+                    bitField0_ |= 0x00000001;
                 }
             }
 
@@ -17368,7 +17622,7 @@ public final class DataPlaneContract {
             public Builder clearDialectedFilter() {
                 if (dialectedFilterBuilder_ == null) {
                     dialectedFilter_ = java.util.Collections.emptyList();
-                    bitField0_ = (bitField0_ & ~0x00008000);
+                    bitField0_ = (bitField0_ & ~0x00000001);
                     onChanged();
                 } else {
                     dialectedFilterBuilder_.clear();
@@ -17487,7 +17741,7 @@ public final class DataPlaneContract {
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilter.Builder,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DialectedFilterOrBuilder>(
-                            dialectedFilter_, ((bitField0_ & 0x00008000) != 0), getParentForChildren(), isClean());
+                            dialectedFilter_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
                     dialectedFilter_ = null;
                 }
                 return dialectedFilterBuilder_;
@@ -17518,7 +17772,6 @@ public final class DataPlaneContract {
             public Builder setVReplicas(int value) {
 
                 vReplicas_ = value;
-                bitField0_ |= 0x00010000;
                 onChanged();
                 return this;
             }
@@ -17531,7 +17784,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearVReplicas() {
-                bitField0_ = (bitField0_ & ~0x00010000);
+
                 vReplicas_ = 0;
                 onChanged();
                 return this;
@@ -17552,7 +17805,7 @@ public final class DataPlaneContract {
              * @return Whether the featureFlags field is set.
              */
             public boolean hasFeatureFlags() {
-                return ((bitField0_ & 0x00020000) != 0);
+                return featureFlagsBuilder_ != null || featureFlags_ != null;
             }
             /**
              * <pre>
@@ -17586,11 +17839,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     featureFlags_ = value;
+                    onChanged();
                 } else {
                     featureFlagsBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00020000;
-                onChanged();
+
                 return this;
             }
             /**
@@ -17605,11 +17858,11 @@ public final class DataPlaneContract {
                             builderForValue) {
                 if (featureFlagsBuilder_ == null) {
                     featureFlags_ = builderForValue.build();
+                    onChanged();
                 } else {
                     featureFlagsBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00020000;
-                onChanged();
+
                 return this;
             }
             /**
@@ -17622,20 +17875,20 @@ public final class DataPlaneContract {
             public Builder mergeFeatureFlags(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags value) {
                 if (featureFlagsBuilder_ == null) {
-                    if (((bitField0_ & 0x00020000) != 0)
-                            && featureFlags_ != null
-                            && featureFlags_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags
-                                            .getDefaultInstance()) {
-                        getFeatureFlagsBuilder().mergeFrom(value);
+                    if (featureFlags_ != null) {
+                        featureFlags_ =
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags
+                                        .newBuilder(featureFlags_)
+                                        .mergeFrom(value)
+                                        .buildPartial();
                     } else {
                         featureFlags_ = value;
                     }
+                    onChanged();
                 } else {
                     featureFlagsBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00020000;
-                onChanged();
+
                 return this;
             }
             /**
@@ -17646,13 +17899,14 @@ public final class DataPlaneContract {
              * <code>.EgressFeatureFlags featureFlags = 14;</code>
              */
             public Builder clearFeatureFlags() {
-                bitField0_ = (bitField0_ & ~0x00020000);
-                featureFlags_ = null;
-                if (featureFlagsBuilder_ != null) {
-                    featureFlagsBuilder_.dispose();
+                if (featureFlagsBuilder_ == null) {
+                    featureFlags_ = null;
+                    onChanged();
+                } else {
+                    featureFlags_ = null;
                     featureFlagsBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -17664,7 +17918,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.Builder
                     getFeatureFlagsBuilder() {
-                bitField0_ |= 0x00020000;
+
                 onChanged();
                 return getFeatureFlagsFieldBuilder().getBuilder();
             }
@@ -17761,8 +18015,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 oidcServiceAccountName_ = value;
-                bitField0_ |= 0x00040000;
                 onChanged();
                 return this;
             }
@@ -17775,8 +18029,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearOidcServiceAccountName() {
+
                 oidcServiceAccountName_ = getDefaultInstance().getOidcServiceAccountName();
-                bitField0_ = (bitField0_ & ~0x00040000);
                 onChanged();
                 return this;
             }
@@ -17794,8 +18048,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 oidcServiceAccountName_ = value;
-                bitField0_ |= 0x00040000;
                 onChanged();
                 return this;
             }
@@ -17831,18 +18085,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Egress(input, extensionRegistry);
                     }
                 };
 
@@ -17912,6 +18155,49 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private EgressFeatureFlags(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 8: {
+                            enableRateLimiter_ = input.readBool();
+                            break;
+                        }
+                        case 16: {
+                            enableOrderedExecutorMetrics_ = input.readBool();
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
                     .internal_static_EgressFeatureFlags_descriptor;
@@ -17928,7 +18214,7 @@ public final class DataPlaneContract {
         }
 
         public static final int ENABLERATELIMITER_FIELD_NUMBER = 1;
-        private boolean enableRateLimiter_ = false;
+        private boolean enableRateLimiter_;
         /**
          * <pre>
          * Enable rateLimiter
@@ -17943,7 +18229,7 @@ public final class DataPlaneContract {
         }
 
         public static final int ENABLEORDEREDEXECUTORMETRICS_FIELD_NUMBER = 2;
-        private boolean enableOrderedExecutorMetrics_ = false;
+        private boolean enableOrderedExecutorMetrics_;
         /**
          * <pre>
          * Enable newMetrics
@@ -17977,7 +18263,7 @@ public final class DataPlaneContract {
             if (enableOrderedExecutorMetrics_ != false) {
                 output.writeBool(2, enableOrderedExecutorMetrics_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -17992,7 +18278,7 @@ public final class DataPlaneContract {
             if (enableOrderedExecutorMetrics_ != false) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(2, enableOrderedExecutorMetrics_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -18010,7 +18296,7 @@ public final class DataPlaneContract {
 
             if (getEnableRateLimiter() != other.getEnableRateLimiter()) return false;
             if (getEnableOrderedExecutorMetrics() != other.getEnableOrderedExecutorMetrics()) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -18025,7 +18311,7 @@ public final class DataPlaneContract {
             hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEnableRateLimiter());
             hash = (37 * hash) + ENABLEORDEREDEXECUTORMETRICS_FIELD_NUMBER;
             hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEnableOrderedExecutorMetrics());
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -18146,18 +18432,26 @@ public final class DataPlaneContract {
 
             // Construct using
             // dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 enableRateLimiter_ = false;
+
                 enableOrderedExecutorMetrics_ = false;
+
                 return this;
             }
 
@@ -18187,22 +18481,10 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                result.enableRateLimiter_ = enableRateLimiter_;
+                result.enableOrderedExecutorMetrics_ = enableOrderedExecutorMetrics_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.enableRateLimiter_ = enableRateLimiter_;
-                }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.enableOrderedExecutorMetrics_ = enableOrderedExecutorMetrics_;
-                }
             }
 
             @java.lang.Override
@@ -18259,7 +18541,7 @@ public final class DataPlaneContract {
                 if (other.getEnableOrderedExecutorMetrics() != false) {
                     setEnableOrderedExecutorMetrics(other.getEnableOrderedExecutorMetrics());
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -18274,44 +18556,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 8: {
-                                enableRateLimiter_ = input.readBool();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 8
-                            case 16: {
-                                enableOrderedExecutorMetrics_ = input.readBool();
-                                bitField0_ |= 0x00000002;
-                                break;
-                            } // case 16
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressFeatureFlags)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private boolean enableRateLimiter_;
             /**
@@ -18338,7 +18596,6 @@ public final class DataPlaneContract {
             public Builder setEnableRateLimiter(boolean value) {
 
                 enableRateLimiter_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -18351,7 +18608,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearEnableRateLimiter() {
-                bitField0_ = (bitField0_ & ~0x00000001);
+
                 enableRateLimiter_ = false;
                 onChanged();
                 return this;
@@ -18382,7 +18639,6 @@ public final class DataPlaneContract {
             public Builder setEnableOrderedExecutorMetrics(boolean value) {
 
                 enableOrderedExecutorMetrics_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -18395,7 +18651,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearEnableOrderedExecutorMetrics() {
-                bitField0_ = (bitField0_ & ~0x00000002);
+
                 enableOrderedExecutorMetrics_ = false;
                 onChanged();
                 return this;
@@ -18434,18 +18690,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new EgressFeatureFlags(input, extensionRegistry);
                     }
                 };
 
@@ -18631,6 +18876,80 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Ingress(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 8: {
+                            int rawValue = input.readEnum();
+
+                            contentMode_ = rawValue;
+                            break;
+                        }
+                        case 18: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            path_ = s;
+                            break;
+                        }
+                        case 26: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            host_ = s;
+                            break;
+                        }
+                        case 42: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            audience_ = s;
+                            break;
+                        }
+                        case 50: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                eventPolicies_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            eventPolicies_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    eventPolicies_ = java.util.Collections.unmodifiableList(eventPolicies_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Ingress_descriptor;
         }
@@ -18645,7 +18964,7 @@ public final class DataPlaneContract {
         }
 
         public static final int CONTENTMODE_FIELD_NUMBER = 1;
-        private int contentMode_ = 0;
+        private int contentMode_;
         /**
          * <pre>
          * Optional content mode to use when pushing messages to Kafka
@@ -18668,17 +18987,16 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
+            @SuppressWarnings("deprecation")
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result =
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.forNumber(contentMode_);
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
             return result == null
                     ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED
                     : result;
         }
 
         public static final int PATH_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object path_ = "";
+        private volatile java.lang.Object path_;
         /**
          * <pre>
          * path to listen for incoming events.
@@ -18720,9 +19038,7 @@ public final class DataPlaneContract {
         }
 
         public static final int HOST_FIELD_NUMBER = 3;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object host_ = "";
+        private volatile java.lang.Object host_;
         /**
          * <pre>
          * host header to match
@@ -18764,9 +19080,7 @@ public final class DataPlaneContract {
         }
 
         public static final int AUDIENCE_FIELD_NUMBER = 5;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object audience_ = "";
+        private volatile java.lang.Object audience_;
         /**
          * <pre>
          * OIDC audience of this ingress
@@ -18808,8 +19122,6 @@ public final class DataPlaneContract {
         }
 
         public static final int EVENTPOLICIES_FIELD_NUMBER = 6;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy> eventPolicies_;
         /**
          * <pre>
@@ -18889,19 +19201,19 @@ public final class DataPlaneContract {
                     != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
                 output.writeEnum(1, contentMode_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(path_)) {
+            if (!getPathBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, path_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(host_)) {
+            if (!getHostBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, host_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(audience_)) {
+            if (!getAudienceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 5, audience_);
             }
             for (int i = 0; i < eventPolicies_.size(); i++) {
                 output.writeMessage(6, eventPolicies_.get(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -18914,19 +19226,19 @@ public final class DataPlaneContract {
                     != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
                 size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, contentMode_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(path_)) {
+            if (!getPathBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, path_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(host_)) {
+            if (!getHostBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, host_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(audience_)) {
+            if (!getAudienceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, audience_);
             }
             for (int i = 0; i < eventPolicies_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(6, eventPolicies_.get(i));
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -18947,7 +19259,7 @@ public final class DataPlaneContract {
             if (!getHost().equals(other.getHost())) return false;
             if (!getAudience().equals(other.getAudience())) return false;
             if (!getEventPoliciesList().equals(other.getEventPoliciesList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -18970,7 +19282,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + EVENTPOLICIES_FIELD_NUMBER;
                 hash = (53 * hash) + getEventPoliciesList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -19097,27 +19409,38 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getEventPoliciesFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 contentMode_ = 0;
+
                 path_ = "";
+
                 host_ = "";
+
                 audience_ = "";
+
                 if (eventPoliciesBuilder_ == null) {
                     eventPolicies_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    eventPolicies_ = null;
                     eventPoliciesBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000010);
                 return this;
             }
 
@@ -19144,41 +19467,22 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress result) {
+                int from_bitField0_ = bitField0_;
+                result.contentMode_ = contentMode_;
+                result.path_ = path_;
+                result.host_ = host_;
+                result.audience_ = audience_;
                 if (eventPoliciesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000010) != 0)) {
+                    if (((bitField0_ & 0x00000001) != 0)) {
                         eventPolicies_ = java.util.Collections.unmodifiableList(eventPolicies_);
-                        bitField0_ = (bitField0_ & ~0x00000010);
+                        bitField0_ = (bitField0_ & ~0x00000001);
                     }
                     result.eventPolicies_ = eventPolicies_;
                 } else {
                     result.eventPolicies_ = eventPoliciesBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.contentMode_ = contentMode_;
-                }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.path_ = path_;
-                }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.host_ = host_;
-                }
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.audience_ = audience_;
-                }
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -19231,24 +19535,21 @@ public final class DataPlaneContract {
                 }
                 if (!other.getPath().isEmpty()) {
                     path_ = other.path_;
-                    bitField0_ |= 0x00000002;
                     onChanged();
                 }
                 if (!other.getHost().isEmpty()) {
                     host_ = other.host_;
-                    bitField0_ |= 0x00000004;
                     onChanged();
                 }
                 if (!other.getAudience().isEmpty()) {
                     audience_ = other.audience_;
-                    bitField0_ |= 0x00000008;
                     onChanged();
                 }
                 if (eventPoliciesBuilder_ == null) {
                     if (!other.eventPolicies_.isEmpty()) {
                         if (eventPolicies_.isEmpty()) {
                             eventPolicies_ = other.eventPolicies_;
-                            bitField0_ = (bitField0_ & ~0x00000010);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                         } else {
                             ensureEventPoliciesIsMutable();
                             eventPolicies_.addAll(other.eventPolicies_);
@@ -19261,7 +19562,7 @@ public final class DataPlaneContract {
                             eventPoliciesBuilder_.dispose();
                             eventPoliciesBuilder_ = null;
                             eventPolicies_ = other.eventPolicies_;
-                            bitField0_ = (bitField0_ & ~0x00000010);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                             eventPoliciesBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                                     ? getEventPoliciesFieldBuilder()
                                     : null;
@@ -19270,7 +19571,7 @@ public final class DataPlaneContract {
                         }
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -19285,64 +19586,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 8: {
-                                contentMode_ = input.readEnum();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 8
-                            case 18: {
-                                path_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000002;
-                                break;
-                            } // case 18
-                            case 26: {
-                                host_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000004;
-                                break;
-                            } // case 26
-                            case 42: {
-                                audience_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000008;
-                                break;
-                            } // case 42
-                            case 50: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy
-                                                        .parser(),
-                                                extensionRegistry);
-                                if (eventPoliciesBuilder_ == null) {
-                                    ensureEventPoliciesIsMutable();
-                                    eventPolicies_.add(m);
-                                } else {
-                                    eventPoliciesBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 50
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -19371,8 +19626,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder setContentModeValue(int value) {
+
                 contentMode_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -19386,9 +19641,9 @@ public final class DataPlaneContract {
              */
             @java.lang.Override
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
+                @SuppressWarnings("deprecation")
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result =
-                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.forNumber(
-                                contentMode_);
+                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
                 return result == null
                         ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED
                         : result;
@@ -19407,7 +19662,7 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
-                bitField0_ |= 0x00000001;
+
                 contentMode_ = value.getNumber();
                 onChanged();
                 return this;
@@ -19421,7 +19676,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearContentMode() {
-                bitField0_ = (bitField0_ & ~0x00000001);
+
                 contentMode_ = 0;
                 onChanged();
                 return this;
@@ -19479,8 +19734,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 path_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -19493,8 +19748,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearPath() {
+
                 path_ = getDefaultInstance().getPath();
-                bitField0_ = (bitField0_ & ~0x00000002);
                 onChanged();
                 return this;
             }
@@ -19512,8 +19767,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 path_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -19570,8 +19825,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 host_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -19584,8 +19839,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearHost() {
+
                 host_ = getDefaultInstance().getHost();
-                bitField0_ = (bitField0_ & ~0x00000004);
                 onChanged();
                 return this;
             }
@@ -19603,8 +19858,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 host_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -19661,8 +19916,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 audience_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -19675,8 +19930,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearAudience() {
+
                 audience_ = getDefaultInstance().getAudience();
-                bitField0_ = (bitField0_ & ~0x00000008);
                 onChanged();
                 return this;
             }
@@ -19694,8 +19949,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 audience_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -19704,10 +19959,10 @@ public final class DataPlaneContract {
                     eventPolicies_ = java.util.Collections.emptyList();
 
             private void ensureEventPoliciesIsMutable() {
-                if (!((bitField0_ & 0x00000010) != 0)) {
+                if (!((bitField0_ & 0x00000001) != 0)) {
                     eventPolicies_ = new java.util.ArrayList<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy>(eventPolicies_);
-                    bitField0_ |= 0x00000010;
+                    bitField0_ |= 0x00000001;
                 }
             }
 
@@ -19910,7 +20165,7 @@ public final class DataPlaneContract {
             public Builder clearEventPolicies() {
                 if (eventPoliciesBuilder_ == null) {
                     eventPolicies_ = java.util.Collections.emptyList();
-                    bitField0_ = (bitField0_ & ~0x00000010);
+                    bitField0_ = (bitField0_ & ~0x00000001);
                     onChanged();
                 } else {
                     eventPoliciesBuilder_.clear();
@@ -20027,7 +20282,7 @@ public final class DataPlaneContract {
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicy.Builder,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EventPolicyOrBuilder>(
-                            eventPolicies_, ((bitField0_ & 0x00000010) != 0), getParentForChildren(), isClean());
+                            eventPolicies_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
                     eventPolicies_ = null;
                 }
                 return eventPoliciesBuilder_;
@@ -20064,18 +20319,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Ingress(input, extensionRegistry);
                     }
                 };
 
@@ -20250,6 +20494,77 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Reference(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            uuid_ = s;
+                            break;
+                        }
+                        case 18: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            namespace_ = s;
+                            break;
+                        }
+                        case 26: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            name_ = s;
+                            break;
+                        }
+                        case 34: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            version_ = s;
+                            break;
+                        }
+                        case 42: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            kind_ = s;
+                            break;
+                        }
+                        case 50: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            groupVersion_ = s;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Reference_descriptor;
         }
@@ -20264,9 +20579,7 @@ public final class DataPlaneContract {
         }
 
         public static final int UUID_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object uuid_ = "";
+        private volatile java.lang.Object uuid_;
         /**
          * <pre>
          * Object id.
@@ -20308,9 +20621,7 @@ public final class DataPlaneContract {
         }
 
         public static final int NAMESPACE_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object namespace_ = "";
+        private volatile java.lang.Object namespace_;
         /**
          * <pre>
          * Object namespace.
@@ -20352,9 +20663,7 @@ public final class DataPlaneContract {
         }
 
         public static final int NAME_FIELD_NUMBER = 3;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object name_ = "";
+        private volatile java.lang.Object name_;
         /**
          * <pre>
          * Object name.
@@ -20396,9 +20705,7 @@ public final class DataPlaneContract {
         }
 
         public static final int VERSION_FIELD_NUMBER = 4;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object version_ = "";
+        private volatile java.lang.Object version_;
         /**
          * <pre>
          * Object ResourceVersion.
@@ -20440,9 +20747,7 @@ public final class DataPlaneContract {
         }
 
         public static final int KIND_FIELD_NUMBER = 5;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object kind_ = "";
+        private volatile java.lang.Object kind_;
         /**
          * <pre>
          * Object kind.
@@ -20484,9 +20789,7 @@ public final class DataPlaneContract {
         }
 
         public static final int GROUPVERSION_FIELD_NUMBER = 6;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object groupVersion_ = "";
+        private volatile java.lang.Object groupVersion_;
         /**
          * <pre>
          * Object GroupVersion.
@@ -20541,25 +20844,25 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(uuid_)) {
+            if (!getUuidBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uuid_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(namespace_)) {
+            if (!getNamespaceBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, namespace_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
+            if (!getNameBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, name_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(version_)) {
+            if (!getVersionBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 4, version_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(kind_)) {
+            if (!getKindBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 5, kind_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(groupVersion_)) {
+            if (!getGroupVersionBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 6, groupVersion_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -20568,25 +20871,25 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(uuid_)) {
+            if (!getUuidBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uuid_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(namespace_)) {
+            if (!getNamespaceBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, namespace_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
+            if (!getNameBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, name_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(version_)) {
+            if (!getVersionBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, version_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(kind_)) {
+            if (!getKindBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, kind_);
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(groupVersion_)) {
+            if (!getGroupVersionBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, groupVersion_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -20608,7 +20911,7 @@ public final class DataPlaneContract {
             if (!getVersion().equals(other.getVersion())) return false;
             if (!getKind().equals(other.getKind())) return false;
             if (!getGroupVersion().equals(other.getGroupVersion())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -20631,7 +20934,7 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getKind().hashCode();
             hash = (37 * hash) + GROUPVERSION_FIELD_NUMBER;
             hash = (53 * hash) + getGroupVersion().hashCode();
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -20753,22 +21056,34 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 uuid_ = "";
+
                 namespace_ = "";
+
                 name_ = "";
+
                 version_ = "";
+
                 kind_ = "";
+
                 groupVersion_ = "";
+
                 return this;
             }
 
@@ -20796,33 +21111,14 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                result.uuid_ = uuid_;
+                result.namespace_ = namespace_;
+                result.name_ = name_;
+                result.version_ = version_;
+                result.kind_ = kind_;
+                result.groupVersion_ = groupVersion_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.uuid_ = uuid_;
-                }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.namespace_ = namespace_;
-                }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.name_ = name_;
-                }
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.version_ = version_;
-                }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    result.kind_ = kind_;
-                }
-                if (((from_bitField0_ & 0x00000020) != 0)) {
-                    result.groupVersion_ = groupVersion_;
-                }
             }
 
             @java.lang.Override
@@ -20873,35 +21169,29 @@ public final class DataPlaneContract {
                     return this;
                 if (!other.getUuid().isEmpty()) {
                     uuid_ = other.uuid_;
-                    bitField0_ |= 0x00000001;
                     onChanged();
                 }
                 if (!other.getNamespace().isEmpty()) {
                     namespace_ = other.namespace_;
-                    bitField0_ |= 0x00000002;
                     onChanged();
                 }
                 if (!other.getName().isEmpty()) {
                     name_ = other.name_;
-                    bitField0_ |= 0x00000004;
                     onChanged();
                 }
                 if (!other.getVersion().isEmpty()) {
                     version_ = other.version_;
-                    bitField0_ |= 0x00000008;
                     onChanged();
                 }
                 if (!other.getKind().isEmpty()) {
                     kind_ = other.kind_;
-                    bitField0_ |= 0x00000010;
                     onChanged();
                 }
                 if (!other.getGroupVersion().isEmpty()) {
                     groupVersion_ = other.groupVersion_;
-                    bitField0_ |= 0x00000020;
                     onChanged();
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -20916,64 +21206,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                uuid_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            case 18: {
-                                namespace_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000002;
-                                break;
-                            } // case 18
-                            case 26: {
-                                name_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000004;
-                                break;
-                            } // case 26
-                            case 34: {
-                                version_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000008;
-                                break;
-                            } // case 34
-                            case 42: {
-                                kind_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000010;
-                                break;
-                            } // case 42
-                            case 50: {
-                                groupVersion_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000020;
-                                break;
-                            } // case 50
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private java.lang.Object uuid_ = "";
             /**
@@ -21027,8 +21273,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 uuid_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -21041,8 +21287,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearUuid() {
+
                 uuid_ = getDefaultInstance().getUuid();
-                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -21060,8 +21306,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 uuid_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -21118,8 +21364,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 namespace_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -21132,8 +21378,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearNamespace() {
+
                 namespace_ = getDefaultInstance().getNamespace();
-                bitField0_ = (bitField0_ & ~0x00000002);
                 onChanged();
                 return this;
             }
@@ -21151,8 +21397,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 namespace_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -21209,8 +21455,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 name_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -21223,8 +21469,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearName() {
+
                 name_ = getDefaultInstance().getName();
-                bitField0_ = (bitField0_ & ~0x00000004);
                 onChanged();
                 return this;
             }
@@ -21242,8 +21488,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 name_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -21300,8 +21546,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 version_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -21314,8 +21560,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearVersion() {
+
                 version_ = getDefaultInstance().getVersion();
-                bitField0_ = (bitField0_ & ~0x00000008);
                 onChanged();
                 return this;
             }
@@ -21333,8 +21579,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 version_ = value;
-                bitField0_ |= 0x00000008;
                 onChanged();
                 return this;
             }
@@ -21391,8 +21637,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 kind_ = value;
-                bitField0_ |= 0x00000010;
                 onChanged();
                 return this;
             }
@@ -21405,8 +21651,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearKind() {
+
                 kind_ = getDefaultInstance().getKind();
-                bitField0_ = (bitField0_ & ~0x00000010);
                 onChanged();
                 return this;
             }
@@ -21424,8 +21670,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 kind_ = value;
-                bitField0_ |= 0x00000010;
                 onChanged();
                 return this;
             }
@@ -21482,8 +21728,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 groupVersion_ = value;
-                bitField0_ |= 0x00000020;
                 onChanged();
                 return this;
             }
@@ -21496,8 +21742,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearGroupVersion() {
+
                 groupVersion_ = getDefaultInstance().getGroupVersion();
-                bitField0_ = (bitField0_ & ~0x00000020);
                 onChanged();
                 return this;
             }
@@ -21515,8 +21761,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 groupVersion_ = value;
-                bitField0_ |= 0x00000020;
                 onChanged();
                 return this;
             }
@@ -21552,18 +21798,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Reference(input, extensionRegistry);
                     }
                 };
 
@@ -21688,6 +21923,74 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private SecretReference(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder =
+                                    null;
+                            if (reference_ != null) {
+                                subBuilder = reference_.toBuilder();
+                            }
+                            reference_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(reference_);
+                                reference_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 18: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                keyFieldReferences_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                                                .KeyFieldReference>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            keyFieldReferences_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    keyFieldReferences_ = java.util.Collections.unmodifiableList(keyFieldReferences_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
                     .internal_static_SecretReference_descriptor;
@@ -21739,14 +22042,10 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
-            return reference_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance()
-                    : reference_;
+            return getReference();
         }
 
         public static final int KEYFIELDREFERENCES_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference>
                 keyFieldReferences_;
         /**
@@ -21831,7 +22130,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < keyFieldReferences_.size(); i++) {
                 output.writeMessage(2, keyFieldReferences_.get(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -21846,7 +22145,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < keyFieldReferences_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, keyFieldReferences_.get(i));
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -21867,7 +22166,7 @@ public final class DataPlaneContract {
                 if (!getReference().equals(other.getReference())) return false;
             }
             if (!getKeyFieldReferencesList().equals(other.getKeyFieldReferencesList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -21886,7 +22185,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + KEYFIELDREFERENCES_FIELD_NUMBER;
                 hash = (53 * hash) + getKeyFieldReferencesList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -22005,28 +22304,36 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getKeyFieldReferencesFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
-                reference_ = null;
-                if (referenceBuilder_ != null) {
-                    referenceBuilder_.dispose();
+                if (referenceBuilder_ == null) {
+                    reference_ = null;
+                } else {
+                    reference_ = null;
                     referenceBuilder_ = null;
                 }
                 if (keyFieldReferencesBuilder_ == null) {
                     keyFieldReferences_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    keyFieldReferences_ = null;
                     keyFieldReferencesBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000002);
                 return this;
             }
 
@@ -22056,33 +22363,23 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
+                int from_bitField0_ = bitField0_;
+                if (referenceBuilder_ == null) {
+                    result.reference_ = reference_;
+                } else {
+                    result.reference_ = referenceBuilder_.build();
                 }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference result) {
                 if (keyFieldReferencesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000002) != 0)) {
+                    if (((bitField0_ & 0x00000001) != 0)) {
                         keyFieldReferences_ = java.util.Collections.unmodifiableList(keyFieldReferences_);
-                        bitField0_ = (bitField0_ & ~0x00000002);
+                        bitField0_ = (bitField0_ & ~0x00000001);
                     }
                     result.keyFieldReferences_ = keyFieldReferences_;
                 } else {
                     result.keyFieldReferences_ = keyFieldReferencesBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.reference_ = referenceBuilder_ == null ? reference_ : referenceBuilder_.build();
-                }
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -22140,7 +22437,7 @@ public final class DataPlaneContract {
                     if (!other.keyFieldReferences_.isEmpty()) {
                         if (keyFieldReferences_.isEmpty()) {
                             keyFieldReferences_ = other.keyFieldReferences_;
-                            bitField0_ = (bitField0_ & ~0x00000002);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                         } else {
                             ensureKeyFieldReferencesIsMutable();
                             keyFieldReferences_.addAll(other.keyFieldReferences_);
@@ -22153,7 +22450,7 @@ public final class DataPlaneContract {
                             keyFieldReferencesBuilder_.dispose();
                             keyFieldReferencesBuilder_ = null;
                             keyFieldReferences_ = other.keyFieldReferences_;
-                            bitField0_ = (bitField0_ & ~0x00000002);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                             keyFieldReferencesBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                                     ? getKeyFieldReferencesFieldBuilder()
                                     : null;
@@ -22162,7 +22459,7 @@ public final class DataPlaneContract {
                         }
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -22177,49 +22474,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                input.readMessage(getReferenceFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            case 18: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .KeyFieldReference.parser(),
-                                                extensionRegistry);
-                                if (keyFieldReferencesBuilder_ == null) {
-                                    ensureKeyFieldReferencesIsMutable();
-                                    keyFieldReferences_.add(m);
-                                } else {
-                                    keyFieldReferencesBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 18
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -22240,7 +22506,7 @@ public final class DataPlaneContract {
              * @return Whether the reference field is set.
              */
             public boolean hasReference() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return referenceBuilder_ != null || reference_ != null;
             }
             /**
              * <pre>
@@ -22273,11 +22539,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     reference_ = value;
+                    onChanged();
                 } else {
                     referenceBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
+
                 return this;
             }
             /**
@@ -22291,11 +22557,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
                 if (referenceBuilder_ == null) {
                     reference_ = builderForValue.build();
+                    onChanged();
                 } else {
                     referenceBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
+
                 return this;
             }
             /**
@@ -22308,20 +22574,19 @@ public final class DataPlaneContract {
             public Builder mergeReference(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
                 if (referenceBuilder_ == null) {
-                    if (((bitField0_ & 0x00000001) != 0)
-                            && reference_ != null
-                            && reference_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference
-                                            .getDefaultInstance()) {
-                        getReferenceBuilder().mergeFrom(value);
+                    if (reference_ != null) {
+                        reference_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(
+                                        reference_)
+                                .mergeFrom(value)
+                                .buildPartial();
                     } else {
                         reference_ = value;
                     }
+                    onChanged();
                 } else {
                     referenceBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
+
                 return this;
             }
             /**
@@ -22332,13 +22597,14 @@ public final class DataPlaneContract {
              * <code>.Reference reference = 1;</code>
              */
             public Builder clearReference() {
-                bitField0_ = (bitField0_ & ~0x00000001);
-                reference_ = null;
-                if (referenceBuilder_ != null) {
-                    referenceBuilder_.dispose();
+                if (referenceBuilder_ == null) {
+                    reference_ = null;
+                    onChanged();
+                } else {
+                    reference_ = null;
                     referenceBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -22350,7 +22616,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder
                     getReferenceBuilder() {
-                bitField0_ |= 0x00000001;
+
                 onChanged();
                 return getReferenceFieldBuilder().getBuilder();
             }
@@ -22399,11 +22665,11 @@ public final class DataPlaneContract {
                     keyFieldReferences_ = java.util.Collections.emptyList();
 
             private void ensureKeyFieldReferencesIsMutable() {
-                if (!((bitField0_ & 0x00000002) != 0)) {
+                if (!((bitField0_ & 0x00000001) != 0)) {
                     keyFieldReferences_ = new java.util.ArrayList<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference>(
                             keyFieldReferences_);
-                    bitField0_ |= 0x00000002;
+                    bitField0_ |= 0x00000001;
                 }
             }
 
@@ -22611,7 +22877,7 @@ public final class DataPlaneContract {
             public Builder clearKeyFieldReferences() {
                 if (keyFieldReferencesBuilder_ == null) {
                     keyFieldReferences_ = java.util.Collections.emptyList();
-                    bitField0_ = (bitField0_ & ~0x00000002);
+                    bitField0_ = (bitField0_ & ~0x00000001);
                     onChanged();
                 } else {
                     keyFieldReferencesBuilder_.clear();
@@ -22730,7 +22996,7 @@ public final class DataPlaneContract {
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.Builder,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReferenceOrBuilder>(
-                            keyFieldReferences_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+                            keyFieldReferences_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
                     keyFieldReferences_ = null;
                 }
                 return keyFieldReferencesBuilder_;
@@ -22769,18 +23035,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new SecretReference(input, extensionRegistry);
                     }
                 };
 
@@ -22872,6 +23127,53 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private KeyFieldReference(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 18: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            secretKey_ = s;
+                            break;
+                        }
+                        case 24: {
+                            int rawValue = input.readEnum();
+
+                            field_ = rawValue;
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
                     .internal_static_KeyFieldReference_descriptor;
@@ -22888,9 +23190,7 @@ public final class DataPlaneContract {
         }
 
         public static final int SECRETKEY_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object secretKey_ = "";
+        private volatile java.lang.Object secretKey_;
         /**
          * <pre>
          * Key in the secret.
@@ -22932,7 +23232,7 @@ public final class DataPlaneContract {
         }
 
         public static final int FIELD_FIELD_NUMBER = 3;
-        private int field_ = 0;
+        private int field_;
         /**
          * <pre>
          * Field name.
@@ -22955,8 +23255,9 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField getField() {
+            @SuppressWarnings("deprecation")
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField result =
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.forNumber(field_);
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.valueOf(field_);
             return result == null
                     ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.UNRECOGNIZED
                     : result;
@@ -22976,7 +23277,7 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(secretKey_)) {
+            if (!getSecretKeyBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, secretKey_);
             }
             if (field_
@@ -22984,7 +23285,7 @@ public final class DataPlaneContract {
                             .getNumber()) {
                 output.writeEnum(3, field_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -22993,7 +23294,7 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(secretKey_)) {
+            if (!getSecretKeyBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, secretKey_);
             }
             if (field_
@@ -23001,7 +23302,7 @@ public final class DataPlaneContract {
                             .getNumber()) {
                 size += com.google.protobuf.CodedOutputStream.computeEnumSize(3, field_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -23019,7 +23320,7 @@ public final class DataPlaneContract {
 
             if (!getSecretKey().equals(other.getSecretKey())) return false;
             if (field_ != other.field_) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -23034,7 +23335,7 @@ public final class DataPlaneContract {
             hash = (53 * hash) + getSecretKey().hashCode();
             hash = (37 * hash) + FIELD_FIELD_NUMBER;
             hash = (53 * hash) + field_;
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -23154,18 +23455,26 @@ public final class DataPlaneContract {
 
             // Construct using
             // dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 secretKey_ = "";
+
                 field_ = 0;
+
                 return this;
             }
 
@@ -23195,22 +23504,10 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                result.secretKey_ = secretKey_;
+                result.field_ = field_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.secretKey_ = secretKey_;
-                }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.field_ = field_;
-                }
             }
 
             @java.lang.Override
@@ -23263,13 +23560,12 @@ public final class DataPlaneContract {
                                 .getDefaultInstance()) return this;
                 if (!other.getSecretKey().isEmpty()) {
                     secretKey_ = other.secretKey_;
-                    bitField0_ |= 0x00000001;
                     onChanged();
                 }
                 if (other.field_ != 0) {
                     setFieldValue(other.getFieldValue());
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -23284,44 +23580,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 18: {
-                                secretKey_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 18
-                            case 24: {
-                                field_ = input.readEnum();
-                                bitField0_ |= 0x00000002;
-                                break;
-                            } // case 24
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KeyFieldReference)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private java.lang.Object secretKey_ = "";
             /**
@@ -23375,8 +23647,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 secretKey_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -23389,8 +23661,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearSecretKey() {
+
                 secretKey_ = getDefaultInstance().getSecretKey();
-                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -23408,8 +23680,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 secretKey_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -23437,8 +23709,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder setFieldValue(int value) {
+
                 field_ = value;
-                bitField0_ |= 0x00000002;
                 onChanged();
                 return this;
             }
@@ -23452,8 +23724,9 @@ public final class DataPlaneContract {
              */
             @java.lang.Override
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField getField() {
+                @SuppressWarnings("deprecation")
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField result =
-                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.forNumber(field_);
+                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.valueOf(field_);
                 return result == null
                         ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretField.UNRECOGNIZED
                         : result;
@@ -23471,7 +23744,7 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
-                bitField0_ |= 0x00000002;
+
                 field_ = value.getNumber();
                 onChanged();
                 return this;
@@ -23485,7 +23758,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearField() {
-                bitField0_ = (bitField0_ & ~0x00000002);
+
                 field_ = 0;
                 onChanged();
                 return this;
@@ -23524,18 +23797,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new KeyFieldReference(input, extensionRegistry);
                     }
                 };
 
@@ -23652,6 +23914,63 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private MultiSecretReference(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 8: {
+                            int rawValue = input.readEnum();
+
+                            protocol_ = rawValue;
+                            break;
+                        }
+                        case 18: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                references_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            references_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference
+                                            .parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    references_ = java.util.Collections.unmodifiableList(references_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract
                     .internal_static_MultiSecretReference_descriptor;
@@ -23668,7 +23987,7 @@ public final class DataPlaneContract {
         }
 
         public static final int PROTOCOL_FIELD_NUMBER = 1;
-        private int protocol_ = 0;
+        private int protocol_;
         /**
          * <pre>
          * Protocol.
@@ -23691,16 +24010,15 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol getProtocol() {
+            @SuppressWarnings("deprecation")
             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol result =
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.forNumber(protocol_);
+                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.valueOf(protocol_);
             return result == null
                     ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.UNRECOGNIZED
                     : result;
         }
 
         public static final int REFERENCES_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference>
                 references_;
         /**
@@ -23784,7 +24102,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < references_.size(); i++) {
                 output.writeMessage(2, references_.get(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -23800,7 +24118,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < references_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, references_.get(i));
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -23818,7 +24136,7 @@ public final class DataPlaneContract {
 
             if (protocol_ != other.protocol_) return false;
             if (!getReferencesList().equals(other.getReferencesList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -23835,7 +24153,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + REFERENCES_FIELD_NUMBER;
                 hash = (53 * hash) + getReferencesList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -23956,24 +24274,32 @@ public final class DataPlaneContract {
 
             // Construct using
             // dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getReferencesFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 protocol_ = 0;
+
                 if (referencesBuilder_ == null) {
                     references_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    references_ = null;
                     referencesBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000002);
                 return this;
             }
 
@@ -24004,33 +24330,19 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference result) {
+                int from_bitField0_ = bitField0_;
+                result.protocol_ = protocol_;
                 if (referencesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000002) != 0)) {
+                    if (((bitField0_ & 0x00000001) != 0)) {
                         references_ = java.util.Collections.unmodifiableList(references_);
-                        bitField0_ = (bitField0_ & ~0x00000002);
+                        bitField0_ = (bitField0_ & ~0x00000001);
                     }
                     result.references_ = references_;
                 } else {
                     result.references_ = referencesBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.protocol_ = protocol_;
-                }
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -24089,7 +24401,7 @@ public final class DataPlaneContract {
                     if (!other.references_.isEmpty()) {
                         if (references_.isEmpty()) {
                             references_ = other.references_;
-                            bitField0_ = (bitField0_ & ~0x00000002);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                         } else {
                             ensureReferencesIsMutable();
                             references_.addAll(other.references_);
@@ -24102,7 +24414,7 @@ public final class DataPlaneContract {
                             referencesBuilder_.dispose();
                             referencesBuilder_ = null;
                             references_ = other.references_;
-                            bitField0_ = (bitField0_ & ~0x00000002);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                             referencesBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                                     ? getReferencesFieldBuilder()
                                     : null;
@@ -24111,7 +24423,7 @@ public final class DataPlaneContract {
                         }
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -24126,49 +24438,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 8: {
-                                protocol_ = input.readEnum();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 8
-                            case 18: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract
-                                                        .SecretReference.parser(),
-                                                extensionRegistry);
-                                if (referencesBuilder_ == null) {
-                                    ensureReferencesIsMutable();
-                                    references_.add(m);
-                                } else {
-                                    referencesBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 18
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -24197,8 +24478,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder setProtocolValue(int value) {
+
                 protocol_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -24212,8 +24493,9 @@ public final class DataPlaneContract {
              */
             @java.lang.Override
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol getProtocol() {
+                @SuppressWarnings("deprecation")
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol result =
-                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.forNumber(protocol_);
+                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.valueOf(protocol_);
                 return result == null
                         ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Protocol.UNRECOGNIZED
                         : result;
@@ -24231,7 +24513,7 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
-                bitField0_ |= 0x00000001;
+
                 protocol_ = value.getNumber();
                 onChanged();
                 return this;
@@ -24245,7 +24527,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearProtocol() {
-                bitField0_ = (bitField0_ & ~0x00000001);
+
                 protocol_ = 0;
                 onChanged();
                 return this;
@@ -24255,10 +24537,10 @@ public final class DataPlaneContract {
                     references_ = java.util.Collections.emptyList();
 
             private void ensureReferencesIsMutable() {
-                if (!((bitField0_ & 0x00000002) != 0)) {
+                if (!((bitField0_ & 0x00000001) != 0)) {
                     references_ = new java.util.ArrayList<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference>(references_);
-                    bitField0_ |= 0x00000002;
+                    bitField0_ |= 0x00000001;
                 }
             }
 
@@ -24466,7 +24748,7 @@ public final class DataPlaneContract {
             public Builder clearReferences() {
                 if (referencesBuilder_ == null) {
                     references_ = java.util.Collections.emptyList();
-                    bitField0_ = (bitField0_ & ~0x00000002);
+                    bitField0_ = (bitField0_ & ~0x00000001);
                     onChanged();
                 } else {
                     referencesBuilder_.clear();
@@ -24585,7 +24867,7 @@ public final class DataPlaneContract {
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReference.Builder,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.SecretReferenceOrBuilder>(
-                            references_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+                            references_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
                     references_ = null;
                 }
                 return referencesBuilder_;
@@ -24624,18 +24906,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new MultiSecretReference(input, extensionRegistry);
                     }
                 };
 
@@ -24680,11 +24951,7 @@ public final class DataPlaneContract {
         /**
          * <code>map&lt;string, string&gt; extensions = 1;</code>
          */
-        /* nullable */
-        java.lang.String getExtensionsOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue);
+        java.lang.String getExtensionsOrDefault(java.lang.String key, java.lang.String defaultValue);
         /**
          * <code>map&lt;string, string&gt; extensions = 1;</code>
          */
@@ -24718,6 +24985,55 @@ public final class DataPlaneContract {
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
+        }
+
+        private CloudEventOverrides(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                extensions_ = com.google.protobuf.MapField.newMapField(
+                                        ExtensionsDefaultEntryHolder.defaultEntry);
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> extensions__ =
+                                    input.readMessage(
+                                            ExtensionsDefaultEntryHolder.defaultEntry.getParserForType(),
+                                            extensionRegistry);
+                            extensions_.getMutableMap().put(extensions__.getKey(), extensions__.getValue());
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
         }
 
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
@@ -24759,7 +25075,6 @@ public final class DataPlaneContract {
                             "");
         }
 
-        @SuppressWarnings("serial")
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> extensions_;
 
         private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetExtensions() {
@@ -24778,7 +25093,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public boolean containsExtensions(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             return internalGetExtensions().getMap().containsKey(key);
         }
@@ -24801,12 +25116,9 @@ public final class DataPlaneContract {
          * <code>map&lt;string, string&gt; extensions = 1;</code>
          */
         @java.lang.Override
-        public /* nullable */ java.lang.String getExtensionsOrDefault(
-                java.lang.String key,
-                /* nullable */
-                java.lang.String defaultValue) {
+        public java.lang.String getExtensionsOrDefault(java.lang.String key, java.lang.String defaultValue) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetExtensions().getMap();
@@ -24818,7 +25130,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public java.lang.String getExtensionsOrThrow(java.lang.String key) {
             if (key == null) {
-                throw new NullPointerException("map key");
+                throw new java.lang.NullPointerException();
             }
             java.util.Map<java.lang.String, java.lang.String> map =
                     internalGetExtensions().getMap();
@@ -24844,7 +25156,7 @@ public final class DataPlaneContract {
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
                     output, internalGetExtensions(), ExtensionsDefaultEntryHolder.defaultEntry, 1);
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -24863,7 +25175,7 @@ public final class DataPlaneContract {
                                 .build();
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, extensions__);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -24880,7 +25192,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides) obj;
 
             if (!internalGetExtensions().equals(other.internalGetExtensions())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -24895,7 +25207,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + EXTENSIONS_FIELD_NUMBER;
                 hash = (53 * hash) + internalGetExtensions().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -25040,16 +25352,22 @@ public final class DataPlaneContract {
 
             // Construct using
             // dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 internalGetMutableExtensions().clear();
                 return this;
             }
@@ -25081,20 +25399,11 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                int from_bitField0_ = bitField0_;
+                result.extensions_ = internalGetExtensions();
+                result.extensions_.makeImmutable();
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.extensions_ = internalGetExtensions();
-                    result.extensions_.makeImmutable();
-                }
             }
 
             @java.lang.Override
@@ -25146,8 +25455,7 @@ public final class DataPlaneContract {
                         == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides
                                 .getDefaultInstance()) return this;
                 internalGetMutableExtensions().mergeFrom(other.internalGetExtensions());
-                bitField0_ |= 0x00000001;
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -25162,41 +25470,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                com.google.protobuf.MapEntry<java.lang.String, java.lang.String> extensions__ =
-                                        input.readMessage(
-                                                ExtensionsDefaultEntryHolder.defaultEntry.getParserForType(),
-                                                extensionRegistry);
-                                internalGetMutableExtensions()
-                                        .getMutableMap()
-                                        .put(extensions__.getKey(), extensions__.getValue());
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -25212,14 +25497,14 @@ public final class DataPlaneContract {
             }
 
             private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableExtensions() {
+                onChanged();
+                ;
                 if (extensions_ == null) {
                     extensions_ = com.google.protobuf.MapField.newMapField(ExtensionsDefaultEntryHolder.defaultEntry);
                 }
                 if (!extensions_.isMutable()) {
                     extensions_ = extensions_.copy();
                 }
-                bitField0_ |= 0x00000001;
-                onChanged();
                 return extensions_;
             }
 
@@ -25232,7 +25517,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public boolean containsExtensions(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 return internalGetExtensions().getMap().containsKey(key);
             }
@@ -25255,12 +25540,9 @@ public final class DataPlaneContract {
              * <code>map&lt;string, string&gt; extensions = 1;</code>
              */
             @java.lang.Override
-            public /* nullable */ java.lang.String getExtensionsOrDefault(
-                    java.lang.String key,
-                    /* nullable */
-                    java.lang.String defaultValue) {
+            public java.lang.String getExtensionsOrDefault(java.lang.String key, java.lang.String defaultValue) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetExtensions().getMap();
@@ -25272,7 +25554,7 @@ public final class DataPlaneContract {
             @java.lang.Override
             public java.lang.String getExtensionsOrThrow(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 java.util.Map<java.lang.String, java.lang.String> map =
                         internalGetExtensions().getMap();
@@ -25283,7 +25565,6 @@ public final class DataPlaneContract {
             }
 
             public Builder clearExtensions() {
-                bitField0_ = (bitField0_ & ~0x00000001);
                 internalGetMutableExtensions().getMutableMap().clear();
                 return this;
             }
@@ -25292,7 +25573,7 @@ public final class DataPlaneContract {
              */
             public Builder removeExtensions(java.lang.String key) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableExtensions().getMutableMap().remove(key);
                 return this;
@@ -25302,7 +25583,6 @@ public final class DataPlaneContract {
              */
             @java.lang.Deprecated
             public java.util.Map<java.lang.String, java.lang.String> getMutableExtensions() {
-                bitField0_ |= 0x00000001;
                 return internalGetMutableExtensions().getMutableMap();
             }
             /**
@@ -25310,13 +25590,12 @@ public final class DataPlaneContract {
              */
             public Builder putExtensions(java.lang.String key, java.lang.String value) {
                 if (key == null) {
-                    throw new NullPointerException("map key");
+                    throw new java.lang.NullPointerException();
                 }
                 if (value == null) {
-                    throw new NullPointerException("map value");
+                    throw new java.lang.NullPointerException();
                 }
                 internalGetMutableExtensions().getMutableMap().put(key, value);
-                bitField0_ |= 0x00000001;
                 return this;
             }
             /**
@@ -25324,7 +25603,6 @@ public final class DataPlaneContract {
              */
             public Builder putAllExtensions(java.util.Map<java.lang.String, java.lang.String> values) {
                 internalGetMutableExtensions().getMutableMap().putAll(values);
-                bitField0_ |= 0x00000001;
                 return this;
             }
 
@@ -25361,18 +25639,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new CloudEventOverrides(input, extensionRegistry);
                     }
                 };
 
@@ -25429,6 +25696,45 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private FeatureFlags(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 8: {
+                            enableEventTypeAutocreate_ = input.readBool();
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_FeatureFlags_descriptor;
         }
@@ -25443,7 +25749,7 @@ public final class DataPlaneContract {
         }
 
         public static final int ENABLEEVENTTYPEAUTOCREATE_FIELD_NUMBER = 1;
-        private boolean enableEventTypeAutocreate_ = false;
+        private boolean enableEventTypeAutocreate_;
         /**
          * <code>bool enableEventTypeAutocreate = 1;</code>
          * @return The enableEventTypeAutocreate.
@@ -25470,7 +25776,7 @@ public final class DataPlaneContract {
             if (enableEventTypeAutocreate_ != false) {
                 output.writeBool(1, enableEventTypeAutocreate_);
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -25482,7 +25788,7 @@ public final class DataPlaneContract {
             if (enableEventTypeAutocreate_ != false) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(1, enableEventTypeAutocreate_);
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -25499,7 +25805,7 @@ public final class DataPlaneContract {
                     (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags) obj;
 
             if (getEnableEventTypeAutocreate() != other.getEnableEventTypeAutocreate()) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -25512,7 +25818,7 @@ public final class DataPlaneContract {
             hash = (19 * hash) + getDescriptor().hashCode();
             hash = (37 * hash) + ENABLEEVENTTYPEAUTOCREATE_FIELD_NUMBER;
             hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEnableEventTypeAutocreate());
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -25631,17 +25937,24 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 enableEventTypeAutocreate_ = false;
+
                 return this;
             }
 
@@ -25670,19 +25983,9 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags(this);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
+                result.enableEventTypeAutocreate_ = enableEventTypeAutocreate_;
                 onBuilt();
                 return result;
-            }
-
-            private void buildPartial0(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.enableEventTypeAutocreate_ = enableEventTypeAutocreate_;
-                }
             }
 
             @java.lang.Override
@@ -25734,7 +26037,7 @@ public final class DataPlaneContract {
                 if (other.getEnableEventTypeAutocreate() != false) {
                     setEnableEventTypeAutocreate(other.getEnableEventTypeAutocreate());
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -25749,39 +26052,20 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 8: {
-                                enableEventTypeAutocreate_ = input.readBool();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 8
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
-
-            private int bitField0_;
 
             private boolean enableEventTypeAutocreate_;
             /**
@@ -25800,7 +26084,6 @@ public final class DataPlaneContract {
             public Builder setEnableEventTypeAutocreate(boolean value) {
 
                 enableEventTypeAutocreate_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -25809,7 +26092,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearEnableEventTypeAutocreate() {
-                bitField0_ = (bitField0_ & ~0x00000001);
+
                 enableEventTypeAutocreate_ = false;
                 onChanged();
                 return this;
@@ -25846,18 +26129,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new FeatureFlags(input, extensionRegistry);
                     }
                 };
 
@@ -26356,6 +26628,223 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Resource(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 10: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            uid_ = s;
+                            break;
+                        }
+                        case 18: {
+                            java.lang.String s = input.readStringRequireUtf8();
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                topics_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            topics_.add(s);
+                            break;
+                        }
+                        case 26: {
+                            java.lang.String s = input.readStringRequireUtf8();
+
+                            bootstrapServers_ = s;
+                            break;
+                        }
+                        case 34: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder subBuilder =
+                                    null;
+                            if (ingress_ != null) {
+                                subBuilder = ingress_.toBuilder();
+                            }
+                            ingress_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(ingress_);
+                                ingress_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 42: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder
+                                    subBuilder = null;
+                            if (egressConfig_ != null) {
+                                subBuilder = egressConfig_.toBuilder();
+                            }
+                            egressConfig_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(egressConfig_);
+                                egressConfig_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 50: {
+                            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                                egresses_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress>();
+                                mutable_bitField0_ |= 0x00000002;
+                            }
+                            egresses_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        case 58: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder =
+                                    null;
+                            if (authCase_ == 7) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty)
+                                                auth_)
+                                        .toBuilder();
+                            }
+                            auth_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_);
+                                auth_ = subBuilder.buildPartial();
+                            }
+                            authCase_ = 7;
+                            break;
+                        }
+                        case 66: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder =
+                                    null;
+                            if (authCase_ == 8) {
+                                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference)
+                                                auth_)
+                                        .toBuilder();
+                            }
+                            auth_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
+                                auth_ = subBuilder.buildPartial();
+                            }
+                            authCase_ = 8;
+                            break;
+                        }
+                        case 74: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference.Builder
+                                    subBuilder = null;
+                            if (authCase_ == 9) {
+                                subBuilder =
+                                        ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                                                                .MultiSecretReference)
+                                                        auth_)
+                                                .toBuilder();
+                            }
+                            auth_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.MultiSecretReference
+                                            .parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(
+                                        (dev.knative.eventing.kafka.broker.contract.DataPlaneContract
+                                                        .MultiSecretReference)
+                                                auth_);
+                                auth_ = subBuilder.buildPartial();
+                            }
+                            authCase_ = 9;
+                            break;
+                        }
+                        case 82: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder
+                                    subBuilder = null;
+                            if (cloudEventOverrides_ != null) {
+                                subBuilder = cloudEventOverrides_.toBuilder();
+                            }
+                            cloudEventOverrides_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides
+                                            .parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(cloudEventOverrides_);
+                                cloudEventOverrides_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 90: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder =
+                                    null;
+                            if (reference_ != null) {
+                                subBuilder = reference_.toBuilder();
+                            }
+                            reference_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(reference_);
+                                reference_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        case 98: {
+                            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.Builder
+                                    subBuilder = null;
+                            if (featureFlags_ != null) {
+                                subBuilder = featureFlags_.toBuilder();
+                            }
+                            featureFlags_ = input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.parser(),
+                                    extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(featureFlags_);
+                                featureFlags_ = subBuilder.buildPartial();
+                            }
+
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    topics_ = topics_.getUnmodifiableView();
+                }
+                if (((mutable_bitField0_ & 0x00000002) != 0)) {
+                    egresses_ = java.util.Collections.unmodifiableList(egresses_);
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Resource_descriptor;
         }
@@ -26419,9 +26908,7 @@ public final class DataPlaneContract {
         }
 
         public static final int UID_FIELD_NUMBER = 1;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object uid_ = "";
+        private volatile java.lang.Object uid_;
         /**
          * <pre>
          * Id of the resource
@@ -26465,8 +26952,6 @@ public final class DataPlaneContract {
         }
 
         public static final int TOPICS_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
         private com.google.protobuf.LazyStringList topics_;
         /**
          * <pre>
@@ -26524,9 +27009,7 @@ public final class DataPlaneContract {
         }
 
         public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 3;
-
-        @SuppressWarnings("serial")
-        private volatile java.lang.Object bootstrapServers_ = "";
+        private volatile java.lang.Object bootstrapServers_;
         /**
          * <pre>
          * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
@@ -26606,9 +27089,7 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder() {
-            return ingress_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance()
-                    : ingress_;
+            return getIngress();
         }
 
         public static final int EGRESSCONFIG_FIELD_NUMBER = 5;
@@ -26649,14 +27130,10 @@ public final class DataPlaneContract {
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder
                 getEgressConfigOrBuilder() {
-            return egressConfig_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance()
-                    : egressConfig_;
+            return getEgressConfig();
         }
 
         public static final int EGRESSES_FIELD_NUMBER = 6;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> egresses_;
         /**
          * <pre>
@@ -26970,10 +27447,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverridesOrBuilder
                 getCloudEventOverridesOrBuilder() {
-            return cloudEventOverrides_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides
-                            .getDefaultInstance()
-                    : cloudEventOverrides_;
+            return getCloudEventOverrides();
         }
 
         public static final int REFERENCE_FIELD_NUMBER = 11;
@@ -27025,9 +27499,7 @@ public final class DataPlaneContract {
          */
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getReferenceOrBuilder() {
-            return reference_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance()
-                    : reference_;
+            return getReference();
         }
 
         public static final int FEATUREFLAGS_FIELD_NUMBER = 12;
@@ -27068,9 +27540,7 @@ public final class DataPlaneContract {
         @java.lang.Override
         public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlagsOrBuilder
                 getFeatureFlagsOrBuilder() {
-            return featureFlags_ == null
-                    ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.getDefaultInstance()
-                    : featureFlags_;
+            return getFeatureFlags();
         }
 
         private byte memoizedIsInitialized = -1;
@@ -27087,13 +27557,13 @@ public final class DataPlaneContract {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(uid_)) {
+            if (!getUidBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uid_);
             }
             for (int i = 0; i < topics_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topics_.getRaw(i));
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(bootstrapServers_)) {
+            if (!getBootstrapServersBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, bootstrapServers_);
             }
             if (ingress_ != null) {
@@ -27124,7 +27594,7 @@ public final class DataPlaneContract {
             if (featureFlags_ != null) {
                 output.writeMessage(12, getFeatureFlags());
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -27133,7 +27603,7 @@ public final class DataPlaneContract {
             if (size != -1) return size;
 
             size = 0;
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(uid_)) {
+            if (!getUidBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uid_);
             }
             {
@@ -27144,7 +27614,7 @@ public final class DataPlaneContract {
                 size += dataSize;
                 size += 1 * getTopicsList().size();
             }
-            if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(bootstrapServers_)) {
+            if (!getBootstrapServersBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, bootstrapServers_);
             }
             if (ingress_ != null) {
@@ -27177,7 +27647,7 @@ public final class DataPlaneContract {
             if (featureFlags_ != null) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(12, getFeatureFlags());
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -27231,7 +27701,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -27290,7 +27760,7 @@ public final class DataPlaneContract {
                 case 0:
                 default:
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -27407,59 +27877,64 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getEgressesFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 uid_ = "";
+
                 topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-                bitField0_ = (bitField0_ & ~0x00000002);
+                bitField0_ = (bitField0_ & ~0x00000001);
                 bootstrapServers_ = "";
-                ingress_ = null;
-                if (ingressBuilder_ != null) {
-                    ingressBuilder_.dispose();
+
+                if (ingressBuilder_ == null) {
+                    ingress_ = null;
+                } else {
+                    ingress_ = null;
                     ingressBuilder_ = null;
                 }
-                egressConfig_ = null;
-                if (egressConfigBuilder_ != null) {
-                    egressConfigBuilder_.dispose();
+                if (egressConfigBuilder_ == null) {
+                    egressConfig_ = null;
+                } else {
+                    egressConfig_ = null;
                     egressConfigBuilder_ = null;
                 }
                 if (egressesBuilder_ == null) {
                     egresses_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000002);
                 } else {
-                    egresses_ = null;
                     egressesBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000020);
-                if (absentAuthBuilder_ != null) {
-                    absentAuthBuilder_.clear();
-                }
-                if (authSecretBuilder_ != null) {
-                    authSecretBuilder_.clear();
-                }
-                if (multiAuthSecretBuilder_ != null) {
-                    multiAuthSecretBuilder_.clear();
-                }
-                cloudEventOverrides_ = null;
-                if (cloudEventOverridesBuilder_ != null) {
-                    cloudEventOverridesBuilder_.dispose();
+                if (cloudEventOverridesBuilder_ == null) {
+                    cloudEventOverrides_ = null;
+                } else {
+                    cloudEventOverrides_ = null;
                     cloudEventOverridesBuilder_ = null;
                 }
-                reference_ = null;
-                if (referenceBuilder_ != null) {
-                    referenceBuilder_.dispose();
+                if (referenceBuilder_ == null) {
+                    reference_ = null;
+                } else {
+                    reference_ = null;
                     referenceBuilder_ = null;
                 }
-                featureFlags_ = null;
-                if (featureFlagsBuilder_ != null) {
-                    featureFlagsBuilder_.dispose();
+                if (featureFlagsBuilder_ == null) {
+                    featureFlags_ = null;
+                } else {
+                    featureFlags_ = null;
                     featureFlagsBuilder_ = null;
                 }
                 authCase_ = 0;
@@ -27490,73 +27965,72 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                buildPartialOneofs(result);
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result) {
-                if (((bitField0_ & 0x00000002) != 0)) {
+                int from_bitField0_ = bitField0_;
+                result.uid_ = uid_;
+                if (((bitField0_ & 0x00000001) != 0)) {
                     topics_ = topics_.getUnmodifiableView();
-                    bitField0_ = (bitField0_ & ~0x00000002);
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.topics_ = topics_;
+                result.bootstrapServers_ = bootstrapServers_;
+                if (ingressBuilder_ == null) {
+                    result.ingress_ = ingress_;
+                } else {
+                    result.ingress_ = ingressBuilder_.build();
+                }
+                if (egressConfigBuilder_ == null) {
+                    result.egressConfig_ = egressConfig_;
+                } else {
+                    result.egressConfig_ = egressConfigBuilder_.build();
+                }
                 if (egressesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000020) != 0)) {
+                    if (((bitField0_ & 0x00000002) != 0)) {
                         egresses_ = java.util.Collections.unmodifiableList(egresses_);
-                        bitField0_ = (bitField0_ & ~0x00000020);
+                        bitField0_ = (bitField0_ & ~0x00000002);
                     }
                     result.egresses_ = egresses_;
                 } else {
                     result.egresses_ = egressesBuilder_.build();
                 }
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.uid_ = uid_;
+                if (authCase_ == 7) {
+                    if (absentAuthBuilder_ == null) {
+                        result.auth_ = auth_;
+                    } else {
+                        result.auth_ = absentAuthBuilder_.build();
+                    }
                 }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.bootstrapServers_ = bootstrapServers_;
+                if (authCase_ == 8) {
+                    if (authSecretBuilder_ == null) {
+                        result.auth_ = auth_;
+                    } else {
+                        result.auth_ = authSecretBuilder_.build();
+                    }
                 }
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.ingress_ = ingressBuilder_ == null ? ingress_ : ingressBuilder_.build();
+                if (authCase_ == 9) {
+                    if (multiAuthSecretBuilder_ == null) {
+                        result.auth_ = auth_;
+                    } else {
+                        result.auth_ = multiAuthSecretBuilder_.build();
+                    }
                 }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    result.egressConfig_ = egressConfigBuilder_ == null ? egressConfig_ : egressConfigBuilder_.build();
+                if (cloudEventOverridesBuilder_ == null) {
+                    result.cloudEventOverrides_ = cloudEventOverrides_;
+                } else {
+                    result.cloudEventOverrides_ = cloudEventOverridesBuilder_.build();
                 }
-                if (((from_bitField0_ & 0x00000200) != 0)) {
-                    result.cloudEventOverrides_ = cloudEventOverridesBuilder_ == null
-                            ? cloudEventOverrides_
-                            : cloudEventOverridesBuilder_.build();
+                if (referenceBuilder_ == null) {
+                    result.reference_ = reference_;
+                } else {
+                    result.reference_ = referenceBuilder_.build();
                 }
-                if (((from_bitField0_ & 0x00000400) != 0)) {
-                    result.reference_ = referenceBuilder_ == null ? reference_ : referenceBuilder_.build();
+                if (featureFlagsBuilder_ == null) {
+                    result.featureFlags_ = featureFlags_;
+                } else {
+                    result.featureFlags_ = featureFlagsBuilder_.build();
                 }
-                if (((from_bitField0_ & 0x00000800) != 0)) {
-                    result.featureFlags_ = featureFlagsBuilder_ == null ? featureFlags_ : featureFlagsBuilder_.build();
-                }
-            }
-
-            private void buildPartialOneofs(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result) {
                 result.authCase_ = authCase_;
-                result.auth_ = this.auth_;
-                if (authCase_ == 7 && absentAuthBuilder_ != null) {
-                    result.auth_ = absentAuthBuilder_.build();
-                }
-                if (authCase_ == 8 && authSecretBuilder_ != null) {
-                    result.auth_ = authSecretBuilder_.build();
-                }
-                if (authCase_ == 9 && multiAuthSecretBuilder_ != null) {
-                    result.auth_ = multiAuthSecretBuilder_.build();
-                }
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -27606,13 +28080,12 @@ public final class DataPlaneContract {
                     return this;
                 if (!other.getUid().isEmpty()) {
                     uid_ = other.uid_;
-                    bitField0_ |= 0x00000001;
                     onChanged();
                 }
                 if (!other.topics_.isEmpty()) {
                     if (topics_.isEmpty()) {
                         topics_ = other.topics_;
-                        bitField0_ = (bitField0_ & ~0x00000002);
+                        bitField0_ = (bitField0_ & ~0x00000001);
                     } else {
                         ensureTopicsIsMutable();
                         topics_.addAll(other.topics_);
@@ -27621,7 +28094,6 @@ public final class DataPlaneContract {
                 }
                 if (!other.getBootstrapServers().isEmpty()) {
                     bootstrapServers_ = other.bootstrapServers_;
-                    bitField0_ |= 0x00000004;
                     onChanged();
                 }
                 if (other.hasIngress()) {
@@ -27634,7 +28106,7 @@ public final class DataPlaneContract {
                     if (!other.egresses_.isEmpty()) {
                         if (egresses_.isEmpty()) {
                             egresses_ = other.egresses_;
-                            bitField0_ = (bitField0_ & ~0x00000020);
+                            bitField0_ = (bitField0_ & ~0x00000002);
                         } else {
                             ensureEgressesIsMutable();
                             egresses_.addAll(other.egresses_);
@@ -27647,7 +28119,7 @@ public final class DataPlaneContract {
                             egressesBuilder_.dispose();
                             egressesBuilder_ = null;
                             egresses_ = other.egresses_;
-                            bitField0_ = (bitField0_ & ~0x00000020);
+                            bitField0_ = (bitField0_ & ~0x00000002);
                             egressesBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                                     ? getEgressesFieldBuilder()
                                     : null;
@@ -27682,7 +28154,7 @@ public final class DataPlaneContract {
                         break;
                     }
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -27697,102 +28169,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 10: {
-                                uid_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 10
-                            case 18: {
-                                java.lang.String s = input.readStringRequireUtf8();
-                                ensureTopicsIsMutable();
-                                topics_.add(s);
-                                break;
-                            } // case 18
-                            case 26: {
-                                bootstrapServers_ = input.readStringRequireUtf8();
-                                bitField0_ |= 0x00000004;
-                                break;
-                            } // case 26
-                            case 34: {
-                                input.readMessage(getIngressFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000008;
-                                break;
-                            } // case 34
-                            case 42: {
-                                input.readMessage(getEgressConfigFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000010;
-                                break;
-                            } // case 42
-                            case 50: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress
-                                                        .parser(),
-                                                extensionRegistry);
-                                if (egressesBuilder_ == null) {
-                                    ensureEgressesIsMutable();
-                                    egresses_.add(m);
-                                } else {
-                                    egressesBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 50
-                            case 58: {
-                                input.readMessage(getAbsentAuthFieldBuilder().getBuilder(), extensionRegistry);
-                                authCase_ = 7;
-                                break;
-                            } // case 58
-                            case 66: {
-                                input.readMessage(getAuthSecretFieldBuilder().getBuilder(), extensionRegistry);
-                                authCase_ = 8;
-                                break;
-                            } // case 66
-                            case 74: {
-                                input.readMessage(
-                                        getMultiAuthSecretFieldBuilder().getBuilder(), extensionRegistry);
-                                authCase_ = 9;
-                                break;
-                            } // case 74
-                            case 82: {
-                                input.readMessage(
-                                        getCloudEventOverridesFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000200;
-                                break;
-                            } // case 82
-                            case 90: {
-                                input.readMessage(getReferenceFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000400;
-                                break;
-                            } // case 90
-                            case 98: {
-                                input.readMessage(getFeatureFlagsFieldBuilder().getBuilder(), extensionRegistry);
-                                bitField0_ |= 0x00000800;
-                                break;
-                            } // case 98
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -27867,8 +28255,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 uid_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -27882,8 +28270,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearUid() {
+
                 uid_ = getDefaultInstance().getUid();
-                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -27902,8 +28290,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 uid_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -27911,9 +28299,9 @@ public final class DataPlaneContract {
             private com.google.protobuf.LazyStringList topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureTopicsIsMutable() {
-                if (!((bitField0_ & 0x00000002) != 0)) {
+                if (!((bitField0_ & 0x00000001) != 0)) {
                     topics_ = new com.google.protobuf.LazyStringArrayList(topics_);
-                    bitField0_ |= 0x00000002;
+                    bitField0_ |= 0x00000001;
                 }
             }
             /**
@@ -28040,7 +28428,7 @@ public final class DataPlaneContract {
              */
             public Builder clearTopics() {
                 topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-                bitField0_ = (bitField0_ & ~0x00000002);
+                bitField0_ = (bitField0_ & ~0x00000001);
                 onChanged();
                 return this;
             }
@@ -28121,8 +28509,8 @@ public final class DataPlaneContract {
                 if (value == null) {
                     throw new NullPointerException();
                 }
+
                 bootstrapServers_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -28136,8 +28524,8 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearBootstrapServers() {
+
                 bootstrapServers_ = getDefaultInstance().getBootstrapServers();
-                bitField0_ = (bitField0_ & ~0x00000004);
                 onChanged();
                 return this;
             }
@@ -28156,8 +28544,8 @@ public final class DataPlaneContract {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
+
                 bootstrapServers_ = value;
-                bitField0_ |= 0x00000004;
                 onChanged();
                 return this;
             }
@@ -28177,7 +28565,7 @@ public final class DataPlaneContract {
              * @return Whether the ingress field is set.
              */
             public boolean hasIngress() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ingressBuilder_ != null || ingress_ != null;
             }
             /**
              * <pre>
@@ -28209,11 +28597,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     ingress_ = value;
+                    onChanged();
                 } else {
                     ingressBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000008;
-                onChanged();
+
                 return this;
             }
             /**
@@ -28227,11 +28615,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder builderForValue) {
                 if (ingressBuilder_ == null) {
                     ingress_ = builderForValue.build();
+                    onChanged();
                 } else {
                     ingressBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000008;
-                onChanged();
+
                 return this;
             }
             /**
@@ -28243,20 +28631,19 @@ public final class DataPlaneContract {
              */
             public Builder mergeIngress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress value) {
                 if (ingressBuilder_ == null) {
-                    if (((bitField0_ & 0x00000008) != 0)
-                            && ingress_ != null
-                            && ingress_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress
-                                            .getDefaultInstance()) {
-                        getIngressBuilder().mergeFrom(value);
+                    if (ingress_ != null) {
+                        ingress_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.newBuilder(
+                                        ingress_)
+                                .mergeFrom(value)
+                                .buildPartial();
                     } else {
                         ingress_ = value;
                     }
+                    onChanged();
                 } else {
                     ingressBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000008;
-                onChanged();
+
                 return this;
             }
             /**
@@ -28267,13 +28654,14 @@ public final class DataPlaneContract {
              * <code>.Ingress ingress = 4;</code>
              */
             public Builder clearIngress() {
-                bitField0_ = (bitField0_ & ~0x00000008);
-                ingress_ = null;
-                if (ingressBuilder_ != null) {
-                    ingressBuilder_.dispose();
+                if (ingressBuilder_ == null) {
+                    ingress_ = null;
+                    onChanged();
+                } else {
+                    ingress_ = null;
                     ingressBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -28284,7 +28672,7 @@ public final class DataPlaneContract {
              * <code>.Ingress ingress = 4;</code>
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder getIngressBuilder() {
-                bitField0_ |= 0x00000008;
+
                 onChanged();
                 return getIngressFieldBuilder().getBuilder();
             }
@@ -28342,7 +28730,7 @@ public final class DataPlaneContract {
              * @return Whether the egressConfig field is set.
              */
             public boolean hasEgressConfig() {
-                return ((bitField0_ & 0x00000010) != 0);
+                return egressConfigBuilder_ != null || egressConfig_ != null;
             }
             /**
              * <pre>
@@ -28376,11 +28764,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     egressConfig_ = value;
+                    onChanged();
                 } else {
                     egressConfigBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000010;
-                onChanged();
+
                 return this;
             }
             /**
@@ -28394,11 +28782,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder builderForValue) {
                 if (egressConfigBuilder_ == null) {
                     egressConfig_ = builderForValue.build();
+                    onChanged();
                 } else {
                     egressConfigBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000010;
-                onChanged();
+
                 return this;
             }
             /**
@@ -28411,20 +28799,20 @@ public final class DataPlaneContract {
             public Builder mergeEgressConfig(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
                 if (egressConfigBuilder_ == null) {
-                    if (((bitField0_ & 0x00000010) != 0)
-                            && egressConfig_ != null
-                            && egressConfig_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig
-                                            .getDefaultInstance()) {
-                        getEgressConfigBuilder().mergeFrom(value);
+                    if (egressConfig_ != null) {
+                        egressConfig_ =
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.newBuilder(
+                                                egressConfig_)
+                                        .mergeFrom(value)
+                                        .buildPartial();
                     } else {
                         egressConfig_ = value;
                     }
+                    onChanged();
                 } else {
                     egressConfigBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000010;
-                onChanged();
+
                 return this;
             }
             /**
@@ -28435,13 +28823,14 @@ public final class DataPlaneContract {
              * <code>.EgressConfig egressConfig = 5;</code>
              */
             public Builder clearEgressConfig() {
-                bitField0_ = (bitField0_ & ~0x00000010);
-                egressConfig_ = null;
-                if (egressConfigBuilder_ != null) {
-                    egressConfigBuilder_.dispose();
+                if (egressConfigBuilder_ == null) {
+                    egressConfig_ = null;
+                    onChanged();
+                } else {
+                    egressConfig_ = null;
                     egressConfigBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -28453,7 +28842,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder
                     getEgressConfigBuilder() {
-                bitField0_ |= 0x00000010;
+
                 onChanged();
                 return getEgressConfigFieldBuilder().getBuilder();
             }
@@ -28502,10 +28891,10 @@ public final class DataPlaneContract {
                     java.util.Collections.emptyList();
 
             private void ensureEgressesIsMutable() {
-                if (!((bitField0_ & 0x00000020) != 0)) {
+                if (!((bitField0_ & 0x00000002) != 0)) {
                     egresses_ = new java.util.ArrayList<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress>(egresses_);
-                    bitField0_ |= 0x00000020;
+                    bitField0_ |= 0x00000002;
                 }
             }
 
@@ -28705,7 +29094,7 @@ public final class DataPlaneContract {
             public Builder clearEgresses() {
                 if (egressesBuilder_ == null) {
                     egresses_ = java.util.Collections.emptyList();
-                    bitField0_ = (bitField0_ & ~0x00000020);
+                    bitField0_ = (bitField0_ & ~0x00000002);
                     onChanged();
                 } else {
                     egressesBuilder_.clear();
@@ -28821,7 +29210,7 @@ public final class DataPlaneContract {
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>(
-                            egresses_, ((bitField0_ & 0x00000020) != 0), getParentForChildren(), isClean());
+                            egresses_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
                     egresses_ = null;
                 }
                 return egressesBuilder_;
@@ -28928,9 +29317,8 @@ public final class DataPlaneContract {
                 } else {
                     if (authCase_ == 7) {
                         absentAuthBuilder_.mergeFrom(value);
-                    } else {
-                        absentAuthBuilder_.setMessage(value);
                     }
+                    absentAuthBuilder_.setMessage(value);
                 }
                 authCase_ = 7;
                 return this;
@@ -29014,6 +29402,7 @@ public final class DataPlaneContract {
                 }
                 authCase_ = 7;
                 onChanged();
+                ;
                 return absentAuthBuilder_;
             }
 
@@ -29274,9 +29663,8 @@ public final class DataPlaneContract {
                 } else {
                     if (authCase_ == 8) {
                         authSecretBuilder_.mergeFrom(value);
-                    } else {
-                        authSecretBuilder_.setMessage(value);
                     }
+                    authSecretBuilder_.setMessage(value);
                 }
                 authCase_ = 8;
                 return this;
@@ -29487,6 +29875,7 @@ public final class DataPlaneContract {
                 }
                 authCase_ = 8;
                 onChanged();
+                ;
                 return authSecretBuilder_;
             }
 
@@ -29602,9 +29991,8 @@ public final class DataPlaneContract {
                 } else {
                     if (authCase_ == 9) {
                         multiAuthSecretBuilder_.mergeFrom(value);
-                    } else {
-                        multiAuthSecretBuilder_.setMessage(value);
                     }
+                    multiAuthSecretBuilder_.setMessage(value);
                 }
                 authCase_ = 9;
                 return this;
@@ -29692,6 +30080,7 @@ public final class DataPlaneContract {
                 }
                 authCase_ = 9;
                 onChanged();
+                ;
                 return multiAuthSecretBuilder_;
             }
 
@@ -29707,7 +30096,7 @@ public final class DataPlaneContract {
              * @return Whether the cloudEventOverrides field is set.
              */
             public boolean hasCloudEventOverrides() {
-                return ((bitField0_ & 0x00000200) != 0);
+                return cloudEventOverridesBuilder_ != null || cloudEventOverrides_ != null;
             }
             /**
              * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
@@ -29734,11 +30123,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     cloudEventOverrides_ = value;
+                    onChanged();
                 } else {
                     cloudEventOverridesBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000200;
-                onChanged();
+
                 return this;
             }
             /**
@@ -29749,11 +30138,11 @@ public final class DataPlaneContract {
                             builderForValue) {
                 if (cloudEventOverridesBuilder_ == null) {
                     cloudEventOverrides_ = builderForValue.build();
+                    onChanged();
                 } else {
                     cloudEventOverridesBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000200;
-                onChanged();
+
                 return this;
             }
             /**
@@ -29762,33 +30151,34 @@ public final class DataPlaneContract {
             public Builder mergeCloudEventOverrides(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides value) {
                 if (cloudEventOverridesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000200) != 0)
-                            && cloudEventOverrides_ != null
-                            && cloudEventOverrides_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides
-                                            .getDefaultInstance()) {
-                        getCloudEventOverridesBuilder().mergeFrom(value);
+                    if (cloudEventOverrides_ != null) {
+                        cloudEventOverrides_ =
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides
+                                        .newBuilder(cloudEventOverrides_)
+                                        .mergeFrom(value)
+                                        .buildPartial();
                     } else {
                         cloudEventOverrides_ = value;
                     }
+                    onChanged();
                 } else {
                     cloudEventOverridesBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000200;
-                onChanged();
+
                 return this;
             }
             /**
              * <code>.CloudEventOverrides cloudEventOverrides = 10;</code>
              */
             public Builder clearCloudEventOverrides() {
-                bitField0_ = (bitField0_ & ~0x00000200);
-                cloudEventOverrides_ = null;
-                if (cloudEventOverridesBuilder_ != null) {
-                    cloudEventOverridesBuilder_.dispose();
+                if (cloudEventOverridesBuilder_ == null) {
+                    cloudEventOverrides_ = null;
+                    onChanged();
+                } else {
+                    cloudEventOverrides_ = null;
                     cloudEventOverridesBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -29796,7 +30186,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.CloudEventOverrides.Builder
                     getCloudEventOverridesBuilder() {
-                bitField0_ |= 0x00000200;
+
                 onChanged();
                 return getCloudEventOverridesFieldBuilder().getBuilder();
             }
@@ -29852,7 +30242,7 @@ public final class DataPlaneContract {
              * @return Whether the reference field is set.
              */
             public boolean hasReference() {
-                return ((bitField0_ & 0x00000400) != 0);
+                return referenceBuilder_ != null || reference_ != null;
             }
             /**
              * <pre>
@@ -29893,11 +30283,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     reference_ = value;
+                    onChanged();
                 } else {
                     referenceBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000400;
-                onChanged();
+
                 return this;
             }
             /**
@@ -29915,11 +30305,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
                 if (referenceBuilder_ == null) {
                     reference_ = builderForValue.build();
+                    onChanged();
                 } else {
                     referenceBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000400;
-                onChanged();
+
                 return this;
             }
             /**
@@ -29936,20 +30326,19 @@ public final class DataPlaneContract {
             public Builder mergeReference(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
                 if (referenceBuilder_ == null) {
-                    if (((bitField0_ & 0x00000400) != 0)
-                            && reference_ != null
-                            && reference_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference
-                                            .getDefaultInstance()) {
-                        getReferenceBuilder().mergeFrom(value);
+                    if (reference_ != null) {
+                        reference_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder(
+                                        reference_)
+                                .mergeFrom(value)
+                                .buildPartial();
                     } else {
                         reference_ = value;
                     }
+                    onChanged();
                 } else {
                     referenceBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000400;
-                onChanged();
+
                 return this;
             }
             /**
@@ -29964,13 +30353,14 @@ public final class DataPlaneContract {
              * <code>.Reference reference = 11;</code>
              */
             public Builder clearReference() {
-                bitField0_ = (bitField0_ & ~0x00000400);
-                reference_ = null;
-                if (referenceBuilder_ != null) {
-                    referenceBuilder_.dispose();
+                if (referenceBuilder_ == null) {
+                    reference_ = null;
+                    onChanged();
+                } else {
+                    reference_ = null;
                     referenceBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -29986,7 +30376,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder
                     getReferenceBuilder() {
-                bitField0_ |= 0x00000400;
+
                 onChanged();
                 return getReferenceFieldBuilder().getBuilder();
             }
@@ -30054,7 +30444,7 @@ public final class DataPlaneContract {
              * @return Whether the featureFlags field is set.
              */
             public boolean hasFeatureFlags() {
-                return ((bitField0_ & 0x00000800) != 0);
+                return featureFlagsBuilder_ != null || featureFlags_ != null;
             }
             /**
              * <pre>
@@ -30088,11 +30478,11 @@ public final class DataPlaneContract {
                         throw new NullPointerException();
                     }
                     featureFlags_ = value;
+                    onChanged();
                 } else {
                     featureFlagsBuilder_.setMessage(value);
                 }
-                bitField0_ |= 0x00000800;
-                onChanged();
+
                 return this;
             }
             /**
@@ -30106,11 +30496,11 @@ public final class DataPlaneContract {
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.Builder builderForValue) {
                 if (featureFlagsBuilder_ == null) {
                     featureFlags_ = builderForValue.build();
+                    onChanged();
                 } else {
                     featureFlagsBuilder_.setMessage(builderForValue.build());
                 }
-                bitField0_ |= 0x00000800;
-                onChanged();
+
                 return this;
             }
             /**
@@ -30123,20 +30513,20 @@ public final class DataPlaneContract {
             public Builder mergeFeatureFlags(
                     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags value) {
                 if (featureFlagsBuilder_ == null) {
-                    if (((bitField0_ & 0x00000800) != 0)
-                            && featureFlags_ != null
-                            && featureFlags_
-                                    != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags
-                                            .getDefaultInstance()) {
-                        getFeatureFlagsBuilder().mergeFrom(value);
+                    if (featureFlags_ != null) {
+                        featureFlags_ =
+                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.newBuilder(
+                                                featureFlags_)
+                                        .mergeFrom(value)
+                                        .buildPartial();
                     } else {
                         featureFlags_ = value;
                     }
+                    onChanged();
                 } else {
                     featureFlagsBuilder_.mergeFrom(value);
                 }
-                bitField0_ |= 0x00000800;
-                onChanged();
+
                 return this;
             }
             /**
@@ -30147,13 +30537,14 @@ public final class DataPlaneContract {
              * <code>.FeatureFlags featureFlags = 12;</code>
              */
             public Builder clearFeatureFlags() {
-                bitField0_ = (bitField0_ & ~0x00000800);
-                featureFlags_ = null;
-                if (featureFlagsBuilder_ != null) {
-                    featureFlagsBuilder_.dispose();
+                if (featureFlagsBuilder_ == null) {
+                    featureFlags_ = null;
+                    onChanged();
+                } else {
+                    featureFlags_ = null;
                     featureFlagsBuilder_ = null;
                 }
-                onChanged();
+
                 return this;
             }
             /**
@@ -30165,7 +30556,7 @@ public final class DataPlaneContract {
              */
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.FeatureFlags.Builder
                     getFeatureFlagsBuilder() {
-                bitField0_ |= 0x00000800;
+
                 onChanged();
                 return getFeatureFlagsFieldBuilder().getBuilder();
             }
@@ -30241,18 +30632,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Resource(input, extensionRegistry);
                     }
                 };
 
@@ -30377,6 +30757,72 @@ public final class DataPlaneContract {
             return this.unknownFields;
         }
 
+        private Contract(
+                com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+                    com.google.protobuf.UnknownFieldSet.newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        case 8: {
+                            generation_ = input.readUInt64();
+                            break;
+                        }
+                        case 18: {
+                            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                                resources_ = new java.util.ArrayList<
+                                        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource>();
+                                mutable_bitField0_ |= 0x00000001;
+                            }
+                            resources_.add(input.readMessage(
+                                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.parser(),
+                                    extensionRegistry));
+                            break;
+                        }
+                        case 26: {
+                            java.lang.String s = input.readStringRequireUtf8();
+                            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                                trustBundles_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000002;
+                            }
+                            trustBundles_.add(s);
+                            break;
+                        }
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                if (((mutable_bitField0_ & 0x00000001) != 0)) {
+                    resources_ = java.util.Collections.unmodifiableList(resources_);
+                }
+                if (((mutable_bitField0_ & 0x00000002) != 0)) {
+                    trustBundles_ = trustBundles_.getUnmodifiableView();
+                }
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
         public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
             return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Contract_descriptor;
         }
@@ -30391,7 +30837,7 @@ public final class DataPlaneContract {
         }
 
         public static final int GENERATION_FIELD_NUMBER = 1;
-        private long generation_ = 0L;
+        private long generation_;
         /**
          * <pre>
          * Count each contract update.
@@ -30407,8 +30853,6 @@ public final class DataPlaneContract {
         }
 
         public static final int RESOURCES_FIELD_NUMBER = 2;
-
-        @SuppressWarnings("serial")
         private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> resources_;
         /**
          * <code>repeated .Resource resources = 2;</code>
@@ -30450,8 +30894,6 @@ public final class DataPlaneContract {
         }
 
         public static final int TRUSTBUNDLES_FIELD_NUMBER = 3;
-
-        @SuppressWarnings("serial")
         private com.google.protobuf.LazyStringList trustBundles_;
         /**
          * <pre>
@@ -30523,7 +30965,7 @@ public final class DataPlaneContract {
             for (int i = 0; i < trustBundles_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, trustBundles_.getRaw(i));
             }
-            getUnknownFields().writeTo(output);
+            unknownFields.writeTo(output);
         }
 
         @java.lang.Override
@@ -30546,7 +30988,7 @@ public final class DataPlaneContract {
                 size += dataSize;
                 size += 1 * getTrustBundlesList().size();
             }
-            size += getUnknownFields().getSerializedSize();
+            size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
         }
@@ -30565,7 +31007,7 @@ public final class DataPlaneContract {
             if (getGeneration() != other.getGeneration()) return false;
             if (!getResourcesList().equals(other.getResourcesList())) return false;
             if (!getTrustBundlesList().equals(other.getTrustBundlesList())) return false;
-            if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+            if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
 
@@ -30586,7 +31028,7 @@ public final class DataPlaneContract {
                 hash = (37 * hash) + TRUSTBUNDLES_FIELD_NUMBER;
                 hash = (53 * hash) + getTrustBundlesList().hashCode();
             }
-            hash = (29 * hash) + getUnknownFields().hashCode();
+            hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
         }
@@ -30703,26 +31145,34 @@ public final class DataPlaneContract {
             }
 
             // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.newBuilder()
-            private Builder() {}
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
 
             private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
                 super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getResourcesFieldBuilder();
+                }
             }
 
             @java.lang.Override
             public Builder clear() {
                 super.clear();
-                bitField0_ = 0;
                 generation_ = 0L;
+
                 if (resourcesBuilder_ == null) {
                     resources_ = java.util.Collections.emptyList();
+                    bitField0_ = (bitField0_ & ~0x00000001);
                 } else {
-                    resources_ = null;
                     resourcesBuilder_.clear();
                 }
-                bitField0_ = (bitField0_ & ~0x00000002);
                 trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-                bitField0_ = (bitField0_ & ~0x00000004);
+                bitField0_ = (bitField0_ & ~0x00000002);
                 return this;
             }
 
@@ -30749,37 +31199,24 @@ public final class DataPlaneContract {
             public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract buildPartial() {
                 dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract result =
                         new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract(this);
-                buildPartialRepeatedFields(result);
-                if (bitField0_ != 0) {
-                    buildPartial0(result);
-                }
-                onBuilt();
-                return result;
-            }
-
-            private void buildPartialRepeatedFields(
-                    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract result) {
+                int from_bitField0_ = bitField0_;
+                result.generation_ = generation_;
                 if (resourcesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000002) != 0)) {
+                    if (((bitField0_ & 0x00000001) != 0)) {
                         resources_ = java.util.Collections.unmodifiableList(resources_);
-                        bitField0_ = (bitField0_ & ~0x00000002);
+                        bitField0_ = (bitField0_ & ~0x00000001);
                     }
                     result.resources_ = resources_;
                 } else {
                     result.resources_ = resourcesBuilder_.build();
                 }
-                if (((bitField0_ & 0x00000004) != 0)) {
+                if (((bitField0_ & 0x00000002) != 0)) {
                     trustBundles_ = trustBundles_.getUnmodifiableView();
-                    bitField0_ = (bitField0_ & ~0x00000004);
+                    bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.trustBundles_ = trustBundles_;
-            }
-
-            private void buildPartial0(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract result) {
-                int from_bitField0_ = bitField0_;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.generation_ = generation_;
-                }
+                onBuilt();
+                return result;
             }
 
             @java.lang.Override
@@ -30834,7 +31271,7 @@ public final class DataPlaneContract {
                     if (!other.resources_.isEmpty()) {
                         if (resources_.isEmpty()) {
                             resources_ = other.resources_;
-                            bitField0_ = (bitField0_ & ~0x00000002);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                         } else {
                             ensureResourcesIsMutable();
                             resources_.addAll(other.resources_);
@@ -30847,7 +31284,7 @@ public final class DataPlaneContract {
                             resourcesBuilder_.dispose();
                             resourcesBuilder_ = null;
                             resources_ = other.resources_;
-                            bitField0_ = (bitField0_ & ~0x00000002);
+                            bitField0_ = (bitField0_ & ~0x00000001);
                             resourcesBuilder_ = com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                                     ? getResourcesFieldBuilder()
                                     : null;
@@ -30859,14 +31296,14 @@ public final class DataPlaneContract {
                 if (!other.trustBundles_.isEmpty()) {
                     if (trustBundles_.isEmpty()) {
                         trustBundles_ = other.trustBundles_;
-                        bitField0_ = (bitField0_ & ~0x00000004);
+                        bitField0_ = (bitField0_ & ~0x00000002);
                     } else {
                         ensureTrustBundlesIsMutable();
                         trustBundles_.addAll(other.trustBundles_);
                     }
                     onChanged();
                 }
-                this.mergeUnknownFields(other.getUnknownFields());
+                this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
             }
@@ -30881,55 +31318,18 @@ public final class DataPlaneContract {
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                     throws java.io.IOException {
-                if (extensionRegistry == null) {
-                    throw new java.lang.NullPointerException();
-                }
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parsedMessage = null;
                 try {
-                    boolean done = false;
-                    while (!done) {
-                        int tag = input.readTag();
-                        switch (tag) {
-                            case 0:
-                                done = true;
-                                break;
-                            case 8: {
-                                generation_ = input.readUInt64();
-                                bitField0_ |= 0x00000001;
-                                break;
-                            } // case 8
-                            case 18: {
-                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource m =
-                                        input.readMessage(
-                                                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource
-                                                        .parser(),
-                                                extensionRegistry);
-                                if (resourcesBuilder_ == null) {
-                                    ensureResourcesIsMutable();
-                                    resources_.add(m);
-                                } else {
-                                    resourcesBuilder_.addMessage(m);
-                                }
-                                break;
-                            } // case 18
-                            case 26: {
-                                java.lang.String s = input.readStringRequireUtf8();
-                                ensureTrustBundlesIsMutable();
-                                trustBundles_.add(s);
-                                break;
-                            } // case 26
-                            default: {
-                                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
-                                    done = true; // was an endgroup tag
-                                }
-                                break;
-                            } // default:
-                        } // switch (tag)
-                    } // while (!done)
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract)
+                            e.getUnfinishedMessage();
                     throw e.unwrapIOException();
                 } finally {
-                    onChanged();
-                } // finally
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
                 return this;
             }
 
@@ -30962,7 +31362,6 @@ public final class DataPlaneContract {
             public Builder setGeneration(long value) {
 
                 generation_ = value;
-                bitField0_ |= 0x00000001;
                 onChanged();
                 return this;
             }
@@ -30976,7 +31375,7 @@ public final class DataPlaneContract {
              * @return This builder for chaining.
              */
             public Builder clearGeneration() {
-                bitField0_ = (bitField0_ & ~0x00000001);
+
                 generation_ = 0L;
                 onChanged();
                 return this;
@@ -30986,10 +31385,10 @@ public final class DataPlaneContract {
                     java.util.Collections.emptyList();
 
             private void ensureResourcesIsMutable() {
-                if (!((bitField0_ & 0x00000002) != 0)) {
+                if (!((bitField0_ & 0x00000001) != 0)) {
                     resources_ = new java.util.ArrayList<
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource>(resources_);
-                    bitField0_ |= 0x00000002;
+                    bitField0_ |= 0x00000001;
                 }
             }
 
@@ -31145,7 +31544,7 @@ public final class DataPlaneContract {
             public Builder clearResources() {
                 if (resourcesBuilder_ == null) {
                     resources_ = java.util.Collections.emptyList();
-                    bitField0_ = (bitField0_ & ~0x00000002);
+                    bitField0_ = (bitField0_ & ~0x00000001);
                     onChanged();
                 } else {
                     resourcesBuilder_.clear();
@@ -31233,7 +31632,7 @@ public final class DataPlaneContract {
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder,
                             dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder>(
-                            resources_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+                            resources_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
                     resources_ = null;
                 }
                 return resourcesBuilder_;
@@ -31242,9 +31641,9 @@ public final class DataPlaneContract {
             private com.google.protobuf.LazyStringList trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureTrustBundlesIsMutable() {
-                if (!((bitField0_ & 0x00000004) != 0)) {
+                if (!((bitField0_ & 0x00000002) != 0)) {
                     trustBundles_ = new com.google.protobuf.LazyStringArrayList(trustBundles_);
-                    bitField0_ |= 0x00000004;
+                    bitField0_ |= 0x00000002;
                 }
             }
             /**
@@ -31355,7 +31754,7 @@ public final class DataPlaneContract {
              */
             public Builder clearTrustBundles() {
                 trustBundles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-                bitField0_ = (bitField0_ & ~0x00000004);
+                bitField0_ = (bitField0_ & ~0x00000002);
                 onChanged();
                 return this;
             }
@@ -31410,18 +31809,7 @@ public final class DataPlaneContract {
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                             throws com.google.protobuf.InvalidProtocolBufferException {
-                        Builder builder = newBuilder();
-                        try {
-                            builder.mergeFrom(input, extensionRegistry);
-                        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-                            throw e.setUnfinishedMessage(builder.buildPartial());
-                        } catch (com.google.protobuf.UninitializedMessageException e) {
-                            throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
-                        } catch (java.io.IOException e) {
-                            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                                    .setUnfinishedMessage(builder.buildPartial());
-                        }
-                        return builder.buildPartial();
+                        return new Contract(input, extensionRegistry);
                     }
                 };
 
