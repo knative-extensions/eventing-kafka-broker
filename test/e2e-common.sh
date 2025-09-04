@@ -18,6 +18,7 @@ readonly SKIP_INITIALIZE=${SKIP_INITIALIZE:-false}
 readonly LOCAL_DEVELOPMENT=${LOCAL_DEVELOPMENT:-false}
 export REPLICAS=${REPLICAS:-3}
 export KO_FLAGS="${KO_FLAGS:-}"
+export TAG="$(git rev-parse HEAD)"
 
 repo_root_dir=$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..
 
@@ -207,7 +208,6 @@ function install_latest_release() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CHANNEL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl apply -f ./test/config/100-config-tracing.yaml
   kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
@@ -223,7 +223,6 @@ function install_head() {
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl apply -f ./test/config/100-config-tracing.yaml
   kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
@@ -235,7 +234,6 @@ function install_control_plane_from_source() {
   kubectl apply -f "${EVENTING_KAFKA_TLS_NETWORK_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl replace -f ./test/config/100-config-tracing.yaml
   kubectl replace -f ./test/config/100-config-kafka-features.yaml
   
 }
@@ -248,7 +246,6 @@ function install_latest_release_source() {
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl apply -f ./test/config/100-config-tracing.yaml
   kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
@@ -259,7 +256,6 @@ function install_head_source() {
   kubectl apply -f "${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 
   # Restore test config.
-  kubectl apply -f ./test/config/100-config-tracing.yaml
   kubectl apply -f ./test/config/100-config-kafka-features.yaml
 }
 
@@ -404,19 +400,19 @@ function build_monitoring_artifacts() {
   ko resolve ${KO_FLAGS} \
     -Rf "${EVENTING_KAFKA_CONTROLLER_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" \
     -Rf "${EVENTING_KAFKA_WEBHOOK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_BROKER_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_SINK_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_CHANNEL_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 }
 
 function build_monitoring_artifacts_source() {
@@ -424,10 +420,10 @@ function build_monitoring_artifacts_source() {
   ko resolve ${KO_FLAGS} \
     -Rf "${EVENTING_KAFKA_CONTROLLER_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" \
     -Rf "${EVENTING_KAFKA_WEBHOOK_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_CONTROL_PLANE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 
   ko resolve ${KO_FLAGS} -Rf "${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT_PATH}" |
-    "${LABEL_YAML_CMD[@]}" >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
+    LABEL_YAML_CMD >"${EVENTING_KAFKA_SOURCE_PROMETHEUS_OPERATOR_ARTIFACT}" || return $?
 }
 
 function create_tls_secrets() {

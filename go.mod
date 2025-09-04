@@ -17,7 +17,6 @@ require (
 	github.com/magiconair/properties v1.8.5
 	github.com/manifestival/client-go-client v0.6.0
 	github.com/manifestival/manifestival v0.7.1
-	github.com/openzipkin/zipkin-go v0.4.3
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/rickb777/date v1.14.1
 	github.com/stretchr/testify v1.10.0
@@ -25,7 +24,6 @@ require (
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/metric v1.37.0
 	go.opentelemetry.io/otel/sdk/metric v1.37.0
-	go.opentelemetry.io/otel/trace v1.37.0
 	go.uber.org/atomic v1.10.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
@@ -111,6 +109,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -141,6 +140,7 @@ require (
 	go.opentelemetry.io/otel/exporters/prometheus v0.59.1 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.37.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
+	go.opentelemetry.io/otel/trace v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect

@@ -23,10 +23,10 @@ import dev.knative.eventing.kafka.broker.core.ReactiveKafkaConsumer;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.filter.Filter;
 import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.ExactFilter;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.kafka.ConsumerTracer;
 import dev.knative.eventing.kafka.broker.core.security.Credentials;
 import dev.knative.eventing.kafka.broker.core.security.KafkaClientsAuth;
-import dev.knative.eventing.kafka.broker.core.tracing.kafka.ConsumerTracer;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
@@ -43,6 +43,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.PartitionRevok
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import io.cloudevents.CloudEvent;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -222,7 +224,9 @@ public class ConsumerVerticleBuilder {
                             consumerVerticleContext.getResource().getReference().getNamespace(),
                             consumerVerticleContext.getEgress().getOidcServiceAccountName()),
                     consumerVerticleContext,
-                    Metrics.Tags.senderContext("reply")));
+                    Tags.of(
+                            Tag.of(Metrics.Tags.OPERATION_NAME, "reply"),
+                            Tag.of(Metrics.Tags.OPERATION_TYPE, "send"))));
             if (consumerVerticleContext.getResource().hasFeatureFlags()
                     && consumerVerticleContext.getResource().getFeatureFlags().getEnableEventTypeAutocreate()) {
                 return handler.withEventTypeAutocreate(
@@ -267,7 +271,10 @@ public class ConsumerVerticleBuilder {
                         consumerVerticleContext.getResource().getReference().getNamespace(),
                         consumerVerticleContext.getEgress().getOidcServiceAccountName()),
                 consumerVerticleContext,
-                Metrics.Tags.senderContext("subscriber"));
+                Tags.of(
+                        Tag.of(Metrics.Tags.OPERATION_NAME, "send"),
+                        Tag.of(Metrics.Tags.OPERATION_TYPE, "send"),
+                        Tag.of(Metrics.Tags.DESTINATION_TEMPLATE, "subscriber")));
     }
 
     private CloudEventSender createDeadLetterSinkRecordSender(final Vertx vertx) {
@@ -289,7 +296,10 @@ public class ConsumerVerticleBuilder {
                             consumerVerticleContext.getResource().getReference().getNamespace(),
                             consumerVerticleContext.getEgress().getOidcServiceAccountName()),
                     consumerVerticleContext,
-                    Metrics.Tags.senderContext("deadlettersink"));
+                    Tags.of(
+                            Tag.of(Metrics.Tags.OPERATION_NAME, "send"),
+                            Tag.of(Metrics.Tags.OPERATION_TYPE, "send"),
+                            Tag.of(Metrics.Tags.DESTINATION_TEMPLATE, "deadLetterSink")));
         }
 
         return NO_DEAD_LETTER_SINK_SENDER;

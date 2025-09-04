@@ -26,10 +26,11 @@ import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
-import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
+import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
+import dev.knative.eventing.kafka.broker.core.observability.tracing.TracingProvider;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.security.AuthProvider;
-import dev.knative.eventing.kafka.broker.core.tracing.TracingConfig;
 import dev.knative.eventing.kafka.broker.core.utils.Configurations;
 import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.CloudEventDeserializer;
@@ -80,8 +81,9 @@ public class Main {
             throws IOException {
         DispatcherEnv env = new DispatcherEnv(System::getenv);
 
-        OpenTelemetrySdk openTelemetry =
-                TracingConfig.fromDir(env.getConfigTracingPath()).setup();
+        ObservabilityConfig observabilityConfig = ObservabilityConfig.fromDir(env.getConfigObservabilityPath());
+
+        OpenTelemetrySdk openTelemetry = new TracingProvider(observabilityConfig.getTracingConfig()).setup();
 
         // Read consumer and producer kafka config
         Properties producerConfig = Configurations.readPropertiesSync(env.getProducerConfigFilePath());
@@ -109,7 +111,7 @@ public class Main {
 
         // Start Vertx
         Vertx vertx = Vertx.vertx(new VertxOptions()
-                .setMetricsOptions(Metrics.getOptions(env))
+                .setMetricsOptions(Metrics.getOptions(env, observabilityConfig))
                 .setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
         // Register Contract message codec
@@ -159,6 +161,13 @@ public class Main {
             //     Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(
                     vertx, publisher, fileWatcher, eventTypeListerFactory, openTelemetry.getSdkTracerProvider());
+
+            File healthFile = new File("/tmp/healthy");
+            try {
+                healthFile.createNewFile();
+            } catch (Exception e) {
+                logger.warn("Failed to create health file.", e);
+            }
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the dispatcher", ex);
