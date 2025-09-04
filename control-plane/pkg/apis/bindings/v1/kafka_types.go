@@ -57,6 +57,11 @@ type KafkaSASLSpec struct {
 	// +optional
 	Password SecretValueFromSource `json:"password,omitempty"`
 
+	// RoleARN is the Kubernetes secret containing the ARN of the IAM role to assume.
+	// Only used if saslType is OAUTHBEARER and tokenProvider is MSKRoleAccessTokenProvider.
+	// +optional
+	RoleARN SecretValueFromSource `json:"roleARN,omitempty"`
+
 	// Token Provider is the Kubernetes secret containing the OAUTHBEARER
 	// token provider function. Only used if saslType is OAUTHBEARER.
 	// +optional

@@ -170,6 +170,7 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 			secretTargetRefs = addAuthSecretTargetRef("password", cg.Spec.Template.Spec.Auth.NetSpec.SASL.Password, secretTargetRefs)
 			secretTargetRefs = addAuthSecretTargetRef("type", cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type, secretTargetRefs)
 			secretTargetRefs = addAuthSecretTargetRef("tokenProvider", cg.Spec.Template.Spec.Auth.NetSpec.SASL.TokenProvider, secretTargetRefs)
+			secretTargetRefs = addAuthSecretTargetRef("roleARN", cg.Spec.Template.Spec.Auth.NetSpec.SASL.RoleARN, secretTargetRefs)
 
 			triggerAuth.Spec.SecretTargetRef = secretTargetRefs
 		}
@@ -209,6 +210,9 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 
 			tokenProvider := kedav1alpha1.AuthSecretTargetRef{Parameter: "tokenProvider", Name: secret.Name, Key: security.SaslTokenProviderKey}
 			secretTargetRefs = append(secretTargetRefs, tokenProvider)
+
+			roleARN := kedav1alpha1.AuthSecretTargetRef{Parameter: "roleARN", Name: secret.Name, Key: security.SaslRoleARNKey}
+			secretTargetRefs = append(secretTargetRefs, roleARN)
 		}
 
 		if caCertValue, ok := secret.Data[security.CaCertificateKey]; ok && string(caCertValue) != "" { // TLS enabled

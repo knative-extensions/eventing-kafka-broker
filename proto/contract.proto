@@ -265,6 +265,7 @@ enum SecretField {
   PASSWORD = 5;
   TYPE = 6;
   TOKEN_PROVIDER = 7;
+  ROLE_ARN = 8;
 }
 
 message SecretReference {
@@ -348,6 +349,7 @@ message Resource {
     //   password: <SASL password>
     //   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
     //   tokenProvider: <OIDC token provider>
+    //   roleARN: <OAUTHBEARER role ARN>
     //
     // Validation:
     //   - protocol=PLAINTEXT

@@ -119,6 +119,14 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 					},
 				})
 			}
+			if kfb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
+				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_ROLE_ARN",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.RoleARN.SecretKeyRef,
+					},
+				})
+			}
 		}
 		if kfb.Spec.Net.TLS.Enable {
 			spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
@@ -177,6 +185,14 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 					Name: "KAFKA_NET_SASL_TOKEN_PROVIDER",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
+					},
+				})
+			}
+			if kfb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
+				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+					Name: "KAFKA_NET_SASL_ROLE_ARN",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: kfb.Spec.Net.SASL.RoleARN.SecretKeyRef,
 					},
 				})
 			}

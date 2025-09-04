@@ -62,11 +62,14 @@ class CredentialsValidator {
                         + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER or PLAIN got "
                         + SASLMechanism;
             }
-            if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword()) && SASLMechanism != null
+            if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())
+                    && SASLMechanism != null
                     && !"OAUTHBEARER".equals(SASLMechanism)) {
                 return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
             }
-            if (anyBlank(credentials.SASLTokenProvider()) && SASLMechanism != null && "OAUTHBEARER".equals(SASLMechanism)) {
+            if (anyBlank(credentials.SASLTokenProvider())
+                    && SASLMechanism != null
+                    && "OAUTHBEARER".equals(SASLMechanism)) {
                 return "Security protocol " + securityProtocol.name + ":  invalid SASL token provider";
             }
             return null;

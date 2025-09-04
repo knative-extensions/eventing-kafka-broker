@@ -27,6 +27,7 @@ import (
 	"github.com/IBM/sarama"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	msk "knative.dev/eventing-kafka-broker/control-plane/pkg/security/msk"
 )
 
 const (
@@ -43,6 +44,7 @@ const (
 	SaslPasswordKey      = "password"
 	SaslType             = "sasltype"
 	SaslTokenProviderKey = "tokenProvider"
+	SaslRoleARNKey       = "roleARN"
 	SaslTypeLegacy       = "saslType" // legacy secrets
 	SaslUsernameKey      = "username" // legacy secrets
 
@@ -123,9 +125,15 @@ func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 			tokenProviderStr := string(tokenProvider)
 			switch tokenProviderStr {
 			case "MSKAccessTokenProvider":
-				config.Net.SASL.TokenProvider = MSKAccessTokenProviderGeneratorFunc()
+				config.Net.SASL.TokenProvider = msk.MSKAccessTokenProviderGeneratorFunc()
+			case "MSKRoleAccessTokenProvider":
+				roleARN, ok := data[SaslRoleARNKey]
+				if !ok || len(roleARN) == 0 {
+					return fmt.Errorf("[protocol %s] TokenProvider MSKRoleAccessTokenProvider required (key: %s)", protocol, SaslRoleARNKey)
+				}
+				config.Net.SASL.TokenProvider = msk.MSKRoleAccessTokenProviderGeneratorFunc(string(roleARN))
 			default:
-				return fmt.Errorf("[protocol %s] unsupported OAUTHBEARER token provider (key: %s), supported: MSKAccessTokenProvider", protocol, SaslTokenProviderKey)
+				return fmt.Errorf("[protocol %s] unsupported OAUTHBEARER token provider (key: %s), supported: MSKAccessTokenProvider, MSKRoleAccessTokenProvider", protocol, SaslTokenProviderKey)
 			}
 			return nil
 		}
