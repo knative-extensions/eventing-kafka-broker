@@ -162,28 +162,8 @@ spec:
                                   description: Specify whether the Secret or its key must be defined
                                   type: boolean
                               x-kubernetes-map-type: atomic
-                        tokenProvider:
-                          description: The name of the token provider function. Only used if saslType is OAUTHBEARER.
-                          type: object
-                          properties:
-                            secretKeyRef:
-                              description: The Secret key to select from.
-                              type: object
-                              required:
-                                - key
-                              properties:
-                                key:
-                                  description: The key of the secret to select from.  Must be a valid secret key.
-                                  type: string
-                                name:
-                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
-                                  type: string
-                                optional:
-                                  description: Specify whether the Secret or its key must be defined
-                                  type: boolean
-                              x-kubernetes-map-type: atomic
                         type:
-                          description: Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256 or OAUTHBEARER)
+                          description: Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256)
                           type: object
                           properties:
                             secretKeyRef:
