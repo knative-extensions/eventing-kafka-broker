@@ -39,6 +39,7 @@ class KubernetesCredentials implements Credentials {
 
     static final String TYPE_KEY = "type";
     static final String TOKEN_PROVIDER_KEY = "tokenProvider";
+    static final String ROLE_ARN_KEY = "roleARN";
 
     static final String SECURITY_PROTOCOL = "protocol";
     static final String SASL_MECHANISM = "sasl.mechanism";
@@ -53,7 +54,6 @@ class KubernetesCredentials implements Credentials {
     private String SASLMechanism;
     private String SASLUsername;
     private String SASLPassword;
-    private String SASLTokenProvider;
 
     KubernetesCredentials(final Secret secret) {
         this.secret = secret;
@@ -198,20 +198,5 @@ class KubernetesCredentials implements Credentials {
             this.SASLPassword = new String(Base64.getDecoder().decode(SASLPassword));
         }
         return this.SASLPassword;
-    }
-
-    @Override
-    public String SASLTokenProvider() {
-        if (secret == null || secret.getData() == null) {
-            return null;
-        }
-        if (SASLTokenProvider == null) {
-            final var SASLTokenProvider = secret.getData().get(TOKEN_PROVIDER_KEY);
-            if (SASLTokenProvider == null) {
-                return null;
-            }
-            this.SASLTokenProvider = new String(Base64.getDecoder().decode(SASLTokenProvider));
-        }
-        return this.SASLTokenProvider;
     }
 }

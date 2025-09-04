@@ -135,6 +135,7 @@ class KubernetesAuthProvider implements AuthProvider {
             case PASSWORD -> KubernetesCredentials.PASSWORD_KEY;
             case TYPE -> KubernetesCredentials.TYPE_KEY;
             case TOKEN_PROVIDER -> KubernetesCredentials.TOKEN_PROVIDER_KEY;
+            case ROLE_ARN -> KubernetesCredentials.ROLE_ARN_KEY;
             case UNRECOGNIZED -> throw new IllegalArgumentException("unknown field mapping for " + field);
         };
     }

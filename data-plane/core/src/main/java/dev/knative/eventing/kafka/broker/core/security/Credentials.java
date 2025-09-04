@@ -76,15 +76,4 @@ public interface Credentials {
      * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
      */
     String SASLPassword();
-
-    /**
-     * Client config:
-     * sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
-     * sasl.login.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
-     * sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
-     *
-     * @return password.
-     * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
-     */
-    String SASLTokenProvider();
 }

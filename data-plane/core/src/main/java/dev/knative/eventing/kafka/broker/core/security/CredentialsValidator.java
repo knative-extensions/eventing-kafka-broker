@@ -67,11 +67,6 @@ class CredentialsValidator {
                     && !"OAUTHBEARER".equals(SASLMechanism)) {
                 return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
             }
-            if (anyBlank(credentials.SASLTokenProvider())
-                    && SASLMechanism != null
-                    && "OAUTHBEARER".equals(SASLMechanism)) {
-                return "Security protocol " + securityProtocol.name + ":  invalid SASL token provider";
-            }
             return null;
         }
         return "Unsupported security protocol " + securityProtocol.name;
