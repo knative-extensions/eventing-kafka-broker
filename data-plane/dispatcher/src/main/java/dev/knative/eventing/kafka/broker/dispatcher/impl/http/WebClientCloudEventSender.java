@@ -296,12 +296,20 @@ public final class WebClientCloudEventSender implements CloudEventSender {
             closePromise.tryComplete(null);
         }
 
-        final Function<Void, Future<Void>> closeF = v -> {
+        final Function<Void, Future<Void>> closeWebClientFunction = v -> {
             this.client.close();
             return Future.succeededFuture();
         };
 
-        return closePromise.future().compose(v -> closeF.apply(null), v -> closeF.apply(null));
+        final Function<Void, Future<Void>> closeTokenProviderFunction = v -> {
+            tokenProvider.close();
+            return Future.succeededFuture();
+        };
+
+        return closePromise
+                .future()
+                .compose(v -> closeWebClientFunction.apply(null), v -> closeWebClientFunction.apply(null))
+                .compose(v -> closeTokenProviderFunction.apply(null), v -> closeTokenProviderFunction.apply(null));
     }
 
     static boolean isRetryableStatusCode(final int statusCode) {
