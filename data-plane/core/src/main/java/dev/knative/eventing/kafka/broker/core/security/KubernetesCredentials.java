@@ -37,6 +37,10 @@ class KubernetesCredentials implements Credentials {
     static final String USERNAME_KEY = "user";
     static final String PASSWORD_KEY = "password";
 
+    static final String TYPE_KEY = "type";
+    static final String TOKEN_PROVIDER_KEY = "tokenProvider";
+    static final String ROLE_ARN_KEY = "roleARN";
+
     static final String SECURITY_PROTOCOL = "protocol";
     static final String SASL_MECHANISM = "sasl.mechanism";
 
@@ -160,6 +164,7 @@ class KubernetesCredentials implements Credentials {
                 case "PLAIN" -> "PLAIN";
                 case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
                 case "SCRAM-SHA-512" -> "SCRAM-SHA-512";
+                case "OAUTHBEARER" -> "OAUTHBEARER";
                 default -> null;};
         }
         return this.SASLMechanism;
