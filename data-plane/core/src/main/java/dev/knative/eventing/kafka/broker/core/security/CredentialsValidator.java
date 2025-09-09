@@ -63,8 +63,7 @@ class CredentialsValidator {
                         + SASLMechanism;
             }
             if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())
-                    && (SASLMechanism == null
-                    || !"OAUTHBEARER".equals(SASLMechanism))) {
+                    && (SASLMechanism == null || !"OAUTHBEARER".equals(SASLMechanism))) {
                 return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
             }
             return null;
