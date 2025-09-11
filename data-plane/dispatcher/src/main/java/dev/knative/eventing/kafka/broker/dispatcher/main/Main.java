@@ -41,7 +41,6 @@ import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
@@ -53,7 +52,6 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -145,16 +143,6 @@ public class Main {
                             eventTypeListerFactory),
                     env.getEgressesInitialCapacity());
 
-            // Set up readiness tracking - completed when initial reconciliation finishes
-            final Promise<Void> readinessPromise = Promise.promise();
-            final AtomicBoolean initialReconciliationDone = new AtomicBoolean(false);
-            consumerDeployerVerticle.setReadinessCallback(() -> {
-                if (initialReconciliationDone.compareAndSet(false, true)) {
-                    logger.info("Initial consumer reconciliation completed, marking dispatcher as ready");
-                    readinessPromise.complete();
-                }
-            });
-
             // Deploy the consumer deployer
             vertx.deployVerticle(consumerDeployerVerticle)
                     .toCompletionStage()
@@ -168,24 +156,18 @@ public class Main {
 
             File file = new File(env.getDataPlaneConfigFilePath());
             FileWatcher fileWatcher = new FileWatcher(file, () -> publisher.updateContract(file));
-            // Load initial contract to trigger reconciliation
-            publisher.updateContract(file);
             fileWatcher.start();
 
-            // Register shutdown hook for graceful shutdown.
+            //     Register shutdown hook for graceful shutdown.
             Shutdown.registerHook(
                     vertx, publisher, fileWatcher, eventTypeListerFactory, openTelemetry.getSdkTracerProvider());
 
-            // Wait for readiness before creating health file
-            readinessPromise.future().onComplete(ar -> {
-                File healthFile = new File("/tmp/healthy");
-                try {
-                    healthFile.createNewFile();
-                    logger.info("Health file created - dispatcher ready");
-                } catch (Exception e) {
-                    logger.warn("Failed to create health file.", e);
-                }
-            });
+            File healthFile = new File("/tmp/healthy");
+            try {
+                healthFile.createNewFile();
+            } catch (Exception e) {
+                logger.warn("Failed to create health file.", e);
+            }
 
         } catch (final Exception ex) {
             logger.error("Failed to startup the dispatcher", ex);

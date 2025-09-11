@@ -43,7 +43,6 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
     private final ConsumerVerticleFactory consumerFactory;
 
     private MessageConsumer<Object> messageConsumer;
-    private Runnable readinessCallback;
 
     /**
      * All args constructor.
@@ -70,16 +69,6 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
         this.messageConsumer.unregister().onComplete(stopPromise);
     }
 
-    /**
-     * Set a callback to be invoked when consumer verticles are successfully deployed.
-     * This is used for readiness tracking during initial startup.
-     *
-     * @param readinessCallback callback to run when consumers are deployed
-     */
-    public void setReadinessCallback(Runnable readinessCallback) {
-        this.readinessCallback = readinessCallback;
-    }
-
     @Override
     public Future<Void> onNewEgress(final EgressContext egressContext) {
         // TODO we should check if the consumer is still running
@@ -101,11 +90,6 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
                                 keyValue(
                                         "resource.uid", egressContext.resource().getUid()),
                                 keyValue("deploymentId", deploymentId));
-                        
-                        // Notify readiness callback if set (for initial deployments)
-                        if (readinessCallback != null) {
-                            readinessCallback.run();
-                        }
                     })
                     .onFailure(cause -> {
                         // this is a bad state we cannot start the verticle for consuming messages.
