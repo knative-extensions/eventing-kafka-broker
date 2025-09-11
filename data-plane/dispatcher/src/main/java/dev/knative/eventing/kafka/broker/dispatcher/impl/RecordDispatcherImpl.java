@@ -257,6 +257,15 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             final HttpResponse<?> response, final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
         logDebug("Successfully sent event to subscriber", recordContext.getRecord());
 
+        // DEBUG: Add detailed logging for retry test debugging
+        logger.info("EVENT_DEBUG: Success - eventId={} partition={} offset={} statusCode={} timestamp={}",
+                recordContext.getRecord().headers().lastHeader("ce-id") != null ? 
+                    new String(recordContext.getRecord().headers().lastHeader("ce-id").value()) : "unknown",
+                recordContext.getRecord().partition(),
+                recordContext.getRecord().offset(),
+                response.statusCode(),
+                System.currentTimeMillis());
+
         recordDispatchLatency(response, recordContext);
 
         recordDispatcherListener.successfullySentToSubscriber(recordContext.getRecord());
@@ -267,6 +276,17 @@ public class RecordDispatcherImpl implements RecordDispatcher {
             final Throwable failure, final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
 
         var response = getResponse(failure);
+        
+        // DEBUG: Add detailed logging for retry test debugging
+        logger.info("EVENT_DEBUG: Failure - eventId={} partition={} offset={} statusCode={} error={} timestamp={}",
+                recordContext.getRecord().headers().lastHeader("ce-id") != null ? 
+                    new String(recordContext.getRecord().headers().lastHeader("ce-id").value()) : "unknown",
+                recordContext.getRecord().partition(),
+                recordContext.getRecord().offset(),
+                response != null ? response.statusCode() : "unknown",
+                failure.getClass().getSimpleName(),
+                System.currentTimeMillis());
+        
         recordDispatchLatency(response, recordContext);
 
         if (response == null && failure instanceof ResponseFailureException) {

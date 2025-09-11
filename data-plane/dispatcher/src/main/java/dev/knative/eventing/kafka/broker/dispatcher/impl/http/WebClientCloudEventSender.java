@@ -116,6 +116,13 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                 keyValue("id", event.getId()),
                 keyValue("subscriberURI", target),
                 keyValue("retry", retryCounter));
+                
+        // DEBUG: Add detailed logging for retry test debugging
+        logger.info("EVENT_DEBUG: Sending - eventId={} target={} retryAttempt={} timestamp={}",
+                event.getId(),
+                target,
+                retryCounter,
+                System.currentTimeMillis());
 
         final Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
@@ -176,6 +183,15 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event) {
         Promise<HttpResponse<Buffer>> r = Promise.promise();
         final var delay = retryPolicyFunc.apply(retryCounter + 1);
+        
+        // DEBUG: Add detailed logging for retry test debugging
+        logger.info("EVENT_DEBUG: Retry scheduled - eventId={} target={} retryAttempt={} delay={}ms timestamp={}",
+                event.getId(),
+                target,
+                retryCounter + 1,
+                delay,
+                System.currentTimeMillis());
+        
         vertx.setTimer(delay, v -> send(event, retryCounter + 1).onComplete(r));
         return r.future();
     }

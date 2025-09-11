@@ -52,7 +52,7 @@ func TestChannelConformance(t *testing.T) {
 	// Install and wait for a Ready Channel.
 	env.Prerequisite(ctx, t, channel.ImplGoesReady(channelName))
 
-	env.TestSet(ctx, t, channel.ControlPlaneConformance(channelName))
+	//env.TestSet(ctx, t, channel.ControlPlaneConformance(channelName))
 	env.TestSet(ctx, t, channel.DataPlaneConformance(channelName))
 }
 

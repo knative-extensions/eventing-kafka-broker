@@ -274,6 +274,9 @@ func addControlPlaneDelivery(fs *feature.FeatureSet) {
 				gtg := true
 				for prefix, want := range expected {
 					events := prober.ReceivedOrRejectedBy(ctx, prefix)
+					// DEBUG: Add detailed logging for retry test debugging  
+					t.Logf("EVENT_DEBUG: Poll check - prefix=%s expected=%d actual=%d ready=%t", 
+						prefix, len(want.Success), len(events), len(events) == len(want.Success))
 					if len(events) != len(want.Success) {
 						gtg = false
 					}
