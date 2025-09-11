@@ -21,6 +21,7 @@ package e2e_new_channel
 
 import (
 	"testing"
+	"time"
 
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/manifest"
@@ -45,6 +46,7 @@ func TestChannelConformance(t *testing.T) {
 		knative.WithTracingConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 	)
 
 	channelName := "mychannelimpl"
