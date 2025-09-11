@@ -53,7 +53,7 @@ func TestBrokerDeletedRecreated(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -69,7 +69,7 @@ func TestBrokerConfigMapDeletedFirst(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -85,7 +85,7 @@ func TestBrokerConfigMapDoesNotExist(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -101,7 +101,7 @@ func TestBrokerAuthSecretDoesNotExist(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -117,7 +117,7 @@ func TestBrokerExternalTopicDoesNotExist(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -133,7 +133,7 @@ func TestBrokerExternalTopicAuthSecretDoesNotExist(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -149,7 +149,7 @@ func TestBrokerAuthSecretForInternalTopicDoesNotExist(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -165,7 +165,7 @@ func TestTriggerLatestOffset(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -181,7 +181,7 @@ func TestBrokerWithBogusConfig(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -197,7 +197,7 @@ func TestBrokerCannotReachKafkaCluster(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -210,7 +210,7 @@ func TestNamespacedBrokerResourcesPropagation(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -227,7 +227,7 @@ func TestNamespacedBrokerNamespaceDeletion(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.WithTestLogger(t),
@@ -245,7 +245,7 @@ func TestBrokerEventTypeAutoCreate(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
 	)
@@ -262,7 +262,7 @@ func TestTriggerEventTypeAutoCreate(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
 	)
@@ -296,7 +296,7 @@ func TestBrokerSupportsOIDC(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(4*time.Second, 12*time.Minute),
 		environment.Managed(t),
@@ -315,7 +315,7 @@ func TestBrokerSendsEventsWithOIDCSupport(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
 		eventshub.WithTLS(t),
@@ -330,7 +330,7 @@ func TestBrokerSupportsAuthZ(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
 		eventshub.WithTLS(t),
@@ -348,7 +348,7 @@ func TestBrokerDispatcherKedaScaling(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 		environment.Managed(t),
@@ -363,7 +363,7 @@ func TestBrokerDispatcherKedaScalingSASL(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 		environment.Managed(t),
@@ -378,7 +378,7 @@ func TestBrokerDispatcherKedaScalingSSL(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 		environment.Managed(t),
