@@ -567,7 +567,7 @@ spec:
                                   type: boolean
                               x-kubernetes-map-type: atomic
                         type:
-                          description: Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256)
+                          description: Type of saslType, defaults to plain (vs SCRAM-SHA-512 or SCRAM-SHA-256 or OAUTHBEARER)
                           type: object
                           properties:
                             secretKeyRef:
