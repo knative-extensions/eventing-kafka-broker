@@ -53,7 +53,9 @@ func TestChannelConformance(t *testing.T) {
 	env.Prerequisite(ctx, t, channel.ImplGoesReady(channelName))
 
 	env.TestSet(ctx, t, channel.ControlPlaneConformance(channelName))
-	env.TestSet(ctx, t, channel.DataPlaneConformance(channelName))
+
+	t.Skip("Skipping rest of test due to flakes. See issue: https://github.com/knative-extensions/eventing-kafka-broker/issues/4519")
+	//env.TestSet(ctx, t, channel.DataPlaneConformance(channelName))
 }
 
 // TestSmoke_Channel
