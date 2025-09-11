@@ -31,7 +31,7 @@ import (
 //	ctx, env := global.Environment(
 //		knative.WithKnativeNamespace(system.Namespace()),
 //		knative.WithLoggingConfig,
-//		knative.WithTracingConfig,
+//		knative.WithObservabilityConfig,
 //		k8s.WithEventListener,
 //		tracing.WithZipkin,
 //		environment.Managed(t),

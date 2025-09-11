@@ -27,7 +27,7 @@ package e2e_new
 //	ctx, env := global.Environment(
 //		knative.WithKnativeNamespace(system.Namespace()),
 //		knative.WithLoggingConfig,
-//		knative.WithTracingConfig,
+//		knative.WithObservabilityConfig,
 //		k8s.WithEventListener,
 //		environment.Managed(t),
 //	)
