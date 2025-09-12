@@ -89,7 +89,7 @@ func PatternFromProber(ctx context.Context, prober *eventshub.EventProber, prefi
 		if i == 0 {
 			got.Interval = []uint{0}
 		} else {
-			diff := events[i-1].Time.Unix() - event.Time.Unix()
+			diff := event.Time.Unix() - events[i-1].Time.Unix()
 			got.Interval = append(got.Interval, uint(diff))
 		}
 	}
