@@ -241,6 +241,13 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
     private void onFilterMatching(final ConsumerRecordContext recordContext, final Promise<Void> finalProm) {
         logDebug("Record matched filtering", recordContext.getRecord());
+        
+        // DEBUG: Log when subscriber processing starts
+        logger.info("SUBSCRIBER_DEBUG: Starting subscriber processing - eventId={} timestamp={}",
+                recordContext.getRecord().headers().lastHeader("ce-id") != null ? 
+                    new String(recordContext.getRecord().headers().lastHeader("ce-id").value()) : "unknown",
+                System.currentTimeMillis());
+        
         subscriberSender
                 .apply(recordContext.getRecord())
                 .onSuccess(response -> onSubscriberSuccess(response, recordContext, finalProm))
@@ -295,6 +302,16 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
         // enhance event with extension attributes prior to forwarding to the dead letter sink
         final var transformedRecordContext = errorTransform(recordContext, response);
+
+        // DEBUG: Log when event is being sent to DLQ
+        logger.info("DLQ_DEBUG: Sending event to Dead Letter Queue - eventId={} partition={} offset={} originalError={} statusCode={} timestamp={}",
+                recordContext.getRecord().headers().lastHeader("ce-id") != null ? 
+                    new String(recordContext.getRecord().headers().lastHeader("ce-id").value()) : "unknown",
+                recordContext.getRecord().partition(),
+                recordContext.getRecord().offset(),
+                failure.getClass().getSimpleName(),
+                response != null ? response.statusCode() : "unknown",
+                System.currentTimeMillis());
 
         dlsSender
                 .apply(transformedRecordContext.getRecord())
@@ -392,12 +409,42 @@ public class RecordDispatcherImpl implements RecordDispatcher {
 
     private Function<ConsumerRecord<Object, CloudEvent>, Future<HttpResponse<?>>> composeSenderAndSinkHandler(
             CloudEventSender sender, ResponseHandler sinkHandler, String senderType) {
-        return rec -> sender.send(rec.value())
-                .onFailure(ex -> logError("Failed to send event to " + senderType, rec, ex))
-                .compose(res -> sinkHandler
+        return rec -> {
+            String eventId = rec.headers().lastHeader("ce-id") != null ? 
+                new String(rec.headers().lastHeader("ce-id").value()) : "unknown";
+            
+            // DEBUG: Log when composed sender starts
+            logger.info("HANDLER_DEBUG: Starting {} processing - eventId={} timestamp={}",
+                    senderType, eventId, System.currentTimeMillis());
+            
+            return sender.send(rec.value())
+                .onFailure(ex -> {
+                    logger.info("HANDLER_DEBUG: {} sender failed - eventId={} error={} timestamp={}",
+                            senderType, eventId, ex.getClass().getSimpleName(), System.currentTimeMillis());
+                    logError("Failed to send event to " + senderType, rec, ex);
+                })
+                .onSuccess(res -> {
+                    logger.info("HANDLER_DEBUG: {} sender succeeded - eventId={} statusCode={} timestamp={}",
+                            senderType, eventId, res.statusCode(), System.currentTimeMillis());
+                })
+                .compose(res -> {
+                    logger.info("HANDLER_DEBUG: Starting {} response handling - eventId={} statusCode={} timestamp={}",
+                            senderType, eventId, res.statusCode(), System.currentTimeMillis());
+                    
+                    return sinkHandler
                         .handle(res)
-                        .onFailure(ex -> logError("Failed to handle " + senderType + " response", rec, ex))
-                        .map(v -> res));
+                        .onFailure(ex -> {
+                            logger.info("HANDLER_DEBUG: {} response handler failed - eventId={} error={} timestamp={}",
+                                    senderType, eventId, ex.getClass().getSimpleName(), System.currentTimeMillis());
+                            logError("Failed to handle " + senderType + " response", rec, ex);
+                        })
+                        .onSuccess(v -> {
+                            logger.info("HANDLER_DEBUG: {} response handler succeeded - eventId={} timestamp={}",
+                                    senderType, eventId, System.currentTimeMillis());
+                        })
+                        .map(v -> res);
+                });
+        };
     }
 
     private void incrementDiscardedRecord(final ConsumerRecordContext recordContext) {

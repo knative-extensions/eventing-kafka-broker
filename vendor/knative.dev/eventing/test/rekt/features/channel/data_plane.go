@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
@@ -261,12 +262,31 @@ func addControlPlaneDelivery(fs *feature.FeatureSet) {
 
 		prober := createChannelTopology(f, chName, tt.chDS, tt.subs)
 
+		// DEBUG: Log test setup details
+		f.Setup("Log test configuration", func(ctx context.Context, t feature.T) {
+			t.Logf("TEST_DEBUG: Starting test '%s' at timestamp=%d", tt.name, time.Now().UnixMilli())
+			for _, sub := range tt.subs {
+				t.Logf("TEST_DEBUG: Sub config - prefix=%s subFailCount=%d replyFailCount=%d hasReply=%t retry=%d", 
+					sub.prefix, sub.subFailCount, sub.replyFailCount, sub.hasReply, 
+					func() int32 { if sub.delivery != nil && sub.delivery.Retry != nil { return *sub.delivery.Retry } else { return 0 } }())
+			}
+		})
+
 		// Send an event into the matrix and hope for the best
 		prober.SenderFullEvents(1)
 		f.Requirement("install source", prober.SenderInstall("source"))
 
 		// All events have been sent, time to look at the specs and confirm we got them.
 		expected := createExpectedEventPatterns(tt.chDS, tt.subs)
+		
+		// DEBUG: Log expected results
+		f.Setup("Log expected patterns", func(ctx context.Context, t feature.T) {
+			t.Logf("TEST_DEBUG: Expected event patterns:")
+			for prefix, pattern := range expected {
+				t.Logf("TEST_DEBUG: Expected - prefix=%s successCount=%d pattern=%+v", 
+					prefix, len(pattern.Success), pattern.Success)
+			}
+		})
 
 		f.Requirement("wait until done", func(ctx context.Context, t feature.T) {
 			interval, timeout := environment.PollTimingsFromContext(ctx)
@@ -288,7 +308,24 @@ func addControlPlaneDelivery(fs *feature.FeatureSet) {
 			}
 		})
 
-		f.Stable("Conformance").Should(tt.name, knconf.AssertEventPatterns(prober, expected))
+		f.Stable("Conformance").Should(tt.name, func(ctx context.Context, t feature.T) {
+			t.Logf("TEST_DEBUG: Final assertion check for '%s' at timestamp=%d", tt.name, time.Now().UnixMilli())
+			
+			// Log actual event counts before assertion
+			for prefix, want := range expected {
+				events := prober.ReceivedOrRejectedBy(ctx, prefix)
+				t.Logf("TEST_DEBUG: Final result - prefix=%s expected=%d actual=%d", 
+					prefix, len(want.Success), len(events))
+				
+				// Log individual events for debugging
+				for i, event := range events {
+					t.Logf("TEST_DEBUG: Event %d for %s: %+v", i, prefix, event)
+				}
+			}
+			
+			// Call the original assertion
+			knconf.AssertEventPatterns(prober, expected)(ctx, t)
+		})
 
 		// Add this feature to the feature set.
 		fs.Features = append(fs.Features, f)

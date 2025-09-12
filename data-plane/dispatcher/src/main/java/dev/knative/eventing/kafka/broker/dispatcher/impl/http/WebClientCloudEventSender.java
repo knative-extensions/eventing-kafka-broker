@@ -128,6 +128,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
         if (closed.get()) {
             // Once sender is closed, return a successful future to avoid retrying.
+            logger.info("SENDER_DEBUG: Sender closed during send - eventId={} target={} timestamp={}",
+                    event.getId(), target, System.currentTimeMillis());
             promise.tryComplete(null);
         } else {
             try {
@@ -176,6 +178,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                                                         .getRetry()) {
                                     return retry(retryCounter, event);
                                 }
+                                logger.info("RETRY_DEBUG: Giving up on retries - eventId={} target={} finalStatusCode={} timestamp={}",
+                                        event.getId(), target, response.statusCode(), System.currentTimeMillis());
                                 return Future.failedFuture(cause);
                             } else if (cause instanceof OIDCTokenRequestException) {
                                 logger.info("RETRY_DEBUG: OIDC failure - eventId={} noRetry=true", event.getId());
@@ -189,6 +193,8 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                                 return retry(retryCounter, event);
                             }
 
+                            logger.info("RETRY_DEBUG: Giving up on retries (other failure) - eventId={} target={} cause={} timestamp={}",
+                                    event.getId(), target, cause.getClass().getSimpleName(), System.currentTimeMillis());
                             return Future.failedFuture(cause);
                         });
     }
@@ -261,6 +267,9 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                     return VertxMessageFactory.createWriter(req).writeBinary(event);
                 })
                 .onFailure(ex -> {
+                    // DEBUG: Log network/connection failures
+                    logger.info("NETWORK_DEBUG: Connection/network failure - eventId={} target={} error={} message='{}' timestamp={}",
+                            event.getId(), target, ex.getClass().getSimpleName(), ex.getMessage(), System.currentTimeMillis());
                     logError(event, ex);
                     breaker.tryFail(ex);
                 })
@@ -271,6 +280,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
                                 response, "Received failure response, status code: " + response.statusCode()));
                         return;
                     }
+
+                    // DEBUG: Log successful responses to track complete event flow
+                    logger.info("SUCCESS_DEBUG: Event delivered successfully - eventId={} target={} statusCode={} timestamp={}",
+                            event.getId(), target, response.statusCode(), System.currentTimeMillis());
 
                     breaker.tryComplete(response);
                 });
