@@ -92,7 +92,32 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
                     .withSchema(event.getDataSchema())
                     .withDescription("Event Type auto-created by controller");
 
-            return this.eventTypeClient.resource(et.build()).create();
+            try {
+                return this.eventTypeClient.resource(et.build()).create();
+            } catch (io.fabric8.kubernetes.client.KubernetesClientException e) {
+                // Handle race condition where EventType was created between cache check and creation attempt
+                // Check for HTTP 409 (Conflict) status code or "AlreadyExists" reason
+                final boolean isAlreadyExists = (e.getCode() == 409)
+                        || (e.getStatus() != null
+                                && "AlreadyExists".equals(e.getStatus().getReason()));
+
+                if (isAlreadyExists) {
+                    logger.debug("EventType {} already exists (race condition), fetching existing resource", name);
+                    // Fetch the existing EventType instead of failing
+                    final var existing = this.eventTypeClient
+                            .inNamespace(ownerReference.getNamespace())
+                            .withName(name)
+                            .get();
+                    if (existing != null) {
+                        return existing;
+                    }
+                    // If we can't fetch it, fall back to the original exception
+                    logger.warn(
+                            "EventType {} already exists but could not fetch it, falling back to original error", name);
+                }
+                // Re-throw the original exception if it's not an AlreadyExists error or we couldn't handle it
+                throw e;
+            }
         });
     }
 }
