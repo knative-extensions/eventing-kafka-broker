@@ -175,5 +175,8 @@ data:
   config-kafka-channel-webclient.properties: |
     idleTimeout=10000
     maxPoolSize=100
+    # Connection timeout to handle DNS resolution delays
+    # This prevents DNS timeouts from bypassing HTTP retry logic
+    connectTimeout=5000
   config-kafka-channel-httpserver.properties: |
     idleTimeout=0
