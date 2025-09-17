@@ -28,7 +28,6 @@ type MSKAccessTokenProvider struct {
 }
 
 func (m *MSKAccessTokenProvider) Token() (*sarama.AccessToken, error) {
-	signer.AwsDebugCreds = true
 	// Load AWS region from environment variable
 	awsRegion := os.Getenv("AWS_REGION")
 	if awsRegion == "" {
