@@ -26,6 +26,8 @@ import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreator;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeCreatorImpl;
 import dev.knative.eventing.kafka.broker.core.eventtype.EventTypeListerFactory;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.CeSqlRuntimeManager;
+import dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi.KnVerifyCorrelationId;
 import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
 import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.observability.tracing.TracingProvider;
@@ -125,6 +127,9 @@ public class Main {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+
+        CeSqlRuntimeManager.getInstance()
+                .registerFunction(new KnVerifyCorrelationId(vertx, kubernetesClient, env.getServiceNamespace()));
 
         final var eventTypeListerFactory = new EventTypeListerFactory(eventTypeClient);
 
