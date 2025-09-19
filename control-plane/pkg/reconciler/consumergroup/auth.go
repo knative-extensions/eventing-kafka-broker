@@ -89,6 +89,8 @@ func hasNetSpecAuthConfig(auth *kafkainternals.Auth) bool {
 			auth.NetSpec.TLS.Key.SecretKeyRef != nil ||
 			auth.NetSpec.SASL.User.SecretKeyRef != nil ||
 			auth.NetSpec.SASL.Password.SecretKeyRef != nil ||
+			auth.NetSpec.SASL.RoleARN.SecretKeyRef != nil ||
+			auth.NetSpec.SASL.TokenProvider.SecretKeyRef != nil ||
 			auth.NetSpec.SASL.Type.SecretKeyRef != nil)
 }
 
