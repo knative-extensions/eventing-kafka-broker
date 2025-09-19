@@ -175,6 +175,66 @@ func TestSASLPlainLSCRAM512NoPassword(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestSASLOAuth(t *testing.T) {
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_PLAINTEXT"),
+		"sasl.mechanism": []byte("OAUTHBEARER"),
+		"tokenProvider":  []byte("MSKAccessTokenProvider"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeOAuth), config.Net.SASL.Mechanism)
+	assert.NotNil(t, config.Net.SASL.TokenProvider)
+}
+
+func TestSASLOAuthWithMSKRoleProvider(t *testing.T) {
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_PLAINTEXT"),
+		"sasl.mechanism": []byte("OAUTHBEARER"),
+		"tokenProvider":  []byte("MSKRoleAccessTokenProvider"),
+		"roleARN":        []byte("arn:aws:iam::123456789012:role/test-role"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeOAuth), config.Net.SASL.Mechanism)
+	assert.NotNil(t, config.Net.SASL.TokenProvider)
+}
+
+func TestSASLOAuthMissingTokenProvider(t *testing.T) {
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_PLAINTEXT"),
+		"sasl.mechanism": []byte("OAUTHBEARER"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "OAUTHBEARER token provider required")
+}
+
+func TestSASLOAuthInvalidTokenProvider(t *testing.T) {
+	secret := map[string][]byte{
+		"protocol":       []byte("SASL_PLAINTEXT"),
+		"sasl.mechanism": []byte("OAUTHBEARER"),
+		"tokenProvider":  []byte("UnsupportedProvider"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "unsupported OAUTHBEARER token provider")
+}
+
 func TestSSL(t *testing.T) {
 	ca, userKey, userCert := loadCerts(t)
 

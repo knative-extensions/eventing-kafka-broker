@@ -344,7 +344,7 @@
         <version>2.3.2</version>
       </dependency>
       <dependency>
-        <!-- Not sure why this has to be explicitly added.
+        <!-- This had to be explicitly added to avoid the error below:
           Error:
           Failed to reconcile contract generation contractGeneration=2
           Caused by: org.apache.kafka.common.KafkaException: java.lang.NoClassDefFoundError: Could not initialize class software.amazon.awssdk.http.apache.internal.conn.SdkTlsSocketFactory

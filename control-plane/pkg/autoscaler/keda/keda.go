@@ -136,8 +136,6 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 			secret.StringData["sasl"] = "scram_sha256"
 		case sarama.SASLTypeSCRAMSHA512:
 			secret.StringData["sasl"] = "scram_sha512"
-		case sarama.SASLTypeOAuth:
-			secret.StringData["sasl"] = "oauthbearer"
 		default:
 			return nil, nil, fmt.Errorf("SASL type value %q is not supported", cfg.Net.SASL.Mechanism)
 		}
@@ -168,9 +166,6 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 
 			secretTargetRefs = addAuthSecretTargetRef("username", cg.Spec.Template.Spec.Auth.NetSpec.SASL.User, secretTargetRefs)
 			secretTargetRefs = addAuthSecretTargetRef("password", cg.Spec.Template.Spec.Auth.NetSpec.SASL.Password, secretTargetRefs)
-			secretTargetRefs = addAuthSecretTargetRef("type", cg.Spec.Template.Spec.Auth.NetSpec.SASL.Type, secretTargetRefs)
-			secretTargetRefs = addAuthSecretTargetRef("tokenProvider", cg.Spec.Template.Spec.Auth.NetSpec.SASL.TokenProvider, secretTargetRefs)
-			secretTargetRefs = addAuthSecretTargetRef("roleARN", cg.Spec.Template.Spec.Auth.NetSpec.SASL.RoleARN, secretTargetRefs)
 
 			triggerAuth.Spec.SecretTargetRef = secretTargetRefs
 		}
@@ -204,15 +199,6 @@ func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData 
 
 			password := kedav1alpha1.AuthSecretTargetRef{Parameter: "password", Name: secret.Name, Key: security.SaslPasswordKey}
 			secretTargetRefs = append(secretTargetRefs, password)
-
-			typeRef := kedav1alpha1.AuthSecretTargetRef{Parameter: "type", Name: secret.Name, Key: security.SaslType}
-			secretTargetRefs = append(secretTargetRefs, typeRef)
-
-			tokenProvider := kedav1alpha1.AuthSecretTargetRef{Parameter: "tokenProvider", Name: secret.Name, Key: security.SaslTokenProviderKey}
-			secretTargetRefs = append(secretTargetRefs, tokenProvider)
-
-			roleARN := kedav1alpha1.AuthSecretTargetRef{Parameter: "roleARN", Name: secret.Name, Key: security.SaslRoleARNKey}
-			secretTargetRefs = append(secretTargetRefs, roleARN)
 		}
 
 		if caCertValue, ok := secret.Data[security.CaCertificateKey]; ok && string(caCertValue) != "" { // TLS enabled

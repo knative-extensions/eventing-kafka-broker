@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Knative Authors
+ * Copyright 2025 The Knative Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,19 @@
 package security
 
 import (
-	"context"
 	"os"
-
-	"github.com/IBM/sarama"
-	"github.com/aws/aws-msk-iam-sasl-signer-go/signer"
 )
 
-type MSKAccessTokenProvider struct {
-}
+const (
+	SaslTokenProviderKey = "tokenProvider"
+	SaslRoleARNKey       = "roleARN"
+	SaslAWSRegion        = "awsRegion"
+)
 
-func (m *MSKAccessTokenProvider) Token() (*sarama.AccessToken, error) {
-	// Load AWS region from environment variable
+func getAWSRegion(data map[string][]byte) string {
+	if region, ok := data[SaslAWSRegion]; ok && len(region) > 0 {
+		return string(region)
+	}
 	awsRegion := os.Getenv("AWS_REGION")
 	if awsRegion == "" {
 		// Fallback to AWS_DEFAULT_REGION if AWS_REGION is not set
@@ -37,10 +38,5 @@ func (m *MSKAccessTokenProvider) Token() (*sarama.AccessToken, error) {
 			awsRegion = "us-east-1"
 		}
 	}
-	token, _, err := signer.GenerateAuthToken(context.TODO(), awsRegion)
-	return &sarama.AccessToken{Token: token}, err
-}
-
-func MSKAccessTokenProviderGeneratorFunc() *MSKAccessTokenProvider {
-	return &MSKAccessTokenProvider{}
+	return awsRegion
 }
