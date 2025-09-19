@@ -40,7 +40,7 @@ func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -56,7 +56,7 @@ func TestKafkaSourceDeletedFromContractConfigMaps(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -75,7 +75,7 @@ func TestKafkaSourceScale(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -91,7 +91,7 @@ func TestKafkaSourceInitialOffsetEarliest(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -109,7 +109,7 @@ func TestKafkaSourceBinaryEvent(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -124,7 +124,7 @@ func TestKafkaSourceBinaryEventWithExtensions(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -139,7 +139,7 @@ func TestKafkaSourceStructuredEvent(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -154,7 +154,7 @@ func TestKafkaSourceWithExtensions(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -170,7 +170,7 @@ func TestKafkaSourceTLS(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -190,7 +190,7 @@ func TestKafkaSourceSASL(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -206,7 +206,7 @@ func TestKafkaSourceUpdate(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),
@@ -232,7 +232,7 @@ func TestKafkaSourceKedaScaling(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 		environment.Managed(t),
@@ -248,7 +248,7 @@ func TestKafkaSourceKedaScalingSASL(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 		environment.Managed(t),
@@ -264,7 +264,7 @@ func TestKafkaSourceScaledObject(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(5*time.Second, 4*time.Minute),
 		environment.Managed(t),
@@ -281,7 +281,7 @@ func TestKafkaSourceTLSSink(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		eventshub.WithTLS(t),
@@ -298,7 +298,7 @@ func TestKafkaSourceTLSTrustBundle(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.WithPollTimings(PollInterval, PollTimeout),
 		environment.Managed(t),

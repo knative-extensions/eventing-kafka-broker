@@ -39,7 +39,7 @@ func TestRotateBrokerTLSCertificates(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
 		eventshub.WithTLS(t),
@@ -55,7 +55,7 @@ func TestTriggerTLS(t *testing.T) {
 	ctx, env := global.Environment(
 		knative.WithKnativeNamespace(system.Namespace()),
 		knative.WithLoggingConfig,
-		knative.WithTracingConfig,
+		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
 		eventshub.WithTLS(t),
