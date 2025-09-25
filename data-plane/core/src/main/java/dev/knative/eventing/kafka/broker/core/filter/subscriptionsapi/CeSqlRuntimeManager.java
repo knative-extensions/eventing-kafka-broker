@@ -16,21 +16,29 @@
 package dev.knative.eventing.kafka.broker.core.filter.subscriptionsapi;
 
 import io.cloudevents.sql.EvaluationRuntime;
+import io.cloudevents.sql.Function;
 import io.cloudevents.sql.impl.functions.BaseFunction;
+import io.cloudevents.sql.impl.runtime.EvaluationRuntimeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class CeSqlRuntimeManager {
     private static final Logger logger = LoggerFactory.getLogger(CeSqlRuntimeManager.class);
 
     private static final CeSqlRuntimeManager INSTANCE = new CeSqlRuntimeManager();
 
+    private List<Function> functions;
+
     private EvaluationRuntime runtime;
 
     private CeSqlRuntimeManager() {
         this.runtime = EvaluationRuntime.builder().build();
+        this.functions = new LinkedList<>();
     }
 
     public static CeSqlRuntimeManager getInstance() {
@@ -43,7 +51,10 @@ public class CeSqlRuntimeManager {
 
     public void registerFunction(BaseFunction function) {
         logger.info("Registering CeSql function: {}", function.name());
-        this.runtime = EvaluationRuntime.builder().addFunction(function).build();
+        this.functions.add(function);
+        EvaluationRuntimeBuilder builder = EvaluationRuntime.builder();
+        this.functions.forEach(builder::addFunction);
+        this.runtime = builder.build();
     }
 
     public void registerKnVerifyCorrelationId(Vertx vertx, KubernetesClient kubernetesClient, String systemNamespace) {

@@ -39,8 +39,8 @@ public class KnVerifyCorrelationId extends BaseFunction {
     private final Vertx vertx;
     private final KubernetesClient kubeClient;
     private final String systemNamespace;
-    private static final int GCM_NONCE_LENGTH_BYTES = 12;
-    private static final int GCM_TAG_LENGTH_BITS = 128;
+    private static final int GCM_NONCE_LENGTH_BYTES = 12; // This aligns with the default nonce length used in the go cypher package
+    private static final int GCM_TAG_LENGTH_BITS = 128; // this aligns with the default tag length used in the go cypher package
 
     public KnVerifyCorrelationId(Vertx vertx, KubernetesClient kubeClient, String systemNamespace) {
         super("KN_VERIFY_CORRELATION_ID");
