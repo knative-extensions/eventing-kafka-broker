@@ -49,7 +49,9 @@ public class CeSqlFilter implements Filter {
         try {
             logger.debug(
                     "Testing event against CESQL expression. Expression {} - Event {}", this.expression, cloudEvent);
-            Object value = this.expression.tryEvaluate(cloudEvent);
+            Object value = this.expression
+                    .evaluate(CeSqlRuntimeManager.getInstance().getRuntime(), cloudEvent)
+                    .value();
             logger.debug(
                     "CESQL evaluation succeeded. Expression {} - Event {} - Result {}", expression, cloudEvent, value);
             Result castedResult =

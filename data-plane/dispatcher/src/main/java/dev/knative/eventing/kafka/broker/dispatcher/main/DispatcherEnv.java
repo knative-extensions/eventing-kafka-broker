@@ -31,12 +31,16 @@ public class DispatcherEnv extends BaseEnv {
     public static final String EGRESSES_INITIAL_CAPACITY = "EGRESSES_INITIAL_CAPACITY";
     private final int egressesInitialCapacity;
 
+    public static final String SERVICE_NAMESPACE = "SERVICE_NAMESPACE";
+    private final String serviceNamespace;
+
     public DispatcherEnv(Function<String, String> envProvider) {
         super(envProvider);
 
         this.consumerConfigFilePath = requireNonNull(envProvider.apply(CONSUMER_CONFIG_FILE_PATH));
         this.webClientConfigFilePath = requireNonNull(envProvider.apply(WEBCLIENT_CONFIG_FILE_PATH));
         this.egressesInitialCapacity = Integer.parseInt(requireNonNull(envProvider.apply(EGRESSES_INITIAL_CAPACITY)));
+        this.serviceNamespace = requireNonNull(envProvider.apply(SERVICE_NAMESPACE));
     }
 
     public String getConsumerConfigFilePath() {
@@ -49,6 +53,10 @@ public class DispatcherEnv extends BaseEnv {
 
     public int getEgressesInitialCapacity() {
         return egressesInitialCapacity;
+    }
+
+    public String getServiceNamespace() {
+        return serviceNamespace;
     }
 
     @Override
