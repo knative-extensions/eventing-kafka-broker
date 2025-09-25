@@ -21,11 +21,10 @@ import io.cloudevents.sql.impl.functions.BaseFunction;
 import io.cloudevents.sql.impl.runtime.EvaluationRuntimeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.LinkedList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CeSqlRuntimeManager {
     private static final Logger logger = LoggerFactory.getLogger(CeSqlRuntimeManager.class);
