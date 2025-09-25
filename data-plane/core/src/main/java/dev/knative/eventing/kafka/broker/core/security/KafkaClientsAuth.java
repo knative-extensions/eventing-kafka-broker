@@ -71,6 +71,8 @@ public class KafkaClientsAuth {
                             PlainLoginModule.class.getName() + " required username=\"%s\" password=\"%s\";",
                             credentials.SASLUsername(),
                             credentials.SASLPassword()));
+        } else if ("OAUTHBEARER".equals(mechanism)) {
+            // OAUTHBEARER does not require username and password, so we do not set them.
         } else {
             propertiesSetter.accept(
                     SaslConfigs.SASL_JAAS_CONFIG,

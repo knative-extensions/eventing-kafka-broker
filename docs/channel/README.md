@@ -83,9 +83,12 @@ implementations.
 5. If you are going to use authentication or encryption, create your secret.
 
     For using authentication, these values must exist in the secret:
-    - `sasl.mechanism`: Can be one of `PLAIN`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `sasl.mechanism`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `type`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
     - `user`: Username to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
     - `password`: Password to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `tokenProvider`: Name of the OAuth token provider. Only `MSKAccessTokenProvider` and `MSKRoleAccessTokenProvider` currently supported. Required for `OAUTHBEARER`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `roleARN`: ARN of the AWS IAM role to assume. Required for `OAUTHBEARER` and `MSKRoleAccessTokenProvider`.
 
     For using encryption, these values must exist in the secret:
     - `ca.crt`: Certificate authority certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
@@ -134,7 +137,7 @@ implementations.
       --dry-run=client -o yaml | kubectl apply -n knative-eventing -f -
    ```
 
-7. Configure `auth.secret.ref.name` and `auth.secret.ref.namespace` values in the `kafka-channel-config` ConfigMap in the
+6. Configure `auth.secret.ref.name` and `auth.secret.ref.namespace` values in the `kafka-channel-config` ConfigMap in the
    `knative-eventing` namespace.
 
     ```yaml
@@ -150,6 +153,30 @@ implementations.
       # Replace with secret name, such as strimzi-sasl-secret as created above
       auth.secret.ref.name: REPLACE_WITH_SECRET_NAME
       auth.secret.ref.namespace: knative-eventing
+    ```
+
+7. If using `sasl.mechanism: OAUTHBEARER`, update java properties for the data plane.
+
+    The following java properties files need sasl properties set:
+    1. config-kafka-source-producer.properties
+    2. config-kafka-source-consumer.properties
+    3. config-kafka-channel-producer.properties
+    4. config-kafka-channel-consumer.properties
+    5. config-kafka-broker-producer.properties
+    6. config-kafka-broker-consumer.properties
+
+    The following properties should be added:
+    ```
+    security.protocol=SASL_SSL
+    sasl.mechanism=OAUTHBEARER
+    sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required awsStsRegion="<REGION>";
+    sasl.login.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
+    sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
+    ```
+
+    If you need to assume a role to connect to MSK, add a `awsRoleArn` value to `sasl.jaas.config` and make sure to use the `MSKRoleAccessTokenProvider`:
+    ```
+    sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required awsStsRegion="<REGION>" awsRoleArn="<ROLE_ARN>";
     ```
 
 ## Usage

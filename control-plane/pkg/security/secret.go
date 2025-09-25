@@ -27,6 +27,7 @@ import (
 	"github.com/IBM/sarama"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	oauth "knative.dev/eventing-kafka-broker/control-plane/pkg/security/oauth"
 )
 
 const (
@@ -53,6 +54,7 @@ const (
 	SaslPlain       = "PLAIN"
 	SaslScramSha256 = "SCRAM-SHA-256"
 	SaslScramSha512 = "SCRAM-SHA-512"
+	SaslOAuth       = "OAUTHBEARER"
 
 	// Legacy Channel config to enable TLS, see https://github.com/knative-extensions/eventing-kafka-broker/issues/2231
 	SSLLegacyEnabled = "tls.enabled"
@@ -104,11 +106,22 @@ func secretData(data map[string][]byte) kafka.ConfigOption {
 func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 	return func(config *sarama.Config) error {
 
-		// Supported mechanism SASL/PLAIN (default if not specified) or SASL/SCRAM.
+		// Supported mechanism SASL/PLAIN (default if not specified), SASL/SCRAM, or SASL/OAUTHBEARER.
 		saslMechanism := SaslPlain
 		givenSASLMechanism, ok := data[SaslMechanismKey]
 		if ok {
 			saslMechanism = string(givenSASLMechanism)
+		}
+
+		if saslMechanism == SaslOAuth {
+			config.Net.SASL.Enable = true
+			config.Net.SASL.Mechanism = sarama.SASLTypeOAuth
+			tokenProvider, err := oauth.NewTokenProvider(data)
+			if err != nil {
+				return fmt.Errorf("[protocol %s] failed to create OAUTHBEARER token provider: %w", protocol, err)
+			}
+			config.Net.SASL.TokenProvider = tokenProvider
+			return nil
 		}
 
 		user, ok := data[SaslUserKey]
