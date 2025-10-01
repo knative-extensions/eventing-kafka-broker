@@ -171,6 +171,9 @@ spec:
         - name: config-observability
           configMap:
             name: config-observability
+        - name: contract-resources
+          # only a placeholder. Will be replaced later by our pod defaulting webhook
+          emptyDir: {}
       restartPolicy: Always
       dnsConfig:
         options:

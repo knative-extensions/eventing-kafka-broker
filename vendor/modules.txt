@@ -1389,7 +1389,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/trace
-# knative.dev/eventing v0.46.1-0.20250917152302-903c74c03172
+# knative.dev/eventing v0.46.1-0.20250925094728-73042972ef84
 ## explicit; go 1.24.0
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1422,6 +1422,7 @@ knative.dev/eventing/pkg/apis/sources/v1alpha1
 knative.dev/eventing/pkg/apis/sources/v1beta2
 knative.dev/eventing/pkg/auth
 knative.dev/eventing/pkg/broker
+knative.dev/eventing/pkg/channel
 knative.dev/eventing/pkg/client/certmanager/injection/client
 knative.dev/eventing/pkg/client/certmanager/injection/client/fake
 knative.dev/eventing/pkg/client/clientset/versioned
