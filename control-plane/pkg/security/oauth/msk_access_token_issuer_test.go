@@ -14,13 +14,28 @@
  * limitations under the License.
  */
 
-package security
+package oauth
 
 import (
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	// Test regions
+	testRegionEuWest1      = "eu-west-1"
+	testRegionUsWest2      = "us-west-2"
+	testRegionApSoutheast1 = "ap-southeast-1"
+	testRegionUsEast1      = "us-east-1"
+
+	// Test names
+	testNameWithRegionInData        = "with region in data"
+	testNameWithAWSRegionEnv        = "with AWS_REGION env var"
+	testNameWithAWSDefaultRegionEnv = "with AWS_DEFAULT_REGION env var"
+	testNameWithNoRegion            = "with no region specified"
+	testNameEmptyRegionInData       = "empty region in data"
 )
 
 func TestNewMSKAccessTokenIssuer(t *testing.T) {
@@ -34,61 +49,61 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 		cleanupEnv func()
 	}{
 		{
-			name: "with region in data",
+			name: testNameWithRegionInData,
 			data: map[string][]byte{
-				SaslAWSRegion: []byte("eu-west-1"),
+				saslAWSRegion: []byte(testRegionEuWest1),
 			},
-			wantRegion: "eu-west-1",
+			wantRegion: testRegionEuWest1,
 			setupEnv:   func() {},
 			cleanupEnv: func() {},
 		},
 		{
-			name: "with AWS_REGION env var",
+			name: testNameWithAWSRegionEnv,
 			data: map[string][]byte{},
 			envVars: map[string]string{
-				"AWS_REGION": "us-west-2",
+				awsRegionEnvVar: testRegionUsWest2,
 			},
-			wantRegion: "us-west-2",
+			wantRegion: testRegionUsWest2,
 			setupEnv: func() {
-				os.Setenv("AWS_REGION", "us-west-2")
+				os.Setenv(awsRegionEnvVar, testRegionUsWest2)
 			},
 			cleanupEnv: func() {
-				os.Unsetenv("AWS_REGION")
+				os.Unsetenv(awsRegionEnvVar)
 			},
 		},
 		{
-			name: "with AWS_DEFAULT_REGION env var",
+			name: testNameWithAWSDefaultRegionEnv,
 			data: map[string][]byte{},
 			envVars: map[string]string{
-				"AWS_DEFAULT_REGION": "ap-southeast-1",
+				awsDefaultRegionEnvVar: testRegionApSoutheast1,
 			},
-			wantRegion: "ap-southeast-1",
+			wantRegion: testRegionApSoutheast1,
 			setupEnv: func() {
-				os.Setenv("AWS_DEFAULT_REGION", "ap-southeast-1")
+				os.Setenv(awsDefaultRegionEnvVar, testRegionApSoutheast1)
 			},
 			cleanupEnv: func() {
-				os.Unsetenv("AWS_DEFAULT_REGION")
+				os.Unsetenv(awsDefaultRegionEnvVar)
 			},
 		},
 		{
-			name:       "with no region specified",
+			name:       testNameWithNoRegion,
 			data:       map[string][]byte{},
-			wantRegion: "us-east-1", // default region
+			wantRegion: testRegionUsEast1, // default region
 			setupEnv: func() {
-				os.Unsetenv("AWS_REGION")
-				os.Unsetenv("AWS_DEFAULT_REGION")
+				os.Unsetenv(awsRegionEnvVar)
+				os.Unsetenv(awsDefaultRegionEnvVar)
 			},
 			cleanupEnv: func() {},
 		},
 		{
-			name: "empty region in data",
+			name: testNameEmptyRegionInData,
 			data: map[string][]byte{
-				SaslAWSRegion: []byte(""),
+				saslAWSRegion: []byte(""),
 			},
-			wantRegion: "us-east-1", // should fall back to default
+			wantRegion: testRegionUsEast1, // should fall back to default
 			setupEnv: func() {
-				os.Unsetenv("AWS_REGION")
-				os.Unsetenv("AWS_DEFAULT_REGION")
+				os.Unsetenv(awsRegionEnvVar)
+				os.Unsetenv(awsDefaultRegionEnvVar)
 			},
 			cleanupEnv: func() {},
 		},
@@ -97,8 +112,8 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup environment
-			tt.setupEnv()
-			defer tt.cleanupEnv()
+			t.Setenv(awsRegionEnvVar, tt.envVars[awsRegionEnvVar])
+			t.Setenv(awsDefaultRegionEnvVar, tt.envVars[awsDefaultRegionEnvVar])
 
 			// Create the issuer
 			issuer, err := NewMSKAccessTokenIssuer(tt.data)

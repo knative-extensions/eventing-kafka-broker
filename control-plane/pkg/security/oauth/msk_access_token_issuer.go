@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package security
+package oauth
 
 import (
 	"context"
@@ -22,19 +22,19 @@ import (
 	"github.com/aws/aws-msk-iam-sasl-signer-go/signer"
 )
 
-// MSKAccessTokenIssuer implements TokenIssuer for the MSK access token
-type MSKAccessTokenIssuer struct {
+// mskAccessTokenIssuer implements TokenIssuer for the MSK access token
+type mskAccessTokenIssuer struct {
 	region string
 }
 
-func (m *MSKAccessTokenIssuer) IssueToken(ctx context.Context) (string, error) {
+func (m *mskAccessTokenIssuer) IssueToken(ctx context.Context) (string, error) {
 	token, _, err := signer.GenerateAuthToken(ctx, m.region)
 	return token, err
 }
 
-func NewMSKAccessTokenIssuer(data map[string][]byte) (*MSKAccessTokenIssuer, error) {
+func NewMSKAccessTokenIssuer(data map[string][]byte) (*mskAccessTokenIssuer, error) {
 	region := getAWSRegion(data)
-	return &MSKAccessTokenIssuer{
+	return &mskAccessTokenIssuer{
 		region: region,
 	}, nil
 }

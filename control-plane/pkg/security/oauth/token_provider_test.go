@@ -14,12 +14,31 @@
  * limitations under the License.
  */
 
-package security
+package oauth
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	// Test-specific constants
+	unsupportedProvider = "UnsupportedProvider"
+
+	// Error messages - specific to this test file
+	errorMsgTokenProviderRequired     = "OAUTHBEARER token provider required"
+	errorMsgUnsupportedTokenProvider  = "unsupported OAUTHBEARER token provider"
+	errorMsgRoleTokenProviderRequired = "TokenProvider MSKRoleAccessTokenProvider required"
+
+	// Test names - specific to this test file
+	testNameValidMSKAccessToken              = "valid MSKAccessTokenProvider"
+	testNameValidMSKRoleAccessToken          = "valid MSKRoleAccessTokenProvider"
+	testNameMissingTokenProvider             = "missing token provider"
+	testNameEmptyTokenProvider               = "empty token provider"
+	testNameUnsupportedTokenProvider         = "unsupported token provider"
+	testNameMSKAccessTokenMissingRegion      = "MSKAccessTokenProvider with missing region"
+	testNameMSKRoleAccessTokenMissingRoleARN = "MSKRoleAccessTokenProvider with missing role ARN"
 )
 
 func TestNewTokenProvider(t *testing.T) {
@@ -30,63 +49,63 @@ func TestNewTokenProvider(t *testing.T) {
 		errMsg  string
 	}{
 		{
-			name: "valid MSKAccessTokenProvider",
+			name: testNameValidMSKAccessToken,
 			data: map[string][]byte{
-				SaslTokenProviderKey: []byte("MSKAccessTokenProvider"),
-				SaslAWSRegion:        []byte("us-west-2"),
+				saslTokenProviderKey: []byte(MSKAccessTokenProvider),
+				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: false,
 		},
 		{
-			name: "valid MSKRoleAccessTokenProvider",
+			name: testNameValidMSKRoleAccessToken,
 			data: map[string][]byte{
-				SaslTokenProviderKey: []byte("MSKRoleAccessTokenProvider"),
-				SaslRoleARNKey:       []byte("arn:aws:iam::123456789012:role/test-role"),
-				SaslAWSRegion:        []byte("us-west-2"),
+				saslTokenProviderKey: []byte(MSKRoleAccessTokenProvider),
+				saslRoleARNKey:       []byte(testRoleARN),
+				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: false,
 		},
 		{
-			name: "missing token provider",
+			name: testNameMissingTokenProvider,
 			data: map[string][]byte{
-				SaslAWSRegion: []byte("us-west-2"),
+				saslAWSRegion: []byte(testRegionUsWest2),
 			},
 			wantErr: true,
-			errMsg:  "OAUTHBEARER token provider required",
+			errMsg:  errorMsgTokenProviderRequired,
 		},
 		{
-			name: "empty token provider",
+			name: testNameEmptyTokenProvider,
 			data: map[string][]byte{
-				SaslTokenProviderKey: []byte(""),
-				SaslAWSRegion:        []byte("us-west-2"),
+				saslTokenProviderKey: []byte(""),
+				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: true,
-			errMsg:  "OAUTHBEARER token provider required",
+			errMsg:  errorMsgTokenProviderRequired,
 		},
 		{
-			name: "unsupported token provider",
+			name: testNameUnsupportedTokenProvider,
 			data: map[string][]byte{
-				SaslTokenProviderKey: []byte("UnsupportedProvider"),
-				SaslAWSRegion:        []byte("us-west-2"),
+				saslTokenProviderKey: []byte(unsupportedProvider),
+				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: true,
-			errMsg:  "unsupported OAUTHBEARER token provider",
+			errMsg:  errorMsgUnsupportedTokenProvider,
 		},
 		{
-			name: "MSKAccessTokenProvider with missing region",
+			name: testNameMSKAccessTokenMissingRegion,
 			data: map[string][]byte{
-				SaslTokenProviderKey: []byte("MSKAccessTokenProvider"),
+				saslTokenProviderKey: []byte(MSKAccessTokenProvider),
 			},
 			wantErr: false, // should not error as it will use default region
 		},
 		{
-			name: "MSKRoleAccessTokenProvider with missing role ARN",
+			name: testNameMSKRoleAccessTokenMissingRoleARN,
 			data: map[string][]byte{
-				SaslTokenProviderKey: []byte("MSKRoleAccessTokenProvider"),
-				SaslAWSRegion:        []byte("us-west-2"),
+				saslTokenProviderKey: []byte(MSKRoleAccessTokenProvider),
+				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: true,
-			errMsg:  "TokenProvider MSKRoleAccessTokenProvider required",
+			errMsg:  errorMsgRoleTokenProviderRequired,
 		},
 	}
 
@@ -111,11 +130,11 @@ func TestNewTokenProvider(t *testing.T) {
 			assert.NotNil(t, provider.tokenIssuer)
 
 			// Check the type of the token issuer
-			switch string(tt.data[SaslTokenProviderKey]) {
-			case "MSKAccessTokenProvider":
-				assert.IsType(t, &MSKAccessTokenIssuer{}, provider.tokenIssuer)
-			case "MSKRoleAccessTokenProvider":
-				assert.IsType(t, &MSKRoleAccessTokenIssuer{}, provider.tokenIssuer)
+			switch string(tt.data[saslTokenProviderKey]) {
+			case MSKAccessTokenProvider:
+				assert.IsType(t, &mskAccessTokenIssuer{}, provider.tokenIssuer)
+			case MSKRoleAccessTokenProvider:
+				assert.IsType(t, &mskRoleAccessTokenIssuer{}, provider.tokenIssuer)
 			}
 		})
 	}

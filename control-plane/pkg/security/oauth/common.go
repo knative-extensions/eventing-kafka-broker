@@ -14,29 +14,47 @@
  * limitations under the License.
  */
 
-package security
+package oauth
 
 import (
 	"os"
 )
 
 const (
-	SaslTokenProviderKey = "tokenProvider"
-	SaslRoleARNKey       = "roleARN"
-	SaslAWSRegion        = "awsRegion"
+	saslTokenProviderKey = "tokenProvider"
+	saslRoleARNKey       = "roleARN"
+	saslAWSRegion        = "awsRegion"
+
+	// Environment variable names
+	awsRegionEnvVar        = "AWS_REGION"
+	awsDefaultRegionEnvVar = "AWS_DEFAULT_REGION"
+
+	// Default AWS region
+	defaultAWSRegion = "us-east-1"
+
+	// Token provider types
+	MSKAccessTokenProvider     = "MSKAccessTokenProvider"
+	MSKRoleAccessTokenProvider = "MSKRoleAccessTokenProvider"
+
+	// MSK IAM Auth constants
+	knativeEventingUserAgent = "knative-eventing"
 )
 
 func getAWSRegion(data map[string][]byte) string {
-	if region, ok := data[SaslAWSRegion]; ok && len(region) > 0 {
+	if region, ok := data[saslAWSRegion]; ok && len(region) > 0 {
 		return string(region)
 	}
-	awsRegion := os.Getenv("AWS_REGION")
-	if awsRegion == "" {
-		// Fallback to AWS_DEFAULT_REGION if AWS_REGION is not set
-		awsRegion = os.Getenv("AWS_DEFAULT_REGION")
-		if awsRegion == "" {
-			awsRegion = "us-east-1"
-		}
+
+	awsRegion := os.Getenv(awsRegionEnvVar)
+	if awsRegion != "" {
+		return awsRegion
 	}
-	return awsRegion
+
+	// Fallback to AWS_DEFAULT_REGION if AWS_REGION is not set
+	awsRegion = os.Getenv(awsDefaultRegionEnvVar)
+	if awsRegion != "" {
+		return awsRegion
+	}
+
+	return defaultAWSRegion
 }

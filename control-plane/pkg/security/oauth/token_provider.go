@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package security
+package oauth
 
 import (
 	"context"
@@ -23,16 +23,14 @@ import (
 	"github.com/IBM/sarama"
 )
 
-// getAWSRegion retrieves the AWS region from environment variables
-// with fallback logic for default region
-// TokenIssuer defines the interface for generating access tokens
-type TokenIssuer interface {
+// tokenIssuer defines the interface for generating access tokens
+type tokenIssuer interface {
 	IssueToken(ctx context.Context) (string, error)
 }
 
 // TokenProvider provides common functionality for OAuth token providers
 type TokenProvider struct {
-	tokenIssuer TokenIssuer
+	tokenIssuer tokenIssuer
 }
 
 // Token implements the sarama.AccessTokenProvider interface
@@ -45,20 +43,20 @@ func (b *TokenProvider) Token() (*sarama.AccessToken, error) {
 }
 
 func NewTokenProvider(data map[string][]byte) (*TokenProvider, error) {
-	tokenProvider, ok := data[SaslTokenProviderKey]
+	tokenProvider, ok := data[saslTokenProviderKey]
 	if !ok || len(tokenProvider) == 0 {
-		return nil, fmt.Errorf("OAUTHBEARER token provider required (key: %s)", SaslTokenProviderKey)
+		return nil, fmt.Errorf("OAUTHBEARER token provider required (key: %s)", saslTokenProviderKey)
 	}
 	tokenProviderStr := string(tokenProvider)
-	var tokenIssuer TokenIssuer
+	var tokenIssuer tokenIssuer
 	var err error
 	switch tokenProviderStr {
-	case "MSKAccessTokenProvider":
+	case MSKAccessTokenProvider:
 		tokenIssuer, err = NewMSKAccessTokenIssuer(data)
-	case "MSKRoleAccessTokenProvider":
+	case MSKRoleAccessTokenProvider:
 		tokenIssuer, err = NewMSKRoleAccessTokenIssuer(data)
 	default:
-		return nil, fmt.Errorf("unsupported OAUTHBEARER token provider (key: %s), supported: MSKAccessTokenProvider, MSKRoleAccessTokenProvider", SaslTokenProviderKey)
+		return nil, fmt.Errorf("unsupported OAUTHBEARER token provider (key: %s), supported: %s, %s", saslTokenProviderKey, MSKAccessTokenProvider, MSKRoleAccessTokenProvider)
 	}
 	if err != nil {
 		return nil, err

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package security
+package oauth
 
 import (
 	"context"
@@ -23,24 +23,24 @@ import (
 	"github.com/aws/aws-msk-iam-sasl-signer-go/signer"
 )
 
-// MSKRoleAccessTokenIssuer implements TokenIssuer for the MSK role access token
-type MSKRoleAccessTokenIssuer struct {
+// mskRoleAccessTokenIssuer implements TokenIssuer for the MSK role access token
+type mskRoleAccessTokenIssuer struct {
 	region  string
 	roleARN string
 }
 
-func (m *MSKRoleAccessTokenIssuer) IssueToken(ctx context.Context) (string, error) {
-	token, _, err := signer.GenerateAuthTokenFromRole(ctx, m.region, m.roleARN, "knative-eventing")
+func (m *mskRoleAccessTokenIssuer) IssueToken(ctx context.Context) (string, error) {
+	token, _, err := signer.GenerateAuthTokenFromRole(ctx, m.region, m.roleARN, knativeEventingUserAgent)
 	return token, err
 }
 
-func NewMSKRoleAccessTokenIssuer(data map[string][]byte) (*MSKRoleAccessTokenIssuer, error) {
-	roleARN, ok := data[SaslRoleARNKey]
+func NewMSKRoleAccessTokenIssuer(data map[string][]byte) (*mskRoleAccessTokenIssuer, error) {
+	roleARN, ok := data[saslRoleARNKey]
 	if !ok || len(roleARN) == 0 {
-		return nil, fmt.Errorf("TokenProvider MSKRoleAccessTokenProvider required (key: %s)", SaslRoleARNKey)
+		return nil, fmt.Errorf("TokenProvider MSKRoleAccessTokenProvider required (key: %s)", saslRoleARNKey)
 	}
 	region := getAWSRegion(data)
-	return &MSKRoleAccessTokenIssuer{
+	return &mskRoleAccessTokenIssuer{
 		region:  region,
 		roleARN: string(roleARN),
 	}, nil
