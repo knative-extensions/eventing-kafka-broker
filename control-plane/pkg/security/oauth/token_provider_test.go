@@ -51,7 +51,7 @@ func TestNewTokenProvider(t *testing.T) {
 		{
 			name: testNameValidMSKAccessToken,
 			data: map[string][]byte{
-				saslTokenProviderKey: []byte(MSKAccessTokenProvider),
+				saslTokenProviderKey: []byte(mskAccessTokenProvider),
 				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: false,
@@ -59,7 +59,7 @@ func TestNewTokenProvider(t *testing.T) {
 		{
 			name: testNameValidMSKRoleAccessToken,
 			data: map[string][]byte{
-				saslTokenProviderKey: []byte(MSKRoleAccessTokenProvider),
+				saslTokenProviderKey: []byte(mskRoleAccessTokenProvider),
 				saslRoleARNKey:       []byte(testRoleARN),
 				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
@@ -94,14 +94,14 @@ func TestNewTokenProvider(t *testing.T) {
 		{
 			name: testNameMSKAccessTokenMissingRegion,
 			data: map[string][]byte{
-				saslTokenProviderKey: []byte(MSKAccessTokenProvider),
+				saslTokenProviderKey: []byte(mskAccessTokenProvider),
 			},
 			wantErr: false, // should not error as it will use default region
 		},
 		{
 			name: testNameMSKRoleAccessTokenMissingRoleARN,
 			data: map[string][]byte{
-				saslTokenProviderKey: []byte(MSKRoleAccessTokenProvider),
+				saslTokenProviderKey: []byte(mskRoleAccessTokenProvider),
 				saslAWSRegion:        []byte(testRegionUsWest2),
 			},
 			wantErr: true,
@@ -131,9 +131,9 @@ func TestNewTokenProvider(t *testing.T) {
 
 			// Check the type of the token issuer
 			switch string(tt.data[saslTokenProviderKey]) {
-			case MSKAccessTokenProvider:
+			case mskAccessTokenProvider:
 				assert.IsType(t, &mskAccessTokenIssuer{}, provider.tokenIssuer)
-			case MSKRoleAccessTokenProvider:
+			case mskRoleAccessTokenProvider:
 				assert.IsType(t, &mskRoleAccessTokenIssuer{}, provider.tokenIssuer)
 			}
 		})

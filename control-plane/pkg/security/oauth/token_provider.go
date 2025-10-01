@@ -51,12 +51,12 @@ func NewTokenProvider(data map[string][]byte) (*TokenProvider, error) {
 	var tokenIssuer tokenIssuer
 	var err error
 	switch tokenProviderStr {
-	case MSKAccessTokenProvider:
+	case mskAccessTokenProvider:
 		tokenIssuer, err = NewMSKAccessTokenIssuer(data)
-	case MSKRoleAccessTokenProvider:
+	case mskRoleAccessTokenProvider:
 		tokenIssuer, err = NewMSKRoleAccessTokenIssuer(data)
 	default:
-		return nil, fmt.Errorf("unsupported OAUTHBEARER token provider (key: %s), supported: %s, %s", saslTokenProviderKey, MSKAccessTokenProvider, MSKRoleAccessTokenProvider)
+		return nil, fmt.Errorf("unsupported OAUTHBEARER token provider (key: %s), supported: %s, %s", saslTokenProviderKey, mskAccessTokenProvider, mskRoleAccessTokenProvider)
 	}
 	if err != nil {
 		return nil, err

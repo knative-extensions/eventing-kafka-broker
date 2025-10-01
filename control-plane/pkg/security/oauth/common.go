@@ -33,8 +33,8 @@ const (
 	defaultAWSRegion = "us-east-1"
 
 	// Token provider types
-	MSKAccessTokenProvider     = "MSKAccessTokenProvider"
-	MSKRoleAccessTokenProvider = "MSKRoleAccessTokenProvider"
+	mskAccessTokenProvider     = "MSKAccessTokenProvider"
+	mskRoleAccessTokenProvider = "MSKRoleAccessTokenProvider"
 
 	// MSK IAM Auth constants
 	knativeEventingUserAgent = "knative-eventing"
