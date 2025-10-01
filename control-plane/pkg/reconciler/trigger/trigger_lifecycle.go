@@ -109,20 +109,6 @@ func (m *statusConditionManager) failedToResolveTriggerConfig(err error) reconci
 	return fmt.Errorf("failed to resolve trigger config: %w", err)
 }
 
-func (m *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err error) {
-
-	// We don't set status conditions for dispatcher pods updates.
-
-	// Record the event.
-	m.Recorder.Eventf(
-		m.Trigger,
-		corev1.EventTypeWarning,
-		"Failed to update dispatcher pods annotation",
-		"%v",
-		err,
-	)
-}
-
 func (m *statusConditionManager) subscriberResolved(egress *contract.Egress) {
 	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkTrueWithReason(
 		eventing.TriggerConditionSubscriberResolved,
