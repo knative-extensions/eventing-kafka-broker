@@ -24,7 +24,15 @@ SYSTEM_NAMESPACE=${SYSTEM_NAMESPACE:-"knative-eventing"}
 kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
 
 header "Applying Strimzi Cluster Operator file"
-cat $(dirname $0)/strimzi-cluster-operator.yaml | sed 's/namespace: .*/namespace: kafka/' | sed "s/cluster.local/${CLUSTER_SUFFIX}/g" | kubectl apply -n kafka -f -
+# Doubling memory limits for strimzi operator deployment to avoid it being `OOMKilled`.
+# See issues:
+# - https://github.com/knative-extensions/eventing-kafka-broker/issues/4547
+# - https://github.com/strimzi/strimzi-kafka-operator/issues/11964
+cat $(dirname $0)/strimzi-cluster-operator.yaml \
+| sed 's/namespace: .*/namespace: kafka/' \
+| sed "s/cluster.local/${CLUSTER_SUFFIX}/g" \
+| sed '0,/memory: 384Mi/s/memory: 384Mi/memory: 768Mi/' \
+| kubectl apply -n kafka -f -
 
 echo "Create Kafka Certificate"
 # create the cluster-issuer, as the certificate links to this cluster-issuer
