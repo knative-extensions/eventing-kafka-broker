@@ -29,12 +29,12 @@ type mskRoleAccessTokenIssuer struct {
 	roleARN string
 }
 
-func (m *mskRoleAccessTokenIssuer) IssueToken(ctx context.Context) (string, error) {
+func (m *mskRoleAccessTokenIssuer) issueToken(ctx context.Context) (string, error) {
 	token, _, err := signer.GenerateAuthTokenFromRole(ctx, m.region, m.roleARN, knativeEventingUserAgent)
 	return token, err
 }
 
-func NewMSKRoleAccessTokenIssuer(data map[string][]byte) (*mskRoleAccessTokenIssuer, error) {
+func newMSKRoleAccessTokenIssuer(data map[string][]byte) (*mskRoleAccessTokenIssuer, error) {
 	roleARN, ok := data[saslRoleARNKey]
 	if !ok || len(roleARN) == 0 {
 		return nil, fmt.Errorf("TokenProvider MSKRoleAccessTokenProvider required (key: %s)", saslRoleARNKey)
