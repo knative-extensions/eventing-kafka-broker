@@ -17,7 +17,6 @@
 package oauth
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,8 +44,6 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 		envVars    map[string]string
 		wantRegion string
 		wantErr    bool
-		setupEnv   func()
-		cleanupEnv func()
 	}{
 		{
 			name: testNameWithRegionInData,
@@ -54,8 +51,6 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 				saslAWSRegion: []byte(testRegionEuWest1),
 			},
 			wantRegion: testRegionEuWest1,
-			setupEnv:   func() {},
-			cleanupEnv: func() {},
 		},
 		{
 			name: testNameWithAWSRegionEnv,
@@ -64,12 +59,6 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 				awsRegionEnvVar: testRegionUsWest2,
 			},
 			wantRegion: testRegionUsWest2,
-			setupEnv: func() {
-				os.Setenv(awsRegionEnvVar, testRegionUsWest2)
-			},
-			cleanupEnv: func() {
-				os.Unsetenv(awsRegionEnvVar)
-			},
 		},
 		{
 			name: testNameWithAWSDefaultRegionEnv,
@@ -78,22 +67,11 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 				awsDefaultRegionEnvVar: testRegionApSoutheast1,
 			},
 			wantRegion: testRegionApSoutheast1,
-			setupEnv: func() {
-				os.Setenv(awsDefaultRegionEnvVar, testRegionApSoutheast1)
-			},
-			cleanupEnv: func() {
-				os.Unsetenv(awsDefaultRegionEnvVar)
-			},
 		},
 		{
 			name:       testNameWithNoRegion,
 			data:       map[string][]byte{},
 			wantRegion: testRegionUsEast1, // default region
-			setupEnv: func() {
-				os.Unsetenv(awsRegionEnvVar)
-				os.Unsetenv(awsDefaultRegionEnvVar)
-			},
-			cleanupEnv: func() {},
 		},
 		{
 			name: testNameEmptyRegionInData,
@@ -101,11 +79,6 @@ func TestNewMSKAccessTokenIssuer(t *testing.T) {
 				saslAWSRegion: []byte(""),
 			},
 			wantRegion: testRegionUsEast1, // should fall back to default
-			setupEnv: func() {
-				os.Unsetenv(awsRegionEnvVar)
-				os.Unsetenv(awsDefaultRegionEnvVar)
-			},
-			cleanupEnv: func() {},
 		},
 	}
 

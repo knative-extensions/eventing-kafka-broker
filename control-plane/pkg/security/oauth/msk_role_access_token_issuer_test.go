@@ -17,7 +17,6 @@
 package oauth
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,8 +42,6 @@ func TestNewMSKRoleAccessTokenIssuer(t *testing.T) {
 		wantRegion  string
 		wantRoleARN string
 		wantErr     bool
-		setupEnv    func()
-		cleanupEnv  func()
 	}{
 		{
 			name: testNameValidConfigWithRegionInData,
@@ -54,8 +51,6 @@ func TestNewMSKRoleAccessTokenIssuer(t *testing.T) {
 			},
 			wantRegion:  testRegionEuWest1,
 			wantRoleARN: testRoleARN,
-			setupEnv:    func() {},
-			cleanupEnv:  func() {},
 		},
 		{
 			name: testNameValidConfigWithAWSRegionEnv,
@@ -67,21 +62,13 @@ func TestNewMSKRoleAccessTokenIssuer(t *testing.T) {
 			},
 			wantRegion:  testRegionUsWest2,
 			wantRoleARN: testRoleARN,
-			setupEnv: func() {
-				os.Setenv(awsRegionEnvVar, testRegionUsWest2)
-			},
-			cleanupEnv: func() {
-				os.Unsetenv(awsRegionEnvVar)
-			},
 		},
 		{
 			name: testNameMissingRoleARN,
 			data: map[string][]byte{
 				saslAWSRegion: []byte(testRegionEuWest1),
 			},
-			wantErr:    true,
-			setupEnv:   func() {},
-			cleanupEnv: func() {},
+			wantErr: true,
 		},
 		{
 			name: testNameEmptyRoleARN,
@@ -89,9 +76,7 @@ func TestNewMSKRoleAccessTokenIssuer(t *testing.T) {
 				saslRoleARNKey: []byte(""),
 				saslAWSRegion:  []byte(testRegionEuWest1),
 			},
-			wantErr:    true,
-			setupEnv:   func() {},
-			cleanupEnv: func() {},
+			wantErr: true,
 		},
 		{
 			name: testNameDefaultRegionWithValidRole,
@@ -100,11 +85,6 @@ func TestNewMSKRoleAccessTokenIssuer(t *testing.T) {
 			},
 			wantRegion:  testRegionUsEast1, // default region
 			wantRoleARN: testRoleARN,
-			setupEnv: func() {
-				os.Unsetenv(awsRegionEnvVar)
-				os.Unsetenv(awsDefaultRegionEnvVar)
-			},
-			cleanupEnv: func() {},
 		},
 	}
 
