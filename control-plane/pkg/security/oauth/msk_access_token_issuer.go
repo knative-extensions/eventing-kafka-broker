@@ -27,12 +27,12 @@ type mskAccessTokenIssuer struct {
 	region string
 }
 
-func (m *mskAccessTokenIssuer) IssueToken(ctx context.Context) (string, error) {
+func (m *mskAccessTokenIssuer) issueToken(ctx context.Context) (string, error) {
 	token, _, err := signer.GenerateAuthToken(ctx, m.region)
 	return token, err
 }
 
-func NewMSKAccessTokenIssuer(data map[string][]byte) (*mskAccessTokenIssuer, error) {
+func newMSKAccessTokenIssuer(data map[string][]byte) (*mskAccessTokenIssuer, error) {
 	region := getAWSRegion(data)
 	return &mskAccessTokenIssuer{
 		region: region,
