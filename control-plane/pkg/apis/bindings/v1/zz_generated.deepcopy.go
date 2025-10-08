@@ -167,6 +167,8 @@ func (in *KafkaSASLSpec) DeepCopyInto(out *KafkaSASLSpec) {
 	*out = *in
 	in.User.DeepCopyInto(&out.User)
 	in.Password.DeepCopyInto(&out.Password)
+	in.RoleARN.DeepCopyInto(&out.RoleARN)
+	in.TokenProvider.DeepCopyInto(&out.TokenProvider)
 	in.Type.DeepCopyInto(&out.Type)
 	return
 }

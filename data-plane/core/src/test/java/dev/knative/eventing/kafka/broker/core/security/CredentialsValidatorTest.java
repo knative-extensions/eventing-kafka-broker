@@ -324,6 +324,16 @@ public class CredentialsValidatorTest {
     }
 
     @Test
+    public void securityProtocolSaslSslScramOauthbearerValid() {
+        final var credential = mock(Credentials.class);
+
+        when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credential.SASLMechanism()).thenReturn("OAUTHBEARER");
+
+        assertThat(CredentialsValidator.validate(credential)).isNull();
+    }
+
+    @Test
     public void securityProtocol_nullInValid() {
         final var credential = mock(Credentials.class);
 

@@ -507,6 +507,18 @@ public final class DataPlaneContract {
          * <code>PASSWORD = 5;</code>
          */
         PASSWORD(5),
+        /**
+         * <code>TYPE = 6;</code>
+         */
+        TYPE(6),
+        /**
+         * <code>TOKEN_PROVIDER = 7;</code>
+         */
+        TOKEN_PROVIDER(7),
+        /**
+         * <code>ROLE_ARN = 8;</code>
+         */
+        ROLE_ARN(8),
         UNRECOGNIZED(-1),
         ;
 
@@ -534,6 +546,18 @@ public final class DataPlaneContract {
          * <code>PASSWORD = 5;</code>
          */
         public static final int PASSWORD_VALUE = 5;
+        /**
+         * <code>TYPE = 6;</code>
+         */
+        public static final int TYPE_VALUE = 6;
+        /**
+         * <code>TOKEN_PROVIDER = 7;</code>
+         */
+        public static final int TOKEN_PROVIDER_VALUE = 7;
+        /**
+         * <code>ROLE_ARN = 8;</code>
+         */
+        public static final int ROLE_ARN_VALUE = 8;
 
         public final int getNumber() {
             if (this == UNRECOGNIZED) {
@@ -570,6 +594,12 @@ public final class DataPlaneContract {
                     return USER;
                 case 5:
                     return PASSWORD;
+                case 6:
+                    return TYPE;
+                case 7:
+                    return TOKEN_PROVIDER;
+                case 8:
+                    return ROLE_ARN;
                 default:
                     return null;
             }
@@ -26340,12 +26370,15 @@ public final class DataPlaneContract {
          * Secret reference.
          * Secret format:
          *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
          *   ca.crt: &lt;CA PEM certificate&gt;
          *   user.crt: &lt;User PEM certificate&gt;
          *   user.key: &lt;User PEM key&gt;
          *   user: &lt;SASL username&gt;
          *   password: &lt;SASL password&gt;
+         *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+         *   tokenProvider: &lt;OIDC token provider&gt;
+         *   roleARN: &lt;OAUTHBEARER role ARN&gt;
          * Validation:
          *   - protocol=PLAINTEXT
          *   - protocol=SSL
@@ -26377,12 +26410,15 @@ public final class DataPlaneContract {
          * Secret reference.
          * Secret format:
          *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
          *   ca.crt: &lt;CA PEM certificate&gt;
          *   user.crt: &lt;User PEM certificate&gt;
          *   user.key: &lt;User PEM key&gt;
          *   user: &lt;SASL username&gt;
          *   password: &lt;SASL password&gt;
+         *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+         *   tokenProvider: &lt;OIDC token provider&gt;
+         *   roleARN: &lt;OAUTHBEARER role ARN&gt;
          * Validation:
          *   - protocol=PLAINTEXT
          *   - protocol=SSL
@@ -26414,12 +26450,15 @@ public final class DataPlaneContract {
          * Secret reference.
          * Secret format:
          *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
          *   ca.crt: &lt;CA PEM certificate&gt;
          *   user.crt: &lt;User PEM certificate&gt;
          *   user.key: &lt;User PEM key&gt;
          *   user: &lt;SASL username&gt;
          *   password: &lt;SASL password&gt;
+         *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+         *   tokenProvider: &lt;OIDC token provider&gt;
+         *   roleARN: &lt;OAUTHBEARER role ARN&gt;
          * Validation:
          *   - protocol=PLAINTEXT
          *   - protocol=SSL
@@ -27203,12 +27242,15 @@ public final class DataPlaneContract {
          * Secret reference.
          * Secret format:
          *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
          *   ca.crt: &lt;CA PEM certificate&gt;
          *   user.crt: &lt;User PEM certificate&gt;
          *   user.key: &lt;User PEM key&gt;
          *   user: &lt;SASL username&gt;
          *   password: &lt;SASL password&gt;
+         *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+         *   tokenProvider: &lt;OIDC token provider&gt;
+         *   roleARN: &lt;OAUTHBEARER role ARN&gt;
          * Validation:
          *   - protocol=PLAINTEXT
          *   - protocol=SSL
@@ -27243,12 +27285,15 @@ public final class DataPlaneContract {
          * Secret reference.
          * Secret format:
          *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
          *   ca.crt: &lt;CA PEM certificate&gt;
          *   user.crt: &lt;User PEM certificate&gt;
          *   user.key: &lt;User PEM key&gt;
          *   user: &lt;SASL username&gt;
          *   password: &lt;SASL password&gt;
+         *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+         *   tokenProvider: &lt;OIDC token provider&gt;
+         *   roleARN: &lt;OAUTHBEARER role ARN&gt;
          * Validation:
          *   - protocol=PLAINTEXT
          *   - protocol=SSL
@@ -27286,12 +27331,15 @@ public final class DataPlaneContract {
          * Secret reference.
          * Secret format:
          *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+         *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
          *   ca.crt: &lt;CA PEM certificate&gt;
          *   user.crt: &lt;User PEM certificate&gt;
          *   user.key: &lt;User PEM key&gt;
          *   user: &lt;SASL username&gt;
          *   password: &lt;SASL password&gt;
+         *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+         *   tokenProvider: &lt;OIDC token provider&gt;
+         *   roleARN: &lt;OAUTHBEARER role ARN&gt;
          * Validation:
          *   - protocol=PLAINTEXT
          *   - protocol=SSL
@@ -29368,12 +29416,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29408,12 +29459,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29458,12 +29512,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29506,12 +29563,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29552,12 +29612,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29611,12 +29674,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29662,12 +29728,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29701,12 +29770,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -29748,12 +29820,15 @@ public final class DataPlaneContract {
              * Secret reference.
              * Secret format:
              *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
-             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+             *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
              *   ca.crt: &lt;CA PEM certificate&gt;
              *   user.crt: &lt;User PEM certificate&gt;
              *   user.key: &lt;User PEM key&gt;
              *   user: &lt;SASL username&gt;
              *   password: &lt;SASL password&gt;
+             *   type: (plain | SCRAM-SHA-256 | SCRAM-SHA-512 | OAUTHBEARER)
+             *   tokenProvider: &lt;OIDC token provider&gt;
+             *   roleARN: &lt;OAUTHBEARER role ARN&gt;
              * Validation:
              *   - protocol=PLAINTEXT
              *   - protocol=SSL
@@ -31930,13 +32005,14 @@ public final class DataPlaneContract {
                     + "\022\013\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007"
                     + "Integer\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013"
                     + "ContentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001*"
-                    + "a\n\013SecretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006CA"
-                    + "_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004US"
-                    + "ER\020\004\022\014\n\010PASSWORD\020\005*D\n\010Protocol\022\r\n\tPLAINT"
-                    + "EXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022\014\n\010SA"
-                    + "SL_SSL\020\003B[\n*dev.knative.eventing.kafka.b"
-                    + "roker.contractB\021DataPlaneContractZ\032contr"
-                    + "ol-plane/pkg/contractb\006proto3"
+                    + "\215\001\n\013SecretField\022\022\n\016SASL_MECHANISM\020\000\022\n\n\006C"
+                    + "A_CRT\020\001\022\014\n\010USER_CRT\020\002\022\014\n\010USER_KEY\020\003\022\010\n\004U"
+                    + "SER\020\004\022\014\n\010PASSWORD\020\005\022\010\n\004TYPE\020\006\022\022\n\016TOKEN_P"
+                    + "ROVIDER\020\007\022\014\n\010ROLE_ARN\020\010*D\n\010Protocol\022\r\n\tP"
+                    + "LAINTEXT\020\000\022\022\n\016SASL_PLAINTEXT\020\001\022\007\n\003SSL\020\002\022"
+                    + "\014\n\010SASL_SSL\020\003B[\n*dev.knative.eventing.ka"
+                    + "fka.broker.contractB\021DataPlaneContractZ\032"
+                    + "control-plane/pkg/contractb\006proto3"
         };
         descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
                 descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
