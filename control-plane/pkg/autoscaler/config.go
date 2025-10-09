@@ -23,8 +23,9 @@ import (
 
 // AutoscalerConfig contains the defaults defined in the autoscaler ConfigMap.
 type AutoscalerConfig struct {
-	AutoscalerClass    map[string]string
-	AutoscalerDefaults map[string]int32
+	AutoscalerClass          map[string]string
+	AutoscalerDefaults       map[string]int32
+	AutoscalerAuthentication map[string]string
 }
 
 func defaultConfig() *AutoscalerConfig {
@@ -38,6 +39,11 @@ func defaultConfig() *AutoscalerConfig {
 			AutoscalingPollingIntervalAnnotation: DefaultPollingInterval,
 			AutoscalingCooldownPeriodAnnotation:  DefaultCooldownPeriod,
 			AutoscalingLagThreshold:              DefaultLagThreshold,
+		},
+		AutoscalerAuthentication: map[string]string{
+			AutoscalingAuthenticationName: DefaultAuthenticationName,
+			AutoscalingAuthenticationKind: DefaultAuthenticationKind,
+			AutoscalingAwsRegion:          DefaultAwsRegion,
 		},
 	}
 }
@@ -53,9 +59,12 @@ func NewConfigFromMap(data map[string]string) (*AutoscalerConfig, error) {
 	for key, val := range data {
 		key = convertConfigKeyToAutoscalingAnnotation(key)
 
-		if key == AutoscalingClassAnnotation {
+		switch key {
+		case AutoscalingClassAnnotation:
 			ac.AutoscalerClass[AutoscalingClassAnnotation] = val
-		} else {
+		case AutoscalingAuthenticationName, AutoscalingAuthenticationKind, AutoscalingAwsRegion:
+			ac.AutoscalerAuthentication[key] = val
+		default:
 			i, err := strconv.ParseInt(val, 10, 32)
 			if err != nil {
 				return nil, fmt.Errorf("Expected value for autoscaling annotation: "+key+" should be integer but got "+val, err)

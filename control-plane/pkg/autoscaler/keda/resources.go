@@ -85,3 +85,14 @@ func GetInt32ValueFromMap(dict map[string]string, key string, defaultValue int32
 	i32 := int32(i)
 	return &i32, nil
 }
+
+func GetStringValueFromMap(dict map[string]string, key string, defaultValue string) (*string, error) {
+	val, ok := dict[key]
+	if !ok {
+		return &defaultValue, nil
+	}
+	if val == "" {
+		return nil, nil
+	}
+	return &val, nil
+}
