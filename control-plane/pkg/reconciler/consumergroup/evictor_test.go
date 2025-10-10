@@ -17,7 +17,6 @@
 package consumergroup
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,24 +25,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	filteredFactory "knative.dev/pkg/client/injection/kube/informers/factory/filtered"
 	"knative.dev/pkg/ptr"
-	reconcilertesting "knative.dev/pkg/reconciler/testing"
 
-	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	kafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
 func TestNewEvictor(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	require.NotPanics(t, func() { newEvictor(ctx, zap.String("k", "n")) })
 }
 
 func TestEvictorNilPodNoPanic(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	var pod *corev1.Pod
 
@@ -77,7 +73,7 @@ func TestEvictorNilPodNoPanic(t *testing.T) {
 }
 
 func TestEvictorEvictSuccess(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
@@ -114,7 +110,7 @@ func TestEvictorEvictSuccess(t *testing.T) {
 }
 
 func TestEvictorNoEvictionEmptyPlacement(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
@@ -148,7 +144,7 @@ func TestEvictorNoEvictionEmptyPlacement(t *testing.T) {
 }
 
 func TestEvictorNoEviction(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
@@ -184,7 +180,7 @@ func TestEvictorNoEviction(t *testing.T) {
 }
 
 func TestEvictorEvictSuccessConsumerGroupSchedulingInProgress(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
@@ -215,7 +211,7 @@ func TestEvictorEvictSuccessConsumerGroupSchedulingInProgress(t *testing.T) {
 }
 
 func TestEvictorEvictPodNotFound(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
@@ -241,7 +237,7 @@ func TestEvictorEvictPodNotFound(t *testing.T) {
 	require.Nil(t, err)
 }
 func TestEvictorEvictConsumerGroupNotFound(t *testing.T) {
-	ctx, _ := reconcilertesting.SetupFakeContext(t, withFilteredSelectors)
+	ctx := fakeCtxWithDispatcher(t)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "ns", Name: "name"},
@@ -265,10 +261,4 @@ func TestEvictorEvictConsumerGroupNotFound(t *testing.T) {
 	err := e.evict(pod, cg, placement)
 
 	require.Nil(t, err)
-}
-
-func withFilteredSelectors(ctx context.Context) context.Context {
-	return filteredFactory.WithSelectors(ctx,
-		internalsapi.DispatcherLabelSelectorStr,
-	)
 }
