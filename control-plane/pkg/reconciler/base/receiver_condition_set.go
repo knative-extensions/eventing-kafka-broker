@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/url"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/apis"
@@ -214,20 +213,6 @@ func (manager *StatusConditionManager) Addressable(address *url.URL) {
 		}})
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrue(ConditionAddressable)
 	manager.ProbesStatusReady()
-}
-
-func (manager *StatusConditionManager) FailedToUpdateDispatcherPodsAnnotation(err error) {
-
-	// We don't set status conditions for dispatcher pods updates.
-
-	// Record the event.
-	manager.Recorder.Eventf(
-		manager.Object,
-		corev1.EventTypeWarning,
-		"failed to update dispatcher pods annotation",
-		"%v",
-		err,
-	)
 }
 
 func (manager *StatusConditionManager) FailedToUpdateReceiverPodsAnnotation(err error) reconciler.Event {
