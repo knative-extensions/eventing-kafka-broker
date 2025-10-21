@@ -206,8 +206,6 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
 			zap.Error(err),
 		)
-
-		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
 	} else {
 		logger.Debug("Updated dispatcher pod annotation")
 	}
