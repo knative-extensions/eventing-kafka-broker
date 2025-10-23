@@ -36,9 +36,9 @@ require (
 	k8s.io/client-go v0.32.2
 	k8s.io/utils v0.0.0-20241210054802-24370beab758
 	knative.dev/eventing v0.45.0
-	knative.dev/hack v0.0.0-20250331013814-c577ed9f7775
+	knative.dev/hack v0.0.0-20251022160648-4a7a07f9b7b4
 	knative.dev/pkg v0.0.0-20250415155312-ed3e2158b883
-	knative.dev/reconciler-test v0.0.0-20250415170512-23f86169156f
+	knative.dev/reconciler-test v0.0.0-20251023120746-56e79a32e54e
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -118,7 +118,7 @@ require (
 	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/oauth2 v0.26.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/term v0.31.0 // indirect
