@@ -86,7 +86,7 @@ function dispatcher_build_push() {
 
 function data_plane_build_push() {
   pushd "${DATA_PLANE_DIR}" || return $?
-  ./mvnw install -DskipTests || fail_test "failed to install data plane"
+  ./mvnw clean install -DskipTests || fail_test "failed to install data plane"
   receiver_build_push || receiver_build_push || fail_test "failed to build receiver"
   dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
   popd || return $?
@@ -167,7 +167,7 @@ function data_plane_setup() {
 
 function data_plane_source_setup() {
   pushd "${DATA_PLANE_DIR}" || return $?
-  ./mvnw install -DskipTests || fail_test "failed to install data plane"
+  ./mvnw clean install -DskipTests || fail_test "failed to install data plane"
   dispatcher_build_push || dispatcher_build_push || fail_test "failed to build dispatcher"
   popd || return $?
 
