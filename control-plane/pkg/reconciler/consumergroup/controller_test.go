@@ -18,7 +18,9 @@ package consumergroup
 
 import (
 	"context"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -61,15 +63,20 @@ const (
 	ConfigKafkaAutoscalerName = "config-kafka-autoscaler"
 )
 
-func TestNewController(t *testing.T) {
+func fakeCtxWithDispatcher(t *testing.T) context.Context {
 	ctx, _ := reconcilertesting.SetupFakeContext(t, func(ctx context.Context) context.Context {
 		return filteredFactory.WithSelectors(ctx,
 			internalsapi.DispatcherLabelSelectorStr,
 		)
 	})
-	ctx, _ = kedaclient.With(ctx)
 
-	t.Setenv("SYSTEM_NAMESPACE", systemNamespace)
+	return ctx
+}
+
+func TestNewController(t *testing.T) {
+	ctx := fakeCtxWithDispatcher(t)
+
+	ctx, _ = kedaclient.With(ctx)
 
 	ctx, _ = kubeclient.With(ctx,
 		&corev1.ConfigMap{
@@ -79,16 +86,16 @@ func TestNewController(t *testing.T) {
 			},
 			Data: map[string]string{
 				"predicates": `
-			     [
-			       {"Name": "PodFitsResources"},
-			       {"Name": "NoMaxResourceCount", "Args": "{\"NumPartitions\": 100}"},
-			       {"Name": "EvenPodSpread", "Args": "{\"MaxSkew\": 2}"}
-			     ]`,
+					[
+						{"Name": "PodFitsResources"},
+						{"Name": "NoMaxResourceCount", "Args": "{\"NumPartitions\": 100}"},
+						{"Name": "EvenPodSpread", "Args": "{\"MaxSkew\": 2}"}
+					]`,
 				"priorities": `
-                [
-                  {"Name": "AvailabilityZonePriority", "Weight": 10, "Args":  "{\"MaxSkew\": 2}"},
-                  {"Name": "LowestOrdinalPriority", "Weight": 2}
-                ]`,
+					[
+						{"Name": "AvailabilityZonePriority", "Weight": 10, "Args":  "{\"MaxSkew\": 2}"},
+						{"Name": "LowestOrdinalPriority", "Weight": 2}
+					]`,
 			},
 		},
 		&corev1.ConfigMap{
@@ -99,23 +106,25 @@ func TestNewController(t *testing.T) {
 			Data: map[string]string{
 				"predicates": `[]`,
 				"priorities": `
-                 [
-                    {"Name": "RemoveWithEvenPodSpreadPriority", "Weight": 10, "Args": "{\"MaxSkew\": 2}"},
-                    {"Name": "RemoveWithAvailabilityZonePriority", "Weight": 10, "Args":  "{\"MaxSkew\": 2}"},
-                    {"Name": "RemoveWithHighestOrdinalPriority", "Weight": 2}
-                 ]`,
+					[
+						{"Name": "RemoveWithEvenPodSpreadPriority", "Weight": 10, "Args": "{\"MaxSkew\": 2}"},
+						{"Name": "RemoveWithAvailabilityZonePriority", "Weight": 10, "Args":  "{\"MaxSkew\": 2}"},
+						{"Name": "RemoveWithHighestOrdinalPriority", "Weight": 2}
+					]`,
 			},
 		},
 	)
 
 	ctx = clientpool.WithKafkaClientPool(ctx)
 
+	t.Setenv("SYSTEM_NAMESPACE", systemNamespace)
 	t.Setenv("AUTOSCALER_REFRESH_PERIOD", RefreshPeriod)
 	t.Setenv("POD_CAPACITY", PodCapacity)
 	t.Setenv("DISPATCHERS_MIN_REPLICAS", MinReplicas)
 	t.Setenv("SCHEDULER_CONFIG", ConfigKafkaSchedulerName)
 	t.Setenv("DESCHEDULER_CONFIG", ConfigKafkaDeSchedulerName)
 	t.Setenv("AUTOSCALER_CONFIG", ConfigKafkaAutoscalerName)
+
 	controller := NewController(ctx, configmap.NewStaticWatcher(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "config-kafka-features",
@@ -127,7 +136,6 @@ func TestNewController(t *testing.T) {
 }
 
 func TestEnqueueConsumerFromConsumerGroup(t *testing.T) {
-
 	capture := types.NamespacedName{}
 
 	f := enqueueConsumerGroupFromConsumer(func(name types.NamespacedName) {
@@ -154,4 +162,37 @@ func TestEnqueueConsumerFromConsumerGroup(t *testing.T) {
 
 	require.Equal(t, or.Name, capture.Name)
 	require.Equal(t, ns, capture.Namespace)
+}
+
+// Test covering the bug:
+// - https://github.com/knative-extensions/eventing-kafka-broker/issues/4542
+//
+// The config value "MinReplicas" was ignored in createKafkaScheduler when the config was copied.
+// To make sure this does not happen for the other values too, they were added to the test.
+func TestCreateKafkaSchedulerSetsCorrectConfig(t *testing.T) {
+	ctx := fakeCtxWithDispatcher(t)
+	ctx, cancel := context.WithCancel(ctx)
+	t.Cleanup(cancel)
+
+	rp, _ := time.ParseDuration(RefreshPeriod)
+	c, _ := strconv.ParseInt(PodCapacity, 10, 32)
+	mr, _ := strconv.ParseInt(MinReplicas, 10, 32)
+	expectedConfig := SchedulerConfig{
+		RefreshPeriod: rp,
+		Capacity:      int32(c),
+		MinReplicas:   int32(mr),
+	}
+	informer := filteredFactory.Get(ctx, internalsapi.DispatcherLabelSelectorStr).Core().V1().Pods()
+
+	scheduler := createKafkaScheduler(
+		ctx,
+		expectedConfig,
+		kafkainternals.SourceStatefulSetName,
+		informer,
+	)
+
+	require.Equal(t, kafkainternals.SourceStatefulSetName, scheduler.StatefulSetName)
+	require.Equal(t, expectedConfig.RefreshPeriod, scheduler.RefreshPeriod)
+	require.Equal(t, expectedConfig.Capacity, scheduler.Capacity)
+	require.Equal(t, expectedConfig.MinReplicas, scheduler.MinReplicas)
 }
