@@ -373,6 +373,7 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string,
 			StatefulSetName: ssName,
 			RefreshPeriod:   c.RefreshPeriod,
 			Capacity:        c.Capacity,
+			MinReplicas:     c.MinReplicas,
 		},
 		func() ([]scheduler.VPod, error) {
 			consumerGroups, err := lister.List(labels.SelectorFromSet(getSelectorLabel(ssName)))
@@ -390,20 +391,19 @@ func createKafkaScheduler(ctx context.Context, c SchedulerConfig, ssName string,
 }
 
 func getSelectorLabel(ssName string) map[string]string {
-	//TODO remove hardcoded kinds
 	var selectorLabel map[string]string
 	switch ssName {
 	case kafkainternals.SourceStatefulSetName:
 		selectorLabel = map[string]string{
-			kafkainternals.UserFacingResourceLabelSelector: "kafkasource",
+			kafkainternals.UserFacingResourceLabelSelector: KafkaSourceScheduler,
 		}
 	case kafkainternals.BrokerStatefulSetName:
 		selectorLabel = map[string]string{
-			kafkainternals.UserFacingResourceLabelSelector: "trigger",
+			kafkainternals.UserFacingResourceLabelSelector: KafkaTriggerScheduler,
 		}
 	case kafkainternals.ChannelStatefulSetName:
 		selectorLabel = map[string]string{
-			kafkainternals.UserFacingResourceLabelSelector: "kafkachannel",
+			kafkainternals.UserFacingResourceLabelSelector: KafkaChannelScheduler,
 		}
 	}
 	return selectorLabel
