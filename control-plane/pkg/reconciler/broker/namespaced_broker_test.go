@@ -138,7 +138,6 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
     name: test-role
     labels:
       "knative.foo": "foo-{{.Namespace}}"
-    creationTimestamp: null
   rules:
     - apiGroups:
         - "v1"
@@ -149,7 +148,6 @@ func namespacedBrokerReconciliation(t *testing.T, format string, env config.Env)
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: RoleBinding
   metadata:
-    creationTimestamp: null
     name: test-role
     namespace: {{.Namespace}}
   roleRef:
@@ -389,7 +387,6 @@ func namespacedBrokerFinalization(t *testing.T, format string, env config.Env) {
     name: test-role
     labels:
       "knative.foo": "foo-{{.Namespace}}"
-    creationTimestamp: null
   rules:
     - apiGroups:
         - "v1"
