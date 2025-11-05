@@ -46,8 +46,8 @@ class ReceiverEnvTest {
             case BaseEnv.METRICS_PUBLISH_QUANTILES -> "TRUE";
             case BaseEnv.CONFIG_OBSERVABILITY_PATH -> OBSERVABILITY_CONFIG_PATH;
             case BaseEnv.METRICS_JVM_ENABLED -> METRICS_JVM_ENABLED;
-            case BaseEnv.WAIT_STARTUP_SECONDS -> Integer.valueOf(WAIT_STARTUP_SECONDS)
-                    .toString();
+            case BaseEnv.WAIT_STARTUP_SECONDS ->
+                Integer.valueOf(WAIT_STARTUP_SECONDS).toString();
             default -> null;
         });
 
