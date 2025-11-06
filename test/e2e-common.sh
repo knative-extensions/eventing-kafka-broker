@@ -202,6 +202,11 @@ function install_latest_release() {
   ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+
+  # Wait for webhook to be ready before installing data plane components
+  # The webhook is required to inject the contract-resources ConfigMap volume into dispatcher pods
+  kubectl wait --for=condition=Available --timeout=60s deployment/kafka-webhook-eventing -n knative-eventing || return $?
+
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
@@ -215,6 +220,11 @@ function install_head() {
   echo "Installing head"
 
   kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+
+  # Wait for webhook to be ready before installing data plane components
+  # The webhook is required to inject the contract-resources ConfigMap volume into dispatcher pods
+  kubectl wait --for=condition=Available --timeout=60s deployment/kafka-webhook-eventing -n knative-eventing || return $?
+
   kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
