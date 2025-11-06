@@ -70,8 +70,7 @@ const (
 	PlainMech      = "plain"
 )
 
-// EventMatcher is a type alias for cleaner code
-type EventMatcher = cetest.EventMatcher
+
 
 func SetupAndCleanupKafkaSources(prefix string, n int) *feature.Feature {
 	f := SetupKafkaSources(prefix, n)
@@ -377,10 +376,10 @@ func matchEvent(sink string, matcher EventMatcher) feature.StepFn {
 
 // CustomizeEventFunc creates a pair of eventshub options that customize the event
 // and corresponding event matcher that will match the respective event.
-type CustomizeEventFunc func() ([]eventshub.EventsHubOption, EventMatcher)
+type CustomizeEventFunc func() ([]eventshub.EventsHubOption, cetest.EventMatcher)
 
 func KafkaSourceBinaryEventCustomizeFunc() CustomizeEventFunc {
-	return func() ([]eventshub.EventsHubOption, EventMatcher) {
+	return func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputHeader("ce-specversion", cloudevents.VersionV1),
@@ -395,16 +394,16 @@ func KafkaSourceBinaryEventCustomizeFunc() CustomizeEventFunc {
 				"hello": "Francesco",
 			})),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasType("com.github.pull.create"),
-			HasSource("github.com/cloudevents/spec/pull"),
-			HasSubject("123"),
-			HasId(id),
-			HasDataContentType("application/json"),
-			HasData([]byte(`{"hello":"Francesco"}`)),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("github.com/cloudevents/spec/pull"),
+			cetest.HasSubject("123"),
+			cetest.HasId(id),
+			cetest.HasDataContentType("application/json"),
+			cetest.HasData([]byte(`{"hello":"Francesco"}`)),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -429,7 +428,7 @@ func KafkaSourceBinaryEventFeatureSetup(f *feature.Feature) (string, string) {
 }
 
 func KafkaSourceBinaryEventWithExtensions() *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputHeader("ce-specversion", cloudevents.VersionV1),
@@ -439,15 +438,15 @@ func KafkaSourceBinaryEventWithExtensions() *feature.Feature {
 			eventshub.InputHeader("ce-id", id),
 			eventshub.InputHeader("content-type", "application/json"),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasType("com.github.pull.create"),
-			HasSource("github.com/cloudevents/spec/pull"),
-			HasSubject("123"),
-			HasId(id),
-			HasDataContentType("application/json"),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("github.com/cloudevents/spec/pull"),
+			cetest.HasSubject("123"),
+			cetest.HasId(id),
+			cetest.HasDataContentType("application/json"),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -471,7 +470,7 @@ func KafkaSourceBinaryEventWithExtensions() *feature.Feature {
 }
 
 func KafkaSourceStructuredEventCustomizeFunc() CustomizeEventFunc {
-	return func() ([]eventshub.EventsHubOption, EventMatcher) {
+	return func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		eventTime, _ := cetypes.ParseTime("2018-04-05T17:31:00Z")
 		senderOptions := []eventshub.EventsHubOption{
@@ -491,17 +490,17 @@ func KafkaSourceStructuredEventCustomizeFunc() CustomizeEventFunc {
 				"comexampleothervalue": 5,
 			})),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasType("com.github.pull.create"),
-			HasSource("https://github.com/cloudevents/spec/pull"),
-			HasSubject("123"),
-			HasId(id),
-			HasTime(eventTime),
-			HasDataContentType("application/json"),
-			HasData([]byte(`{"hello":"Francesco"}`)),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("https://github.com/cloudevents/spec/pull"),
+			cetest.HasSubject("123"),
+			cetest.HasId(id),
+			cetest.HasTime(eventTime),
+			cetest.HasDataContentType("application/json"),
+			cetest.HasData([]byte(`{"hello":"Francesco"}`)),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -526,7 +525,7 @@ func KafkaSourceStructuredEventFeatureSetup(f *feature.Feature) (string, string)
 }
 
 func KafkaSourceWithExtensions() *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputHeader("content-type", "application/cloudevents+json"),
@@ -537,13 +536,13 @@ func KafkaSourceWithExtensions() *feature.Feature {
 				"id":          id,
 			})),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasId(id),
-			HasType("com.github.pull.create"),
-			HasSource("https://github.com/cloudevents/spec/pull"),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasId(id),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("https://github.com/cloudevents/spec/pull"),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -569,16 +568,16 @@ func KafkaSourceWithExtensions() *feature.Feature {
 }
 
 func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		e := cetest.FullEvent()
 		e.SetID(id)
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputEvent(e),
 		}
-		matcher := AllOf(
-			HasData(e.Data()),
-			HasId(id),
+		matcher := cetest.AllOf(
+			cetest.HasData(e.Data()),
+			cetest.HasId(id),
 		)
 		return senderOptions, matcher
 	}
@@ -709,16 +708,16 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 }
 
 func KafkaSourceSASL() *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		e := cetest.FullEvent()
 		e.SetID(id)
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputEvent(e),
 		}
-		matcher := AllOf(
-			HasData(e.Data()),
-			HasId(id),
+		matcher := cetest.AllOf(
+			cetest.HasData(e.Data()),
+			cetest.HasId(id),
 		)
 		return senderOptions, matcher
 	}
@@ -772,9 +771,9 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 
 	f.Requirement("install eventshub sender for kafka sink", eventshub.Install(sender, options...))
 
-	matcher := AllOf(
-		HasData(e.Data()),
-		HasTime(e.Time()),
+	matcher := cetest.AllOf(
+		cetest.HasData(e.Data()),
+		cetest.HasTime(e.Time()),
 	)
 	f.Assert("sink receives event", matchEvent(receiver, matcher))
 

@@ -49,8 +49,6 @@ const (
 // test case.
 type SourceTestScope func(auth, testCase, version string) bool
 
-// EventMatcher is a type alias for cleaner code
-type EventMatcher = cetest.EventMatcher
 // AssureKafkaSourceConsumesMsgNoEvent assures that KafkaSource reads messages
 // that were not cloud events.
 func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
@@ -60,7 +58,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 		messageHeaders map[string]string
 		transactional  bool
 		messagePayload string
-		matcherGen     func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher
+		matcherGen     func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher
 		extensions     map[string]string
 	}{
 		"no_event": {
@@ -70,7 +68,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 				"content-type": "application/json",
 			},
 			messagePayload: `{"value":5}`,
-			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
+			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher {
 				return cetest.AllOf(
 					cetest.HasSource(cloudEventsSourceName),
 					cetest.HasType(cloudEventsEventType),
@@ -84,7 +82,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 			messageKey:     "0",
 			messageCount:   1,
 			messagePayload: `{"value":5}`,
-			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
+			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher {
 				return cetest.AllOf(
 					cetest.HasSource(cloudEventsSourceName),
 					cetest.HasType(cloudEventsEventType),
@@ -96,7 +94,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 		"no_event_content_type_or_key": {
 			messageCount:   1,
 			messagePayload: `{"value":5}`,
-			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
+			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher {
 				return cetest.AllOf(
 					cetest.HasSource(cloudEventsSourceName),
 					cetest.HasType(cloudEventsEventType),
@@ -111,7 +109,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 				"content-type": "text/plain",
 			},
 			messagePayload: "simple 10",
-			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
+			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher {
 				return cetest.AllOf(
 					cetest.HasSource(cloudEventsSourceName),
 					cetest.HasType(cloudEventsEventType),
@@ -129,7 +127,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 				"content-type": "application/json",
 			},
 			messagePayload: `{"value":5}`,
-			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
+			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher {
 				return cetest.AllOf(
 					cetest.HasSource(cloudEventsSourceName),
 					cetest.HasType(cloudEventsEventType),
@@ -155,7 +153,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 
 func testKafkaSource(t *testing.T,
 	name string, version string, messageKey string, messageCount int, messageHeaders map[string]string, transactional bool, messagePayload string,
-	matcherGen func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher,
+	matcherGen func(cloudEventsSourceName, cloudEventsEventType string) cetest.EventMatcher,
 	bootStrapServer string, extensions map[string]string) {
 
 	name = fmt.Sprintf("%s-%s", name, version)
