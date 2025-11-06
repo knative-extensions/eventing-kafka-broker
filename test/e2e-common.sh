@@ -202,6 +202,8 @@ function install_latest_release() {
   ko apply ${KO_FLAGS} -f ./test/config/ || fail_test "Failed to apply test configurations"
 
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  # The next apply needs the webhook rules to be populated to properly validate/mutate the resources
+  kubectl wait --for=jsonpath='{.webhooks[0].rules[0]}' mutatingwebhookconfiguration/pods.defaulting.webhook.kafka.eventing.knative.dev --timeout=60s
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
   kubectl apply -f "${PREVIOUS_RELEASE_URL}/${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
@@ -215,6 +217,8 @@ function install_head() {
   echo "Installing head"
 
   kubectl apply -f "${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
+  # The next apply needs the webhook rules to be populated to properly validate/mutate the resources
+  kubectl wait --for=jsonpath='{.webhooks[0].rules[0]}' mutatingwebhookconfiguration/pods.defaulting.webhook.kafka.eventing.knative.dev --timeout=60s
   kubectl apply -f "${EVENTING_KAFKA_SOURCE_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_BROKER_ARTIFACT}" || return $?
   kubectl apply -f "${EVENTING_KAFKA_SINK_ARTIFACT}" || return $?
@@ -235,7 +239,7 @@ function install_control_plane_from_source() {
 
   # Restore test config.
   kubectl replace -f ./test/config/100-config-kafka-features.yaml
-  
+
 }
 
 function install_latest_release_source() {
