@@ -27,7 +27,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"knative.dev/eventing-kafka-broker/test/pkg/kafka"
 
-	. "github.com/cloudevents/sdk-go/v2/test"
+	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	testlib "knative.dev/eventing/test/lib"
 	"knative.dev/eventing/test/lib/recordevents"
@@ -49,6 +49,8 @@ const (
 // test case.
 type SourceTestScope func(auth, testCase, version string) bool
 
+// EventMatcher is a type alias for cleaner code
+type EventMatcher = cetest.EventMatcher
 // AssureKafkaSourceConsumesMsgNoEvent assures that KafkaSource reads messages
 // that were not cloud events.
 func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
@@ -69,12 +71,12 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 			},
 			messagePayload: `{"value":5}`,
 			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
-				return AllOf(
-					HasSource(cloudEventsSourceName),
-					HasType(cloudEventsEventType),
-					HasDataContentType("application/json"),
-					HasData([]byte(`{"value":5}`)),
-					HasExtension("key", "0"),
+				return cetest.AllOf(
+					cetest.HasSource(cloudEventsSourceName),
+					cetest.HasType(cloudEventsEventType),
+					cetest.HasDataContentType("application/json"),
+					cetest.HasData([]byte(`{"value":5}`)),
+					cetest.HasExtension("key", "0"),
 				)
 			},
 		},
@@ -83,11 +85,11 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 			messageCount:   1,
 			messagePayload: `{"value":5}`,
 			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
-				return AllOf(
-					HasSource(cloudEventsSourceName),
-					HasType(cloudEventsEventType),
-					HasData([]byte(`{"value":5}`)),
-					HasExtension("key", "0"),
+				return cetest.AllOf(
+					cetest.HasSource(cloudEventsSourceName),
+					cetest.HasType(cloudEventsEventType),
+					cetest.HasData([]byte(`{"value":5}`)),
+					cetest.HasExtension("key", "0"),
 				)
 			},
 		},
@@ -95,10 +97,10 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 			messageCount:   1,
 			messagePayload: `{"value":5}`,
 			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
-				return AllOf(
-					HasSource(cloudEventsSourceName),
-					HasType(cloudEventsEventType),
-					HasData([]byte(`{"value":5}`)),
+				return cetest.AllOf(
+					cetest.HasSource(cloudEventsSourceName),
+					cetest.HasType(cloudEventsEventType),
+					cetest.HasData([]byte(`{"value":5}`)),
 				)
 			},
 		},
@@ -110,12 +112,12 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 			},
 			messagePayload: "simple 10",
 			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
-				return AllOf(
-					HasSource(cloudEventsSourceName),
-					HasType(cloudEventsEventType),
-					HasDataContentType("text/plain"),
-					HasData([]byte("simple 10")),
-					HasExtension("key", "0"),
+				return cetest.AllOf(
+					cetest.HasSource(cloudEventsSourceName),
+					cetest.HasType(cloudEventsEventType),
+					cetest.HasDataContentType("text/plain"),
+					cetest.HasData([]byte("simple 10")),
+					cetest.HasExtension("key", "0"),
 				)
 			},
 		},
@@ -128,12 +130,12 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 			},
 			messagePayload: `{"value":5}`,
 			matcherGen: func(cloudEventsSourceName, cloudEventsEventType string) EventMatcher {
-				return AllOf(
-					HasSource(cloudEventsSourceName),
-					HasType(cloudEventsEventType),
-					HasDataContentType("application/json"),
-					HasData([]byte(`{"value":5}`)),
-					HasExtension("key", "0"),
+				return cetest.AllOf(
+					cetest.HasSource(cloudEventsSourceName),
+					cetest.HasType(cloudEventsEventType),
+					cetest.HasDataContentType("application/json"),
+					cetest.HasData([]byte(`{"value":5}`)),
+					cetest.HasExtension("key", "0"),
 				)
 			},
 		},

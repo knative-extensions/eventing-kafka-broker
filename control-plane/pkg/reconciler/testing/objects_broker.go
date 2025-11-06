@@ -42,7 +42,7 @@ import (
 
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
@@ -242,7 +242,7 @@ func WithAutoscalingAnnotationsTrigger() reconcilertesting.TriggerOption {
 			trigger.Annotations = make(map[string]string)
 		}
 
-		for k, v := range ConsumerGroupAnnotations {
+		for k, v := range brokerreconciler.ConsumerGroupAnnotations {
 			if _, ok := trigger.Annotations[k]; !ok {
 				trigger.Annotations[k] = v
 			}

@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	. "github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/uuid"
@@ -70,6 +69,9 @@ const (
 	TLSMech        = "tls"
 	PlainMech      = "plain"
 )
+
+// EventMatcher is a type alias for cleaner code
+type EventMatcher = cetest.EventMatcher
 
 func SetupAndCleanupKafkaSources(prefix string, n int) *feature.Feature {
 	f := SetupKafkaSources(prefix, n)
