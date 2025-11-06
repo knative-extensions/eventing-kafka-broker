@@ -37,7 +37,7 @@ const (
 func ConfigMapNameFromPod(p *corev1.Pod) (string, error) {
 	var vDp *corev1.Volume
 	for i, v := range p.Spec.Volumes {
-		if v.Name == DispatcherVolumeName && v.ConfigMap != nil && v.ConfigMap.Name != "" {
+		if v.Name == DispatcherVolumeName {
 			vDp = &p.Spec.Volumes[i]
 			break
 		}
@@ -45,5 +45,15 @@ func ConfigMapNameFromPod(p *corev1.Pod) (string, error) {
 	if vDp == nil {
 		return "", fmt.Errorf("failed to get data plane volume %s in pod %s/%s", ConfigMapVolumeName, p.GetNamespace(), p.GetName())
 	}
-	return vDp.ConfigMap.Name, nil
+
+	// If the volume has a ConfigMap reference, use that name
+	if vDp.ConfigMap != nil && vDp.ConfigMap.Name != "" {
+		return vDp.ConfigMap.Name, nil
+	}
+
+	// Fallback: If the volume exists but doesn't have a ConfigMap reference yet
+	// (e.g., it's still emptyDir because the webhook hasn't processed it yet),
+	// use the pod name as the ConfigMap name. This matches the webhook's behavior
+	// which sets the ConfigMap name to the pod name.
+	return p.GetName(), nil
 }
