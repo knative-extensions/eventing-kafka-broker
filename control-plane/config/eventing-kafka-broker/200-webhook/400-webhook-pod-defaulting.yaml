@@ -20,7 +20,7 @@ metadata:
     app.kubernetes.io/version: devel
 webhooks:
   # Dispatcher pods webhook config.
-  - admissionReviewVersions: [ "v1", "v1beta1" ]
+  - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
       service:
         name: kafka-webhook-eventing
@@ -37,3 +37,15 @@ webhooks:
     objectSelector:
       matchLabels:
         app.kubernetes.io/kind: kafka-dispatcher
+    rules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+          - pods/status
+        scope: "*"
