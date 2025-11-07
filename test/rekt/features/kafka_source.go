@@ -368,7 +368,7 @@ func KafkaSourceFeatureAssert(f *feature.Feature, kafkaSink, receiver string, cu
 	f.Assert("eventshub receiver gets event", matchEvent(receiver, matcher))
 }
 
-func matchEvent(sink string, matcher EventMatcher) feature.StepFn {
+func matchEvent(sink string, matcher cetest.EventMatcher) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		assert.OnStore(sink).MatchEvent(matcher).AtLeast(1)(ctx, t)
 	}
@@ -607,7 +607,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 	topic := feature.MakeRandomK8sName("tls-sink-topic")
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
-	event := FullEvent()
+	event := cetest.FullEvent()
 	event.SetID(uuid.NewString())
 
 	f := feature.NewFeature()
@@ -642,7 +642,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 	f.Stable("KafkaSource as event source").
 		Must("delivers events on sink with ref",
 			assert.OnStore(receiver).
-				MatchReceivedEvent(HasId(event.ID())).
+				MatchReceivedEvent(cetest.HasId(event.ID())).
 				AtLeast(1)).
 		Must("Set sinkURI to HTTPS endpoint", source.ExpectHTTPSSink(kafkasource.GVR(), kafkaSource)).
 		Must("Set sinkCACerts to non empty CA certs", source.ExpectCACerts(kafkasource.GVR(), kafkaSource))
@@ -657,7 +657,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	topic := feature.MakeRandomK8sName("tls-sink-topic")
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
-	event := FullEvent()
+	event := cetest.FullEvent()
 	event.SetID(uuid.NewString())
 
 	f := feature.NewFeature()
@@ -700,7 +700,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	f.Stable("KafkaSource as event source").
 		Must("delivers events on sink with ref",
 			assert.OnStore(receiver).
-				MatchReceivedEvent(HasId(event.ID())).
+				MatchReceivedEvent(cetest.HasId(event.ID())).
 				AtLeast(1)).
 		Must("Set sinkURI to HTTPS endpoint", source.ExpectHTTPSSink(kafkasource.GVR(), kafkaSource))
 

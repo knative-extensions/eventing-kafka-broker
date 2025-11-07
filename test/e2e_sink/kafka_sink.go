@@ -40,8 +40,8 @@ const (
 	sinkSecretName = "secret-test"
 )
 
-func RunTestKafkaSink(t *testing.T, mode string, sp testpkg.SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
-	testpkgtesting.RunMultiple(t, func(t *testing.T) {
+func RunTestKafkaSink(t *testing.T, mode string, sp testpkgtesting.SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
+   testpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
