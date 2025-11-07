@@ -34,7 +34,7 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 	pointer "knative.dev/pkg/ptr"
-     
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -43,7 +43,6 @@ import (
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
@@ -496,7 +495,7 @@ func BrokerConfigMapAnnotations() reconcilertesting.BrokerOption {
 		if broker.Status.Annotations == nil {
 			broker.Status.Annotations = make(map[string]string, 10)
 		}
-		broker.Status.Annotations[kafka.BootstrapServersConfigMapKey] = strings.Join(testpkg.BootstrapServersPlaintextArr, ",")
+		broker.Status.Annotations[kafka.BootstrapServersConfigMapKey] = strings.Join(bootstrapServers, ",")
 		broker.Status.Annotations[kafka.DefaultTopicNumPartitionConfigMapKey] = fmt.Sprintf("%d", brokerreconciler.DefaultNumPartitions)
 		broker.Status.Annotations[kafka.DefaultTopicReplicationFactorConfigMapKey] = fmt.Sprintf("%d", brokerreconciler.DefaultReplicationFactor)
 	}
