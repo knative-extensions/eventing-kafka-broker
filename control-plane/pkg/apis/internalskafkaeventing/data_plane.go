@@ -43,7 +43,7 @@ func ConfigMapNameFromPod(p *corev1.Pod) (string, error) {
 		}
 	}
 	if vDp == nil {
-		return "", fmt.Errorf("failed to get data plane volume %s in pod %s/%s", ConfigMapVolumeName, p.GetNamespace(), p.GetName())
+		return "", fmt.Errorf("failed to get data plane volume %s in pod %s/%s", DispatcherVolumeName, p.GetNamespace(), p.GetName())
 	}
 	return vDp.ConfigMap.Name, nil
 }

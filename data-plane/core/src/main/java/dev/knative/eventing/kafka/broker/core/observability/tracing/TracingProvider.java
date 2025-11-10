@@ -92,12 +92,14 @@ public final class TracingProvider {
     private static SpanExporter otlpExporter(final ObservabilityConfig.TracingConfig tracingConfig) {
         return switch (tracingConfig.protocol()) {
             case NONE -> SpanExporter.composite();
-            case OTLP_HTTP -> OtlpHttpSpanExporter.builder()
-                    .setEndpoint(tracingConfig.endpoint())
-                    .build();
-            case OTLP_GRPC -> OtlpGrpcSpanExporter.builder()
-                    .setEndpoint(tracingConfig.endpoint())
-                    .build();
+            case OTLP_HTTP ->
+                OtlpHttpSpanExporter.builder()
+                        .setEndpoint(tracingConfig.endpoint())
+                        .build();
+            case OTLP_GRPC ->
+                OtlpGrpcSpanExporter.builder()
+                        .setEndpoint(tracingConfig.endpoint())
+                        .build();
             case STDOUT -> OtlpStdoutSpanExporter.builder().build();
         };
     }
