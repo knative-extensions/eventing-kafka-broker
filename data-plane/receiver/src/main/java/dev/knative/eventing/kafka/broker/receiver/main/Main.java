@@ -33,6 +33,7 @@ import dev.knative.eventing.kafka.broker.receiver.impl.auth.OIDCDiscoveryConfigL
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.vertx.VertxHttpClientFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
@@ -107,7 +108,9 @@ public class Main {
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-        final var kubernetesClient = new KubernetesClientBuilder().build();
+        final var kubernetesClient = new KubernetesClientBuilder()
+                .withHttpClientFactory(new VertxHttpClientFactory(vertx))
+                .build();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         final var eventTypeListerFactory = new EventTypeListerFactory(eventTypeClient);
 
