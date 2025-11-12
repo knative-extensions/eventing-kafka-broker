@@ -63,7 +63,7 @@
     <quarkus.version>3.28.0</quarkus.version>
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
-    <palantirJavaFormat.version>2.38.0</palantirJavaFormat.version>
+    <palantirJavaFormat.version>2.81.0</palantirJavaFormat.version>
     <jose4j.version>0.9.6</jose4j.version>
   </properties>
 

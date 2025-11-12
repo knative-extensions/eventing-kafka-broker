@@ -233,8 +233,7 @@ public class ReceiverVerticleTest {
         }
 
         // Write the new CA cert to the file
-        String new_TLS_Cert =
-                """
+        String new_TLS_Cert = """
 -----BEGIN CERTIFICATE-----
 MIIDmDCCAoCgAwIBAgIUZx4ztTK7wyEpRYKkKqM9+oFr+PwwDQYJKoZIhvcNAQEL
 BQAwJzELMAkGA1UEBhMCVVMxGDAWBgNVBAMMD0V4YW1wbGUtUm9vdC1DQTAeFw0y
@@ -258,8 +257,7 @@ rHxaoqIen8NYjNpBdJDInPMFZshZSx1lAzw6uwP4OuM5WQHgYEk7V+TkOU3osqgD
 5bOo/SpCokC166Ym
 -----END CERTIFICATE-----""";
 
-        String new_TLS_key =
-                """
+        String new_TLS_key = """
 -----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKrS1taPfNv+WF
 zKQABeVzxFVU+Jnz3w3E1XWh3de8VQVFiRA/0NT/ecT/kPENBtCZ9OWi/nRZuBKB

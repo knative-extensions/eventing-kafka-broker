@@ -41,12 +41,14 @@ public interface Filter extends Predicate<CloudEvent> {
             case PREFIX -> new PrefixFilter(filter.getPrefix().getAttributesMap());
             case SUFFIX -> new SuffixFilter(filter.getSuffix().getAttributesMap());
             case NOT -> new NotFilter(fromContract(filter.getNot().getFilter()));
-            case ANY -> AnyFilter.newFilter(filter.getAny().getFiltersList().stream()
-                    .map(Filter::fromContract)
-                    .collect(Collectors.toList()));
-            case ALL -> AllFilter.newFilter(filter.getAll().getFiltersList().stream()
-                    .map(Filter::fromContract)
-                    .collect(Collectors.toList()));
+            case ANY ->
+                AnyFilter.newFilter(filter.getAny().getFiltersList().stream()
+                        .map(Filter::fromContract)
+                        .collect(Collectors.toList()));
+            case ALL ->
+                AllFilter.newFilter(filter.getAll().getFiltersList().stream()
+                        .map(Filter::fromContract)
+                        .collect(Collectors.toList()));
             case CESQL -> new CeSqlFilter(filter.getCesql().getExpression());
             default -> Filter.noop();
         };

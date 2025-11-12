@@ -235,9 +235,8 @@ public class Metrics {
                     public String get(String key) {
                         return switch (key) {
                             case "url" -> observabilityConfig.getMetricsConfig().endpoint();
-                            case "step" -> observabilityConfig
-                                    .getMetricsConfig()
-                                    .exportInterval();
+                            case "step" ->
+                                observabilityConfig.getMetricsConfig().exportInterval();
                             default -> "";
                         };
                     }
