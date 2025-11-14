@@ -1,5 +1,5 @@
 
-Lists of 291 third-party dependencies.
+Lists of 290 third-party dependencies.
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.5.18 - http://logback.qos.ch/logback-classic)
      (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.5.18 - http://logback.qos.ch/logback-core)
      (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.20 - https://github.com/FasterXML/jackson)
@@ -53,7 +53,6 @@ Lists of 291 third-party dependencies.
      (Apache License 2.0) Metrics Core (io.dropwizard.metrics:metrics-core:4.1.12.1 - https://metrics.dropwizard.io/metrics-core)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes :: Java Client (io.fabric8:kubernetes-client:7.3.1 - https://github.com/fabric8io/kubernetes-client/kubernetes-client)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes :: Java Client API (io.fabric8:kubernetes-client-api:7.3.1 - https://github.com/fabric8io/kubernetes-client/kubernetes-client-api)
-     (Apache License, Version 2.0) Fabric8 :: Kubernetes :: HttpClient :: JDK (io.fabric8:kubernetes-httpclient-jdk:7.3.1 - https://github.com/fabric8io/kubernetes-client/kubernetes-httpclient-jdk)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes :: HttpClient :: Vert.x (io.fabric8:kubernetes-httpclient-vertx:7.4.0 - https://github.com/fabric8io/kubernetes-client/kubernetes-httpclient-vertx)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes Model :: Admission Registration, Authentication and Authorization (io.fabric8:kubernetes-model-admissionregistration:7.4.0 - https://github.com/fabric8io/kubernetes-client/kubernetes-model-generator/kubernetes-model-admissionregistration)
      (Apache License, Version 2.0) Fabric8 :: Kubernetes Model :: API Extensions (io.fabric8:kubernetes-model-apiextensions:7.4.0 - https://github.com/fabric8io/kubernetes-client/kubernetes-model-generator/kubernetes-model-apiextensions)
