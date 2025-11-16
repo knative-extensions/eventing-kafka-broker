@@ -45,7 +45,6 @@ import (
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/auth"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
@@ -3239,7 +3238,7 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 }
 
 func makeTriggerOIDCServiceAccount() *corev1.ServiceAccount {
-	return auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+	return auth.GetOIDCServiceAccountForResource(eventing.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
 		Name:      TriggerName,
 		Namespace: TriggerNamespace,
 		UID:       TriggerUUID,
@@ -3247,7 +3246,7 @@ func makeTriggerOIDCServiceAccount() *corev1.ServiceAccount {
 }
 
 func makeTriggerOIDCServiceAccountWithoutOwnerRef() *corev1.ServiceAccount {
-	sa := auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+	sa := auth.GetOIDCServiceAccountForResource(eventing.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
 		Name:      TriggerName,
 		Namespace: TriggerNamespace,
 		UID:       TriggerUUID,
@@ -3273,7 +3272,7 @@ func newTriggerWithCert(options ...reconcilertesting.TriggerOption) runtime.Obje
 
 func WithTriggerSubscriberURIAndCert(rawurl string) reconcilertesting.TriggerOption {
 	uri, _ := apis.ParseURL(rawurl)
-	return func(t *v1.Trigger) {
+	return func(t *eventing.Trigger) {
 		t.Spec.Subscriber = duckv1.Destination{
 			URI:     uri,
 			CACerts: pointer.String(string(eventingtlstesting.CA)),

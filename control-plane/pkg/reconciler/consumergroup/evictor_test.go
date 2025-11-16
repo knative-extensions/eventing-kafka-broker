@@ -28,7 +28,6 @@ import (
 	"knative.dev/pkg/ptr"
 
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
-	_ "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	kafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 

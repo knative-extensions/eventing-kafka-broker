@@ -58,16 +58,13 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
-	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 
 	"github.com/rickb777/date/period"
 
-	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
@@ -1021,8 +1018,8 @@ func TestReconcileKind(t *testing.T) {
 					ActionImpl: clientgotesting.ActionImpl{
 						Namespace: ChannelNamespace,
 						Resource: schema.GroupVersionResource{
-							Group:    kafkainternals.SchemeGroupVersion.Group,
-							Version:  kafkainternals.SchemeGroupVersion.Version,
+							Group:    internalscg.SchemeGroupVersion.Group,
+							Version:  internalscg.SchemeGroupVersion.Version,
 							Resource: "consumergroups",
 						},
 					},
@@ -1518,8 +1515,8 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
-					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				reconcilertesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					reconcilertesting.WithSubscriptionUID(Subscription1UUID),
 					WithAutoscalingAnnotationsSubscription(),
 				),
 			},
@@ -2374,7 +2371,7 @@ func TestReconcileKind(t *testing.T) {
 		r := messagingv1beta1kafkachannelreconciler.NewReconciler(
 			ctx,
 			logging.FromContext(ctx),
-			fakeeventingkafkaclient.Get(ctx),
+			fakeconsumergroupinformer.Get(ctx),
 			listers.GetKafkaChannelLister(),
 			controller.GetEventRecorder(ctx),
 			reconciler,

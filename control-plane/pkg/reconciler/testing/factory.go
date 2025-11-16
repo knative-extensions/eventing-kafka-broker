@@ -33,9 +33,8 @@ import (
 	pkgcontroller "knative.dev/pkg/controller"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	"knative.dev/pkg/reconciler"
-	. "knative.dev/pkg/reconciler/testing"
+	rectest "knative.dev/pkg/reconciler/testing"
 
-	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	fakekafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
@@ -49,10 +48,10 @@ const (
 )
 
 // Ctor functions create a k8s controller with given params.
-type Ctor func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) pkgcontroller.Reconciler
+type Ctor func(ctx context.Context, listers *Listers, env *config.Env, row *rectest.TableRow) pkgcontroller.Reconciler
 
-func NewFactory(env *config.Env, ctor Ctor) Factory {
-	return func(t *testing.T, row *TableRow) (pkgcontroller.Reconciler, ActionRecorderList, EventList) {
+func NewFactory(env *config.Env, ctor Ctor) rectest.Factory {
+	return func(t *testing.T, row *rectest.TableRow) (pkgcontroller.Reconciler, rectest.ActionRecorderList, rectest.EventList) {
 
 		listers := newListers(row.Objects)
 		var ctx context.Context
@@ -63,7 +62,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 		}
 
 		ctx, eventingClient := fakeeventingclient.With(ctx, listers.GetEventingObjects()...)
-		ctx, eventingKafkaBrokerClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
+		ctx, eventingKafkaBrokerClient := fakekafkainternals.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
 		ctx, kubeClient := fakekubeclient.With(ctx, listers.GetKubeObjects()...)
 		ctx, kafkaInternalsClient := fakekafkainternals.With(ctx, listers.GetKafkaInternalsObjects()...)
 		ctx, kedaClient := fakekeda.With(ctx, []runtime.Object{}...)
@@ -105,7 +104,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 			kedaClient.PrependReactor("*", "*", reactor)
 		}
 
-		actionRecorderList := ActionRecorderList{
+		actionRecorderList := rectest.ActionRecorderList{
 			dynamicClient,
 			kubeClient,
 			eventingClient,
@@ -113,7 +112,7 @@ func NewFactory(env *config.Env, ctor Ctor) Factory {
 			kafkaInternalsClient,
 		}
 
-		eventList := EventList{
+		eventList := rectest.EventList{
 			Recorder: eventRecorder,
 		}
 

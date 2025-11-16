@@ -29,19 +29,19 @@ import (
 
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	eventingv1alpha1clientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
-	. "knative.dev/eventing-kafka-broker/test/pkg"
+	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/pkg/addressable"
 	"knative.dev/eventing-kafka-broker/test/pkg/sink"
 
-	. "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
 
 const (
 	sinkSecretName = "secret-test"
 )
 
-func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
-	RunMultiple(t, func(t *testing.T) {
+func RunTestKafkaSink(t *testing.T, mode string, sp testingpkg.SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
+	testpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
@@ -61,7 +61,7 @@ func RunTestKafkaSink(t *testing.T, mode string, sp SecretProvider, opts ...func
 			Topic:             "kafka-sink-" + client.Namespace,
 			NumPartitions:     pointer.Int32(10),
 			ReplicationFactor: func(rf int16) *int16 { return &rf }(1),
-			BootstrapServers:  BootstrapServersPlaintextArr,
+			BootstrapServers:  testpkg.BootstrapServersPlaintextArr,
 			ContentMode:       pointer.String(mode),
 		}
 		for _, opt := range opts {

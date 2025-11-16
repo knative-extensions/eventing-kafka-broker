@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	. "github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	cetypes "github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/uuid"
@@ -53,14 +52,11 @@ import (
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 const (
@@ -91,7 +87,7 @@ func SetupKafkaSources(prefix string, n int) *feature.Feature {
 		f.Setup("install kafka topic", kafkatopic.Install(topicName))
 		f.Setup(fmt.Sprintf("install kafkasource %s", name), kafkasource.Install(
 			name,
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithTopics([]string{topicName}),
 			kafkasource.WithSink(service.AsDestinationRef(sink)),
 		))
@@ -115,7 +111,7 @@ func deletedKafkaSourcesAreNotPresentInContractConfigMaps(prefix string) feature
 
 		namespace := environment.FromContext(ctx).Namespace()
 
-		kss, err := kafkaclient.Get(ctx).SourcesV1().
+		kss, err := consumergroupclient.Get(ctx).SourcesV1().
 			KafkaSources(namespace).
 			List(ctx, metav1.ListOptions{
 				Limit: 2000,
@@ -189,7 +185,7 @@ func ScaleKafkaSource() *feature.Feature {
 		service.WithSelectors(map[string]string{"app": "rekt"})))
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("scale kafkasource", kafkasource.Install(source,
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topicName}),
 		kafkasource.WithSink(service.AsDestinationRef(sink)),
 		kafkasource.WithAnnotations(map[string]string{
@@ -218,7 +214,7 @@ func KafkaSourceInitialOffsetEarliest(count int, topic string) *feature.Feature 
 
 	f.Setup("install kafkasource", kafkasource.Install(
 		source,
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithInitialOffset(sources.OffsetEarliest),
 		kafkasource.WithSink(service.AsDestinationRef(sink)),
@@ -251,7 +247,7 @@ func compareConsumerGroup(source string, cmp func(*internalscg.ConsumerGroup) er
 	return func(ctx context.Context, t feature.T) {
 		ns := environment.FromContext(ctx).Namespace()
 
-		ks, err := sourcesclient.Get(ctx).
+		ks, err := consumergroupclient.Get(ctx).
 			SourcesV1beta1().
 			KafkaSources(ns).
 			Get(ctx, source, metav1.GetOptions{})
@@ -325,7 +321,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 	switch kafkaSourceCfg.authMech {
 	case TLSMech:
 		f.Setup("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), TLSSecretName, secretName))
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslArr),
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testpkg.BootstrapServersSslArr),
 			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 			kafkasource.WithTLSCert(secretName, "user.crt"),
 			kafkasource.WithTLSKey(secretName, "user.key"),
@@ -334,7 +330,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 		)
 	case SASLMech:
 		f.Setup("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), SASLSecretName, secretName))
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testpkg.BootstrapServersSslSaslScramArr),
 			kafkasource.WithSASLEnabled(),
 			kafkasource.WithSASLUser(secretName, "user"),
 			kafkasource.WithSASLPassword(secretName, "password"),
@@ -343,7 +339,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 		)
 	default:
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr))
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr))
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSourceCfg.sourceName, kafkaSourceOpts...))
@@ -367,7 +363,7 @@ func KafkaSourceFeatureAssert(f *feature.Feature, kafkaSink, receiver string, cu
 	f.Assert("eventshub receiver gets event", matchEvent(receiver, matcher))
 }
 
-func matchEvent(sink string, matcher EventMatcher) feature.StepFn {
+func matchEvent(sink string, matcher cetest.EventMatcher) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
 		assert.OnStore(sink).MatchEvent(matcher).AtLeast(1)(ctx, t)
 	}
@@ -375,10 +371,10 @@ func matchEvent(sink string, matcher EventMatcher) feature.StepFn {
 
 // CustomizeEventFunc creates a pair of eventshub options that customize the event
 // and corresponding event matcher that will match the respective event.
-type CustomizeEventFunc func() ([]eventshub.EventsHubOption, EventMatcher)
+type CustomizeEventFunc func() ([]eventshub.EventsHubOption, cetest.EventMatcher)
 
 func KafkaSourceBinaryEventCustomizeFunc() CustomizeEventFunc {
-	return func() ([]eventshub.EventsHubOption, EventMatcher) {
+	return func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputHeader("ce-specversion", cloudevents.VersionV1),
@@ -393,16 +389,16 @@ func KafkaSourceBinaryEventCustomizeFunc() CustomizeEventFunc {
 				"hello": "Francesco",
 			})),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasType("com.github.pull.create"),
-			HasSource("github.com/cloudevents/spec/pull"),
-			HasSubject("123"),
-			HasId(id),
-			HasDataContentType("application/json"),
-			HasData([]byte(`{"hello":"Francesco"}`)),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("github.com/cloudevents/spec/pull"),
+			cetest.HasSubject("123"),
+			cetest.HasId(id),
+			cetest.HasDataContentType("application/json"),
+			cetest.HasData([]byte(`{"hello":"Francesco"}`)),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -427,7 +423,7 @@ func KafkaSourceBinaryEventFeatureSetup(f *feature.Feature) (string, string) {
 }
 
 func KafkaSourceBinaryEventWithExtensions() *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputHeader("ce-specversion", cloudevents.VersionV1),
@@ -437,15 +433,15 @@ func KafkaSourceBinaryEventWithExtensions() *feature.Feature {
 			eventshub.InputHeader("ce-id", id),
 			eventshub.InputHeader("content-type", "application/json"),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasType("com.github.pull.create"),
-			HasSource("github.com/cloudevents/spec/pull"),
-			HasSubject("123"),
-			HasId(id),
-			HasDataContentType("application/json"),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("github.com/cloudevents/spec/pull"),
+			cetest.HasSubject("123"),
+			cetest.HasId(id),
+			cetest.HasDataContentType("application/json"),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -469,7 +465,7 @@ func KafkaSourceBinaryEventWithExtensions() *feature.Feature {
 }
 
 func KafkaSourceStructuredEventCustomizeFunc() CustomizeEventFunc {
-	return func() ([]eventshub.EventsHubOption, EventMatcher) {
+	return func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		eventTime, _ := cetypes.ParseTime("2018-04-05T17:31:00Z")
 		senderOptions := []eventshub.EventsHubOption{
@@ -489,17 +485,17 @@ func KafkaSourceStructuredEventCustomizeFunc() CustomizeEventFunc {
 				"comexampleothervalue": 5,
 			})),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasType("com.github.pull.create"),
-			HasSource("https://github.com/cloudevents/spec/pull"),
-			HasSubject("123"),
-			HasId(id),
-			HasTime(eventTime),
-			HasDataContentType("application/json"),
-			HasData([]byte(`{"hello":"Francesco"}`)),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("https://github.com/cloudevents/spec/pull"),
+			cetest.HasSubject("123"),
+			cetest.HasId(id),
+			cetest.HasTime(eventTime),
+			cetest.HasDataContentType("application/json"),
+			cetest.HasData([]byte(`{"hello":"Francesco"}`)),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -524,7 +520,7 @@ func KafkaSourceStructuredEventFeatureSetup(f *feature.Feature) (string, string)
 }
 
 func KafkaSourceWithExtensions() *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputHeader("content-type", "application/cloudevents+json"),
@@ -535,13 +531,13 @@ func KafkaSourceWithExtensions() *feature.Feature {
 				"id":          id,
 			})),
 		}
-		matcher := AllOf(
-			HasSpecVersion(cloudevents.VersionV1),
-			HasId(id),
-			HasType("com.github.pull.create"),
-			HasSource("https://github.com/cloudevents/spec/pull"),
-			HasExtension("comexampleextension1", "value"),
-			HasExtension("comexampleothervalue", "5"),
+		matcher := cetest.AllOf(
+			cetest.HasSpecVersion(cloudevents.VersionV1),
+			cetest.HasId(id),
+			cetest.HasType("com.github.pull.create"),
+			cetest.HasSource("https://github.com/cloudevents/spec/pull"),
+			cetest.HasExtension("comexampleextension1", "value"),
+			cetest.HasExtension("comexampleothervalue", "5"),
 		)
 		return senderOptions, matcher
 	}
@@ -567,16 +563,16 @@ func KafkaSourceWithExtensions() *feature.Feature {
 }
 
 func KafkaSourceTLS(kafkaSource, kafkaSink, topic string) *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		e := cetest.FullEvent()
 		e.SetID(id)
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputEvent(e),
 		}
-		matcher := AllOf(
-			HasData(e.Data()),
-			HasId(id),
+		matcher := cetest.AllOf(
+			cetest.HasData(e.Data()),
+			cetest.HasId(id),
 		)
 		return senderOptions, matcher
 	}
@@ -606,7 +602,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 	topic := feature.MakeRandomK8sName("tls-sink-topic")
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
-	event := FullEvent()
+	event := cetest.FullEvent()
 	event.SetID(uuid.NewString())
 
 	f := feature.NewFeature()
@@ -627,7 +623,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 		d.CACerts = eventshub.GetCaCerts(ctx)
 		kafkasource.Install(kafkaSource,
 			kafkasource.WithTopics([]string{topic}),
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithSink(d),
 		)(ctx, t)
 	})
@@ -641,7 +637,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 	f.Stable("KafkaSource as event source").
 		Must("delivers events on sink with ref",
 			assert.OnStore(receiver).
-				MatchReceivedEvent(HasId(event.ID())).
+				MatchReceivedEvent(cetest.HasId(event.ID())).
 				AtLeast(1)).
 		Must("Set sinkURI to HTTPS endpoint", source.ExpectHTTPSSink(kafkasource.GVR(), kafkaSource)).
 		Must("Set sinkCACerts to non empty CA certs", source.ExpectCACerts(kafkasource.GVR(), kafkaSource))
@@ -656,7 +652,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	topic := feature.MakeRandomK8sName("tls-sink-topic")
 	receiver := feature.MakeRandomK8sName("eventshub-receiver")
 	sender := feature.MakeRandomK8sName("eventshub-sender")
-	event := FullEvent()
+	event := cetest.FullEvent()
 	event.SetID(uuid.NewString())
 
 	f := feature.NewFeature()
@@ -685,7 +681,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 		}
 		kafkasource.Install(kafkaSource,
 			kafkasource.WithTopics([]string{topic}),
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithSink(d),
 		)(ctx, t)
 	})
@@ -699,7 +695,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	f.Stable("KafkaSource as event source").
 		Must("delivers events on sink with ref",
 			assert.OnStore(receiver).
-				MatchReceivedEvent(HasId(event.ID())).
+				MatchReceivedEvent(cetest.HasId(event.ID())).
 				AtLeast(1)).
 		Must("Set sinkURI to HTTPS endpoint", source.ExpectHTTPSSink(kafkasource.GVR(), kafkaSource))
 
@@ -707,16 +703,16 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 }
 
 func KafkaSourceSASL() *feature.Feature {
-	customizeFunc := func() ([]eventshub.EventsHubOption, EventMatcher) {
+	customizeFunc := func() ([]eventshub.EventsHubOption, cetest.EventMatcher) {
 		id := feature.MakeRandomK8sName("id")
 		e := cetest.FullEvent()
 		e.SetID(id)
 		senderOptions := []eventshub.EventsHubOption{
 			eventshub.InputEvent(e),
 		}
-		matcher := AllOf(
-			HasData(e.Data()),
-			HasId(id),
+		matcher := cetest.AllOf(
+			cetest.HasData(e.Data()),
+			cetest.HasId(id),
 		)
 		return senderOptions, matcher
 	}
@@ -752,7 +748,7 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		// Keep the original topic.
 		kafkasource.WithTopics([]string{topic}),
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithOrdering(string(sources.Unordered)),
 		kafkasource.WithTLSDisabled(),
 		kafkasource.WithSASLDisabled(),
@@ -770,9 +766,9 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 
 	f.Requirement("install eventshub sender for kafka sink", eventshub.Install(sender, options...))
 
-	matcher := AllOf(
-		HasData(e.Data()),
-		HasTime(e.Time()),
+	matcher := cetest.AllOf(
+		cetest.HasData(e.Data()),
+		cetest.HasTime(e.Time()),
 	)
 	f.Assert("sink receives event", matchEvent(receiver, matcher))
 

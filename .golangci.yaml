@@ -18,11 +18,11 @@ linters:
     staticcheck:
       checks:
         - all
-        - "-ST1019"
+        # "-ST1019"
         - "-ST1003"
         - "-ST1012"
         - "-ST1016"
-        - "-ST1001"
+        # "-ST1001"
   exclusions:
     generated: lax
     presets:

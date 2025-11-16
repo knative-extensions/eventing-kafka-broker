@@ -27,7 +27,6 @@ import (
 
 	"knative.dev/eventing/test/rekt/resources/trigger"
 
-	"github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,8 +44,6 @@ import (
 	"knative.dev/reconciler-test/pkg/resources/service"
 
 	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/features/kafkafeatureflags"
 	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
@@ -82,7 +79,7 @@ func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {
 	kafkaSourceOpts := []manifest.CfgFn{
 		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		kafkasource.WithTopics([]string{topic}),
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
@@ -121,7 +118,7 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	kafkaSourceOpts := []manifest.CfgFn{
 		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		kafkasource.WithTopics([]string{topic}),
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
@@ -136,7 +133,7 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	}
 	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
 
-	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(test.HasId(event.ID())).Exact(1))
+	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
 	// after the event is sent, the source should scale down to zero replicas
 	f.Alpha("KafkaSource").Must("Scale down to zero", verifyConsumerGroupReplicas(getKafkaSourceCg(kafkaSource), 0, false))
@@ -174,7 +171,7 @@ func KafkaSourceSASLScalesToZeroWithKeda() *feature.Feature {
 	}
 	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
 
-	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(test.HasId(event.ID())).Exact(1))
+	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
 	// after the event is sent, the source should scale down to zero replicas
 	f.Alpha("KafkaSource").Must("Scale down to zero", verifyConsumerGroupReplicas(getKafkaSourceCg(sourceCfg.sourceName), 0, false))
@@ -203,7 +200,7 @@ func TriggerScalesToZeroWithKeda() *feature.Feature {
 
 	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
 
-	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
 	//after the event is sent, the trigger should scale down to zero replicas
 	f.Alpha("Trigger").Must("Scale down to zero", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, false))
@@ -248,7 +245,7 @@ func TriggerSASLScalesToZeroWithKeda() *feature.Feature {
 
 	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
 
-	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
 	//after the event is sent, the trigger should scale down to zero replicas
 	f.Alpha("Trigger").Must("Scale down to zero", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, false))
@@ -293,7 +290,7 @@ func TriggerSSLScalesToZeroWithKeda() *feature.Feature {
 
 	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(broker.GVR(), brokerName), eventshub.InputEvent(event)))
 
-	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
 	//after the event is sent, the trigger should scale down to zero replicas
 	f.Alpha("Trigger").Must("Scale down to zero", verifyConsumerGroupReplicas(getTriggerCg(triggerName), 0, false))
@@ -334,7 +331,7 @@ func ChannelScalesToZeroWithKeda() *feature.Feature {
 
 	f.Requirement("install source", eventshub.Install(sourceName, eventshub.StartSenderToResource(kafkachannelresources.GVR(), channelName), eventshub.InputEvent(event)))
 
-	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(test.HasId(event.ID())).Exact(1))
+	f.Requirement("sink receives event", assert.OnStore(sinkName).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
 	//after the event is sent, the subscription should scale down to zero replicas
 	f.Alpha("Subscription").Must("Scale down to zero", verifyConsumerGroupReplicas(getSubscriptionCg(subscriptionName), 0, false))
@@ -348,7 +345,7 @@ func getKafkaSourceCg(source string) getCgName {
 	return func(ctx context.Context) (string, error) {
 		ns := environment.FromContext(ctx).Namespace()
 
-		ks, err := sourcesclient.Get(ctx).
+		ks, err := consumergroupclient.Get(ctx).
 			SourcesV1().
 			KafkaSources(ns).
 			Get(ctx, source, metav1.GetOptions{})

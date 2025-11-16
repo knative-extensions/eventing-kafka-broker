@@ -46,7 +46,6 @@ import (
 	. "knative.dev/pkg/reconciler/testing"
 
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
-	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	eventingkafkasourcereconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1/kafkasource"
 
 	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
@@ -1621,7 +1620,7 @@ func TestReconcileKind(t *testing.T) {
 		r := eventingkafkasourcereconciler.NewReconciler(
 			ctx,
 			logging.FromContext(ctx),
-			fakeeventingkafkaclient.Get(ctx),
+			fakeconsumergroupinformer.Get(ctx),
 			listers.GetKafkaSourceLister(),
 			controller.GetEventRecorder(ctx),
 			reconciler,

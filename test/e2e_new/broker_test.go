@@ -35,7 +35,6 @@ import (
 	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing/test/rekt/features/authz"
-	"knative.dev/eventing/test/rekt/features/broker"
 	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
 	"knative.dev/eventing/test/rekt/features/oidc"
 	brokerresources "knative.dev/eventing/test/rekt/resources/broker"
@@ -304,7 +303,7 @@ func TestBrokerSupportsOIDC(t *testing.T) {
 	)
 
 	name := feature.MakeRandomK8sName("broker")
-	env.Prerequisite(ctx, t, broker.GoesReady(name, brokerresources.WithEnvConfig()...))
+	env.Prerequisite(ctx, t, brokereventingfeatures.GoesReady(name, brokerresources.WithEnvConfig()...))
 
 	env.TestSet(ctx, t, oidc.AddressableOIDCConformance(brokerresources.GVR(), "Broker", name, env.Namespace()))
 }
@@ -337,7 +336,7 @@ func TestBrokerSupportsAuthZ(t *testing.T) {
 	)
 
 	name := feature.MakeRandomK8sName("broker")
-	env.Prerequisite(ctx, t, broker.GoesReady(name, brokerresources.WithEnvConfig()...))
+	env.Prerequisite(ctx, t, brokereventingfeatures.GoesReady(name, brokerresources.WithEnvConfig()...))
 
 	env.TestSet(ctx, t, authz.AddressableAuthZConformance(brokerresources.GVR(), "Broker", name))
 }
