@@ -25,7 +25,7 @@ import (
 
 // tokenIssuer defines the interface for generating access tokens
 type tokenIssuer interface {
-	IssueToken(ctx context.Context) (string, error)
+	issueToken(ctx context.Context) (string, error)
 }
 
 // TokenProvider provides common functionality for OAuth token providers
@@ -35,7 +35,7 @@ type TokenProvider struct {
 
 // Token implements the sarama.AccessTokenProvider interface
 func (b *TokenProvider) Token() (*sarama.AccessToken, error) {
-	token, err := b.tokenIssuer.IssueToken(context.TODO())
+	token, err := b.tokenIssuer.issueToken(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func NewTokenProvider(data map[string][]byte) (*TokenProvider, error) {
 	var err error
 	switch tokenProviderStr {
 	case mskAccessTokenProvider:
-		tokenIssuer, err = NewMSKAccessTokenIssuer(data)
+		tokenIssuer, err = newMSKAccessTokenIssuer(data)
 	case mskRoleAccessTokenProvider:
-		tokenIssuer, err = NewMSKRoleAccessTokenIssuer(data)
+		tokenIssuer, err = newMSKRoleAccessTokenIssuer(data)
 	default:
 		return nil, fmt.Errorf("unsupported OAUTHBEARER token provider (key: %s), supported: %s, %s", saslTokenProviderKey, mskAccessTokenProvider, mskRoleAccessTokenProvider)
 	}
