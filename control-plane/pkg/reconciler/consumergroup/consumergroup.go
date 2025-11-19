@@ -812,19 +812,17 @@ func getMetricAttributes(cg *kafkainternals.ConsumerGroup) []attribute.KeyValue 
 	if uf == nil {
 		return []attribute.KeyValue{}
 	}
-	attributes := []attribute.KeyValue{}
+
 	switch strings.ToLower(uf.Kind) {
 	case "trigger":
-		attributes = []attribute.KeyValue{TriggerNameKey.With(uf.Name), TriggerNamespaceKey.With(cg.Namespace)}
+		return []attribute.KeyValue{TriggerNameKey.With(uf.Name), TriggerNamespaceKey.With(cg.Namespace)}
 	case "kafkachannel":
-		attributes = []attribute.KeyValue{observability.ChannelName.With(uf.Name), observability.ChannelNamespace.With(cg.Namespace)}
+		return []attribute.KeyValue{observability.ChannelName.With(uf.Name), observability.ChannelNamespace.With(cg.Namespace)}
 	case "kafkasource":
-		attributes = []attribute.KeyValue{observability.SourceName.With(uf.Name), observability.SourceNamespace.With(cg.Namespace)}
+		return []attribute.KeyValue{observability.SourceName.With(uf.Name), observability.SourceNamespace.With(cg.Namespace)}
 	default:
 		return []attribute.KeyValue{}
 	}
-
-	return attributes
 }
 
 func (r *Reconciler) recordScheduleLatency(ctx context.Context, cg *kafkainternals.ConsumerGroup, startTime time.Time) {
