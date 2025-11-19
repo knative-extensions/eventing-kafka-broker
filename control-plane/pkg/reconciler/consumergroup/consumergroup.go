@@ -812,7 +812,7 @@ func getMetricAttributes(cg *kafkainternals.ConsumerGroup) []attribute.KeyValue 
 	if uf == nil {
 		return []attribute.KeyValue{}
 	}
-	
+
 	switch strings.ToLower(uf.Kind) {
 	case "trigger":
 		return []attribute.KeyValue{TriggerNameKey.With(uf.Name), TriggerNamespaceKey.With(cg.Namespace)}

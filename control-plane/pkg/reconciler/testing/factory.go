@@ -54,7 +54,7 @@ type Ctor func(ctx context.Context, listers *Listers, env *config.Env, row *rtes
 func NewFactory(env *config.Env, ctor Ctor) rtesting.Factory {
 	return func(t *testing.T, row *rtesting.TableRow) (pkgcontroller.Reconciler, rtesting.ActionRecorderList, rtesting.EventList) {
 
-	    listers := newListers(row.Objects)
+		listers := newListers(row.Objects)
 		var ctx context.Context
 		if row.Ctx != nil {
 			ctx = row.Ctx

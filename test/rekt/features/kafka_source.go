@@ -70,8 +70,6 @@ const (
 	PlainMech      = "plain"
 )
 
-
-
 func SetupAndCleanupKafkaSources(prefix string, n int) *feature.Feature {
 	f := SetupKafkaSources(prefix, n)
 	f.Teardown("cleanup resources", f.DeleteResources)

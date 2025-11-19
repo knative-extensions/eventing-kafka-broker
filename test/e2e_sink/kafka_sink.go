@@ -41,7 +41,7 @@ const (
 )
 
 func RunTestKafkaSink(t *testing.T, mode string, sp testpkgtesting.SecretProvider, opts ...func(kss *eventingv1alpha1.KafkaSinkSpec) error) {
-   testpkg.RunMultiple(t, func(t *testing.T) {
+	testpkg.RunMultiple(t, func(t *testing.T) {
 
 		ctx := context.Background()
 
