@@ -52,7 +52,6 @@ import (
 	"knative.dev/eventing/pkg/apis/feature"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
@@ -130,7 +129,7 @@ var DefaultEnv = &config.Env{
 
 func TestSinkReconciler(t *testing.T) {
 
-	v1alpha1.RegisterConditionSet(base.IngressConditionSet)
+	kafkaeventing.RegisterConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
@@ -216,7 +215,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			Objects: []runtime.Object{
 				NewSink(
 					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
-					SinkContentMode(v1alpha1.ModeStructured),
+					SinkContentMode(kafkaeventing.ModeStructured),
 				),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
 				SinkReceiverPod(env.SystemNamespace, map[string]string{
@@ -253,7 +252,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				{
 					Object: NewSink(
 						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
-						SinkContentMode(v1alpha1.ModeStructured),
+						SinkContentMode(kafkaeventing.ModeStructured),
 						InitSinkConditions,
 						StatusDataPlaneAvailable,
 						StatusConfigParsed,
@@ -361,7 +360,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 					func(obj duckv1.KRShaped) {
-						s := obj.(*v1alpha1.KafkaSink)
+						s := obj.(*kafkaeventing.KafkaSink)
 						s.Spec.ReplicationFactor = nil
 						s.Spec.NumPartitions = nil
 					},
@@ -406,7 +405,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					Object: NewSink(
 						StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 						func(obj duckv1.KRShaped) {
-							s := obj.(*v1alpha1.KafkaSink)
+							s := obj.(*kafkaeventing.KafkaSink)
 							s.Spec.ReplicationFactor = nil
 							s.Spec.NumPartitions = nil
 						},
@@ -440,7 +439,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 					func(obj duckv1.KRShaped) {
-						s := obj.(*v1alpha1.KafkaSink)
+						s := obj.(*kafkaeventing.KafkaSink)
 						s.Spec.ReplicationFactor = nil
 						s.Spec.NumPartitions = nil
 					},
@@ -470,7 +469,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					Object: NewSink(
 						StatusControllerOwnsTopic(sink.ExternalTopicOwner),
 						func(obj duckv1.KRShaped) {
-							s := obj.(*v1alpha1.KafkaSink)
+							s := obj.(*kafkaeventing.KafkaSink)
 							s.Spec.ReplicationFactor = nil
 							s.Spec.NumPartitions = nil
 						},
@@ -490,7 +489,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				NewSink(
 					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					func(obj duckv1.KRShaped) {
-						s := obj.(*v1alpha1.KafkaSink)
+						s := obj.(*kafkaeventing.KafkaSink)
 						s.Spec.Topic = "my-topic-1"
 						s.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 					},
@@ -532,7 +531,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 					Object: NewSink(
 						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 						func(obj duckv1.KRShaped) {
-							s := obj.(*v1alpha1.KafkaSink)
+							s := obj.(*kafkaeventing.KafkaSink)
 							s.Spec.Topic = "my-topic-1"
 							s.Spec.BootstrapServers = []string{"kafka-broker:10000"}
 						},
@@ -1610,7 +1609,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 
 func TestSinkFinalizer(t *testing.T) {
 
-	v1alpha1.RegisterConditionSet(base.IngressConditionSet)
+	kafkaeventing.RegisterConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
@@ -1837,7 +1836,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				NewDeletedSink(
 					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
 					func(obj duckv1.KRShaped) {
-						s := obj.(*v1alpha1.KafkaSink)
+						s := obj.(*kafkaeventing.KafkaSink)
 						s.Spec.Topic = "topic-2"
 					},
 				),

@@ -36,7 +36,6 @@ import (
 	pointer "knative.dev/pkg/ptr"
 
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/pkg/controller"
@@ -278,7 +277,7 @@ func TestReconcileKind(t *testing.T) {
 									Namespace: "non-existing secret",
 								}},
 						}),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
 							PodName:      "p2",
@@ -294,7 +293,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -335,7 +334,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 									ConsumerGroupIdConfig("my.group.id"),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
 									SecretSpec: &kafkainternals.SecretSpec{
 										Ref: &kafkainternals.SecretReference{
@@ -366,7 +365,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -389,7 +388,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -421,7 +420,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -444,7 +443,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 									ConsumerGroupIdConfig("my.group.id"),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
 									SecretSpec: &kafkainternals.SecretSpec{
 										Ref: &kafkainternals.SecretReference{
@@ -492,7 +491,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -515,7 +514,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -546,7 +545,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -569,7 +568,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 									ConsumerGroupIdConfig("my.group.id"),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
 									SecretSpec: &kafkainternals.SecretSpec{
 										Ref: &kafkainternals.SecretReference{
@@ -646,7 +645,7 @@ func TestReconcileKind(t *testing.T) {
 								},
 							},
 						}),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
 							PodName:      "p2",
@@ -662,7 +661,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
 								SASL: bindings.KafkaSASLSpec{
@@ -729,7 +728,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 									ConsumerGroupIdConfig("my.group.id"),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
 									NetSpec: &bindings.KafkaNetSpec{
 										SASL: bindings.KafkaSASLSpec{
@@ -787,7 +786,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
 								SASL: bindings.KafkaSASLSpec{
@@ -837,7 +836,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
 								SASL: bindings.KafkaSASLSpec{
@@ -895,7 +894,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							ConsumerGroupIdConfig("my.group.id"),
 						),
-						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
 								SASL: bindings.KafkaSASLSpec{
@@ -945,7 +944,7 @@ func TestReconcileKind(t *testing.T) {
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 									ConsumerGroupIdConfig("my.group.id"),
 								),
-								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(sources.OffsetLatest))),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
 									NetSpec: &bindings.KafkaNetSpec{
 										SASL: bindings.KafkaSASLSpec{
@@ -1296,7 +1295,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
-							ConsumerInitialOffset(sources.OffsetLatest),
+							ConsumerInitialOffset(kafkasource.OffsetLatest),
 						)),
 					)),
 					ConsumerGroupReplicas(3),
@@ -1323,7 +1322,7 @@ func TestReconcileKind(t *testing.T) {
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
-							ConsumerInitialOffset(sources.OffsetLatest),
+							ConsumerInitialOffset(kafkasource.OffsetLatest),
 						)),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1347,7 +1346,7 @@ func TestReconcileKind(t *testing.T) {
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 								NewConsumerSpecDeliveryDeadLetterSink(),
-								ConsumerInitialOffset(sources.OffsetLatest),
+								ConsumerInitialOffset(kafkasource.OffsetLatest),
 							)),
 							ConsumerVReplicas(2),
 							ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
@@ -1368,7 +1367,7 @@ func TestReconcileKind(t *testing.T) {
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
-									ConsumerInitialOffset(sources.OffsetLatest),
+									ConsumerInitialOffset(kafkasource.OffsetLatest),
 								)),
 							)),
 							ConsumerGroupStatusSelector(ConsumerLabels),
