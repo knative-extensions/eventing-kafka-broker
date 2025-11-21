@@ -63,12 +63,9 @@ import (
 
 	"github.com/rickb777/date/period"
 
-	eventingrekttesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 )
 
 const (
@@ -1219,9 +1216,9 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
-						ConsumerAuth(&internalscg.Auth{
-							SecretSpec: &internalscg.SecretSpec{
-								Ref: &internalscg.SecretReference{
+						ConsumerAuth(&kafkainternals.Auth{
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
 									Name:      "secret-1",
 									Namespace: "ns-1",
 								},
@@ -1326,9 +1323,9 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
-						ConsumerAuth(&internalscg.Auth{
-							SecretSpec: &internalscg.SecretSpec{
-								Ref: &internalscg.SecretReference{
+						ConsumerAuth(&kafkainternals.Auth{
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
 									Name:      "secret-1",
 									Namespace: "ns-1",
 								},
@@ -1432,9 +1429,9 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
 						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
-						ConsumerAuth(&internalscg.Auth{
-							SecretSpec: &internalscg.SecretSpec{
-								Ref: &internalscg.SecretReference{
+						ConsumerAuth(&kafkainternals.Auth{
+							SecretSpec: &kafkainternals.SecretSpec{
+								Ref: &kafkainternals.SecretReference{
 									Name:      "secret-1",
 									Namespace: "ns-1",
 								},
@@ -1518,8 +1515,8 @@ func TestReconcileKind(t *testing.T) {
 					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
 				}),
 				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
-				eventingrekttesting.NewSubscription(Subscription1Name, ChannelNamespace,
-					eventingrekttesting.WithSubscriptionUID(Subscription1UUID),
+				reconcilertesting.NewSubscription(Subscription1Name, ChannelNamespace,
+					reconcilertesting.WithSubscriptionUID(Subscription1UUID),
 					WithAutoscalingAnnotationsSubscription(),
 				),
 			},
@@ -2363,7 +2360,7 @@ func TestReconcileKind(t *testing.T) {
 			SubscriptionLister:  listers.GetSubscriptionLister(),
 			ConsumerGroupLister: listers.GetConsumerGroupLister(),
 			EventPolicyLister:   listers.GetEventPolicyLister(),
-			InternalsClient:     fakeconsumergroupinformer.Get(ctx),
+			InternalsClient:     fakeeventingkafkaclient.Get(ctx),
 			Prober:              proberMock,
 			IngressHost:         network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 			KafkaFeatureFlags:   featureFlags,

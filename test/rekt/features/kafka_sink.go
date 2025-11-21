@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,12 +64,12 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 	trigger2FilterType := "trigger-2"
 
 	eventIdTrigger1 := uuid.New().String()
-	eventTrigger1 := test.MinEvent()
+	eventTrigger1 := cetest.MinEvent()
 	eventTrigger1.SetID(eventIdTrigger1)
 	eventTrigger1.SetType(trigger1FilterType)
 
 	eventIdTrigger2 := uuid.New().String()
-	eventTrigger2 := test.MinEvent()
+	eventTrigger2 := cetest.MinEvent()
 	eventTrigger2.SetID(eventIdTrigger2)
 	eventTrigger2.SetType(trigger2FilterType)
 

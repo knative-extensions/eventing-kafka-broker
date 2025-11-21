@@ -42,7 +42,6 @@ import (
 
 	"knative.dev/eventing/pkg/apis/feature"
 
-	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
@@ -83,13 +82,13 @@ type Reconciler struct {
 	IngressHost string
 }
 
-func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventingv1alpha1.KafkaSink) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.reconcileKind(ctx, ks)
 	})
 }
 
-func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) error {
+func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventingv1alpha1.KafkaSink) error {
 	logger := kafkalogging.CreateReconcileMethodLogger(ctx, ks)
 	features := feature.FromContext(ctx)
 
@@ -168,7 +167,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Got contract config map")
 
-	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, eventing.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta)
+	applyingEventPolicies, err := auth.GetEventPoliciesForResource(r.EventPolicyLister, eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta)
 	if err != nil {
 		return fmt.Errorf("could not get applying eventpolicies for kafkasink: %v", err)
 	}
@@ -193,7 +192,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	var audience *string
 	if features.IsOIDCAuthentication() {
-		audience = ptr.To(auth.GetAudience(eventing.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta))
+		audience = ptr.To(auth.GetAudience(eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"), ks.ObjectMeta))
 		logging.FromContext(ctx).Debugw("Setting the kafkasinks audience", zap.String("audience", *audience))
 	} else {
 		logging.FromContext(ctx).Debug("Clearing the kafkasinks audience as OIDC is not enabled")
@@ -299,13 +298,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	return nil
 }
 
-func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventingv1alpha1.KafkaSink) reconciler.Event {
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		return r.finalizeKind(ctx, ks)
 	})
 }
 
-func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) error {
+func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventingv1alpha1.KafkaSink) error {
 	logger := kafkalogging.CreateFinalizeMethodLogger(ctx, ks)
 
 	// Get contract config map.
@@ -397,7 +396,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	return nil
 }
 
-func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {
+func topicConfigFromSinkSpec(kss *eventingv1alpha1.KafkaSinkSpec) *kafka.TopicConfig {
 	return &kafka.TopicConfig{
 		TopicDetail: sarama.TopicDetail{
 			NumPartitions:     *kss.NumPartitions,

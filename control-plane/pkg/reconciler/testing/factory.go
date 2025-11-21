@@ -35,7 +35,6 @@ import (
 	"knative.dev/pkg/reconciler"
 	rtesting "knative.dev/pkg/reconciler/testing"
 
-	fakeeventingkafkabrokerclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	fakekafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
@@ -63,7 +62,7 @@ func NewFactory(env *config.Env, ctor Ctor) rtesting.Factory {
 		}
 
 		ctx, eventingClient := fakeeventingclient.With(ctx, listers.GetEventingObjects()...)
-		ctx, eventingKafkaBrokerClient := fakeeventingkafkabrokerclient.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
+		ctx, eventingKafkaBrokerClient := fakekafkainternals.With(ctx, listers.GetEventingKafkaBrokerObjects()...)
 		ctx, kubeClient := fakekubeclient.With(ctx, listers.GetKubeObjects()...)
 		ctx, kafkaInternalsClient := fakekafkainternals.With(ctx, listers.GetKafkaInternalsObjects()...)
 		ctx, kedaClient := fakekeda.With(ctx, []runtime.Object{}...)

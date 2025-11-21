@@ -19,7 +19,6 @@ package features
 import (
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	testpkg "knative.dev/eventing-kafka-broker/test/pkg"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
@@ -148,7 +147,7 @@ func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
 	kafkaSourceOpts := []manifest.CfgFn{
 		kafkasource.WithSink(service.AsDestinationRef(sinkName)),
 		kafkasource.WithTopics([]string{topic}),
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))

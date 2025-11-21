@@ -51,15 +51,12 @@ import (
 
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
-	consumergroupclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
-	kafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	sourcesclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 const (
@@ -90,7 +87,7 @@ func SetupKafkaSources(prefix string, n int) *feature.Feature {
 		f.Setup("install kafka topic", kafkatopic.Install(topicName))
 		f.Setup(fmt.Sprintf("install kafkasource %s", name), kafkasource.Install(
 			name,
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithTopics([]string{topicName}),
 			kafkasource.WithSink(service.AsDestinationRef(sink)),
 		))
@@ -114,7 +111,7 @@ func deletedKafkaSourcesAreNotPresentInContractConfigMaps(prefix string) feature
 
 		namespace := environment.FromContext(ctx).Namespace()
 
-		kss, err := kafkaclient.Get(ctx).SourcesV1().
+		kss, err := sourcesclient.Get(ctx).SourcesV1().
 			KafkaSources(namespace).
 			List(ctx, metav1.ListOptions{
 				Limit: 2000,
@@ -188,7 +185,7 @@ func ScaleKafkaSource() *feature.Feature {
 		service.WithSelectors(map[string]string{"app": "rekt"})))
 	f.Setup("install kafka topic", kafkatopic.Install(topicName))
 	f.Setup("scale kafkasource", kafkasource.Install(source,
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topicName}),
 		kafkasource.WithSink(service.AsDestinationRef(sink)),
 		kafkasource.WithAnnotations(map[string]string{
@@ -217,7 +214,7 @@ func KafkaSourceInitialOffsetEarliest(count int, topic string) *feature.Feature 
 
 	f.Setup("install kafkasource", kafkasource.Install(
 		source,
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithTopics([]string{topic}),
 		kafkasource.WithInitialOffset(sources.OffsetEarliest),
 		kafkasource.WithSink(service.AsDestinationRef(sink)),
@@ -258,7 +255,7 @@ func compareConsumerGroup(source string, cmp func(*internalscg.ConsumerGroup) er
 			t.Fatal(err)
 		}
 
-		InternalsClient := consumergroupclient.Get(ctx)
+		InternalsClient := sourcesclient.Get(ctx)
 		cg, err := InternalsClient.InternalV1alpha1().
 			ConsumerGroups(ns).
 			Get(ctx, string(ks.UID), metav1.GetOptions{})
@@ -324,7 +321,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 	switch kafkaSourceCfg.authMech {
 	case TLSMech:
 		f.Setup("Create TLS secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), TLSSecretName, secretName))
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslArr),
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testpkg.BootstrapServersSslArr),
 			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 			kafkasource.WithTLSCert(secretName, "user.crt"),
 			kafkasource.WithTLSKey(secretName, "user.key"),
@@ -333,7 +330,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 		)
 	case SASLMech:
 		f.Setup("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), SASLSecretName, secretName))
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersSslSaslScramArr),
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testpkg.BootstrapServersSslSaslScramArr),
 			kafkasource.WithSASLEnabled(),
 			kafkasource.WithSASLUser(secretName, "user"),
 			kafkasource.WithSASLPassword(secretName, "password"),
@@ -342,7 +339,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 			kafkasource.WithTLSCACert(secretName, "ca.crt"),
 		)
 	default:
-		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr))
+		kafkaSourceOpts = append(kafkaSourceOpts, kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr))
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSourceCfg.sourceName, kafkaSourceOpts...))
@@ -626,7 +623,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 		d.CACerts = eventshub.GetCaCerts(ctx)
 		kafkasource.Install(kafkaSource,
 			kafkasource.WithTopics([]string{topic}),
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithSink(d),
 		)(ctx, t)
 	})
@@ -684,7 +681,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 		}
 		kafkasource.Install(kafkaSource,
 			kafkasource.WithTopics([]string{topic}),
-			kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+			kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 			kafkasource.WithSink(d),
 		)(ctx, t)
 	})
@@ -751,7 +748,7 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 		kafkasource.WithSink(service.AsDestinationRef(receiver)),
 		// Keep the original topic.
 		kafkasource.WithTopics([]string{topic}),
-		kafkasource.WithBootstrapServers(testingpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
 		kafkasource.WithOrdering(string(sources.Unordered)),
 		kafkasource.WithTLSDisabled(),
 		kafkasource.WithSASLDisabled(),
