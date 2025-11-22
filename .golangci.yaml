@@ -18,9 +18,7 @@ linters:
     staticcheck:
       checks:
         - all
-        - "-ST1019"
         - "-ST1003"
-        - "-ST1012"
         - "-ST1016"
   exclusions:
     generated: lax
