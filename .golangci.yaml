@@ -19,6 +19,10 @@ linters:
       checks:
         - all
         - "-ST1003"
+<<<<<<< HEAD
+=======
+        - "-ST1016"
+>>>>>>> bdbf8919cc48e1935609040f7c86d89927e98f45
   exclusions:
     generated: lax
     presets:

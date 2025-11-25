@@ -52,7 +52,7 @@ echo "Async profiler URL: ${ASYNC_PROFILER_URL}"
 echo "Kafka URL: ${KAFKA_URL}"
 
 # Build the data plane.
-cd "${PROJECT_ROOT_DIR}" && ./mvnw package -DskipTests -Dlicense.skip -B -U --no-transfer-progress && cd - || exit 1
+cd "${PROJECT_ROOT_DIR}" && ./mvnw clean package -DskipTests -Dlicense.skip -B -U --no-transfer-progress && cd - || exit 1
 
 # Download async profiler.
 rm -rf async-profiler
@@ -88,7 +88,7 @@ export CONSUMER_CONFIG_FILE_PATH=${RESOURCES_DIR}/config-kafka-broker-consumer.p
 export HTTPSERVER_CONFIG_FILE_PATH=${RESOURCES_DIR}/config-kafka-broker-httpserver.properties
 export WEBCLIENT_CONFIG_FILE_PATH=${RESOURCES_DIR}/config-kafka-broker-webclient.properties
 export DATA_PLANE_CONFIG_FILE_PATH=${RESOURCES_DIR}/ingress.json
-export CONFIG_TRACING_PATH=${RESOURCES_DIR}/tracing
+export CONFIG_OBSERVABILITY_PATH=${RESOURCES_DIR}/observability
 export LIVENESS_PROBE_PATH=/healthz
 export READINESS_PROBE_PATH=/readyz
 export METRICS_PATH=/metrics

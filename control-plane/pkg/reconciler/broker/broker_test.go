@@ -111,8 +111,8 @@ var (
 		Kind:    "Broker",
 	}
 
-	createTopicError = fmt.Errorf("failed to create topic")
-	deleteTopicError = fmt.Errorf("failed to delete topic")
+	errCreateTopic = fmt.Errorf("failed to create topic")
+	errDeleteTopic = fmt.Errorf("failed to delete topic")
 
 	linear                    = eventingduck.BackoffPolicyLinear
 	exponential               = eventingduck.BackoffPolicyExponential
@@ -640,7 +640,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to create topic: %s: %v",
-					BrokerTopic(), createTopicError,
+					BrokerTopic(), errCreateTopic,
 				),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
@@ -662,7 +662,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnCreateTopic: createTopicError,
+				wantErrorOnCreateTopic: errCreateTopic,
 			},
 		},
 		{
@@ -2961,7 +2961,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 					corev1.EventTypeWarning,
 					"InternalError",
 					"failed to delete topic %s: %v",
-					BrokerTopic(), deleteTopicError,
+					BrokerTopic(), errDeleteTopic,
 				),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
@@ -2970,7 +2970,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: deleteTopicError,
+				wantErrorOnDeleteTopic: errDeleteTopic,
 				testProber:             probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
@@ -3259,14 +3259,14 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			featureFlags = apisconfig.DefaultFeaturesConfig()
 		}
 
-		var onCreateTopicError error
+		var onerrCreateTopic error
 		if want, ok := row.OtherTestData[wantErrorOnCreateTopic]; ok {
-			onCreateTopicError = want.(error)
+			onerrCreateTopic = want.(error)
 		}
 
-		var onDeleteTopicError error
+		var onerrDeleteTopic error
 		if want, ok := row.OtherTestData[wantErrorOnDeleteTopic]; ok {
-			onDeleteTopicError = want.(error)
+			onerrDeleteTopic = want.(error)
 		}
 
 		expectedTopicDetail := defaultTopicDetail
@@ -3309,8 +3309,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
 					ExpectedTopicDetail:                    expectedTopicDetail,
-					ErrorOnCreateTopic:                     onCreateTopicError,
-					ErrorOnDeleteTopic:                     onDeleteTopicError,
+					ErrorOnCreateTopic:                     onerrCreateTopic,
+					ErrorOnDeleteTopic:                     onerrDeleteTopic,
 					ExpectedTopics:                         []string{expectedTopicName},
 					ExpectedTopicsMetadataOnDescribeTopics: metadata,
 					T:                                      t,
