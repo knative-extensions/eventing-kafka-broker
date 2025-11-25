@@ -44,8 +44,7 @@ import (
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	v1 "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventingv1 "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/eventing/pkg/auth"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
@@ -113,7 +112,7 @@ func (b EgressBuilder) build(useDialectedFilters bool) *contract.Egress {
 }
 
 func TestTriggerReconciler(t *testing.T) {
-	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
+	eventingv1.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
@@ -123,7 +122,7 @@ func TestTriggerReconciler(t *testing.T) {
 }
 
 func TestTriggerWithNewFiltersReconciler(t *testing.T) {
-	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
+	eventingv1.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
@@ -864,7 +863,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Objects: []runtime.Object{
 				newTrigger(),
 				NewBroker(
-					func(v *eventing.Broker) { v.Status.InitializeConditions() },
+					func(v *eventingv1.Broker) { v.Status.InitializeConditions() },
 					StatusBrokerConfigNotParsed("wrong"),
 				),
 			},
@@ -1018,7 +1017,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				newTrigger(
 					withFilters(
 						map[string]string{"type": "type1"},
-						[]eventing.SubscriptionsAPIFilter{
+						[]eventingv1.SubscriptionsAPIFilter{
 							{
 								Exact: map[string]string{
 									"type": "type1",
@@ -1080,7 +1079,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withFilters(
 							map[string]string{"type": "type1"},
-							[]eventing.SubscriptionsAPIFilter{
+							[]eventingv1.SubscriptionsAPIFilter{
 								{
 									Exact: map[string]string{
 										"type": "type1",
@@ -1113,7 +1112,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				newTrigger(
 					withFilters(
 						map[string]string{"type": "type1"},
-						[]eventing.SubscriptionsAPIFilter{
+						[]eventingv1.SubscriptionsAPIFilter{
 							{
 								Exact: map[string]string{
 									"type": "type1",
@@ -1391,7 +1390,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withFilters(
 							map[string]string{"type": "type1"},
-							[]eventing.SubscriptionsAPIFilter{
+							[]eventingv1.SubscriptionsAPIFilter{
 								{
 									Exact: map[string]string{
 										"type": "type1",
@@ -1427,7 +1426,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				newTrigger(
 					withFilters(
 						map[string]string{"ext": "extval"},
-						[]eventing.SubscriptionsAPIFilter{
+						[]eventingv1.SubscriptionsAPIFilter{
 							{
 								Exact: map[string]string{
 									"ext": "extval",
@@ -1696,7 +1695,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 					Object: newTrigger(
 						withFilters(
 							map[string]string{"ext": "extval"},
-							[]eventing.SubscriptionsAPIFilter{
+							[]eventingv1.SubscriptionsAPIFilter{
 								{
 									Exact: map[string]string{
 										"ext": "extval",
@@ -2119,9 +2118,9 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 			Name: "Don't reconcile trigger associated with a broker with a different broker class",
 			Objects: []runtime.Object{
 				newTrigger(),
-				NewBroker(func(b *eventing.Broker) {
+				NewBroker(func(b *eventingv1.Broker) {
 					b.Annotations = map[string]string{
-						eventing.BrokerClassAnnotationKey: "MTChannelBasedBroker",
+						eventingv1.BrokerClassAnnotationKey: "MTChannelBasedBroker",
 					}
 				}),
 			},
@@ -2307,7 +2306,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 	useTable(t, table, &env)
 }
 
-func withDelivery(trigger *eventing.Trigger) {
+func withDelivery(trigger *eventingv1.Trigger) {
 	trigger.Spec.Delivery = &eventingduck.DeliverySpec{
 		DeadLetterSink: &duckv1.Destination{URI: url},
 		Retry:          pointer.Int32(3),
@@ -2317,7 +2316,7 @@ func withDelivery(trigger *eventing.Trigger) {
 	}
 }
 
-func withDeliveryTLS(trigger *eventing.Trigger) {
+func withDeliveryTLS(trigger *eventingv1.Trigger) {
 	trigger.Spec.Delivery = &eventingduck.DeliverySpec{
 		DeadLetterSink: &duckv1.Destination{URI: url, CACerts: pointer.String(string(eventingtlstesting.CA))},
 		Retry:          pointer.Int32(3),
@@ -3231,7 +3230,7 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 		append(
 			options,
 			reconcilertesting.WithTriggerSubscriberURI(ServiceURL),
-			func(t *eventing.Trigger) {
+			func(t *eventingv1.Trigger) {
 				t.UID = TriggerUUID
 			},
 		)...,
@@ -3239,7 +3238,7 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 }
 
 func makeTriggerOIDCServiceAccount() *corev1.ServiceAccount {
-	return auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+	return auth.GetOIDCServiceAccountForResource(eventingv1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
 		Name:      TriggerName,
 		Namespace: TriggerNamespace,
 		UID:       TriggerUUID,
@@ -3247,7 +3246,7 @@ func makeTriggerOIDCServiceAccount() *corev1.ServiceAccount {
 }
 
 func makeTriggerOIDCServiceAccountWithoutOwnerRef() *corev1.ServiceAccount {
-	sa := auth.GetOIDCServiceAccountForResource(v1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
+	sa := auth.GetOIDCServiceAccountForResource(eventingv1.SchemeGroupVersion.WithKind("Trigger"), metav1.ObjectMeta{
 		Name:      TriggerName,
 		Namespace: TriggerNamespace,
 		UID:       TriggerUUID,
@@ -3264,7 +3263,7 @@ func newTriggerWithCert(options ...reconcilertesting.TriggerOption) runtime.Obje
 		append(
 			options,
 			WithTriggerSubscriberURIAndCert(ServiceURL),
-			func(t *eventing.Trigger) {
+			func(t *eventingv1.Trigger) {
 				t.UID = TriggerUUID
 			},
 		)...,
@@ -3273,7 +3272,7 @@ func newTriggerWithCert(options ...reconcilertesting.TriggerOption) runtime.Obje
 
 func WithTriggerSubscriberURIAndCert(rawurl string) reconcilertesting.TriggerOption {
 	uri, _ := apis.ParseURL(rawurl)
-	return func(t *v1.Trigger) {
+	return func(t *eventingv1.Trigger) {
 		t.Spec.Subscriber = duckv1.Destination{
 			URI:     uri,
 			CACerts: pointer.String(string(eventingtlstesting.CA)),
@@ -3281,19 +3280,19 @@ func WithTriggerSubscriberURIAndCert(rawurl string) reconcilertesting.TriggerOpt
 	}
 }
 
-func withFilters(attributes eventing.TriggerFilterAttributes, newFilters []eventing.SubscriptionsAPIFilter, withNewFilters bool) func(*eventing.Trigger) {
-	return func(e *eventing.Trigger) {
+func withFilters(attributes eventingv1.TriggerFilterAttributes, newFilters []eventingv1.SubscriptionsAPIFilter, withNewFilters bool) func(*eventingv1.Trigger) {
+	return func(e *eventingv1.Trigger) {
 		if withNewFilters {
 			e.Spec.Filters = newFilters
 		} else {
-			e.Spec.Filter = &eventing.TriggerFilter{
+			e.Spec.Filter = &eventingv1.TriggerFilter{
 				Attributes: attributes,
 			}
 		}
 	}
 }
 
-func withSubscriberURI(trigger *eventing.Trigger) {
+func withSubscriberURI(trigger *eventingv1.Trigger) {
 	u, err := apis.ParseURL(ServiceURL)
 	if err != nil {
 		panic(err)
@@ -3301,8 +3300,8 @@ func withSubscriberURI(trigger *eventing.Trigger) {
 	trigger.Status.SubscriberURI = u
 }
 
-func withDeadLetterSinkURI(uri string) func(trigger *eventing.Trigger) {
-	return func(trigger *eventing.Trigger) {
+func withDeadLetterSinkURI(uri string) func(trigger *eventingv1.Trigger) {
+	return func(trigger *eventingv1.Trigger) {
 		u, err := apis.ParseURL(uri)
 		if err != nil {
 			panic(err)
@@ -3312,8 +3311,8 @@ func withDeadLetterSinkURI(uri string) func(trigger *eventing.Trigger) {
 	}
 }
 
-func withDeadLetterSinkURIandCACert(uri string, cert string) func(trigger *eventing.Trigger) {
-	return func(trigger *eventing.Trigger) {
+func withDeadLetterSinkURIandCACert(uri string, cert string) func(trigger *eventingv1.Trigger) {
+	return func(trigger *eventingv1.Trigger) {
 		u, err := apis.ParseURL(uri)
 		if err != nil {
 			panic(err)
@@ -3324,18 +3323,18 @@ func withDeadLetterSinkURIandCACert(uri string, cert string) func(trigger *event
 	}
 }
 
-func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder) func(*eventing.Trigger) {
-	return func(t *eventing.Trigger) {
+func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder) func(*eventingv1.Trigger) {
+	return func(t *eventingv1.Trigger) {
 		t.GetConditionSet().Manage(&t.Status).MarkTrueWithReason(
-			eventing.TriggerConditionSubscriberResolved,
-			string(eventing.TriggerConditionSubscriberResolved),
+			eventingv1.TriggerConditionSubscriberResolved,
+			string(eventingv1.TriggerConditionSubscriberResolved),
 			fmt.Sprintf("Subscriber will receive events with the delivery order: %s", deliveryOrder.String()),
 		)
 	}
 }
 
-func withTriggerStatusGroupIdAnnotation(groupId string) func(*eventing.Trigger) {
-	return func(t *eventing.Trigger) {
+func withTriggerStatusGroupIdAnnotation(groupId string) func(*eventingv1.Trigger) {
+	return func(t *eventingv1.Trigger) {
 		if t.Status.Annotations == nil {
 			t.Status.Annotations = make(map[string]string, 1)
 		}

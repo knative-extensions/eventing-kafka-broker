@@ -49,8 +49,6 @@ import (
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	eventingkafkasourcereconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/sources/v1/kafkasource"
 
-	fakeconsumergroupinformer "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
-
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
@@ -1609,7 +1607,7 @@ func TestReconcileKind(t *testing.T) {
 
 		reconciler := &Reconciler{
 			ConsumerGroupLister:  listers.GetConsumerGroupLister(),
-			InternalsClient:      fakeconsumergroupinformer.Get(ctx),
+			InternalsClient:      fakeeventingkafkaclient.Get(ctx),
 			KedaClient:           kedaclient.Get(ctx),
 			KafkaFeatureFlags:    configapis.DefaultFeaturesConfig(),
 			ServiceAccountLister: listers.GetServiceAccountLister(),
