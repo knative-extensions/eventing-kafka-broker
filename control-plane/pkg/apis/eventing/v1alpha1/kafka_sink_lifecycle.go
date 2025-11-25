@@ -36,18 +36,18 @@ func (ks *KafkaSink) GetConditionSet() apis.ConditionSet {
 	return conditionSet
 }
 
-func (ks *KafkaSinkStatus) GetConditionSet() apis.ConditionSet {
+func (kss *KafkaSinkStatus) GetConditionSet() apis.ConditionSet {
 	return conditionSet
 }
 
 // SetAddress makes this Kafka Sink addressable by setting the URI. It also
 // sets the ConditionAddressable to true.
-func (ks *KafkaSinkStatus) SetAddress(addr *duckv1.Addressable) {
-	ks.Address = addr
+func (kss *KafkaSinkStatus) SetAddress(addr *duckv1.Addressable) {
+	kss.Address = addr
 	if addr != nil {
-		ks.GetConditionSet().Manage(ks).MarkTrue(ConditionAddressable)
+		kss.GetConditionSet().Manage(kss).MarkTrue(ConditionAddressable)
 	} else {
-		ks.GetConditionSet().Manage(ks).MarkFalse(ConditionAddressable, "nil URL", "URL is nil")
+		kss.GetConditionSet().Manage(kss).MarkFalse(ConditionAddressable, "nil URL", "URL is nil")
 	}
 }
 

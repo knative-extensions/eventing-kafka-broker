@@ -166,18 +166,18 @@ type ConsumerGroupList struct {
 }
 
 // GetGroupVersionKind returns GroupVersionKind for ConsumerGroup.
-func (c *ConsumerGroup) GetGroupVersionKind() schema.GroupVersionKind {
+func (cg *ConsumerGroup) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("ConsumerGroup")
 }
 
 // GetUntypedSpec returns the spec of the ConsumerGroup.
-func (c *ConsumerGroup) GetUntypedSpec() interface{} {
-	return c.Spec
+func (cg *ConsumerGroup) GetUntypedSpec() interface{} {
+	return cg.Spec
 }
 
 // GetStatus retrieves the status of the ConsumerGroup. Implements the KRShaped interface.
-func (c *ConsumerGroup) GetStatus() *duckv1.Status {
-	return &c.Status.Status
+func (cg *ConsumerGroup) GetStatus() *duckv1.Status {
+	return &cg.Status.Status
 }
 
 // ConsumerFromTemplate returns a Consumer from the Consumer template in the ConsumerGroup spec.

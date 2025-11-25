@@ -150,13 +150,13 @@ type KafkaSourceStatus struct {
 	v1alpha1.Placeable `json:",inline"`
 }
 
-func (*KafkaSource) GetGroupVersionKind() schema.GroupVersionKind {
+func (ks *KafkaSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("KafkaSource")
 }
 
 // GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
-func (k *KafkaSource) GetStatus() *duckv1.Status {
-	return &k.Status.Status
+func (ks *KafkaSource) GetStatus() *duckv1.Status {
+	return &ks.Status.Status
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

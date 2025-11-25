@@ -72,44 +72,44 @@ func RegisterAlternateKafkaConditionSet(conditionSet apis.ConditionSet) {
 }
 
 // GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
-func (*KafkaSource) GetConditionSet() apis.ConditionSet {
+func (ks *KafkaSource) GetConditionSet() apis.ConditionSet {
 	return KafkaSourceCondSet
 }
 
-func (s *KafkaSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
-	return KafkaSourceCondSet.Manage(s).GetCondition(t)
+func (kss *KafkaSourceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
+	return KafkaSourceCondSet.Manage(kss).GetCondition(t)
 }
 
 // IsReady returns true if the resource is ready overall.
-func (s *KafkaSourceStatus) IsReady() bool {
-	return KafkaSourceCondSet.Manage(s).IsHappy()
+func (kss *KafkaSourceStatus) IsReady() bool {
+	return KafkaSourceCondSet.Manage(kss).IsHappy()
 }
 
 // InitializeConditions sets relevant unset conditions to Unknown state.
-func (s *KafkaSourceStatus) InitializeConditions() {
-	KafkaSourceCondSet.Manage(s).InitializeConditions()
+func (kss *KafkaSourceStatus) InitializeConditions() {
+	KafkaSourceCondSet.Manage(kss).InitializeConditions()
 }
 
 // MarkSink sets the condition that the source has a sink configured.
-func (s *KafkaSourceStatus) MarkSink(addr *duckv1.Addressable) {
+func (kss *KafkaSourceStatus) MarkSink(addr *duckv1.Addressable) {
 	if addr.URL != nil && !addr.URL.IsEmpty() {
-		s.SinkURI = addr.URL
-		s.SinkCACerts = addr.CACerts
-		s.SinkAudience = addr.Audience
-		KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionSinkProvided)
+		kss.SinkURI = addr.URL
+		kss.SinkCACerts = addr.CACerts
+		kss.SinkAudience = addr.Audience
+		KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionSinkProvided)
 	} else {
-		KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		KafkaSourceCondSet.Manage(kss).MarkUnknown(KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
 	}
 }
 
 // MarkNoSink sets the condition that the source does not have a sink configured.
-func (s *KafkaSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionSinkProvided, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionSinkProvided, reason, messageFormat, messageA...)
 }
 
-func DeploymentIsAvailable(d *appsv1.DeploymentStatus, def bool) bool {
+func DeploymentIsAvailable(ds *appsv1.DeploymentStatus, def bool) bool {
 	// Check if the Deployment is available.
-	for _, cond := range d.Conditions {
+	for _, cond := range ds.Conditions {
 		if cond.Type == appsv1.DeploymentAvailable {
 			return cond.Status == "True"
 		}
@@ -118,69 +118,69 @@ func DeploymentIsAvailable(d *appsv1.DeploymentStatus, def bool) bool {
 }
 
 // MarkDeployed sets the condition that the source has been deployed.
-func (s *KafkaSourceStatus) MarkDeployed(d *appsv1.Deployment) {
+func (kss *KafkaSourceStatus) MarkDeployed(d *appsv1.Deployment) {
 	if duck.DeploymentIsAvailable(&d.Status, false) {
-		KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionDeployed)
+		KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionDeployed)
 
 		// Propagate the number of consumers
-		s.Consumers = d.Status.Replicas
+		kss.Consumers = d.Status.Replicas
 	} else {
 		// I don't know how to propagate the status well, so just give the name of the Deployment
 		// for now.
-		KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
+		KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionDeployed, "DeploymentUnavailable", "The Deployment '%s' is unavailable.", d.Name)
 	}
 }
 
 // MarkDeploying sets the condition that the source is deploying.
-func (s *KafkaSourceStatus) MarkDeploying(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionDeployed, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkDeploying(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkUnknown(KafkaConditionDeployed, reason, messageFormat, messageA...)
 }
 
 // MarkNotDeployed sets the condition that the source has not been deployed.
-func (s *KafkaSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionDeployed, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkNotDeployed(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionDeployed, reason, messageFormat, messageA...)
 }
 
-func (s *KafkaSourceStatus) MarkKeyTypeCorrect() {
-	KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionKeyType)
+func (kss *KafkaSourceStatus) MarkKeyTypeCorrect() {
+	KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionKeyType)
 }
 
-func (s *KafkaSourceStatus) MarkKeyTypeIncorrect(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionKeyType, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkKeyTypeIncorrect(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionKeyType, reason, messageFormat, messageA...)
 }
 
-func (cs *KafkaSourceStatus) MarkConnectionEstablished() {
-	KafkaSourceCondSet.Manage(cs).MarkTrue(KafkaConditionConnectionEstablished)
+func (kss *KafkaSourceStatus) MarkConnectionEstablished() {
+	KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionConnectionEstablished)
 }
 
-func (cs *KafkaSourceStatus) MarkConnectionNotEstablished(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(cs).MarkFalse(KafkaConditionConnectionEstablished, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkConnectionNotEstablished(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionConnectionEstablished, reason, messageFormat, messageA...)
 }
 
-func (s *KafkaSourceStatus) MarkInitialOffsetCommitted() {
-	KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionInitialOffsetsCommitted)
+func (kss *KafkaSourceStatus) MarkInitialOffsetCommitted() {
+	KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionInitialOffsetsCommitted)
 }
 
-func (s *KafkaSourceStatus) MarkInitialOffsetNotCommitted(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionInitialOffsetsCommitted, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkInitialOffsetNotCommitted(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionInitialOffsetsCommitted, reason, messageFormat, messageA...)
 }
 
-func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedSucceeded() {
-	KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionOIDCIdentityCreated)
+func (kss *KafkaSourceStatus) MarkOIDCIdentityCreatedSucceeded() {
+	KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionOIDCIdentityCreated)
 }
 
-func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedSucceededWithReason(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkTrueWithReason(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkOIDCIdentityCreatedSucceededWithReason(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkTrueWithReason(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
 }
 
-func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedFailed(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkOIDCIdentityCreatedFailed(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
 }
 
-func (s *KafkaSourceStatus) MarkOIDCIdentityCreatedUnknown(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkUnknown(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkOIDCIdentityCreatedUnknown(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkUnknown(KafkaConditionOIDCIdentityCreated, reason, messageFormat, messageA...)
 }
 
-func (s *KafkaSourceStatus) UpdateConsumerGroupStatus(status string) {
-	s.Claims = status
+func (kss *KafkaSourceStatus) UpdateConsumerGroupStatus(status string) {
+	kss.Claims = status
 }

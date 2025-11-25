@@ -26,18 +26,18 @@ import (
 )
 
 // ConvertTo implements apis.Convertible
-func (channel *KafkaChannel) ConvertTo(_ context.Context, to apis.Convertible) error {
+func (kc *KafkaChannel) ConvertTo(_ context.Context, to apis.Convertible) error {
 	switch sink := to.(type) {
 	case *v1.KafkaChannel:
-		channel.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		kc.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
 		sink.Spec = v1.KafkaChannelSpec{
-			NumPartitions:     channel.Spec.NumPartitions,
-			ReplicationFactor: channel.Spec.ReplicationFactor,
-			RetentionDuration: channel.Spec.RetentionDuration,
-			ChannelableSpec:   *channel.Spec.ChannelableSpec.DeepCopy(),
+			NumPartitions:     kc.Spec.NumPartitions,
+			ReplicationFactor: kc.Spec.ReplicationFactor,
+			RetentionDuration: kc.Spec.RetentionDuration,
+			ChannelableSpec:   *kc.Spec.ChannelableSpec.DeepCopy(),
 		}
 		sink.Status = v1.KafkaChannelStatus{
-			ChannelableStatus: *channel.Status.ChannelableStatus.DeepCopy(),
+			ChannelableStatus: *kc.Status.ChannelableStatus.DeepCopy(),
 		}
 		return nil
 	default:
@@ -46,17 +46,17 @@ func (channel *KafkaChannel) ConvertTo(_ context.Context, to apis.Convertible) e
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaChannel) ConvertFrom(_ context.Context, from apis.Convertible) error {
+func (kc *KafkaChannel) ConvertFrom(_ context.Context, from apis.Convertible) error {
 	switch channel := from.(type) {
 	case *v1.KafkaChannel:
-		channel.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
-		sink.Spec = KafkaChannelSpec{
+		channel.ObjectMeta.DeepCopyInto(&kc.ObjectMeta)
+		kc.Spec = KafkaChannelSpec{
 			NumPartitions:     channel.Spec.NumPartitions,
 			ReplicationFactor: channel.Spec.ReplicationFactor,
 			RetentionDuration: channel.Spec.RetentionDuration,
 			ChannelableSpec:   *channel.Spec.ChannelableSpec.DeepCopy(),
 		}
-		sink.Status = KafkaChannelStatus{
+		kc.Status = KafkaChannelStatus{
 			ChannelableStatus: *channel.Status.ChannelableStatus.DeepCopy(),
 		}
 		return nil

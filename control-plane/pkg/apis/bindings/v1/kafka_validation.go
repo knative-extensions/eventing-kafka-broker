@@ -23,6 +23,6 @@ import (
 )
 
 // Validate ensures KafkaBinding is properly configured.
-func (r *KafkaBinding) Validate(ctx context.Context) *apis.FieldError {
+func (kb *KafkaBinding) Validate(ctx context.Context) *apis.FieldError {
 	return nil
 }
