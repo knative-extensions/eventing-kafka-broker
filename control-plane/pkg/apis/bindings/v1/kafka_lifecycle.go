@@ -31,121 +31,121 @@ import (
 var kfbCondSet = apis.NewLivingConditionSet()
 
 // GetGroupVersionKind returns the GroupVersionKind.
-func (*KafkaBinding) GetGroupVersionKind() schema.GroupVersionKind {
+func (kb *KafkaBinding) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("KafkaBinding")
 }
 
 // GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
-func (*KafkaBinding) GetConditionSet() apis.ConditionSet {
+func (kb *KafkaBinding) GetConditionSet() apis.ConditionSet {
 	return kfbCondSet
 }
 
 // GetUntypedSpec implements apis.HasSpec
-func (s *KafkaBinding) GetUntypedSpec() interface{} {
-	return s.Spec
+func (kb *KafkaBinding) GetUntypedSpec() interface{} {
+	return kb.Spec
 }
 
 // GetSubject implements psbinding.Bindable
-func (sb *KafkaBinding) GetSubject() tracker.Reference {
-	return sb.Spec.Subject
+func (kb *KafkaBinding) GetSubject() tracker.Reference {
+	return kb.Spec.Subject
 }
 
 // GetBindingStatus implements psbinding.Bindable
-func (sb *KafkaBinding) GetBindingStatus() duck.BindableStatus {
-	return &sb.Status
+func (kb *KafkaBinding) GetBindingStatus() duck.BindableStatus {
+	return &kb.Status
 }
 
 // SetObservedGeneration implements psbinding.BindableStatus
-func (sbs *KafkaBindingStatus) SetObservedGeneration(gen int64) {
-	sbs.ObservedGeneration = gen
+func (kbs *KafkaBindingStatus) SetObservedGeneration(gen int64) {
+	kbs.ObservedGeneration = gen
 }
 
 // InitializeConditions populates the KafkaBindingStatus's conditions field
 // with all of its conditions configured to Unknown.
-func (sbs *KafkaBindingStatus) InitializeConditions() {
-	kfbCondSet.Manage(sbs).InitializeConditions()
+func (kbs *KafkaBindingStatus) InitializeConditions() {
+	kfbCondSet.Manage(kbs).InitializeConditions()
 }
 
 // MarkBindingUnavailable marks the KafkaBinding's Ready condition to False with
 // the provided reason and message.
-func (sbs *KafkaBindingStatus) MarkBindingUnavailable(reason, message string) {
-	kfbCondSet.Manage(sbs).MarkFalse(KafkaBindingConditionReady, reason, message)
+func (kbs *KafkaBindingStatus) MarkBindingUnavailable(reason, message string) {
+	kfbCondSet.Manage(kbs).MarkFalse(KafkaBindingConditionReady, reason, message)
 }
 
 // MarkBindingAvailable marks the KafkaBinding's Ready condition to True.
-func (sbs *KafkaBindingStatus) MarkBindingAvailable() {
-	kfbCondSet.Manage(sbs).MarkTrue(KafkaBindingConditionReady)
+func (kbs *KafkaBindingStatus) MarkBindingAvailable() {
+	kfbCondSet.Manage(kbs).MarkTrue(KafkaBindingConditionReady)
 }
 
 // Do implements psbinding.Bindable
-func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
+func (kb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 	// First undo so that we can just unconditionally append below.
-	kfb.Undo(ctx, ps)
+	kb.Undo(ctx, ps)
 
 	spec := ps.Spec.Template.Spec
 	for i := range spec.InitContainers {
 		spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 			Name:  "KAFKA_BOOTSTRAP_SERVERS",
-			Value: strings.Join(kfb.Spec.BootstrapServers, ","),
+			Value: strings.Join(kb.Spec.BootstrapServers, ","),
 		})
-		if kfb.Spec.Net.SASL.Enable {
+		if kb.Spec.Net.SASL.Enable {
 			spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 				Name:  "KAFKA_NET_SASL_ENABLE",
 				Value: "true",
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_SASL_TYPE",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.SASL.Type.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.SASL.Type.SecretKeyRef,
 				},
 			})
-			if kfb.Spec.Net.SASL.User.SecretKeyRef != nil {
+			if kb.Spec.Net.SASL.User.SecretKeyRef != nil {
 				spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_USER",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.User.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.User.SecretKeyRef,
 					},
 				}, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_PASSWORD",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.Password.SecretKeyRef,
 					},
 				})
 			}
-			if kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
+			if kb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
 				spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_TOKEN_PROVIDER",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
 					},
 				})
 			}
-			if kfb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
+			if kb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
 				spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_ROLE_ARN",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.RoleARN.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.RoleARN.SecretKeyRef,
 					},
 				})
 			}
 		}
-		if kfb.Spec.Net.TLS.Enable {
+		if kb.Spec.Net.TLS.Enable {
 			spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 				Name:  "KAFKA_NET_TLS_ENABLE",
 				Value: "true",
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_TLS_CERT",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.TLS.Cert.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.TLS.Cert.SecretKeyRef,
 				},
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_TLS_KEY",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.TLS.Key.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.TLS.Key.SecretKeyRef,
 				},
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_TLS_CA_CERT",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.TLS.CACert.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.TLS.CACert.SecretKeyRef,
 				},
 			})
 		}
@@ -154,74 +154,74 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 	for i := range spec.Containers {
 		spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 			Name:  "KAFKA_BOOTSTRAP_SERVERS",
-			Value: strings.Join(kfb.Spec.BootstrapServers, ","),
+			Value: strings.Join(kb.Spec.BootstrapServers, ","),
 		})
 
-		if kfb.Spec.Net.SASL.Enable {
+		if kb.Spec.Net.SASL.Enable {
 			spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 				Name:  "KAFKA_NET_SASL_ENABLE",
 				Value: "true",
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_SASL_TYPE",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.SASL.Type.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.SASL.Type.SecretKeyRef,
 				},
 			})
-			if kfb.Spec.Net.SASL.User.SecretKeyRef != nil {
+			if kb.Spec.Net.SASL.User.SecretKeyRef != nil {
 				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_USER",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.User.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.User.SecretKeyRef,
 					},
 				}, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_PASSWORD",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.Password.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.Password.SecretKeyRef,
 					},
 				})
 			}
-			if kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
+			if kb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
 				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_TOKEN_PROVIDER",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
 					},
 				})
 			}
-			if kfb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
+			if kb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
 				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_ROLE_ARN",
 					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: kfb.Spec.Net.SASL.RoleARN.SecretKeyRef,
+						SecretKeyRef: kb.Spec.Net.SASL.RoleARN.SecretKeyRef,
 					},
 				})
 			}
 		}
-		if kfb.Spec.Net.TLS.Enable {
+		if kb.Spec.Net.TLS.Enable {
 			spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
 				Name:  "KAFKA_NET_TLS_ENABLE",
 				Value: "true",
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_TLS_CERT",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.TLS.Cert.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.TLS.Cert.SecretKeyRef,
 				},
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_TLS_KEY",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.TLS.Key.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.TLS.Key.SecretKeyRef,
 				},
 			}, corev1.EnvVar{
 				Name: "KAFKA_NET_TLS_CA_CERT",
 				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: kfb.Spec.Net.TLS.CACert.SecretKeyRef,
+					SecretKeyRef: kb.Spec.Net.TLS.CACert.SecretKeyRef,
 				},
 			})
 		}
 	}
 }
 
-func (kfb *KafkaBinding) Undo(ctx context.Context, ps *duckv1.WithPod) {
+func (kb *KafkaBinding) Undo(ctx context.Context, ps *duckv1.WithPod) {
 	spec := ps.Spec.Template.Spec
 
 	for i, c := range spec.InitContainers {

@@ -26,15 +26,15 @@ var (
 	_ apis.Validatable = &ConsumerGroup{}
 )
 
-func (c *ConsumerGroup) Validate(ctx context.Context) *apis.FieldError {
-	ctx = apis.WithinParent(ctx, c.ObjectMeta)
+func (cg *ConsumerGroup) Validate(ctx context.Context) *apis.FieldError {
+	ctx = apis.WithinParent(ctx, cg.ObjectMeta)
 	if apis.IsInUpdate(ctx) {
-		err := c.CheckImmutableFields(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Labels)
+		err := cg.CheckImmutableFields(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Labels)
 		if err != nil {
 			return err
 		}
 	}
-	return c.Spec.Validate(ctx).ViaField("spec")
+	return cg.Spec.Validate(ctx).ViaField("spec")
 }
 
 func (cgs *ConsumerGroupSpec) Validate(ctx context.Context) *apis.FieldError {
@@ -63,9 +63,9 @@ func (cts *ConsumerTemplateSpec) Validate(ctx context.Context) *apis.FieldError 
 	return err
 }
 
-func (c *ConsumerGroup) CheckImmutableFields(ctx context.Context, original map[string]string) *apis.FieldError {
+func (cg *ConsumerGroup) CheckImmutableFields(ctx context.Context, original map[string]string) *apis.FieldError {
 	if orig, ok := original[KafkaChannelNameLabel]; ok {
-		if new, ok := c.Labels[KafkaChannelNameLabel]; !ok || orig != new {
+		if new, ok := cg.Labels[KafkaChannelNameLabel]; !ok || orig != new {
 			return ErrImmutableField("Consumer Group Label",
 				"Removing or modifying the consumer group label is unsupported")
 		}

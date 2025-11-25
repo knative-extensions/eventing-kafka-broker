@@ -27,26 +27,26 @@ import (
 )
 
 // ConvertTo implements apis.Convertible
-func (source *KafkaSource) ConvertTo(ctx context.Context, to apis.Convertible) error {
+func (ks *KafkaSource) ConvertTo(ctx context.Context, to apis.Convertible) error {
 	switch sink := to.(type) {
 	case *v1.KafkaSource:
-		source.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		ks.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
 		sink.Spec = v1.KafkaSourceSpec{
-			Consumers:     source.Spec.Consumers,
-			KafkaAuthSpec: *source.Spec.ConvertToV1(ctx),
-			Topics:        source.Spec.Topics,
-			ConsumerGroup: source.Spec.ConsumerGroup,
-			InitialOffset: v1.Offset(source.Spec.InitialOffset),
-			Delivery:      source.Spec.Delivery,
-			Ordering:      (*v1.DeliveryOrdering)(source.Spec.Ordering),
-			SourceSpec:    source.Spec.SourceSpec,
+			Consumers:     ks.Spec.Consumers,
+			KafkaAuthSpec: *ks.Spec.ConvertToV1(ctx),
+			Topics:        ks.Spec.Topics,
+			ConsumerGroup: ks.Spec.ConsumerGroup,
+			InitialOffset: v1.Offset(ks.Spec.InitialOffset),
+			Delivery:      ks.Spec.Delivery,
+			Ordering:      (*v1.DeliveryOrdering)(ks.Spec.Ordering),
+			SourceSpec:    ks.Spec.SourceSpec,
 		}
 		sink.Status = v1.KafkaSourceStatus{
-			SourceStatus: *source.Status.SourceStatus.DeepCopy(),
-			Consumers:    source.Status.Consumers,
-			Selector:     source.Status.Selector,
-			Claims:       source.Status.Claims,
-			Placeable:    source.Status.Placeable,
+			SourceStatus: *ks.Status.SourceStatus.DeepCopy(),
+			Consumers:    ks.Status.Consumers,
+			Selector:     ks.Status.Selector,
+			Claims:       ks.Status.Claims,
+			Placeable:    ks.Status.Placeable,
 		}
 		return nil
 	default:
@@ -55,14 +55,14 @@ func (source *KafkaSource) ConvertTo(ctx context.Context, to apis.Convertible) e
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaSource) ConvertFrom(ctx context.Context, from apis.Convertible) error {
+func (ks *KafkaSource) ConvertFrom(ctx context.Context, from apis.Convertible) error {
 
 	switch source := from.(type) {
 	case *v1.KafkaSource:
-		source.ObjectMeta.DeepCopyInto(&sink.ObjectMeta)
+		source.ObjectMeta.DeepCopyInto(&ks.ObjectMeta)
 		authSpec := bindingsv1beta1.KafkaAuthSpec{}
 		authSpec.ConvertFromV1(&source.Spec.KafkaAuthSpec)
-		sink.Spec = KafkaSourceSpec{
+		ks.Spec = KafkaSourceSpec{
 			Consumers:     source.Spec.Consumers,
 			KafkaAuthSpec: authSpec,
 			Topics:        source.Spec.Topics,
@@ -72,7 +72,7 @@ func (sink *KafkaSource) ConvertFrom(ctx context.Context, from apis.Convertible)
 			Ordering:      (*DeliveryOrdering)(source.Spec.Ordering),
 			SourceSpec:    source.Spec.SourceSpec,
 		}
-		sink.Status = KafkaSourceStatus{
+		ks.Status = KafkaSourceStatus{
 			SourceStatus: source.Status.SourceStatus,
 			Consumers:    source.Status.Consumers,
 			Selector:     source.Status.Selector,
