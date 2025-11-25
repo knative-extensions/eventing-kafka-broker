@@ -30,10 +30,10 @@ var (
 	KafkaMTSourceCondSet = apis.NewLivingConditionSet(KafkaConditionSinkProvided, KafkaConditionScheduled, KafkaConditionInitialOffsetsCommitted, KafkaConditionConnectionEstablished)
 )
 
-func (s *KafkaSourceStatus) MarkScheduled() {
-	KafkaSourceCondSet.Manage(s).MarkTrue(KafkaConditionScheduled)
+func (kss *KafkaSourceStatus) MarkScheduled() {
+	KafkaSourceCondSet.Manage(kss).MarkTrue(KafkaConditionScheduled)
 }
 
-func (s *KafkaSourceStatus) MarkNotScheduled(reason, messageFormat string, messageA ...interface{}) {
-	KafkaSourceCondSet.Manage(s).MarkFalse(KafkaConditionScheduled, reason, messageFormat, messageA...)
+func (kss *KafkaSourceStatus) MarkNotScheduled(reason, messageFormat string, messageA ...interface{}) {
+	KafkaSourceCondSet.Manage(kss).MarkFalse(KafkaConditionScheduled, reason, messageFormat, messageA...)
 }
