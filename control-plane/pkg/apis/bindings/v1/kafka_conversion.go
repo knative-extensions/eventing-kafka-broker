@@ -24,21 +24,21 @@ import (
 )
 
 // ConvertTo implements apis.Convertible
-func (source *KafkaBinding) ConvertTo(_ context.Context, sink apis.Convertible) error {
+func (kb *KafkaBinding) ConvertTo(_ context.Context, sink apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaBinding) ConvertFrom(_ context.Context, source apis.Convertible) error {
+func (kb *KafkaBinding) ConvertFrom(_ context.Context, source apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", source)
 }
 
 // ConvertTo implements apis.Convertible
-func (source *KafkaAuthSpec) ConvertTo(_ context.Context, sink apis.Convertible) error {
+func (kas *KafkaAuthSpec) ConvertTo(_ context.Context, sink apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaAuthSpec) ConvertFrom(_ context.Context, source apis.Convertible) error {
+func (kas *KafkaAuthSpec) ConvertFrom(_ context.Context, source apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", source)
 }
