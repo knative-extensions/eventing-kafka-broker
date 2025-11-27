@@ -34,20 +34,18 @@ func (c *Consumer) SetDefaults(ctx context.Context) {
 	c.Spec.SetDefaults(ctx)
 }
 
-func (c *ConsumerSpec) SetDefaults(ctx context.Context) {
-	if c.Delivery == nil {
-		c.Delivery = &DeliverySpec{}
+func (cs *ConsumerSpec) SetDefaults(ctx context.Context) {
+	if cs.Delivery == nil {
+		cs.Delivery = &DeliverySpec{}
 	}
-	c.Delivery.SetDefaults(ctx)
-	c.Subscriber.SetDefaults(ctx)
+	cs.Delivery.SetDefaults(ctx)
+	cs.Subscriber.SetDefaults(ctx)
 }
 
-func (d *DeliverySpec) SetDefaults(ctx context.Context) {
-	if d == nil {
-		return
+// Since this is a pointer receiver method, the caller is responsible for ensuring a non-nil receiver
+func (ds *DeliverySpec) SetDefaults(ctx context.Context) {
+	if ds.InitialOffset == "" {
+		ds.InitialOffset = sources.OffsetLatest
 	}
-	if d.InitialOffset == "" {
-		d.InitialOffset = sources.OffsetLatest
-	}
-	d.DeliverySpec.SetDefaults(ctx)
+	ds.DeliverySpec.SetDefaults(ctx)
 }
