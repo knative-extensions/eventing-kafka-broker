@@ -124,7 +124,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -178,7 +178,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -233,7 +233,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -291,7 +291,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -348,7 +348,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							ConsumerKeyTypeConfig("int"),
 						),
@@ -453,7 +453,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -511,7 +511,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
-						SourceNetSaslTls(true),
+						SourceNetSaslTLS(true),
 						StatusSourceSelector(),
 						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
@@ -582,7 +582,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -632,7 +632,7 @@ func TestReconcileKind(t *testing.T) {
 					Object: NewSource(
 						StatusSourceConsumerGroupUnknown(),
 						StatusSourceSinkResolved(""),
-						SourceNetSaslTls(false),
+						SourceNetSaslTLS(false),
 						StatusSourceSelector(),
 						StatusSourceOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),
@@ -665,7 +665,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -726,7 +726,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -780,7 +780,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -813,7 +813,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerGroupIDConfig(SourceConsumerGroup),
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
@@ -880,7 +880,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerGroupIDConfig(SourceConsumerGroup),
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
@@ -947,7 +947,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerGroupIDConfig(SourceConsumerGroup),
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
@@ -1013,7 +1013,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerGroupIDConfig(SourceConsumerGroup),
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
@@ -1066,7 +1066,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1119,7 +1119,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1171,7 +1171,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1224,7 +1224,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1279,7 +1279,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1313,7 +1313,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(SourceConsumerGroup),
+								ConsumerGroupIDConfig(SourceConsumerGroup),
 								ConsumerBootstrapServersConfig(SourceBootstrapServers),
 							),
 							ConsumerAuth(NewConsumerSpecAuth()),
@@ -1368,7 +1368,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1433,7 +1433,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1488,7 +1488,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1547,7 +1547,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(SourceTopics[0], SourceTopics[1]),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
 						),
 						ConsumerAuth(NewConsumerSpecAuth()),
@@ -1663,7 +1663,7 @@ func StatusSourceConsumerGroupReplicas(replicas int32) KRShapedOption {
 	}
 }
 
-func SourceNetSaslTls(withType bool) KRShapedOption {
+func SourceNetSaslTLS(withType bool) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
 		ks.Spec.Net = bindings.KafkaNetSpec{

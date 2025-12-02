@@ -92,9 +92,9 @@ func (a *asyncProber) probe(ctx context.Context, addressable proberAddressable, 
 	var enqueueOnce sync.Once
 
 	for _, IP := range IPs {
-		podUrl := *address
-		podUrl.Host = IP + a.port
-		address := podUrl.String()
+		podURL := *address
+		podURL.Host = IP + a.port
+		address := podURL.String()
 
 		logger := a.logger.
 			With(zap.String("IP", IP)).

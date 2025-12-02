@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bogus_config
+package bogusconfig
 
 import (
 	"context"

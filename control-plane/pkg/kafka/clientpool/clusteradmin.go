@@ -293,8 +293,8 @@ func (a *clusterAdmin) Controller() (*sarama.Broker, error) {
 	return x, err
 }
 
-func (a *clusterAdmin) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
-	x, err := a.clusterAdmin.RemoveMemberFromConsumerGroup(groupId, groupInstanceIds)
+func (a *clusterAdmin) RemoveMemberFromConsumerGroup(groupID string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
+	x, err := a.clusterAdmin.RemoveMemberFromConsumerGroup(groupID, groupInstanceIds)
 	if a.isFatalError(err) {
 		a.onFatalError(err)
 	}

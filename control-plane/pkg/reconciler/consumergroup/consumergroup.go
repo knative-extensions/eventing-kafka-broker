@@ -283,12 +283,12 @@ func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkai
 	}
 	defer kafkaClusterAdminClient.Close()
 
-	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
-	if err = kafkaClusterAdminClient.DeleteConsumerGroup(groupId); err != nil && !errorIsOneOf(err, sarama.ErrUnknownTopicOrPartition, sarama.ErrGroupIDNotFound) {
-		return fmt.Errorf("unable to delete the consumer group %s: %w", groupId, err)
+	groupID := cg.Spec.Template.Spec.Configs.Configs["group.id"]
+	if err = kafkaClusterAdminClient.DeleteConsumerGroup(groupID); err != nil && !errorIsOneOf(err, sarama.ErrUnknownTopicOrPartition, sarama.ErrGroupIDNotFound) {
+		return fmt.Errorf("unable to delete the consumer group %s: %w", groupID, err)
 	}
 
-	logging.FromContext(ctx).Debug("consumer group deleted", zap.String("id", groupId))
+	logging.FromContext(ctx).Debug("consumer group deleted", zap.String("id", groupID))
 	return nil
 }
 
@@ -584,10 +584,10 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	}
 	defer kafkaClient.Close()
 
-	groupId := cg.Spec.Template.Spec.Configs.Configs["group.id"]
+	groupID := cg.Spec.Template.Spec.Configs.Configs["group.id"]
 	topics := cg.Spec.Template.Spec.Topics
 
-	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupId); err != nil {
+	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupID); err != nil {
 		return fmt.Errorf("failed to initialize offset: %w", err)
 	}
 

@@ -133,11 +133,11 @@ func (k kafkaChannelSut) Deploy(ctx sut.Context, destination duckv1.Destination)
 		c.T.Fatal(err)
 	}
 
-	var sutUrl *apis.URL
+	var sutURL *apis.URL
 	if u, err := c.GetAddressableURI(name, k.channelTypeMeta); err != nil {
 		c.T.Fatal(err)
 	} else {
-		sutUrl, err = apis.ParseURL(u)
+		sutURL, err = apis.ParseURL(u)
 		if err != nil {
 			c.T.Fatal(err)
 		}
@@ -149,7 +149,7 @@ func (k kafkaChannelSut) Deploy(ctx sut.Context, destination duckv1.Destination)
 		k.subscriptionOption(),
 	)
 
-	return sutUrl
+	return sutURL
 }
 
 func withDestinationForSubscription(destination *duckv1.Destination) resources.SubscriptionOption {

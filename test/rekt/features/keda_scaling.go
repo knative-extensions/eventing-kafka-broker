@@ -385,12 +385,12 @@ func getTriggerCg(triggerName string) getCgName {
 			return "", err
 		}
 
-		groupId, ok := trig.Status.Annotations[kafka.GroupIdAnnotation]
+		groupID, ok := trig.Status.Annotations[kafka.GroupIDAnnotation]
 		if !ok {
 			return "", fmt.Errorf("no group id annotation on the trigger")
 		}
 
-		return groupId, nil
+		return groupID, nil
 	}
 }
 

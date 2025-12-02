@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package multiple_partition_config
+package multiplepartitionconfig
 
 import (
 	"context"

@@ -33,8 +33,8 @@ type EKKubernetesConfig struct {
 	PodLabels             map[string]string `json:"podLabels,omitempty"`
 	ServiceAnnotations    map[string]string `json:"serviceAnnotations,omitempty"`
 	ServiceLabels         map[string]string `json:"serviceLabels,omitempty"`
-	CpuLimit              resource.Quantity `json:"cpuLimit,omitempty"`
-	CpuRequest            resource.Quantity `json:"cpuRequest,omitempty"`
+	CPULimit              resource.Quantity `json:"cpuLimit,omitempty"`
+	CPURequest            resource.Quantity `json:"cpuRequest,omitempty"`
 	MemoryLimit           resource.Quantity `json:"memoryLimit,omitempty"`
 	MemoryRequest         resource.Quantity `json:"memoryRequest,omitempty"`
 	Replicas              int               `json:"replicas,omitempty"`

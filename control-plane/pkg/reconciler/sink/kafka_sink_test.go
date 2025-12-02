@@ -124,7 +124,7 @@ var DefaultEnv = &config.Env{
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-sink-ingress",
 	SystemNamespace:             "knative-eventing",
-	ContractConfigMapFormat:     base.Json,
+	ContractConfigMapFormat:     base.JSON,
 }
 
 func TestSinkReconciler(t *testing.T) {

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_sink
+package e2esink
 
 import (
 	"context"
@@ -47,9 +47,9 @@ func TestMain(m *testing.M) {
 			log.Printf("Failed to create kube client: %v\n", err)
 		}
 		logger := logging.NewLogger(ctx, kubeClient, logging.CommonLoggingLabels)
-		e2e_sink_err := logger.Start()
+		e2eSinkErr := logger.Start()
 		if err != nil {
-			fmt.Printf("failed to start logger: %s", e2e_sink_err.Error())
+			fmt.Printf("failed to start logger: %s", e2eSinkErr.Error())
 		}
 		return m.Run()
 	}())

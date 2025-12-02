@@ -52,8 +52,8 @@ func TestCompositeProber(t *testing.T) {
 		responseStatusCode       int
 		wantStatus               Status
 		wantRequeueCountMin      int
-		wantHttpRequestCountMin  int
-		wantHttpsRequestCountMin int
+		wantHTTPRequestCountMin  int
+		wantHTTPSRequestCountMin int
 	}{
 		{
 			name: "one pod - http only",
@@ -83,8 +83,8 @@ func TestCompositeProber(t *testing.T) {
 			responseStatusCode:       http.StatusOK,
 			wantStatus:               StatusReady,
 			wantRequeueCountMin:      1,
-			wantHttpRequestCountMin:  1,
-			wantHttpsRequestCountMin: 0,
+			wantHTTPRequestCountMin:  1,
+			wantHTTPSRequestCountMin: 0,
 		},
 		{
 			name: "one pod - https only",
@@ -114,8 +114,8 @@ func TestCompositeProber(t *testing.T) {
 			responseStatusCode:       http.StatusOK,
 			wantStatus:               StatusReady,
 			wantRequeueCountMin:      1,
-			wantHttpRequestCountMin:  0,
-			wantHttpsRequestCountMin: 1,
+			wantHTTPRequestCountMin:  0,
+			wantHTTPSRequestCountMin: 1,
 		},
 		{
 			name: "one pod - http and https, http primary address",
@@ -148,8 +148,8 @@ func TestCompositeProber(t *testing.T) {
 			responseStatusCode:       http.StatusOK,
 			wantStatus:               StatusReady,
 			wantRequeueCountMin:      2,
-			wantHttpRequestCountMin:  1,
-			wantHttpsRequestCountMin: 1,
+			wantHTTPRequestCountMin:  1,
+			wantHTTPSRequestCountMin: 1,
 		},
 	}
 
@@ -162,9 +162,9 @@ func TestCompositeProber(t *testing.T) {
 				time.Sleep(time.Second)
 				cancel()
 			}()
-			wantHttpRequestCountMin := atomic.NewInt64(int64(tc.wantHttpRequestCountMin))
+			wantHTTPRequestCountMin := atomic.NewInt64(int64(tc.wantHTTPRequestCountMin))
 			httpHandler := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-				wantHttpRequestCountMin.Dec()
+				wantHTTPRequestCountMin.Dec()
 				require.Equal(t, network.ProbeHeaderValue, r.Header.Get(network.ProbeHeaderName))
 				writer.WriteHeader(tc.responseStatusCode)
 			})
@@ -172,9 +172,9 @@ func TestCompositeProber(t *testing.T) {
 			httpServer.Start()
 			defer httpServer.Close()
 
-			wantHttpsRequestCountMin := atomic.NewInt64(int64(tc.wantHttpsRequestCountMin))
+			wantHTTPSRequestCountMin := atomic.NewInt64(int64(tc.wantHTTPSRequestCountMin))
 			httpsHandler := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-				wantHttpsRequestCountMin.Dec()
+				wantHTTPSRequestCountMin.Dec()
 				require.Equal(t, network.ProbeHeaderValue, r.Header.Get(network.ProbeHeaderName))
 				writer.WriteHeader(tc.responseStatusCode)
 			})
@@ -211,11 +211,11 @@ func TestCompositeProber(t *testing.T) {
 				return ips, nil
 			}
 
-			httpUrl, _ := url.Parse(httpServer.URL)
-			httpsUrl, _ := url.Parse(httpsServer.URL)
+			httpURL, _ := url.Parse(httpServer.URL)
+			httpsURL, _ := url.Parse(httpsServer.URL)
 			requeueCountMin := atomic.NewInt64(int64(tc.wantRequeueCountMin))
 
-			t.Log(httpUrl, httpsUrl)
+			t.Log(httpURL, httpsURL)
 
 			clientConfig := eventingtls.NewDefaultClientConfig()
 			clientConfig.CACerts = pointer.String(string(CA1))
@@ -227,7 +227,7 @@ func TestCompositeProber(t *testing.T) {
 			transport := http.DefaultTransport.(*http.Transport).Clone()
 			transport.TLSClientConfig = tlsConfig
 
-			prober, err := NewComposite(ctx, &http.Client{Transport: transport}, httpUrl.Port(), httpsUrl.Port(), IPsLister, func(key types.NamespacedName) {
+			prober, err := NewComposite(ctx, &http.Client{Transport: transport}, httpURL.Port(), httpsURL.Port(), IPsLister, func(key types.NamespacedName) {
 				requeueCountMin.Dec()
 			})
 			require.NoError(t, err)
@@ -238,8 +238,8 @@ func TestCompositeProber(t *testing.T) {
 			}
 
 			require.Eventuallyf(t, probeFunc, 5*time.Second, 250*time.Millisecond, "")
-			require.Eventuallyf(t, func() bool { return wantHttpRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantHttpRequestCountMin.Load())
-			require.Eventuallyf(t, func() bool { return wantHttpsRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantHttpsRequestCountMin.Load())
+			require.Eventuallyf(t, func() bool { return wantHTTPRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantHTTPRequestCountMin.Load())
+			require.Eventuallyf(t, func() bool { return wantHTTPSRequestCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", wantHTTPSRequestCountMin.Load())
 			require.Eventuallyf(t, func() bool { return requeueCountMin.Load() == 0 }, 5*time.Second, 250*time.Millisecond, "got %d, want 0", requeueCountMin.Load())
 
 		})

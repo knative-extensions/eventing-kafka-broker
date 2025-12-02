@@ -96,7 +96,7 @@ var DefaultEnv = &config.Env{
 	GeneralConfigMapName:        "kafka-channel-config",
 	IngressName:                 "kafka-channel-ingress",
 	SystemNamespace:             "knative-eventing",
-	ContractConfigMapFormat:     base.Json,
+	ContractConfigMapFormat:     base.JSON,
 }
 
 var (
@@ -470,12 +470,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					withChannelTopLevelResourceRef(),
 				),
@@ -544,12 +544,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					withChannelTopLevelResourceRef(),
 				),
@@ -619,12 +619,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					withChannelTopLevelResourceRef(),
 				),
@@ -720,12 +720,12 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerGroupConsumerSpec(NewConsumerSpec(
 							ConsumerTopics(ChannelTopic()),
 							ConsumerConfigs(
-								ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+								ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 							ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-							ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+							ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 						)),
 						ConsumerGroupReady,
 						withChannelTopLevelResourceRef(),
@@ -774,12 +774,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					ConsumerGroupReplicas(1),
 					WithConsumerGroupFailed("failed to reconcile consumer group,", "internal error"),
@@ -856,12 +856,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					withChannelTopLevelResourceRef(),
 				),
@@ -874,7 +874,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -947,7 +947,7 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber2(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
@@ -968,12 +968,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					withChannelTopLevelResourceRef(),
 				),
@@ -1210,12 +1210,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -1317,12 +1317,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -1423,12 +1423,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
 								Ref: &kafkainternals.SecretReference{
@@ -1533,12 +1533,12 @@ func TestReconcileKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics(ChannelTopic()),
 						ConsumerConfigs(
-							ConsumerGroupIdConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
+							ConsumerGroupIDConfig(consumerGroup(NewChannel(), GetSubscriberSpec(Subscriber1(WithFreshSubscriber)))),
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered)),
 						ConsumerSubscriber(NewConsumerSpecSubscriber(Subscription1URI)),
-						ConsumerReply(ConsumerUrlReply(apis.HTTP(Subscription1ReplyURI))),
+						ConsumerReply(ConsumerURLReply(apis.HTTP(Subscription1ReplyURI))),
 					)),
 					withChannelTopLevelResourceRef(),
 				),

@@ -130,7 +130,7 @@ var DefaultEnv = &config.Env{
 	GeneralConfigMapName:         "kafka-broker-config",
 	IngressName:                  "kafka-broker-ingress",
 	SystemNamespace:              "knative-eventing",
-	ContractConfigMapFormat:      base.Json,
+	ContractConfigMapFormat:      base.JSON,
 	DefaultBackoffDelayMs:        1000,
 }
 

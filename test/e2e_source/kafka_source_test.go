@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_source
+package e2esource
 
 import (
 	"testing"

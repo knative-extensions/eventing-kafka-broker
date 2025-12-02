@@ -70,7 +70,7 @@ const (
 )
 
 var (
-	Formats = []string{base.Protobuf, base.Json}
+	Formats = []string{base.Protobuf, base.JSON}
 
 	ServiceURL         = ServiceURLFrom(ServiceNamespace, ServiceName)
 	ServiceHTTPSURL    = ServiceHTTPSURLFrom(ServiceNamespace, ServiceName)

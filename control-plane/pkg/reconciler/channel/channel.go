@@ -302,16 +302,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 
 	var addressableStatus duckv1.AddressStatus
-	channelHttpsHost := network.GetServiceHostname(r.IngressName, r.SystemNamespace)
-	channelHttpHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
+	channelHTTPSHost := network.GetServiceHostname(r.IngressName, r.SystemNamespace)
+	channelHTTPHost := network.GetServiceHostname(channelService.Name, channel.Namespace)
 	if featureFlags.IsPermissiveTransportEncryption() {
 		caCerts, err := r.getCaCerts()
 		if err != nil {
 			return err
 		}
 
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
+		httpAddress := receiver.ChannelHTTPAddress(channelHTTPHost, audience)
+		httpsAddress := receiver.HTTPSAddress(channelHTTPSHost, audience, channel, caCerts)
 		// Permissive mode:
 		// - status.address http address with path-based routing
 		// - status.addresses:
@@ -329,11 +329,11 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 			return err
 		}
 
-		httpsAddress := receiver.HTTPSAddress(channelHttpsHost, audience, channel, caCerts)
+		httpsAddress := receiver.HTTPSAddress(channelHTTPSHost, audience, channel, caCerts)
 		addressableStatus.Addresses = []duckv1.Addressable{httpsAddress}
 		addressableStatus.Address = &httpsAddress
 	} else {
-		httpAddress := receiver.ChannelHTTPAddress(channelHttpHost, audience)
+		httpAddress := receiver.ChannelHTTPAddress(channelHTTPHost, audience)
 		addressableStatus.Address = &httpAddress
 		addressableStatus.Addresses = []duckv1.Addressable{httpAddress}
 	}

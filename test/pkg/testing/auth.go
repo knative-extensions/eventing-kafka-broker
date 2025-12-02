@@ -39,7 +39,7 @@ func Ssl(t *testing.T, client *testlib.Client) map[string][]byte {
 	caSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.CaSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
-	tlsUserSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.TlsUserSecretName, metav1.GetOptions{})
+	tlsUserSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.TLSUserSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 
 	return map[string][]byte{
@@ -50,7 +50,7 @@ func Ssl(t *testing.T, client *testlib.Client) map[string][]byte {
 	}
 }
 
-func TlsNoAuth(t *testing.T, client *testlib.Client) map[string][]byte {
+func TLSNoAuth(t *testing.T, client *testlib.Client) map[string][]byte {
 	caSecret, err := client.Kube.CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(context.Background(), pkg.CaSecretName, metav1.GetOptions{})
 	assert.Nil(t, err)
 

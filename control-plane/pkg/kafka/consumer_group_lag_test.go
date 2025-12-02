@@ -260,7 +260,7 @@ func (s *saramaClientMock) RefreshTransactionCoordinator(transactionID string) e
 	panic("implement me")
 }
 
-func (s *saramaClientMock) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
+func (s *saramaClientMock) RemoveMemberFromConsumerGroup(groupID string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
 	panic("implement me")
 }
 
