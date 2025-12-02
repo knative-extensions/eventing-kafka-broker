@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new
+package e2enew
 
 import (
 	"context"
@@ -51,7 +51,7 @@ func TestNewTriggerFilters(t *testing.T) {
 
 func InstallKafkaBrokerStepFn(brokerName string) feature.StepFn {
 	return func(ctx context.Context, t feature.T) {
-		install, cmName := single_partition_config.MakeInstall()
+		install, cmName := singlepartitionconfig.MakeInstall()
 		install(ctx, t)
 		broker.Install(
 			brokerName,

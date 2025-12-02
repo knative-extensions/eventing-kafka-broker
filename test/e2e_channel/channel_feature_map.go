@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_channel
+package e2echannel
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -308,7 +308,7 @@ func (m *MockKafkaClusterAdmin) DescribeLogDirs(brokers []int32) (map[int32][]sa
 	panic("implement me")
 }
 
-func (m *MockKafkaClusterAdmin) RemoveMemberFromConsumerGroup(groupId string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
+func (m *MockKafkaClusterAdmin) RemoveMemberFromConsumerGroup(groupID string, groupInstanceIds []string) (*sarama.LeaveGroupResponse, error) {
 	if m.ErrorBrokenPipe {
 		return nil, brokenPipeError{}
 	}

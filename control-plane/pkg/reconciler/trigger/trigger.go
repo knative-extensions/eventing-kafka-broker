@@ -311,14 +311,14 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 	}
 	trigger.Status.SubscriberURI = destination.URL
 
-	groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	groupID, ok := trigger.Status.Annotations[kafka.GroupIDAnnotation]
 	if !ok {
-		return nil, fmt.Errorf("trigger.Status.Annotations[%s] not set", kafka.GroupIdAnnotation)
+		return nil, fmt.Errorf("trigger.Status.Annotations[%s] not set", kafka.GroupIDAnnotation)
 	}
 
 	egress := &contract.Egress{
 		Destination:   destination.URL.String(),
-		ConsumerGroup: groupId,
+		ConsumerGroup: groupID,
 		Uid:           string(trigger.UID),
 		Reference: &contract.Reference{
 			Uuid:      string(trigger.GetUID()),
@@ -429,7 +429,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	defer kafkaClusterAdmin.Close()
 
 	// Existing Triggers might not yet have this annotation
-	groupID, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	groupID, ok := trigger.Status.Annotations[kafka.GroupIDAnnotation]
 
 	if !ok {
 		groupID, err = r.KafkaFeatureFlags.ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
@@ -437,7 +437,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 			return false, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
 		}
 
-		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupID
+		trigger.Status.Annotations[kafka.GroupIDAnnotation] = groupID
 	}
 
 	isLatest, err := kafka.IsOffsetLatest(r.ConfigMapLister, r.DataPlaneConfigMapNamespace, r.DataPlaneConfigConfigMapName, brokerreconciler.ConsumerConfigKey)

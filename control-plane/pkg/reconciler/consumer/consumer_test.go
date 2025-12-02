@@ -83,7 +83,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(1),
@@ -104,7 +104,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -160,7 +160,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
 								ConsumerVReplicas(1),
@@ -189,7 +189,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 							ConsumerKeyTypeConfig("int"),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
@@ -211,7 +211,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -267,7 +267,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 									ConsumerKeyTypeConfig("int"),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
@@ -297,7 +297,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(2),
@@ -318,7 +318,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -374,7 +374,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
 								ConsumerVReplicas(2),
@@ -403,7 +403,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
@@ -431,7 +431,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -494,7 +494,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
@@ -530,7 +530,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(1),
@@ -556,7 +556,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
 								ConsumerVReplicas(1),
@@ -590,7 +590,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(1),
@@ -619,7 +619,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReference()),
 								ConsumerVReplicas(1),
@@ -649,7 +649,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReference()),
 						ConsumerVReplicas(1),
@@ -749,13 +749,13 @@ func TestReconcileKind(t *testing.T) {
 					},
 					SystemNamespace,
 					"p1",
-					base.Json,
+					base.JSON,
 				),
 			},
 			Key:                     testKey,
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
 					Generation: 2,
 					Resources: []*contract.Resource{
 						{
@@ -837,7 +837,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics(SourceTopics...),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(SourceBootstrapServers),
-							ConsumerGroupIdConfig(SourceConsumerGroup),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
 						),
 						ConsumerSubscriber(NewSourceSinkReferenceWithCACert()),
 						ConsumerVReplicas(1),
@@ -858,7 +858,7 @@ func TestReconcileKind(t *testing.T) {
 				NewConfigMapWithBinaryData(SystemNamespace, "p1", []byte(""), DispatcherPodAsOwnerReference("p1")),
 			},
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(SystemNamespace, "p1", base.Json, &contract.Contract{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -915,7 +915,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics(SourceTopics...),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(SourceBootstrapServers),
-									ConsumerGroupIdConfig(SourceConsumerGroup),
+									ConsumerGroupIDConfig(SourceConsumerGroup),
 								),
 								ConsumerSubscriber(NewSourceSinkReferenceWithCACert()),
 								ConsumerVReplicas(1),
@@ -938,7 +938,7 @@ func TestReconcileKind(t *testing.T) {
 	table.Test(t, NewFactory(DefaultEnv, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := &Reconciler{
-			SerDe:                      contract.FormatSerDe{Format: contract.Json},
+			SerDe:                      contract.FormatSerDe{Format: contract.JSON},
 			Resolver:                   resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0)),
 			Tracker:                    &FakeTracker{},
 			ConsumerGroupLister:        listers.GetConsumerGroupLister(),

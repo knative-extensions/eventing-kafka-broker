@@ -25,7 +25,7 @@ type format string
 
 const (
 	Protobuf format = "protobuf"
-	Json     format = "json"
+	JSON     format = "json"
 )
 
 type Serializer interface {

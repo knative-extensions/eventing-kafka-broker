@@ -82,7 +82,7 @@ func TestFormatSerDeFromString(t *testing.T) {
 		},
 		{
 			format: "json",
-			serde:  contract.FormatSerDe{Format: contract.Json},
+			serde:  contract.FormatSerDe{Format: contract.JSON},
 		},
 	}
 

@@ -48,7 +48,7 @@ func ConfigureDataPlane(ctx context.Context, t *testing.T) *feature.Feature {
 // KafkaChannel and verifies their receipt in the corresponding EventsHub Receiver.
 // It is assumed that the backing KafkaChannel / Subscription / Receiver are in place
 // and ready to receive these events.
-func SendEvents(ctx context.Context, t *testing.T, eventCount int, startId int, endId int) *feature.Feature {
+func SendEvents(ctx context.Context, t *testing.T, eventCount int, startID int, endID int) *feature.Feature {
 
 	// Get Test Names From Context
 	testName := TestName(ctx, t)
@@ -63,7 +63,7 @@ func SendEvents(ctx context.Context, t *testing.T, eventCount int, startId int, 
 	// Create A New Feature To Send Events And Verify Receipt
 	f := feature.NewFeatureNamed("Send Events")
 	setupEventsHubSender(f, senderName, senderSink, event, eventCount)
-	assertEventsReceived(f, receiverName, event, eventCount, startId, endId)
+	assertEventsReceived(f, receiverName, event, eventCount, startID, endID)
 
 	// Return The SendEvents Feature
 	return f

@@ -70,7 +70,7 @@ var DefaultEnv = &config.Env{
 	DataPlaneConfigConfigMapName: "config-kafka-broker-data-plane",
 	IngressName:                  "kafka-broker-ingress",
 	SystemNamespace:              "knative-eventing",
-	ContractConfigMapFormat:      base.Json,
+	ContractConfigMapFormat:      base.JSON,
 	DefaultBackoffDelayMs:        1000,
 }
 
@@ -202,7 +202,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -274,7 +274,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						withDeadLetterSinkURI(ServiceURL),
 					),
 				},
@@ -352,7 +352,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						withDeadLetterSinkURI(url.String()),
 					),
 				},
@@ -423,7 +423,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(sources.Ordered)),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
@@ -495,7 +495,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(sources.Unordered)),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
@@ -574,7 +574,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
 						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
 							URL: &apis.URL{
@@ -738,7 +738,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -787,7 +787,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
 						),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 					),
 				},
 			},
@@ -832,7 +832,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 							"Broker not found in data plane map",
 							fmt.Sprintf("config map: %s", env.DataPlaneConfigMapAsString()),
 						),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 					),
 				},
 			},
@@ -1095,7 +1095,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -1406,7 +1406,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -1711,7 +1711,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -2108,7 +2108,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -2209,7 +2209,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -2289,7 +2289,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						withSubscriberURI,
 						reconcilertesting.WithTriggerDependencyUnknown("", ""),
 						reconcilertesting.WithTriggerBrokerReady(),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
 						reconcilertesting.WithTriggerSubscribedUnknown("", ""),
@@ -3107,7 +3107,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkResolvedSucceeded(),
 						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 						reconcilertesting.WithTriggerStatusDeadLetterSinkURI(duckv1.Addressable{
@@ -3333,12 +3333,12 @@ func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder
 	}
 }
 
-func withTriggerStatusGroupIdAnnotation(groupId string) func(*eventingv1.Trigger) {
+func withTriggerStatusGroupIDAnnotation(groupID string) func(*eventingv1.Trigger) {
 	return func(t *eventingv1.Trigger) {
 		if t.Status.Annotations == nil {
 			t.Status.Annotations = make(map[string]string, 1)
 		}
-		t.Status.Annotations[kafka.GroupIdAnnotation] = groupId
+		t.Status.Annotations[kafka.GroupIDAnnotation] = groupID
 	}
 }
 

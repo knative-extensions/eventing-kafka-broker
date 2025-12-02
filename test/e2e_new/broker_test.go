@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new
+package e2enew
 
 import (
 	"testing"
@@ -273,7 +273,7 @@ func TestTriggerEventTypeAutoCreate(t *testing.T) {
 }
 
 func InstallBroker(brokerName string) *feature.Feature {
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f := feature.NewFeature()
 

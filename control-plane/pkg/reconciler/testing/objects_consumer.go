@@ -241,7 +241,7 @@ func ConsumerBootstrapServersConfig(s string) ConsumerConfigsOption {
 	}
 }
 
-func ConsumerGroupIdConfig(s string) ConsumerConfigsOption {
+func ConsumerGroupIDConfig(s string) ConsumerConfigsOption {
 	return func(configs *kafkainternals.ConsumerConfigs) {
 		configs.Configs["group.id"] = s
 	}
@@ -338,7 +338,7 @@ func ConsumerTopicReply() *kafkainternals.ReplyStrategy {
 	return &kafkainternals.ReplyStrategy{TopicReply: &kafkainternals.TopicReply{Enabled: true}}
 }
 
-func ConsumerUrlReply(uri *apis.URL) *kafkainternals.ReplyStrategy {
+func ConsumerURLReply(uri *apis.URL) *kafkainternals.ReplyStrategy {
 	return &kafkainternals.ReplyStrategy{URLReply: &kafkainternals.DestinationReply{Enabled: true, Destination: duckv1.Destination{URI: uri}}}
 }
 

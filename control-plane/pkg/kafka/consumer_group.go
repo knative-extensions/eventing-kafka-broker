@@ -33,7 +33,7 @@ var (
 )
 
 const (
-	GroupIdAnnotation = "group.id"
+	GroupIDAnnotation = "group.id"
 )
 
 func AreConsumerGroupsPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, consumerGroups ...string) (bool, error) {

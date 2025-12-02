@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_channel
+package e2echannel
 
 import (
 	"context"
@@ -62,9 +62,9 @@ func TestMain(m *testing.M) {
 			log.Printf("Failed to create kube client: %v\n", err)
 		}
 		logger := logging.NewLogger(ctx, kubeClient, logging.CommonLoggingLabels)
-		e2e_channel_err := logger.Start()
+		e2eChannelErr := logger.Start()
 		if err != nil {
-			fmt.Printf("failed to start logger: %s", e2e_channel_err.Error())
+			fmt.Printf("failed to start logger: %s", e2eChannelErr.Error())
 		}
 		return m.Run()
 	}())

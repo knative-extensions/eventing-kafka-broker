@@ -63,14 +63,14 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 	trigger1FilterType := "trigger-1"
 	trigger2FilterType := "trigger-2"
 
-	eventIdTrigger1 := uuid.New().String()
+	eventIDTrigger1 := uuid.New().String()
 	eventTrigger1 := cetest.MinEvent()
-	eventTrigger1.SetID(eventIdTrigger1)
+	eventTrigger1.SetID(eventIDTrigger1)
 	eventTrigger1.SetType(trigger1FilterType)
 
-	eventIdTrigger2 := uuid.New().String()
+	eventIDTrigger2 := uuid.New().String()
 	eventTrigger2 := cetest.MinEvent()
-	eventTrigger2.SetID(eventIdTrigger2)
+	eventTrigger2.SetID(eventIDTrigger2)
 	eventTrigger2.SetType(trigger2FilterType)
 
 	f := feature.NewFeatureNamed("Trigger with KafkaSink")
@@ -113,7 +113,7 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 		job.WithEnvs(map[string]string{
 			"BOOTSTRAP_SERVERS": testpkg.BootstrapServersPlaintext,
 			"TOPIC":             topic,
-			"IDS":               fmt.Sprintf("%s,%s", eventIdTrigger1, eventIdTrigger2),
+			"IDS":               fmt.Sprintf("%s,%s", eventIDTrigger1, eventIDTrigger2),
 			"CONTENT_MODE":      "structured",
 		}),
 		job.WithRestartPolicy(corev1.RestartPolicyNever),

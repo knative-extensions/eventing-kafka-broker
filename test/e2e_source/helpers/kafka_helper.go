@@ -39,8 +39,8 @@ import (
 )
 
 const (
-	strimziApiGroup      = "kafka.strimzi.io"
-	strimziApiVersion    = "v1beta2"
+	strimziAPIGroup      = "kafka.strimzi.io"
+	strimziAPIVersion    = "v1beta2"
 	strimziTopicResource = "kafkatopics"
 	strimziUserResource  = "kafkausers"
 	interval             = 3 * time.Second
@@ -49,12 +49,12 @@ const (
 )
 
 var (
-	topicGVR = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziTopicResource}
-	userGVR  = schema.GroupVersionResource{Group: strimziApiGroup, Version: strimziApiVersion, Resource: strimziUserResource} //nolint:unused
+	topicGVR = schema.GroupVersionResource{Group: strimziAPIGroup, Version: strimziAPIVersion, Resource: strimziTopicResource}
+	userGVR  = schema.GroupVersionResource{Group: strimziAPIGroup, Version: strimziAPIVersion, Resource: strimziUserResource} //nolint:unused
 	ImcGVR   = schema.GroupVersionResource{Group: "messaging.knative.dev", Version: "v1", Resource: "inmemorychannels"}       //nolinte:unused
 )
 
-func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, transactionalId string, value string) {
+func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, topic string, key string, headers map[string]string, transactionalID string, value string) {
 	cgName := topic + "-" + key + "z"
 
 	payload := value
@@ -85,8 +85,8 @@ func MustPublishKafkaMessage(client *testlib.Client, bootstrapServer string, top
 	client.Tracker.Add(corev1.SchemeGroupVersion.Group, corev1.SchemeGroupVersion.Version, "configmap", client.Namespace, cgName)
 
 	args := []string{"-P", "-T", "-b", bootstrapServer, "-t", topic}
-	if transactionalId != "" {
-		args = append(args, "-X", "transactional.id="+transactionalId)
+	if transactionalID != "" {
+		args = append(args, "-X", "transactional.id="+transactionalID)
 	}
 	if key != "" {
 		args = append(args, "-K=")
