@@ -205,9 +205,9 @@ func getKafkaTriggerConsumerGroup(ctx context.Context, c *eventingclientset.Clie
 	return func(t *testing.T) string {
 		trigger, err := c.EventingV1().Triggers(ns).Get(ctx, sacuraTriggerName, metav1.GetOptions{})
 		require.Nil(t, err, "Failed to get trigger %s/%s: %v", ns, sacuraTriggerName)
-		groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+		groupID, ok := trigger.Status.Annotations[kafka.GroupIDAnnotation]
 		require.True(t, ok, "Group ID annotation not set on trigger")
-		return groupId
+		return groupID
 	}
 }
 
