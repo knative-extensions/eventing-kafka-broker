@@ -40,8 +40,8 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/resources/service"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	multiplepartitionconfig "knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
+	singlepartitionconfig "knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
