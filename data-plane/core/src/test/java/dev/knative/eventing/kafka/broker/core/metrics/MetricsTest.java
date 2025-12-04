@@ -53,6 +53,207 @@ public class MetricsTest {
     }
 
     @Test
+    public void getWithOtlpHttpProtocol() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+                                "60s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolEmptyEndpoint() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "",
+                                "60s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolNullEndpoint() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                null,
+                                "60s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolEmptyExportInterval() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+                                ""),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolNullExportInterval() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+                                null),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolAllEmptyValues() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "",
+                                ""),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolAllNullValues() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                null,
+                                null),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolWhitespaceEndpoint() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "   ",
+                                "60s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolWhitespaceExportInterval() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+                                "   "),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolVariousDurationFormats() {
+        String[] durationFormats = {"1m", "30s", "5m", "1h", "100ms", "60s"};
+
+        for (String duration : durationFormats) {
+            final var metricsOptions = Metrics.getOptions(
+                    new BaseEnv(s -> "1"),
+                    new ObservabilityConfig(
+                            new ObservabilityConfig.MetricsConfig(
+                                    ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                    "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+                                    duration),
+                            new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+            assertThat(metricsOptions.isEnabled())
+                    .as("Duration format '%s' should work", duration)
+                    .isTrue();
+        }
+    }
+
+    @Test
+    public void getWithOtlpHttpProtocolVariousEndpointFormats() {
+        String[] endpoints = {
+                "http://localhost:4318/v1/metrics",
+                "http://otel-collector:4318/v1/metrics",
+                "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+                "http://otel-collector.otel-collector.svc.cluster.local:4318/v1/metrics",
+                "https://otel-collector:4318/v1/metrics",
+                "http://127.0.0.1:4318/v1/metrics"
+        };
+
+        for (String endpoint : endpoints) {
+            final var metricsOptions = Metrics.getOptions(
+                    new BaseEnv(s -> "1"),
+                    new ObservabilityConfig(
+                            new ObservabilityConfig.MetricsConfig(
+                                    ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                    endpoint,
+                                    "60s"),
+                            new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+            assertThat(metricsOptions.isEnabled())
+                    .as("Endpoint '%s' should work", endpoint)
+                    .isTrue();
+        }
+    }
+
+    @Test
+    public void getWithOtlpGrpcProtocol() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_GRPC,
+                                "http://otel-collector:4317",
+                                "60s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithPrometheusProtocol() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.PROMETHEUS,
+                                "http://localhost:9090/metrics",
+                                "60s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getWithPrometheusProtocolEmptyValues() {
+        final var metricsOptions = Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.PROMETHEUS,
+                                "",
+                                ""),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
     public void shouldRegisterAndCloseProducerMetricsThread() throws Exception {
         final var meterBinder = Metrics.register(new MockProducer<>());
         meterBinder.close();

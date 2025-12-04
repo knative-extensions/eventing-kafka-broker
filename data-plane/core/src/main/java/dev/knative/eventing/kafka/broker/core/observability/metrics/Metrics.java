@@ -234,10 +234,15 @@ public class Metrics {
                     @Override
                     public String get(String key) {
                         return switch (key) {
-                            case "url" -> observabilityConfig.getMetricsConfig().endpoint();
-                            case "step" ->
-                                observabilityConfig.getMetricsConfig().exportInterval();
-                            default -> "";
+                            case "otlp.url" -> {
+                                String endpoint = observabilityConfig.getMetricsConfig().endpoint();
+                                yield isNullOrBlank(endpoint) ? null : endpoint.trim();
+                            }
+                            case "otlp.step" -> {
+                                String interval = observabilityConfig.getMetricsConfig().exportInterval();
+                                yield convertToMicrometerDuration(interval);
+                            }
+                            default -> null; // Return null so Micrometer uses its built-in defaults
                         };
                     }
                 };
@@ -251,6 +256,30 @@ public class Metrics {
             }
             case PROMETHEUS -> new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         };
+    }
+
+    /**
+     * Checks if a string is null, empty, or contains only whitespace.
+     *
+     * @param value the string to check
+     * @return true if the string is null, empty, or whitespace-only
+     */
+    private static boolean isNullOrBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    /**
+     * Converts a duration string (e.g., "60s", "1m", "5m") to Micrometer-compatible format.
+     * Micrometer expects durations in formats like "1m", "60s", or ISO-8601 duration format.
+     *
+     * @param interval the interval string from configuration
+     * @return the converted duration string, or null if empty/null to use Micrometer defaults
+     */
+    private static String convertToMicrometerDuration(String interval) {
+        if (isNullOrBlank(interval)) {
+            return null; // Let Micrometer use its default (1 minute)
+        }
+        return interval.trim();
     }
 
     /**
