@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.core.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
@@ -23,6 +24,7 @@ import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
+import io.micrometer.registry.otlp.OtlpMeterRegistry;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
@@ -50,6 +52,23 @@ public class MetricsTest {
                         new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.NONE, "", ""),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getOptionsWithOtlpHttpShouldConfigureOtlpMeterRegistry() {
+        final var metricsOptions = assertDoesNotThrow(() -> Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "http://localhost:4318/v1/metrics",
+                                "30s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F))));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+        assertThat(metricsOptions).isInstanceOf(MicrometerMetricsOptions.class);
+
+        final var micrometerOptions = (MicrometerMetricsOptions) metricsOptions;
+        assertThat(micrometerOptions.getMicrometerRegistry()).isInstanceOf(OtlpMeterRegistry.class);
     }
 
     @Test
