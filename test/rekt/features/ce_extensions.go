@@ -76,7 +76,7 @@ func brokerAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Alpha("broker").
 		Must("must add Knative Kafka CE extensions", eventasssert.OnStore(sinkName).
-			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset")).
+			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset", "knativekafkatopic")).
 			Exact(1))
 	return f
 }
@@ -118,7 +118,7 @@ func channelAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Alpha("channel").
 		Must("add Knative Kafka CE extensions", eventasssert.OnStore(sinkName).
-			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset")).
+			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset", "knativekafkatopic")).
 			Exact(1))
 	return f
 }
@@ -161,7 +161,7 @@ func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
 
 	f.Alpha("source").
 		Must("add Knative Kafka CE extensions", eventasssert.OnStore(sinkName).
-			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset")).
+			MatchEvent(test.ContainsExtensions("knativekafkapartition", "knativekafkaoffset", "knativekafkatopic")).
 			Exact(1))
 	return f
 }
