@@ -70,10 +70,7 @@ public class MetricsTest {
         final var metricsOptions = Metrics.getOptions(
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
-                        new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
-                                "",
-                                "60s"),
+                        new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.OTLP_HTTP, "", "60s"),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -84,9 +81,7 @@ public class MetricsTest {
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
                         new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
-                                null,
-                                "60s"),
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP, null, "60s"),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -122,10 +117,7 @@ public class MetricsTest {
         final var metricsOptions = Metrics.getOptions(
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
-                        new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
-                                "",
-                                ""),
+                        new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.OTLP_HTTP, "", ""),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -136,9 +128,7 @@ public class MetricsTest {
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
                         new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
-                                null,
-                                null),
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP, null, null),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -149,9 +139,7 @@ public class MetricsTest {
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
                         new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
-                                "   ",
-                                "60s"),
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP, "   ", "60s"),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -191,12 +179,12 @@ public class MetricsTest {
     @Test
     public void getWithOtlpHttpProtocolVariousEndpointFormats() {
         String[] endpoints = {
-                "http://localhost:4318/v1/metrics",
-                "http://otel-collector:4318/v1/metrics",
-                "http://otel-collector.otel-collector.svc:4318/v1/metrics",
-                "http://otel-collector.otel-collector.svc.cluster.local:4318/v1/metrics",
-                "https://otel-collector:4318/v1/metrics",
-                "http://127.0.0.1:4318/v1/metrics"
+            "http://localhost:4318/v1/metrics",
+            "http://otel-collector:4318/v1/metrics",
+            "http://otel-collector.otel-collector.svc:4318/v1/metrics",
+            "http://otel-collector.otel-collector.svc.cluster.local:4318/v1/metrics",
+            "https://otel-collector:4318/v1/metrics",
+            "http://127.0.0.1:4318/v1/metrics"
         };
 
         for (String endpoint : endpoints) {
@@ -204,9 +192,7 @@ public class MetricsTest {
                     new BaseEnv(s -> "1"),
                     new ObservabilityConfig(
                             new ObservabilityConfig.MetricsConfig(
-                                    ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
-                                    endpoint,
-                                    "60s"),
+                                    ObservabilityConfig.MetricsProtocol.OTLP_HTTP, endpoint, "60s"),
                             new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
             assertThat(metricsOptions.isEnabled())
                     .as("Endpoint '%s' should work", endpoint)
@@ -220,9 +206,7 @@ public class MetricsTest {
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
                         new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.OTLP_GRPC,
-                                "http://otel-collector:4317",
-                                "60s"),
+                                ObservabilityConfig.MetricsProtocol.OTLP_GRPC, "http://otel-collector:4317", "60s"),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -233,9 +217,7 @@ public class MetricsTest {
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
                         new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.PROMETHEUS,
-                                "http://localhost:9090/metrics",
-                                "60s"),
+                                ObservabilityConfig.MetricsProtocol.PROMETHEUS, "http://localhost:9090/metrics", "60s"),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }
@@ -245,10 +227,7 @@ public class MetricsTest {
         final var metricsOptions = Metrics.getOptions(
                 new BaseEnv(s -> "1"),
                 new ObservabilityConfig(
-                        new ObservabilityConfig.MetricsConfig(
-                                ObservabilityConfig.MetricsProtocol.PROMETHEUS,
-                                "",
-                                ""),
+                        new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.PROMETHEUS, "", ""),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
     }

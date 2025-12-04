@@ -235,11 +235,13 @@ public class Metrics {
                     public String get(String key) {
                         return switch (key) {
                             case "otlp.url" -> {
-                                String endpoint = observabilityConfig.getMetricsConfig().endpoint();
+                                String endpoint =
+                                        observabilityConfig.getMetricsConfig().endpoint();
                                 yield isNullOrBlank(endpoint) ? null : endpoint.trim();
                             }
                             case "otlp.step" -> {
-                                String interval = observabilityConfig.getMetricsConfig().exportInterval();
+                                String interval =
+                                        observabilityConfig.getMetricsConfig().exportInterval();
                                 yield convertToMicrometerDuration(interval);
                             }
                             default -> null; // Return null so Micrometer uses its built-in defaults
