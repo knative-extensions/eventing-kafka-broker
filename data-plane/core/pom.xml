@@ -191,10 +191,6 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus-simpleclient</artifactId>
     </dependency>
-      <dependency>
-          <groupId>io.micrometer</groupId>
-          <artifactId>micrometer-registry-prometheus</artifactId>
-      </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
