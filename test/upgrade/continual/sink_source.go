@@ -97,7 +97,7 @@ type kafkaSinkSourceSut struct {
 func (k kafkaSinkSourceSut) Deploy(ctx sut.Context, destination duckv1.Destination) interface{} {
 	k.deploySink(ctx)
 	k.deploySource(ctx, destination)
-	url := k.fetchUrl(ctx)
+	url := k.fetchURL(ctx)
 	return url
 }
 
@@ -127,7 +127,7 @@ func (k kafkaSinkSourceSut) deploySource(ctx sut.Context, destination duckv1.Des
 	eventingkafkatestlib.CreateKafkaSourceOrFail(ctx.Client, ks)
 }
 
-func (k kafkaSinkSourceSut) fetchUrl(ctx sut.Context) *apis.URL {
+func (k kafkaSinkSourceSut) fetchURL(ctx sut.Context) *apis.URL {
 	tm := &metav1.TypeMeta{
 		Kind:       "KafkaSink",
 		APIVersion: eventing.SchemeGroupVersion.String(),

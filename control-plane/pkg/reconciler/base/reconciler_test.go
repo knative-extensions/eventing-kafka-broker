@@ -125,7 +125,7 @@ func TestGetDataPlaneConfigMapData(t *testing.T) {
 
 	r := &base.Reconciler{
 		KubeClient:              kubeclient.Get(ctx),
-		ContractConfigMapFormat: base.Json,
+		ContractConfigMapFormat: base.JSON,
 	}
 
 	ct := &contract.Contract{}
@@ -171,7 +171,7 @@ func TestUpdateDataPlaneConfigMap(t *testing.T) {
 
 	r := &base.Reconciler{
 		KubeClient:              kubeclient.Get(ctx),
-		ContractConfigMapFormat: base.Json,
+		ContractConfigMapFormat: base.JSON,
 	}
 
 	ct := &contract.Contract{}
@@ -186,7 +186,7 @@ func TestGetDataPlaneConfigMapDataCorrupted(t *testing.T) {
 
 	r := &base.Reconciler{
 		KubeClient:              kubeclient.Get(ctx),
-		ContractConfigMapFormat: base.Json,
+		ContractConfigMapFormat: base.JSON,
 	}
 
 	cm := &corev1.ConfigMap{
@@ -205,7 +205,7 @@ func TestGetDataPlaneConfigMapDataUnknownField(t *testing.T) {
 
 	r := &base.Reconciler{
 		KubeClient:              kubeclient.Get(ctx),
-		ContractConfigMapFormat: base.Json,
+		ContractConfigMapFormat: base.JSON,
 	}
 
 	cm := &corev1.ConfigMap{
@@ -401,7 +401,7 @@ func TestCompareSemanticEqual(t *testing.T) {
 						}),
 					},
 				},
-				format: string(contract.Json),
+				format: string(contract.JSON),
 			},
 			want: true,
 		},
@@ -435,7 +435,7 @@ func TestCompareSemanticEqual(t *testing.T) {
 						}),
 					},
 				},
-				format: string(contract.Json),
+				format: string(contract.JSON),
 			},
 			want: true,
 		},
@@ -469,7 +469,7 @@ func TestCompareSemanticEqual(t *testing.T) {
 						}),
 					},
 				},
-				format: string(contract.Json),
+				format: string(contract.JSON),
 			},
 			want: false,
 		},
@@ -503,7 +503,7 @@ func TestCompareSemanticEqual(t *testing.T) {
 						}),
 					},
 				},
-				format: string(contract.Json),
+				format: string(contract.JSON),
 			},
 			want: false,
 		},

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package e2e_sink
+package e2esink
 
 import (
 	"context"

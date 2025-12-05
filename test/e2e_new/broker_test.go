@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new
+package e2enew
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	singlepartitionconfig "knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/eventing/test/rekt/features/authz"
 	brokereventingfeatures "knative.dev/eventing/test/rekt/features/broker"
@@ -273,7 +273,7 @@ func TestTriggerEventTypeAutoCreate(t *testing.T) {
 }
 
 func InstallBroker(brokerName string) *feature.Feature {
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f := feature.NewFeature()
 

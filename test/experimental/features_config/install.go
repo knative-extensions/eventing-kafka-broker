@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package features_config
+package featuresconfig
 
 import (
 	"context"

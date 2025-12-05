@@ -112,6 +112,6 @@ func formatSerDeFromString(val string) contract.FormatSerDe {
 	case "protobuf":
 		return contract.FormatSerDe{Format: contract.Protobuf}
 	default:
-		return contract.FormatSerDe{Format: contract.Json}
+		return contract.FormatSerDe{Format: contract.JSON}
 	}
 }

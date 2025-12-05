@@ -25,7 +25,7 @@ import (
 	pkgTest "knative.dev/pkg/test"
 )
 
-func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapUrl string, topicName string, aggregatorHostname string, additionalArgs ...string) *corev1.Pod {
+func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapURL string, topicName string, aggregatorHostname string, additionalArgs ...string) *corev1.Pod {
 	const podName = "perf-sender"
 	const imageName = "kafka_performance"
 
@@ -34,7 +34,7 @@ func KafkaPerformanceImageSenderPod(pace string, warmup string, bootstrapUrl str
 		fmt.Sprintf("--pace=%s", pace),
 		fmt.Sprintf("--warmup=%s", warmup),
 		fmt.Sprintf("--aggregator=%s:10000", aggregatorHostname),
-		fmt.Sprintf("--bootstrap-url=%s", bootstrapUrl),
+		fmt.Sprintf("--bootstrap-url=%s", bootstrapURL),
 		fmt.Sprintf("--topic=%s", topicName),
 	}, additionalArgs...)
 

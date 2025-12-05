@@ -133,7 +133,7 @@ func deletedKafkaSourcesAreNotPresentInContractConfigMaps(prefix string) feature
 				continue
 			}
 
-			ct, err := base.GetDataPlaneConfigMapData(zap.NewNop(), &cm, base.Json)
+			ct, err := base.GetDataPlaneConfigMapData(zap.NewNop(), &cm, base.JSON)
 			if err != nil {
 				t.Fatal(err)
 			}

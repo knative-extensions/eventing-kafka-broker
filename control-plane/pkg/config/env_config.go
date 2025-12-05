@@ -41,7 +41,7 @@ type Env struct {
 
 	IngressName             string `required:"true" split_words:"true"` // example: kafka-broker-ingress
 	IngressPodPort          string `required:"false" split_words:"true"`
-	IngressPodTlsPort       string `required:"false" split_words:"true"`
+	IngressPodTLSPort       string `required:"false" split_words:"true"`
 	SystemNamespace         string `required:"true" split_words:"true"`
 	ContractConfigMapFormat string `required:"true" split_words:"true"`
 	DefaultBackoffDelayMs   uint64 `required:"false" split_words:"true"`

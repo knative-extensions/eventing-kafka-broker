@@ -130,7 +130,7 @@ func namespacedTriggerReconciliation(t *testing.T, format string, env config.Env
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						withTriggerStatusGroupIdAnnotation(triggerConsumerGroup),
+						withTriggerStatusGroupIDAnnotation(triggerConsumerGroup),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 						reconcilertesting.WithTriggerOIDCIdentityCreatedSucceededBecauseOIDCFeatureDisabled(),
 					),

@@ -129,8 +129,8 @@ func assertSubscriptionReady(f *feature.Feature, name string) {
 }
 
 // assertEventsReceived adds an Assert() to the specified Feature to verify the expected CloudEvents were received successfully.
-func assertEventsReceived(f *feature.Feature, receiverName string, event cloudevents.Event, eventCount int, startId int, endId int) {
-	matchers := newEventMatcher(event, startId, endId)
+func assertEventsReceived(f *feature.Feature, receiverName string, event cloudevents.Event, eventCount int, startID int, endID int) {
+	matchers := newEventMatcher(event, startID, endID)
 	f.Assert("Events Received", assert.OnStore(receiverName).MatchEvent(matchers).Exact(eventCount))
 }
 
@@ -149,7 +149,7 @@ func newEvent(name string, senderName string) (cloudevents.Event, error) {
 }
 
 // newEventMatcher returns a new CloudEvents Matcher based on the specified CloudEvent.
-func newEventMatcher(event cloudevents.Event, startId int, endId int) cloudeventtest.EventMatcher {
+func newEventMatcher(event cloudevents.Event, startID int, endID int) cloudeventtest.EventMatcher {
 	return cloudeventtest.AllOf(
 		cloudeventtest.HasSpecVersion(event.SpecVersion()),
 		cloudeventtest.HasSource(event.Source()),
@@ -157,18 +157,18 @@ func newEventMatcher(event cloudevents.Event, startId int, endId int) cloudevent
 		cloudeventtest.HasSubject(event.Subject()),
 		cloudeventtest.HasDataContentType(event.DataContentType()),
 		cloudeventtest.HasData(event.Data()),
-		eventIdRangeMatcher(startId, endId),
+		eventIDRangeMatcher(startID, endID),
 	)
 }
 
-// eventIdRangeMatcher returns an EventMatcher capable of verifying CloudEvent IDs are within a certain range.
-func eventIdRangeMatcher(startId int, endId int) cloudeventtest.EventMatcher {
+// eventIDRangeMatcher returns an EventMatcher capable of verifying CloudEvent IDs are within a certain range.
+func eventIDRangeMatcher(startID int, endID int) cloudeventtest.EventMatcher {
 	return func(have cloudevents.Event) error {
-		eventId, err := strconv.Atoi(have.ID())
+		eventID, err := strconv.Atoi(have.ID())
 		if err != nil {
 			return err
-		} else if eventId < startId || eventId > endId {
-			return fmt.Errorf("event ID '%d' outside expected range (%d - %d)", eventId, startId, endId)
+		} else if eventID < startID || eventID > endID {
+			return fmt.Errorf("event ID '%d' outside expected range (%d - %d)", eventID, startID, endID)
 		}
 		return nil
 	}
