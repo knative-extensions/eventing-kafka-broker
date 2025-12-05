@@ -39,7 +39,7 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
             return record.value();
         }
         final var builder = CloudEventBuilder.from(record.value());
-        applyKafkaMetadata(builder, record.partition(), record.offset());
+        applyKafkaMetadata(builder, record.partition(), record.offset(), record.topic());
         applyCloudEventOverrides(builder);
         return builder.build();
     }
@@ -48,8 +48,9 @@ public class CloudEventOverridesMutator implements CloudEventMutator {
         cloudEventOverrides.getExtensionsMap().forEach(builder::withExtension);
     }
 
-    private void applyKafkaMetadata(CloudEventBuilder builder, Number partition, Number offset) {
+    private void applyKafkaMetadata(CloudEventBuilder builder, Number partition, Number offset, String topic) {
         builder.withExtension("knativekafkapartition", partition);
         builder.withExtension("knativekafkaoffset", offset);
+        builder.withExtension("knativekafkatopic", topic);
     }
 }

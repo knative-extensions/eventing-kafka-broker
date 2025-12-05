@@ -52,6 +52,7 @@ public class CloudEventOverridesMutatorTest {
         extensions.forEach(expected::withExtension);
         expected.withExtension("knativekafkaoffset", 1L);
         expected.withExtension("knativekafkapartition", 1);
+        expected.withExtension("knativekafkatopic", "test-topic");
 
         final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
 
@@ -100,6 +101,7 @@ public class CloudEventOverridesMutatorTest {
         final var expected = CloudEventBuilder.from(given)
                 .withExtension("knativekafkaoffset", 1L)
                 .withExtension("knativekafkapartition", 1)
+                .withExtension("knativekafkatopic", "test-topic")
                 .build();
 
         final var got = mutator.apply(new ConsumerRecord<>("test-topic", 1, 1, "key", given));
