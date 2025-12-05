@@ -234,7 +234,8 @@ public class Metrics {
                     @Override
                     public String get(String key) {
                         return switch (key) {
-                            case "otlp.url" -> observabilityConfig.getMetricsConfig().endpoint();
+                            case "otlp.url" ->
+                                observabilityConfig.getMetricsConfig().endpoint();
                             case "otlp.step" ->
                                 observabilityConfig.getMetricsConfig().exportInterval();
                             default -> null;

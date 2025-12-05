@@ -90,9 +90,7 @@ public class ObservabilityConfig {
                 URI metricsUrl = new URI(this.endpoint);
 
                 var path = metricsUrl.getPath();
-                return Optional.ofNullable(path)
-                        .filter(p -> !p.isEmpty())
-                        .orElse("/metrics");
+                return Optional.ofNullable(path).filter(p -> !p.isEmpty()).orElse("/metrics");
             } catch (URISyntaxException e) {
                 return "/metrics";
             }
