@@ -158,4 +158,20 @@ public class MetricsTest {
                         .collect(Collectors.toList()))
                 .hasSize(1);
     }
+
+    @Test
+    public void metricsConfigShouldDefaultToMetricsPathWhenEndpointIsEmpty() {
+        // This tests the fix for getMetricsPath() returning empty string instead of "/metrics"
+        // when the metrics-endpoint is not configured in the ConfigMap
+        final var metricsConfig =
+                new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.PROMETHEUS, "", "60s");
+
+        assertThat(metricsConfig.getMetricsPath())
+                .as("getMetricsPath() should return '/metrics' when endpoint is empty")
+                .isEqualTo("/metrics");
+
+        assertThat(metricsConfig.getMetricsPort())
+                .as("getMetricsPort() should return default port 9090 when endpoint is empty")
+                .isEqualTo(9090);
+    }
 }
