@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.core.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.observability.ObservabilityConfig;
@@ -23,6 +24,7 @@ import dev.knative.eventing.kafka.broker.core.observability.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
+import io.micrometer.registry.otlp.OtlpMeterRegistry;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
@@ -50,6 +52,23 @@ public class MetricsTest {
                         new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.NONE, "", ""),
                         new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F)));
         assertThat(metricsOptions.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void getOptionsWithOtlpHttpShouldConfigureOtlpMeterRegistry() {
+        final var metricsOptions = assertDoesNotThrow(() -> Metrics.getOptions(
+                new BaseEnv(s -> "1"),
+                new ObservabilityConfig(
+                        new ObservabilityConfig.MetricsConfig(
+                                ObservabilityConfig.MetricsProtocol.OTLP_HTTP,
+                                "http://localhost:4318/v1/metrics",
+                                "30s"),
+                        new ObservabilityConfig.TracingConfig(ObservabilityConfig.TracingProtocol.NONE, "", 0F))));
+        assertThat(metricsOptions.isEnabled()).isTrue();
+        assertThat(metricsOptions).isInstanceOf(MicrometerMetricsOptions.class);
+
+        final var micrometerOptions = (MicrometerMetricsOptions) metricsOptions;
+        assertThat(micrometerOptions.getMicrometerRegistry()).isInstanceOf(OtlpMeterRegistry.class);
     }
 
     @Test
@@ -138,5 +157,21 @@ public class MetricsTest {
                         .filter(m -> m.getId().getName().equals(Metrics.EVENT_PROCESSING_LATENCY))
                         .collect(Collectors.toList()))
                 .hasSize(1);
+    }
+
+    @Test
+    public void metricsConfigShouldDefaultToMetricsPathWhenEndpointIsEmpty() {
+        // This tests the fix for getMetricsPath() returning empty string instead of "/metrics"
+        // when the metrics-endpoint is not configured in the ConfigMap
+        final var metricsConfig =
+                new ObservabilityConfig.MetricsConfig(ObservabilityConfig.MetricsProtocol.PROMETHEUS, "", "60s");
+
+        assertThat(metricsConfig.getMetricsPath())
+                .as("getMetricsPath() should return '/metrics' when endpoint is empty")
+                .isEqualTo("/metrics");
+
+        assertThat(metricsConfig.getMetricsPort())
+                .as("getMetricsPort() should return default port 9090 when endpoint is empty")
+                .isEqualTo(9090);
     }
 }

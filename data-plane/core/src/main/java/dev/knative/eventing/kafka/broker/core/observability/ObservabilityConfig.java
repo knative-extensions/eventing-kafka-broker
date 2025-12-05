@@ -23,7 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
+import java.util.Optional;
 
 public class ObservabilityConfig {
     public ObservabilityConfig(MetricsConfig metricsConfig, TracingConfig tracingConfig) {
@@ -90,7 +90,7 @@ public class ObservabilityConfig {
                 URI metricsUrl = new URI(this.endpoint);
 
                 var path = metricsUrl.getPath();
-                return Objects.requireNonNullElse(path, "/metrics");
+                return Optional.ofNullable(path).filter(p -> !p.isEmpty()).orElse("/metrics");
             } catch (URISyntaxException e) {
                 return "/metrics";
             }
