@@ -21,9 +21,9 @@ import (
 )
 
 // SetDefaults ensures KafkaBinding reflects the default values.
-func (r *KafkaBinding) SetDefaults(ctx context.Context) {
-	if r.Spec.Subject.Namespace == "" {
+func (kb *KafkaBinding) SetDefaults(ctx context.Context) {
+	if kb.Spec.Subject.Namespace == "" {
 		// Default the subject's namespace to our namespace.
-		r.Spec.Subject.Namespace = r.Namespace
+		kb.Spec.Subject.Namespace = kb.Namespace
 	}
 }

@@ -21,32 +21,32 @@ import (
 	"knative.dev/eventing/pkg/apis/duck/v1alpha1"
 )
 
-func (k *KafkaSource) GetKey() types.NamespacedName {
+func (ks *KafkaSource) GetKey() types.NamespacedName {
 	return types.NamespacedName{
-		Namespace: k.Namespace,
-		Name:      k.Name,
+		Namespace: ks.Namespace,
+		Name:      ks.Name,
 	}
 }
 
-func (k *KafkaSource) GetVReplicas() int32 {
-	if k.Spec.Consumers == nil {
+func (ks *KafkaSource) GetVReplicas() int32 {
+	if ks.Spec.Consumers == nil {
 		return 1
 	}
-	if k.Status.MaxAllowedVReplicas != nil {
-		if *k.Spec.Consumers > *k.Status.MaxAllowedVReplicas {
-			return *k.Status.MaxAllowedVReplicas
+	if ks.Status.MaxAllowedVReplicas != nil {
+		if *ks.Spec.Consumers > *ks.Status.MaxAllowedVReplicas {
+			return *ks.Status.MaxAllowedVReplicas
 		}
 	}
-	return *k.Spec.Consumers
+	return *ks.Spec.Consumers
 }
 
-func (k *KafkaSource) GetPlacements() []v1alpha1.Placement {
-	if k.Status.Placements == nil {
+func (ks *KafkaSource) GetPlacements() []v1alpha1.Placement {
+	if ks.Status.Placements == nil {
 		return nil
 	}
-	return k.Status.Placements
+	return ks.Status.Placements
 }
 
-func (k *KafkaSource) GetResourceVersion() string {
-	return k.ResourceVersion
+func (ks *KafkaSource) GetResourceVersion() string {
+	return ks.ResourceVersion
 }

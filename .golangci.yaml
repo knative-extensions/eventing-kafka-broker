@@ -19,7 +19,6 @@ linters:
       checks:
         - all
         - "-ST1003"
-        - "-ST1016"
   exclusions:
     generated: lax
     presets:

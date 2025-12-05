@@ -53,11 +53,11 @@ func (cs *ConsumerSpec) Validate(ctx context.Context) *apis.FieldError {
 	return err
 }
 
-func (d *DeliverySpec) Validate(ctx context.Context) *apis.FieldError {
-	if d == nil {
+func (ds *DeliverySpec) Validate(ctx context.Context) *apis.FieldError {
+	if ds == nil {
 		return nil
 	}
-	return d.DeliverySpec.Validate(ctx).ViaField(apis.CurrentField)
+	return ds.DeliverySpec.Validate(ctx).ViaField(apis.CurrentField)
 }
 
 func (cc *ConsumerConfigs) Validate(ctx context.Context) *apis.FieldError {

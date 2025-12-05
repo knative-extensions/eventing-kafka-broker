@@ -45,7 +45,7 @@ func (cg *ConsumerGroup) InitializeConditions() {
 	cg.GetConditionSet().Manage(cg.GetStatus()).InitializeConditions()
 }
 
-func (c *ConsumerGroup) GetConditionSet() apis.ConditionSet {
+func (cg *ConsumerGroup) GetConditionSet() apis.ConditionSet {
 	return conditionSet
 }
 
