@@ -112,7 +112,7 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 				})
 			}
 			if kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef != nil {
-				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+				spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_TOKEN_PROVIDER",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: kfb.Spec.Net.SASL.TokenProvider.SecretKeyRef,
@@ -120,7 +120,7 @@ func (kfb *KafkaBinding) Do(ctx context.Context, ps *duckv1.WithPod) {
 				})
 			}
 			if kfb.Spec.Net.SASL.RoleARN.SecretKeyRef != nil {
-				spec.Containers[i].Env = append(spec.Containers[i].Env, corev1.EnvVar{
+				spec.InitContainers[i].Env = append(spec.InitContainers[i].Env, corev1.EnvVar{
 					Name: "KAFKA_NET_SASL_ROLE_ARN",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: kfb.Spec.Net.SASL.RoleARN.SecretKeyRef,
@@ -233,7 +233,7 @@ func (kfb *KafkaBinding) Undo(ctx context.Context, ps *duckv1.WithPod) {
 			switch ev.Name {
 			case "KAFKA_NET_TLS_ENABLE", "KAFKA_NET_TLS_CERT", "KAFKA_NET_TLS_KEY", "KAFKA_NET_TLS_CA_CERT",
 				"KAFKA_NET_SASL_ENABLE", "KAFKA_NET_SASL_USER", "KAFKA_NET_SASL_PASSWORD", "KAFKA_NET_SASL_TYPE",
-				"KAFKA_BOOTSTRAP_SERVERS":
+				"KAFKA_NET_SASL_TOKEN_PROVIDER", "KAFKA_NET_SASL_ROLE_ARN", "KAFKA_BOOTSTRAP_SERVERS":
 
 				continue
 			default:
@@ -252,7 +252,7 @@ func (kfb *KafkaBinding) Undo(ctx context.Context, ps *duckv1.WithPod) {
 			switch ev.Name {
 			case "KAFKA_NET_TLS_ENABLE", "KAFKA_NET_TLS_CERT", "KAFKA_NET_TLS_KEY", "KAFKA_NET_TLS_CA_CERT",
 				"KAFKA_NET_SASL_ENABLE", "KAFKA_NET_SASL_USER", "KAFKA_NET_SASL_PASSWORD", "KAFKA_NET_SASL_TYPE",
-				"KAFKA_BOOTSTRAP_SERVERS":
+				"KAFKA_NET_SASL_TOKEN_PROVIDER", "KAFKA_NET_SASL_ROLE_ARN", "KAFKA_BOOTSTRAP_SERVERS":
 				continue
 			default:
 				env = append(env, spec.Containers[i].Env[j])
