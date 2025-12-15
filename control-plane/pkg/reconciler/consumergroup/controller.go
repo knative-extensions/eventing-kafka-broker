@@ -209,20 +209,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	impl := cgreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
 		return controller.Options{
-			PromoteFunc: func(bkt reconciler.Bucket) {
-				for _, value := range schedulerMgr.getAll() {
-					if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
-						ss.Promote(bkt, nil)
-					}
-				}
-			},
-			DemoteFunc: func(bkt reconciler.Bucket) {
-				for _, value := range schedulerMgr.getAll() {
-					if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
-						ss.Demote(bkt)
-					}
-				}
-			},
+			PromoteFunc: schedulerMgr.promote,
+			DemoteFunc:  schedulerMgr.demote,
 		}
 	})
 
@@ -472,8 +460,9 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 }
 
 type schedulerManager struct {
-	mu         sync.RWMutex
-	schedulers map[string]Scheduler
+	mu           sync.RWMutex
+	schedulers   map[string]Scheduler // protected by mu
+	leaderBucket reconciler.Bucket    // protected by mu
 
 	ctx                   context.Context
 	config                SchedulerConfig
@@ -496,16 +485,6 @@ func (sm *schedulerManager) get(key string) (Scheduler, bool) {
 	return sched, ok
 }
 
-func (sm *schedulerManager) getAll() []Scheduler {
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-	result := make([]Scheduler, 0, len(sm.schedulers))
-	for _, s := range sm.schedulers {
-		result = append(result, s)
-	}
-	return result
-}
-
 func (sm *schedulerManager) createSchedulerForStatefulSet(ssName string) bool {
 	schedulerKey, ok := statefulSetToSchedulerKey[ssName]
 	if !ok {
@@ -522,7 +501,16 @@ func (sm *schedulerManager) createSchedulerForStatefulSet(ssName string) bool {
 	logger := logging.FromContext(sm.ctx)
 	logger.Infow("Creating scheduler for StatefulSet", zap.String("statefulset", ssName), zap.String("scheduler", schedulerKey))
 
-	sm.schedulers[schedulerKey] = createKafkaScheduler(sm.ctx, sm.config, ssName, sm.dispatcherPodInformer)
+	scheduler := createKafkaScheduler(sm.ctx, sm.config, ssName, sm.dispatcherPodInformer)
+	sm.schedulers[schedulerKey] = scheduler
+
+	// If we're already leader, promote the new scheduler immediately
+	if sm.leaderBucket != nil {
+		if ss, ok := scheduler.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+			ss.Promote(sm.leaderBucket, nil)
+		}
+	}
+
 	return true
 }
 
@@ -544,4 +532,28 @@ func (sm *schedulerManager) removeSchedulerForStatefulSet(ssName string) bool {
 
 	delete(sm.schedulers, schedulerKey)
 	return true
+}
+
+func (sm *schedulerManager) promote(bkt reconciler.Bucket) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	sm.leaderBucket = bkt
+	for _, value := range sm.schedulers {
+		if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+			ss.Promote(bkt, nil)
+		}
+	}
+}
+
+func (sm *schedulerManager) demote(bkt reconciler.Bucket) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	sm.leaderBucket = nil
+	for _, value := range sm.schedulers {
+		if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+			ss.Demote(bkt)
+		}
+	}
 }
