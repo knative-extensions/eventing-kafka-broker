@@ -24,8 +24,8 @@ import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.micrometer.core.instrument.search.Search;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.micrometer.registry.otlp.OtlpConfig;
 import io.micrometer.registry.otlp.OtlpMeterRegistry;
 import io.vertx.core.Future;
@@ -234,11 +234,13 @@ public class Metrics {
                     @Override
                     public String get(String key) {
                         return switch (key) {
-                            case "url" -> observabilityConfig.getMetricsConfig().endpoint();
-                            case "step" -> observabilityConfig
+                            case "otlp.url" -> observabilityConfig
+                                    .getMetricsConfig()
+                                    .endpoint();
+                            case "otlp.step" -> observabilityConfig
                                     .getMetricsConfig()
                                     .exportInterval();
-                            default -> "";
+                            default -> null;
                         };
                     }
                 };
