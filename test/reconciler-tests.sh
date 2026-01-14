@@ -75,6 +75,7 @@ go_test_e2e -timeout=1h ./test/e2e_new -run TLS || fail_test
 echo "Running E2E Reconciler OIDC and AuthZ Tests"
 
 kubectl apply -Rf "$(dirname "$0")/config-auth"
+sleep 10  # Give webhooks time to stabilize after config updates
 
 go_test_e2e -timeout=1h ./test/e2e_new -run "OIDC|AuthZ" || fail_test
 
