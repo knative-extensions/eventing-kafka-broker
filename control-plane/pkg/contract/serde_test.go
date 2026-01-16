@@ -34,7 +34,7 @@ func TestFormatSerDe(t *testing.T) {
 			serde: contract.FormatSerDe{Format: contract.Protobuf},
 		},
 		{
-			serde: contract.FormatSerDe{Format: contract.Json},
+			serde: contract.FormatSerDe{Format: contract.JSON},
 		},
 	}
 

@@ -25,7 +25,7 @@ import (
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/bogus_config"
+	bogusconfig "knative.dev/eventing-kafka-broker/test/e2e_new/bogus_config"
 	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkatopic"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/reconciler-test/pkg/environment"
@@ -284,13 +284,13 @@ func BrokerWithBogusConfig() *feature.Feature {
 	brokerName := feature.MakeRandomK8sName("broker")
 	secretName := feature.MakeRandomK8sName("sasl-secret")
 
-	f.Setup("install bogus configuration", bogus_config.Install)
+	f.Setup("install bogus configuration", bogusconfig.Install)
 
 	f.Requirement("Create SASL secret", featuressteps.CopySecretInTestNamespace(system.Namespace(), SASLSecretName, secretName))
 
 	f.Setup("install broker", broker.Install(
 		brokerName,
-		broker.WithConfig(bogus_config.ConfigMapName),
+		broker.WithConfig(bogusconfig.ConfigMapName),
 	))
 	f.Assert("delete broker", featuressteps.DeleteBroker(brokerName))
 

@@ -140,7 +140,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, env *config.E
 		return network.DialTLSWithBackOff(ctx, net, addr, tlsConfig)
 	}
 
-	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, env.IngressPodPort, env.IngressPodTlsPort, IPsLister, impl.EnqueueKey)
+	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, env.IngressPodPort, env.IngressPodTLSPort, IPsLister, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}

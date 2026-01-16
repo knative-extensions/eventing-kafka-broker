@@ -44,7 +44,7 @@ func WithSslData(ctx context.Context) manifest.CfgFn {
 		panic(err)
 	}
 
-	tlsUserSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.TlsUserSecretName, metav1.GetOptions{})
+	tlsUserSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.TLSUserSecretName, metav1.GetOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -57,7 +57,7 @@ func WithSslData(ctx context.Context) manifest.CfgFn {
 	})
 }
 
-func WithTlsNoAuthData(ctx context.Context) manifest.CfgFn {
+func WithTLSNoAuthData(ctx context.Context) manifest.CfgFn {
 	caSecret, err := client.Get(ctx).CoreV1().Secrets(pkg.KafkaClusterNamespace).Get(ctx, pkg.CaSecretName, metav1.GetOptions{})
 	if err != nil {
 		panic(err)

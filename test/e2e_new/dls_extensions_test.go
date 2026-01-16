@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new
+package e2enew
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	singlepartitionconfig "knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	"knative.dev/eventing/test/rekt/resources/trigger"
 	"knative.dev/pkg/system"
@@ -58,7 +58,7 @@ func TestDeadLetterSinkExtensions(t *testing.T) {
 	env.Test(ctx, t, SubscriberReturnedErrorNoData())
 	env.Test(ctx, t, SubscriberReturnedErrorSmallData())
 	env.Test(ctx, t, SubscriberReturnedErrorLargeData())
-	env.Test(ctx, t, SubscriberReturnedHtmlWebpage())
+	env.Test(ctx, t, SubscriberReturnedHTMLWebpage())
 	env.Test(ctx, t, SubscriberReturnedCustomExtensionHeader())
 }
 
@@ -72,7 +72,7 @@ func SubscriberUnreachable() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
@@ -124,7 +124,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, _ := single_partition_config.MakeInstall()
+	install, _ := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
@@ -187,7 +187,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
@@ -252,7 +252,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
@@ -307,7 +307,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 	return f
 }
 
-func SubscriberReturnedHtmlWebpage() *feature.Feature {
+func SubscriberReturnedHTMLWebpage() *feature.Feature {
 	f := feature.NewFeature()
 
 	sourceName := feature.MakeRandomK8sName("source")
@@ -318,7 +318,7 @@ func SubscriberReturnedHtmlWebpage() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
@@ -383,7 +383,7 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(

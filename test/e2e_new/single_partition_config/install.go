@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package single_partition_config
+package singlepartitionconfig
 
 import (
 	"context"

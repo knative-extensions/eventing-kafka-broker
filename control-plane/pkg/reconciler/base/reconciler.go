@@ -71,7 +71,7 @@ const (
 	ConfigFeaturesUpdatedAnnotationKey = "configFeaturesUpdatedAt"
 
 	Protobuf = "protobuf"
-	Json     = "json"
+	JSON     = "json"
 )
 
 var (
@@ -220,7 +220,7 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	switch format {
 	case Protobuf:
 		err = proto.Unmarshal(dataPlaneDataRaw, ct)
-	case Json:
+	case JSON:
 		err = jsonUnmarshalOptions.Unmarshal(dataPlaneDataRaw, ct)
 	}
 	if err != nil {
@@ -260,7 +260,7 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 	switch r.ContractConfigMapFormat {
 	case Protobuf:
 		data, err = proto.Marshal(contract)
-	case Json:
+	case JSON:
 		data, err = protojson.Marshal(contract)
 	default:
 		return fmt.Errorf("unknown contract format %s", r.ContractConfigMapFormat)

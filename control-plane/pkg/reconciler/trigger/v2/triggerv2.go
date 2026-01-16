@@ -171,9 +171,9 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 	topicName := broker.Status.Annotations[kafka.TopicAnnotation]
 
 	// Existing Triggers might not yet have this annotation
-	groupId, ok := trigger.Status.Annotations[kafka.GroupIdAnnotation]
+	groupID, ok := trigger.Status.Annotations[kafka.GroupIDAnnotation]
 	if !ok {
-		groupId = string(trigger.UID)
+		groupID = string(trigger.UID)
 
 		// Check if a consumer group exists with the old naming convention
 		_, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(string(trigger.UID))
@@ -183,18 +183,18 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 
 		// No existing consumer groups, use new naming
 		if apierrors.IsNotFound(err) {
-			groupId, err = apisconfig.FromContext(ctx).ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
+			groupID, err = apisconfig.FromContext(ctx).ExecuteTriggersConsumerGroupTemplate(trigger.ObjectMeta)
 			if err != nil {
 				return nil, fmt.Errorf("couldn't generate new consumergroup id: %w", err)
 			}
 		}
 
-		trigger.Status.Annotations[kafka.GroupIdAnnotation] = groupId
+		trigger.Status.Annotations[kafka.GroupIDAnnotation] = groupID
 	}
 
 	expectedCg := &internalscg.ConsumerGroup{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      groupId,
+			Name:      groupID,
 			Namespace: trigger.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				*kmeta.NewControllerRef(trigger),
@@ -220,7 +220,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 				Spec: internalscg.ConsumerSpec{
 					Topics: []string{topicName},
 					Configs: internalscg.ConsumerConfigs{Configs: map[string]string{
-						"group.id":          groupId,
+						"group.id":          groupID,
 						"bootstrap.servers": bootstrapServers,
 					}},
 					Delivery: &internalscg.DeliverySpec{
@@ -257,7 +257,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 		expectedCg.Spec.OIDCServiceAccountName = trigger.Status.Auth.ServiceAccountName
 	}
 
-	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(groupId) //Get by consumer group name
+	cg, err := r.ConsumerGroupLister.ConsumerGroups(trigger.GetNamespace()).Get(groupID) //Get by consumer group name
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}

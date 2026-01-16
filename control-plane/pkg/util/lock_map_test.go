@@ -69,18 +69,18 @@ func TestExpiringLockMap_GetLock(t *testing.T) {
 func TestExpiringLockMapExpiration(t *testing.T) {
 	lm := NewExpiringLockMap[string](context.Background(), 100*time.Millisecond)
 
-	l1_a := lm.GetLock("l1")
+	l1A := lm.GetLock("l1")
 
 	time.Sleep(50 * time.Millisecond)
-	l1_b := lm.GetLock("l1") // should be the same lock as l1_a, as TTL is 100ms and 50 < 100
+	l1B := lm.GetLock("l1") // should be the same lock as l1A, as TTL is 100ms and 50 < 100
 
 	time.Sleep(300 * time.Millisecond)
-	l1_c := lm.GetLock("l1") // should be a different lock as TTL is 100ms and 300 > 100
+	l1C := lm.GetLock("l1") // should be a different lock as TTL is 100ms and 300 > 100
 
-	if l1_a != l1_b {
-		t.Errorf("l1_a != l1_b")
+	if l1A != l1B {
+		t.Errorf("l1A != l1B")
 	}
-	if l1_a == l1_c {
-		t.Errorf("l1_a == l1_c")
+	if l1A == l1C {
+		t.Errorf("l1A == l1C")
 	}
 }

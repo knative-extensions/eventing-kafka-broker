@@ -94,7 +94,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerGroupReplicas(2),
@@ -117,7 +117,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -129,7 +129,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
@@ -144,7 +144,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupReplicas(2),
@@ -181,7 +181,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerGroupReplicas(2),
@@ -206,7 +206,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -218,7 +218,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
@@ -233,7 +233,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupReplicas(2),
@@ -268,7 +268,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
 							SecretSpec: &kafkainternals.SecretSpec{
@@ -291,7 +291,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -332,7 +332,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
@@ -363,7 +363,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -386,7 +386,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -418,7 +418,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -441,7 +441,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
@@ -489,7 +489,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -512,7 +512,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -543,7 +543,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -566,7 +566,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
@@ -609,7 +609,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
@@ -659,7 +659,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -726,7 +726,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
@@ -784,7 +784,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -834,7 +834,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -892,7 +892,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 						ConsumerAuth(&kafkainternals.Auth{
@@ -942,7 +942,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
 								ConsumerAuth(&kafkainternals.Auth{
@@ -1013,7 +1013,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1025,7 +1025,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerSubscriber(NewSourceSink2Reference()),
 					)),
@@ -1048,7 +1048,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerTopics("t1", "t2"),
 							ConsumerConfigs(
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-								ConsumerGroupIdConfig("my.group.id"),
+								ConsumerGroupIDConfig("my.group.id"),
 							),
 							ConsumerVReplicas(1),
 							ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1065,7 +1065,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerSubscriber(NewSourceSink2Reference()),
 							)),
@@ -1099,7 +1099,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
@@ -1113,7 +1113,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerForTrigger(),
@@ -1136,7 +1136,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1151,7 +1151,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupStatusSelector(ConsumerLabels),
@@ -1185,7 +1185,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
@@ -1200,7 +1200,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerForTrigger(),
@@ -1223,7 +1223,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1238,7 +1238,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupStatusSelector(ConsumerLabels),
@@ -1273,7 +1273,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
@@ -1291,7 +1291,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
@@ -1318,7 +1318,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 							NewConsumerSpecDeliveryDeadLetterSink(),
@@ -1342,7 +1342,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerTopics("t1", "t2"),
 							ConsumerConfigs(
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-								ConsumerGroupIdConfig("my.group.id"),
+								ConsumerGroupIDConfig("my.group.id"),
 							),
 							ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 								NewConsumerSpecDeliveryDeadLetterSink(),
@@ -1363,7 +1363,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 								ConsumerDelivery(NewConsumerSpecDelivery(kafkasource.Ordered,
 									NewConsumerSpecDeliveryDeadLetterSink(),
@@ -1403,7 +1403,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
@@ -1418,7 +1418,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerGroupReplicas(3),
@@ -1441,7 +1441,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1461,7 +1461,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerTopics("t1", "t2"),
 							ConsumerConfigs(
 								ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-								ConsumerGroupIdConfig("my.group.id"),
+								ConsumerGroupIDConfig("my.group.id"),
 							),
 							ConsumerVReplicas(2),
 							ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
@@ -1478,7 +1478,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupStatusSelector(ConsumerLabels),
@@ -1514,7 +1514,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p3", PodNamespace: systemNamespace}),
@@ -1525,7 +1525,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerGroupReplicas(2),
@@ -1561,7 +1561,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1573,7 +1573,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p2", PodNamespace: systemNamespace}),
@@ -1588,7 +1588,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupStatusSelector(ConsumerLabels),
@@ -1622,7 +1622,7 @@ func TestReconcileKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerGroupReplicas(2),
@@ -1651,7 +1651,7 @@ func TestReconcileKind(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupReplicas(2),
@@ -1748,7 +1748,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{
@@ -1763,7 +1763,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 					ConsumerForTrigger(),
@@ -1786,7 +1786,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1801,7 +1801,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 								ConsumerTopics("t1", "t2"),
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 							ConsumerGroupReplicas(2),
@@ -1903,7 +1903,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
@@ -1959,7 +1959,7 @@ func TestFinalizeKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -1972,7 +1972,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
@@ -2041,7 +2041,7 @@ func TestFinalizeKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -2054,7 +2054,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerAuth(&kafkainternals.Auth{
 							NetSpec: &bindings.KafkaNetSpec{
@@ -2120,7 +2120,7 @@ func TestFinalizeKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -2132,7 +2132,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 				),
@@ -2166,7 +2166,7 @@ func TestFinalizeKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -2178,7 +2178,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 				),
@@ -2213,7 +2213,7 @@ func TestFinalizeKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -2225,7 +2225,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 				),
@@ -2260,7 +2260,7 @@ func TestFinalizeKind(t *testing.T) {
 						ConsumerTopics("t1", "t2"),
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 						ConsumerVReplicas(1),
 						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: systemNamespace}),
@@ -2272,7 +2272,7 @@ func TestFinalizeKind(t *testing.T) {
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerConfigs(
 							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-							ConsumerGroupIdConfig("my.group.id"),
+							ConsumerGroupIDConfig("my.group.id"),
 						),
 					)),
 				),
@@ -2313,7 +2313,7 @@ func TestFinalizeKind(t *testing.T) {
 							ConsumerGroupConsumerSpec(NewConsumerSpec(
 								ConsumerConfigs(
 									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
-									ConsumerGroupIdConfig("my.group.id"),
+									ConsumerGroupIDConfig("my.group.id"),
 								),
 							)),
 						)

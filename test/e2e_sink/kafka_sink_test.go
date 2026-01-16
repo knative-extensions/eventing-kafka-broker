@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_sink
+package e2esink
 
 import (
 	"testing"
@@ -53,7 +53,7 @@ func TestKafkaSinkV1Alpha1AuthSsl(t *testing.T) {
 }
 
 func TestKafkaSinkV1Alpha1AuthTlsNoAuth(t *testing.T) {
-	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, TlsNoAuth, withBootstrap(BootstrapServersTlsNoAuthArr), withSecret)
+	RunTestKafkaSink(t, eventingv1alpha1.ModeStructured, TLSNoAuth, withBootstrap(BootstrapServersTLSNoAuthArr), withSecret)
 }
 
 func TestKafkaSinkV1Alpha1AuthSaslPlaintextScram512(t *testing.T) {

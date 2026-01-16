@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_source
+package e2esource
 
 import (
 	"context"
@@ -48,9 +48,9 @@ func TestMain(m *testing.M) {
 			log.Printf("Failed to create kube client: %v\n", err)
 		}
 		logger := logging.NewLogger(ctx, kubeClient, logging.CommonLoggingLabels)
-		e2e_source_err := logger.Start()
+		e2eSourceErr := logger.Start()
 		if err != nil {
-			fmt.Printf("failed to start logger: %s", e2e_source_err.Error())
+			fmt.Printf("failed to start logger: %s", e2eSourceErr.Error())
 		}
 		return m.Run()
 	}())

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new
+package e2enew
 
 import (
 	"context"
@@ -40,8 +40,8 @@ import (
 	"knative.dev/reconciler-test/pkg/knative"
 	"knative.dev/reconciler-test/pkg/resources/service"
 
-	"knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
-	"knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
+	multiplepartitionconfig "knative.dev/eventing-kafka-broker/test/e2e_new/multiple_partition_config"
+	singlepartitionconfig "knative.dev/eventing-kafka-broker/test/e2e_new/single_partition_config"
 
 	. "knative.dev/reconciler-test/pkg/eventshub/assert"
 )
@@ -73,7 +73,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 
 	ev := cetest.FullEvent()
 
-	install, cmName := single_partition_config.MakeInstall()
+	install, cmName := singlepartitionconfig.MakeInstall()
 
 	f.Setup("install one partition configuration", install)
 	f.Setup("install broker", broker.Install(
@@ -133,11 +133,11 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 	evC := cetest.FullEvent()
 	evC.SetExtension("partitionkey", "c")
 
-	f.Setup("install multiple partition configuration", multiple_partition_config.Install)
+	f.Setup("install multiple partition configuration", multiplepartitionconfig.Install)
 	f.Setup("install broker", broker.Install(
 		brokerName,
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
-		broker.WithConfig(multiple_partition_config.ConfigMapName),
+		broker.WithConfig(multiplepartitionconfig.ConfigMapName),
 	))
 	f.Setup("broker is ready", broker.IsReady(brokerName))
 	f.Setup("broker is addressable", broker.IsAddressable(brokerName))

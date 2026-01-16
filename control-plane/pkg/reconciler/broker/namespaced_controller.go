@@ -147,7 +147,7 @@ func NewNamespacedController(ctx context.Context, watcher configmap.Watcher, env
 		return network.DialTLSWithBackOff(ctx, net, addr, tlsConfig)
 	}
 
-	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, env.IngressPodPort, env.IngressPodTlsPort, reconciler.IPsLister.List, impl.EnqueueKey)
+	reconciler.Prober, err = prober.NewComposite(ctx, &http.Client{Transport: transport}, env.IngressPodPort, env.IngressPodTLSPort, reconciler.IPsLister.List, impl.EnqueueKey)
 	if err != nil {
 		logger.Fatal("Failed to create prober", zap.Error(err))
 	}

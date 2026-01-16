@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package e2e_new_channel
+package e2enewchannel
 
 import (
 	_ "knative.dev/pkg/system/testing"

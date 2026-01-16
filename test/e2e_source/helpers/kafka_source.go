@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	KafkaBootstrapUrlPlain   = "my-cluster-kafka-bootstrap.kafka.svc:9092"
+	KafkaBootstrapURLPlain   = "my-cluster-kafka-bootstrap.kafka.svc:9092"
 	KafkaClusterName         = "my-cluster"
 	KafkaClusterNamespace    = "kafka"
 	verifyCommittedOffsetJob = "verify-committed"
@@ -145,7 +145,7 @@ func AssureKafkaSourceConsumesMsgNoEvent(t *testing.T) {
 		for _, version := range []string{"v1"} {
 			testName := name + "-" + version
 			t.Run(testName, func(t *testing.T) {
-				testKafkaSource(t, name, version, test.messageKey, test.messageCount, test.messageHeaders, test.transactional, test.messagePayload, test.matcherGen, KafkaBootstrapUrlPlain, test.extensions)
+				testKafkaSource(t, name, version, test.messageKey, test.messageCount, test.messageHeaders, test.transactional, test.messagePayload, test.matcherGen, KafkaBootstrapURLPlain, test.extensions)
 			})
 		}
 	}
@@ -177,7 +177,7 @@ func testKafkaSource(t *testing.T,
 	var (
 		cloudEventsSourceName string
 		cloudEventsEventType  string
-		transactionalId       string
+		transactionalID       string
 		expectedLag           uint64
 	)
 
@@ -202,11 +202,11 @@ func testKafkaSource(t *testing.T,
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
 
 	if transactional {
-		transactionalId = kafkaTopicName
+		transactionalID = kafkaTopicName
 	}
 
 	for range messageCount {
-		MustPublishKafkaMessage(client, KafkaBootstrapUrlPlain, kafkaTopicName, messageKey, messageHeaders, transactionalId, messagePayload)
+		MustPublishKafkaMessage(client, KafkaBootstrapURLPlain, kafkaTopicName, messageKey, messageHeaders, transactionalID, messagePayload)
 	}
 
 	eventTracker.AssertExact(messageCount, recordevents.MatchEvent(matcherGen(cloudEventsSourceName, cloudEventsEventType)))
