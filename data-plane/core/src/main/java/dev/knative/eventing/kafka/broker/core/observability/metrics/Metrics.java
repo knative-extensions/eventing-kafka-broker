@@ -116,6 +116,9 @@ public class Metrics {
      * @see Metrics#eventDispatchLatency(io.micrometer.core.instrument.Tags)
      */
     public static final String EVENT_PROCESSING_LATENCY = "kn.eventing.process.latency";
+  
+    public static final String TRIGGER_SINK_FAILURES = "kn.eventing.trigger.sink.failures";
+
 
     /**
      * @link https://knative.dev/docs/eventing/observability/metrics/eventing-metrics/
