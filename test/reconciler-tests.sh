@@ -75,7 +75,31 @@ go_test_e2e -timeout=1h ./test/e2e_new -run TLS || fail_test
 echo "Running E2E Reconciler OIDC and AuthZ Tests"
 
 kubectl apply -Rf "$(dirname "$0")/config-auth"
-sleep 10  # Give webhooks time to stabilize after config updates
+
+# Wait until we can actually create an EventPolicy (proof webhook has the right config)
+echo "Waiting for webhook to reload OIDC config..."
+for i in {1..60}; do
+  if kubectl create -f - <<EOF 2>/dev/null
+apiVersion: eventing.knative.dev/v1alpha1
+kind: EventPolicy
+metadata:
+  name: config-readiness-test
+  namespace: knative-eventing
+spec:
+  to:
+    - ref:
+        apiVersion: v1
+        kind: Service
+        name: test
+EOF
+  then
+    kubectl delete eventpolicy config-readiness-test -n knative-eventing
+    echo "Webhook ready with OIDC config enabled"
+    break
+  fi
+  echo "Attempt $i: Webhook not ready yet, waiting..."
+  sleep 2
+done
 
 go_test_e2e -timeout=1h ./test/e2e_new -run "OIDC|AuthZ" || fail_test
 
