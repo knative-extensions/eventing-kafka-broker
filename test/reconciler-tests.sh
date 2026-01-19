@@ -76,28 +76,27 @@ echo "Running E2E Reconciler OIDC and AuthZ Tests"
 
 kubectl apply -Rf "$(dirname "$0")/config-auth"
 
-# Wait until we can actually create an EventPolicy (proof webhook has the right config)
-echo "Waiting for webhook to reload OIDC config..."
+# Wait until ALL webhook pods have reloaded the OIDC config
+echo "Waiting for all webhook pods to reload OIDC config..."
 for i in {1..60}; do
-  if kubectl create -f - <<EOF 2>/dev/null
-apiVersion: eventing.knative.dev/v1alpha1
-kind: EventPolicy
-metadata:
-  name: config-readiness-test
-  namespace: knative-eventing
-spec:
-  to:
-    - ref:
-        apiVersion: v1
-        kind: Service
-        name: test
-EOF
-  then
-    kubectl delete eventpolicy config-readiness-test -n knative-eventing
-    echo "Webhook ready with OIDC config enabled"
+  # Get all eventing-webhook pod names
+  webhook_pods=$(kubectl get pods -n knative-eventing -l app=eventing-webhook -o jsonpath='{.items[*].metadata.name}')
+
+  all_ready=true
+  for pod in $webhook_pods; do
+    # Check if this pod has logged the authentication-oidc: enabled config
+    if ! kubectl logs -n knative-eventing "$pod" --tail=100 2>/dev/null | grep -q 'authentication-oidc:Enabled'; then
+      echo "Attempt $i: Pod $pod not ready yet..."
+      all_ready=false
+      break
+    fi
+  done
+
+  if [ "$all_ready" = true ]; then
+    echo "All webhook pods ready with OIDC config enabled"
     break
   fi
-  echo "Attempt $i: Webhook not ready yet, waiting..."
+
   sleep 2
 done
 
