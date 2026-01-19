@@ -77,7 +77,25 @@ zookeeper_pid=$!
 ./bin/kafka-server-start.sh config/server.properties >"${LOG_DIR}/kafka.log" &
 kafka_pid=$!
 
-# Create our Kafka topic.
+
+# Wait for Kafka broker to be ready before creating topics.
+echo "Waiting for Kafka broker to be ready..."
+max_retries=30
+retry_count=0
+until ./bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1; do
+  retry_count=$((retry_count + 1))
+  if [ $retry_count -ge $max_retries ]; then
+    echo "Kafka broker failed to start within expected time"
+    kill -9 $kafka_pid $zookeeper_pid 2>/dev/null || true
+    exit 1
+  fi
+  echo "Waiting for Kafka broker (attempt $retry_count/$max_retries)..."
+  sleep 2
+done
+echo "Kafka broker is ready"
+
+# Delete the Kafka topic if it exists from a previous run, then create it.
+./bin/kafka-topics.sh --delete --topic attack-ingress-single --bootstrap-server localhost:9092 2>/dev/null || true
 ./bin/kafka-topics.sh --create --topic attack-ingress-single --partitions 10 --bootstrap-server localhost:9092
 # Back to our previous dir
 cd ..
