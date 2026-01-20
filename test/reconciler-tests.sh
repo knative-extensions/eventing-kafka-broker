@@ -75,7 +75,30 @@ go_test_e2e -timeout=1h ./test/e2e_new -run TLS || fail_test
 echo "Running E2E Reconciler OIDC and AuthZ Tests"
 
 kubectl apply -Rf "$(dirname "$0")/config-auth"
-sleep 10  # Give webhooks time to stabilize after config updates
+
+# Wait until ALL webhook pods have reloaded the OIDC config
+echo "Waiting for all webhook pods to reload OIDC config..."
+for i in {1..60}; do
+  # Get all eventing-webhook pod names
+  webhook_pods=$(kubectl get pods -n knative-eventing -l app=eventing-webhook -o jsonpath='{.items[*].metadata.name}')
+
+  all_ready=true
+  for pod in $webhook_pods; do
+    # Check if this pod has logged the authentication-oidc: enabled config
+    if ! kubectl logs -n knative-eventing "$pod" --tail=100 2>/dev/null | grep -q 'authentication-oidc:Enabled'; then
+      echo "Attempt $i: Pod $pod not ready yet..."
+      all_ready=false
+      break
+    fi
+  done
+
+  if [ "$all_ready" = true ]; then
+    echo "All webhook pods ready with OIDC config enabled"
+    break
+  fi
+
+  sleep 2
+done
 
 go_test_e2e -timeout=1h ./test/e2e_new -run "OIDC|AuthZ" || fail_test
 
