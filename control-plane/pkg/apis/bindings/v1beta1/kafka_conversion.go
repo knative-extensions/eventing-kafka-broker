@@ -23,35 +23,35 @@ import (
 )
 
 // ConvertToV1 converts v1beta1 to v1.
-func (source *KafkaAuthSpec) ConvertToV1(_ context.Context) *v1.KafkaAuthSpec {
-	if source == nil {
+func (kas *KafkaAuthSpec) ConvertToV1(_ context.Context) *v1.KafkaAuthSpec {
+	if kas == nil {
 		return nil
 	}
 	sink := &v1.KafkaAuthSpec{
-		BootstrapServers: source.BootstrapServers,
+		BootstrapServers: kas.BootstrapServers,
 		Net: v1.KafkaNetSpec{
 			SASL: v1.KafkaSASLSpec{
-				Enable: source.Net.SASL.Enable,
+				Enable: kas.Net.SASL.Enable,
 				User: v1.SecretValueFromSource{
-					SecretKeyRef: source.Net.SASL.User.SecretKeyRef,
+					SecretKeyRef: kas.Net.SASL.User.SecretKeyRef,
 				},
 				Password: v1.SecretValueFromSource{
-					SecretKeyRef: source.Net.SASL.Password.SecretKeyRef,
+					SecretKeyRef: kas.Net.SASL.Password.SecretKeyRef,
 				},
 				Type: v1.SecretValueFromSource{
-					SecretKeyRef: source.Net.SASL.Type.SecretKeyRef,
+					SecretKeyRef: kas.Net.SASL.Type.SecretKeyRef,
 				},
 			},
 			TLS: v1.KafkaTLSSpec{
-				Enable: source.Net.TLS.Enable,
+				Enable: kas.Net.TLS.Enable,
 				Cert: v1.SecretValueFromSource{
-					SecretKeyRef: source.Net.TLS.Cert.SecretKeyRef,
+					SecretKeyRef: kas.Net.TLS.Cert.SecretKeyRef,
 				},
 				Key: v1.SecretValueFromSource{
-					SecretKeyRef: source.Net.TLS.Key.SecretKeyRef,
+					SecretKeyRef: kas.Net.TLS.Key.SecretKeyRef,
 				},
 				CACert: v1.SecretValueFromSource{
-					SecretKeyRef: source.Net.TLS.CACert.SecretKeyRef,
+					SecretKeyRef: kas.Net.TLS.CACert.SecretKeyRef,
 				},
 			},
 		},
@@ -60,19 +60,19 @@ func (source *KafkaAuthSpec) ConvertToV1(_ context.Context) *v1.KafkaAuthSpec {
 }
 
 // ConvertFromV1 converts v1 to v1beta1
-func (sink *KafkaAuthSpec) ConvertFromV1(source *v1.KafkaAuthSpec) {
+func (kas *KafkaAuthSpec) ConvertFromV1(source *v1.KafkaAuthSpec) {
 	if source == nil {
 		return
 	}
-	sink.BootstrapServers = source.BootstrapServers
+	kas.BootstrapServers = source.BootstrapServers
 
-	sink.Net.SASL.Enable = source.Net.SASL.Enable
-	sink.Net.SASL.Type.SecretKeyRef = source.Net.SASL.Type.SecretKeyRef
-	sink.Net.SASL.User.SecretKeyRef = source.Net.SASL.User.SecretKeyRef
-	sink.Net.SASL.Password.SecretKeyRef = source.Net.SASL.Password.SecretKeyRef
+	kas.Net.SASL.Enable = source.Net.SASL.Enable
+	kas.Net.SASL.Type.SecretKeyRef = source.Net.SASL.Type.SecretKeyRef
+	kas.Net.SASL.User.SecretKeyRef = source.Net.SASL.User.SecretKeyRef
+	kas.Net.SASL.Password.SecretKeyRef = source.Net.SASL.Password.SecretKeyRef
 
-	sink.Net.TLS.Enable = source.Net.TLS.Enable
-	sink.Net.TLS.Key.SecretKeyRef = source.Net.TLS.Key.SecretKeyRef
-	sink.Net.TLS.Cert.SecretKeyRef = source.Net.TLS.Cert.SecretKeyRef
-	sink.Net.TLS.CACert.SecretKeyRef = source.Net.TLS.CACert.SecretKeyRef
+	kas.Net.TLS.Enable = source.Net.TLS.Enable
+	kas.Net.TLS.Key.SecretKeyRef = source.Net.TLS.Key.SecretKeyRef
+	kas.Net.TLS.Cert.SecretKeyRef = source.Net.TLS.Cert.SecretKeyRef
+	kas.Net.TLS.CACert.SecretKeyRef = source.Net.TLS.CACert.SecretKeyRef
 }

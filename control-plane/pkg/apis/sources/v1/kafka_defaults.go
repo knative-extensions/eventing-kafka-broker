@@ -40,42 +40,42 @@ const (
 )
 
 // SetDefaults ensures KafkaSource reflects the default values.
-func (k *KafkaSource) SetDefaults(ctx context.Context) {
-	ctx = apis.WithinParent(ctx, k.ObjectMeta)
+func (ks *KafkaSource) SetDefaults(ctx context.Context) {
+	ctx = apis.WithinParent(ctx, ks.ObjectMeta)
 
-	if k.Spec.ConsumerGroup == "" {
-		k.Spec.ConsumerGroup = uuidPrefix + uuid.New().String()
+	if ks.Spec.ConsumerGroup == "" {
+		ks.Spec.ConsumerGroup = uuidPrefix + uuid.New().String()
 	}
 
-	if k.Spec.Consumers == nil {
-		k.Spec.Consumers = ptr.Int32(1)
+	if ks.Spec.Consumers == nil {
+		ks.Spec.Consumers = ptr.Int32(1)
 	}
 
-	if k.Spec.InitialOffset == "" {
-		k.Spec.InitialOffset = OffsetLatest
+	if ks.Spec.InitialOffset == "" {
+		ks.Spec.InitialOffset = OffsetLatest
 	}
 
-	if k.Spec.Ordering == nil {
+	if ks.Spec.Ordering == nil {
 		deliveryOrdering := Ordered
-		k.Spec.Ordering = &deliveryOrdering
+		ks.Spec.Ordering = &deliveryOrdering
 	}
 
 	kafkaConfig := config.FromContextOrDefaults(ctx)
 	kafkaDefaults := kafkaConfig.KafkaSourceDefaults
 	if kafkaDefaults.AutoscalingClass == config.KedaAutoscalingClass {
-		if k.Annotations == nil {
-			k.Annotations = map[string]string{}
+		if ks.Annotations == nil {
+			ks.Annotations = map[string]string{}
 		}
-		k.Annotations[classAnnotation] = kafkaDefaults.AutoscalingClass
+		ks.Annotations[classAnnotation] = kafkaDefaults.AutoscalingClass
 
 		// Set all annotations regardless of defaults
-		k.Annotations[minScaleAnnotation] = strconv.FormatInt(kafkaDefaults.MinScale, 10)
-		k.Annotations[maxScaleAnnotation] = strconv.FormatInt(kafkaDefaults.MaxScale, 10)
-		k.Annotations[pollingIntervalAnnotation] = strconv.FormatInt(kafkaDefaults.PollingInterval, 10)
-		k.Annotations[cooldownPeriodAnnotation] = strconv.FormatInt(kafkaDefaults.CooldownPeriod, 10)
-		k.Annotations[kafkaLagThresholdAnnotation] = strconv.FormatInt(kafkaDefaults.KafkaLagThreshold, 10)
+		ks.Annotations[minScaleAnnotation] = strconv.FormatInt(kafkaDefaults.MinScale, 10)
+		ks.Annotations[maxScaleAnnotation] = strconv.FormatInt(kafkaDefaults.MaxScale, 10)
+		ks.Annotations[pollingIntervalAnnotation] = strconv.FormatInt(kafkaDefaults.PollingInterval, 10)
+		ks.Annotations[cooldownPeriodAnnotation] = strconv.FormatInt(kafkaDefaults.CooldownPeriod, 10)
+		ks.Annotations[kafkaLagThresholdAnnotation] = strconv.FormatInt(kafkaDefaults.KafkaLagThreshold, 10)
 	}
 
-	k.Spec.Sink.SetDefaults(ctx)
-	k.Spec.Delivery.SetDefaults(ctx)
+	ks.Spec.Sink.SetDefaults(ctx)
+	ks.Spec.Delivery.SetDefaults(ctx)
 }

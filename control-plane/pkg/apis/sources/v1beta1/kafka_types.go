@@ -155,8 +155,8 @@ func (*KafkaSource) GetGroupVersionKind() schema.GroupVersionKind {
 }
 
 // GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
-func (k *KafkaSource) GetStatus() *duckv1.Status {
-	return &k.Status.Status
+func (ks *KafkaSource) GetStatus() *duckv1.Status {
+	return &ks.Status.Status
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

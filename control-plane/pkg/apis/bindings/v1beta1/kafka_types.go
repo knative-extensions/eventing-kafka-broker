@@ -123,6 +123,6 @@ type KafkaBindingList struct {
 }
 
 // GetStatus retrieves the duck status for this resource. Implements the KRShaped interface.
-func (k *KafkaBinding) GetStatus() *duckv1.Status {
-	return &k.Status.Status
+func (kb *KafkaBinding) GetStatus() *duckv1.Status {
+	return &kb.Status.Status
 }

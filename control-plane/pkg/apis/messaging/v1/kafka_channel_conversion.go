@@ -24,11 +24,11 @@ import (
 )
 
 // ConvertTo implements apis.Convertible
-func (channel *KafkaChannel) ConvertTo(_ context.Context, sink apis.Convertible) error {
+func (kc *KafkaChannel) ConvertTo(_ context.Context, sink apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", sink)
 }
 
 // ConvertFrom implements apis.Convertible
-func (sink *KafkaChannel) ConvertFrom(_ context.Context, channel apis.Convertible) error {
+func (kc *KafkaChannel) ConvertFrom(_ context.Context, channel apis.Convertible) error {
 	return fmt.Errorf("v1 is the highest known version, got: %T", channel)
 }
