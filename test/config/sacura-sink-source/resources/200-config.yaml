@@ -31,4 +31,4 @@ data:
       fault:
         minSleepDuration: 3s
         maxSleepDuration: 4s
-    duration: 3m
+    duration: 1m
