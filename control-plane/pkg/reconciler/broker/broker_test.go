@@ -321,8 +321,8 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"topics %v not present or invalid: invalid topic %s",
-					[]string{"my-not-present-topic"}, "my-not-present-topic",
+					"topics %v not present or invalid: invalid topic %s: topic not found in metadata response, got topics: %v",
+					[]string{"my-not-present-topic"}, "my-not-present-topic", []string{ExternalTopicName},
 				),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
@@ -339,7 +339,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithInitBrokerConditions,
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerConfigParsed,
-						StatusExternalBrokerTopicNotPresentOrInvalid("my-not-present-topic"),
+						StatusExternalBrokerTopicNotPresentOrInvalid("my-not-present-topic", []string{ExternalTopicName}),
 						BrokerConfigMapAnnotations(),
 					),
 				},

@@ -536,12 +536,12 @@ func StatusFailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
 	}
 }
 
-func StatusTopicNotPresentOrInvalid(topicName string) func(obj duckv1.KRShaped) {
+func StatusTopicNotPresentOrInvalid(topicName string, availableTopics []string) func(obj duckv1.KRShaped) {
 	return func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionTopicReady,
 			base.ReasonTopicNotPresentOrInvalid,
-			fmt.Sprintf("topics %v: invalid topic %s", []string{topicName}, topicName),
+			fmt.Sprintf("topics %v: invalid topic %s: topic not found in metadata response, got topics: %v", []string{topicName}, topicName, availableTopics),
 		)
 	}
 }
