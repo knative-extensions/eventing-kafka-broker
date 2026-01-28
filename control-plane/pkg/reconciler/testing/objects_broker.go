@@ -407,9 +407,9 @@ func StatusBrokerFailedToCreateTopic(broker *eventing.Broker) {
 	StatusFailedToCreateTopic(BrokerTopic())(broker)
 }
 
-func StatusExternalBrokerTopicNotPresentOrInvalid(topicname string) func(broker *eventing.Broker) {
+func StatusExternalBrokerTopicNotPresentOrInvalid(topicname string, availableTopics []string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		StatusTopicNotPresentOrInvalid(topicname)(broker)
+		StatusTopicNotPresentOrInvalid(topicname, availableTopics)(broker)
 	}
 }
 
