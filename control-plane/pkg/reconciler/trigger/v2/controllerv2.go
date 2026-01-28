@@ -119,7 +119,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	// Filter Brokers and enqueue associated Triggers
 	brokerInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: kafka.BrokerClassFilter(),
-		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue),
+		Handler:    enqueueTriggers(logger, triggerLister, impl.Enqueue, coreFeatureStore),
 	})
 
 	// ConsumerGroup changes and enqueue associated Trigger
@@ -198,21 +198,29 @@ func hasKafkaBrokerTriggerFinalizer(finalizers []string, finalizerName string) b
 func enqueueTriggers(
 	logger *zap.Logger,
 	lister eventinglisters.TriggerLister,
-	enqueue func(obj interface{})) cache.ResourceEventHandler {
+	enqueue func(obj interface{}),
+	featureStore *feature.Store) cache.ResourceEventHandler {
 
 	return controller.HandleAll(func(obj interface{}) {
 
 		if broker, ok := obj.(*eventing.Broker); ok {
+			features := featureStore.Load()
 
 			selector := labels.SelectorFromSet(map[string]string{apiseventing.BrokerLabelKey: broker.Name})
-			triggers, err := lister.Triggers(broker.Namespace).List(selector)
+			triggers, err := lister.Triggers(metav1.NamespaceAll).List(selector)
 			if err != nil {
 				logger.Warn("Failed to list triggers", zap.Any("broker", broker), zap.Error(err))
 				return
 			}
 
 			for _, trigger := range triggers {
-				enqueue(trigger)
+				if features.IsCrossNamespaceEventLinks() {
+					if trigger.Spec.BrokerRef != nil && trigger.Spec.BrokerRef.Namespace == broker.Namespace {
+						enqueue(trigger)
+					}
+				} else if trigger.Namespace == broker.Namespace {
+					enqueue(trigger)
+				}
 			}
 		}
 	})
