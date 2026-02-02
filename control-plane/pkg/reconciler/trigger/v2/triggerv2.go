@@ -89,7 +89,16 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return fmt.Errorf("failed to setup OIDC service account: %w", err)
 	}
 
-	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
+	var brokerName, brokerNamespace string
+	if trigger.Spec.BrokerRef != nil && feature.FromContext(ctx).IsCrossNamespaceEventLinks() {
+		brokerName = trigger.Spec.BrokerRef.Name
+		brokerNamespace = trigger.Spec.BrokerRef.Namespace
+	} else {
+		brokerName = trigger.Spec.Broker
+		brokerNamespace = trigger.Namespace
+	}
+
+	broker, err := r.BrokerLister.Brokers(brokerNamespace).Get(brokerName)
 	if err != nil && !apierrors.IsNotFound(err) {
 		trigger.Status.MarkBrokerFailed("Failed to get broker", "%v", err)
 		return fmt.Errorf("failed to get broker: %w", err)
@@ -99,7 +108,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 		// Actually check if the broker doesn't exist.
 		// Note: do not introduce another `broker` variable with `:`
-		broker, err = r.EventingClient.EventingV1().Brokers(trigger.Namespace).Get(ctx, trigger.Spec.Broker, metav1.GetOptions{})
+		broker, err = r.EventingClient.EventingV1().Brokers(brokerNamespace).Get(ctx, brokerName, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 			return fmt.Errorf("failed to get broker: %w", err)
