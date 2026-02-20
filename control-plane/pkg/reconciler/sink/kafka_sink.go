@@ -147,12 +147,16 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		// If the topic is externally managed, we need to make sure that the topic exists and it's valid.
 		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ExternalTopicOwner
 
+		logger.Debug("Validating external topic", zap.String("topic", ks.Spec.Topic))
+
 		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {
+			logger.Debug("Topic validation failed", zap.String("topic", ks.Spec.Topic), zap.Error(err))
 			return statusConditionManager.TopicsNotPresentOrInvalidErr([]string{ks.Spec.Topic}, err)
 		}
 		if !isPresentAndValid {
-			// The topic might be invalid.
+			// The topic might be invalid (this should not be reached with current implementation).
+			logger.Warn("Topic validation returned false without error", zap.String("topic", ks.Spec.Topic))
 			return statusConditionManager.TopicsNotPresentOrInvalid([]string{ks.Spec.Topic})
 		}
 	}
