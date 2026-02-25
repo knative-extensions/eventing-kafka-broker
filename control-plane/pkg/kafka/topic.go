@@ -176,12 +176,24 @@ func CreateTopicIfDoesntExist(admin sarama.ClusterAdmin, logger *zap.Logger, top
 		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
 	)
 
-	createTopicError := admin.CreateTopic(topic, &config.TopicDetail, false)
-	if err, ok := createTopicError.(*sarama.TopicError); ok && err.Err == sarama.ErrTopicAlreadyExists {
-		return topic, nil
+	metadata, err := admin.DescribeTopics([]string{topic})
+	if err == nil && len(metadata) == 1 {
+		m := metadata[0]
+		if m.Err == sarama.ErrNoError && isValidSingleTopicMetadata(m, topic) {
+			logger.Debug("topic already exists, skipping create", zap.String("topic", topic))
+			return topic, nil
+		}
 	}
 
-	return topic, createTopicError
+	if err := admin.CreateTopic(topic, &config.TopicDetail, false); err != nil {
+		if topicErr, ok := err.(*sarama.TopicError); ok && topicErr.Err == sarama.ErrTopicAlreadyExists {
+			return topic, nil
+		}
+		return topic, err
+	}
+
+	logger.Info("created topic", zap.String("topic", topic))
+	return topic, nil
 }
 
 func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
@@ -215,56 +227,21 @@ func AreTopicsPresentAndValid(kafkaClusterAdmin sarama.ClusterAdmin, topics ...s
 
 	for _, t := range topics {
 		m, ok := metadataByTopic[t]
-		if !ok {
-			// Topic not found in DescribeTopics response
-			returnedTopics := make([]string, 0, len(metadata))
-			for _, meta := range metadata {
-				returnedTopics = append(returnedTopics, meta.Name)
-			}
-			return false, InvalidOrNotPresentTopic{
-				Topic:  t,
-				Reason: fmt.Sprintf("topic not found in metadata response, got topics: %v", returnedTopics),
-			}
-		}
-		if err := validateSingleTopicMetadata(m, t); err != nil {
-			return false, InvalidOrNotPresentTopic{
-				Topic:  t,
-				Reason: err.Error(),
-			}
+		if !ok || !isValidSingleTopicMetadata(m, t) {
+			return false, InvalidOrNotPresentTopic{Topic: t}
 		}
 	}
 	return true, nil
 }
 
-func validateSingleTopicMetadata(metadata *sarama.TopicMetadata, expectedTopic string) error {
-	reasons := []string{}
-
-	if len(metadata.Partitions) == 0 {
-		reasons = append(reasons, "no partitions")
-	}
-	if metadata.Name != expectedTopic {
-		reasons = append(reasons, fmt.Sprintf("name mismatch (expected: %s, got: %s)", expectedTopic, metadata.Name))
-	}
-	if metadata.IsInternal {
-		reasons = append(reasons, "marked as internal topic")
-	}
-
-	if len(reasons) == 0 {
-		return nil
-	}
-
-	return fmt.Errorf("validation failed: %s", strings.Join(reasons, ", "))
+func isValidSingleTopicMetadata(metadata *sarama.TopicMetadata, topic string) bool {
+	return len(metadata.Partitions) > 0 && metadata.Name == topic && !metadata.IsInternal
 }
 
 type InvalidOrNotPresentTopic struct {
-	Topic  string
-	Reason string
+	Topic string
 }
 
 func (it InvalidOrNotPresentTopic) Error() string {
-	if it.Reason != "" {
-		return fmt.Sprintf("invalid topic %s: %s", it.Topic, it.Reason)
-	}
-
 	return fmt.Sprintf("invalid topic %s", it.Topic)
 }
