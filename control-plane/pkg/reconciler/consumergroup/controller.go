@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -30,6 +31,7 @@ import (
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -81,6 +83,12 @@ const (
 
 var (
 	statefulSetScaleCacheRefreshPeriod = time.Minute * 5
+
+	statefulSetToSchedulerKey = map[string]string{
+		kafkainternals.SourceStatefulSetName:  KafkaSourceScheduler,
+		kafkainternals.BrokerStatefulSetName:  KafkaTriggerScheduler,
+		kafkainternals.ChannelStatefulSetName: KafkaChannelScheduler,
+	}
 )
 
 type envConfig struct {
@@ -115,17 +123,24 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	dispatcherPodInformer := podinformer.Get(ctx, internalsapi.DispatcherLabelSelectorStr)
 
-	schedulers := map[string]Scheduler{
-		KafkaSourceScheduler:  createKafkaScheduler(ctx, c, kafkainternals.SourceStatefulSetName, dispatcherPodInformer),
-		KafkaTriggerScheduler: createKafkaScheduler(ctx, c, kafkainternals.BrokerStatefulSetName, dispatcherPodInformer),
-		KafkaChannelScheduler: createKafkaScheduler(ctx, c, kafkainternals.ChannelStatefulSetName, dispatcherPodInformer),
+	schedulerMgr := newSchedulerManager(ctx, c, dispatcherPodInformer)
+
+	statefulSetLister := statefulset.Get(ctx).Lister().StatefulSets(system.Namespace())
+	for ssName := range statefulSetToSchedulerKey {
+		if _, err := statefulSetLister.Get(ssName); err == nil {
+			schedulerMgr.createSchedulerForStatefulSet(ssName)
+		} else if !apierrors.IsNotFound(err) {
+			logger.Warnw("Failed to check StatefulSet existence", zap.String("statefulset", ssName), zap.Error(err))
+		} else {
+			logger.Infow("StatefulSet not found, skipping scheduler creation", zap.String("statefulset", ssName))
+		}
 	}
 
 	mp := otel.GetMeterProvider()
 	meter := mp.Meter("knative.dev/eventing-kafka-broker/pkg/reconciler/consumergroup")
 
 	r := &Reconciler{
-		SchedulerFunc:                      func(s string) (Scheduler, bool) { sched, ok := schedulers[strings.ToLower(s)]; return sched, ok },
+		SchedulerFunc:                      schedulerMgr.get,
 		ConsumerLister:                     consumer.Get(ctx).Lister(),
 		InternalsClient:                    internalsclient.Get(ctx).InternalV1alpha1(),
 		SecretLister:                       secretinformer.Get(ctx).Lister(),
@@ -194,20 +209,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	impl := cgreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
 		return controller.Options{
-			PromoteFunc: func(bkt reconciler.Bucket) {
-				for _, value := range schedulers {
-					if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
-						ss.Promote(bkt, nil)
-					}
-				}
-			},
-			DemoteFunc: func(bkt reconciler.Bucket) {
-				for _, value := range schedulers {
-					if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
-						ss.Demote(bkt)
-					}
-				}
-			},
+			PromoteFunc: schedulerMgr.promote,
+			DemoteFunc:  schedulerMgr.demote,
 		}
 	})
 
@@ -241,6 +244,34 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	ResyncOnStatefulSetChange(ctx, impl.FilteredGlobalResync, consumerGroupInformer.Informer(), func(obj interface{}) (*kafkainternals.ConsumerGroup, bool) {
 		cg, ok := obj.(*kafkainternals.ConsumerGroup)
 		return cg, ok
+	})
+
+	statefulset.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: func(obj any) bool {
+			ss, ok := obj.(*appsv1.StatefulSet)
+			if !ok {
+				return false
+			}
+			return ss.GetNamespace() == system.Namespace() && kafkainternals.IsKnownStatefulSet(ss.GetName())
+		},
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj any) {
+				ss, ok := obj.(*appsv1.StatefulSet)
+				if !ok {
+					return
+				}
+				if schedulerMgr.createSchedulerForStatefulSet(ss.GetName()) {
+					impl.GlobalResync(consumerGroupInformer.Informer())
+				}
+			},
+			DeleteFunc: func(obj any) {
+				ss, ok := obj.(*appsv1.StatefulSet)
+				if !ok {
+					return
+				}
+				schedulerMgr.removeSchedulerForStatefulSet(ss.GetName())
+			},
+		},
 	})
 
 	dispatcherPodInformer.Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
@@ -425,5 +456,104 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 	return Scheduler{
 		Scheduler:       ss,
 		SchedulerConfig: c,
+	}
+}
+
+type schedulerManager struct {
+	mu           sync.RWMutex
+	schedulers   map[string]Scheduler // protected by mu
+	leaderBucket reconciler.Bucket    // protected by mu
+
+	ctx                   context.Context
+	config                SchedulerConfig
+	dispatcherPodInformer v1.PodInformer
+}
+
+func newSchedulerManager(ctx context.Context, config SchedulerConfig, dispatcherPodInformer v1.PodInformer) *schedulerManager {
+	return &schedulerManager{
+		schedulers:            make(map[string]Scheduler),
+		ctx:                   ctx,
+		config:                config,
+		dispatcherPodInformer: dispatcherPodInformer,
+	}
+}
+
+func (sm *schedulerManager) get(key string) (Scheduler, bool) {
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+	sched, ok := sm.schedulers[strings.ToLower(key)]
+	return sched, ok
+}
+
+func (sm *schedulerManager) createSchedulerForStatefulSet(ssName string) bool {
+	schedulerKey, ok := statefulSetToSchedulerKey[ssName]
+	if !ok {
+		return false
+	}
+
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	if _, exists := sm.schedulers[schedulerKey]; exists {
+		return false
+	}
+
+	logger := logging.FromContext(sm.ctx)
+	logger.Infow("Creating scheduler for StatefulSet", zap.String("statefulset", ssName), zap.String("scheduler", schedulerKey))
+
+	scheduler := createKafkaScheduler(sm.ctx, sm.config, ssName, sm.dispatcherPodInformer)
+	sm.schedulers[schedulerKey] = scheduler
+
+	// If we're already leader, promote the new scheduler immediately
+	if sm.leaderBucket != nil {
+		if ss, ok := scheduler.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+			ss.Promote(sm.leaderBucket, nil)
+		}
+	}
+
+	return true
+}
+
+func (sm *schedulerManager) removeSchedulerForStatefulSet(ssName string) bool {
+	schedulerKey, ok := statefulSetToSchedulerKey[ssName]
+	if !ok {
+		return false
+	}
+
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	if _, exists := sm.schedulers[schedulerKey]; !exists {
+		return false
+	}
+
+	logger := logging.FromContext(sm.ctx)
+	logger.Infow("Removing scheduler for deleted StatefulSet", zap.String("statefulset", ssName), zap.String("scheduler", schedulerKey))
+
+	delete(sm.schedulers, schedulerKey)
+	return true
+}
+
+func (sm *schedulerManager) promote(bkt reconciler.Bucket) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	sm.leaderBucket = bkt
+	for _, value := range sm.schedulers {
+		if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+			ss.Promote(bkt, nil)
+		}
+	}
+}
+
+func (sm *schedulerManager) demote(bkt reconciler.Bucket) {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	sm.leaderBucket = nil
+	for _, value := range sm.schedulers {
+		if ss, ok := value.Scheduler.(*statefulsetscheduler.StatefulSetScheduler); ok {
+			ss.Demote(bkt)
+		}
 	}
 }
