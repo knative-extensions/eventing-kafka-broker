@@ -2344,6 +2344,15 @@ func TestReconcileKind(t *testing.T) {
 			Env: env,
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
+					ExpectedTopics: []string{expectedTopicName},
+					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+						{
+							Name:       expectedTopicName,
+							IsInternal: false,
+							Partitions: []*sarama.PartitionMetadata{{}},
+							Err:        sarama.ErrNoError,
+						},
+					},
 					ExpectedTopicName: expectedTopicName,
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     numPartitions,
