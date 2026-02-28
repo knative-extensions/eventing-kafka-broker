@@ -20,9 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/sets"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
@@ -33,8 +31,6 @@ const (
 	// CloudEvents structured content mode.
 	ModeStructured = "structured"
 )
-
-var allowedContentModes = sets.NewString(ModeStructured, ModeBinary)
 
 // +genclient
 // +genreconciler
@@ -57,11 +53,7 @@ type KafkaSink struct {
 }
 
 // Check that Channel can be validated, can be defaulted, and has immutable fields.
-var _ apis.Validatable = (*KafkaSink)(nil)
-var _ apis.Defaultable = (*KafkaSink)(nil)
 var _ runtime.Object = (*KafkaSink)(nil)
-var _ duckv1.KRShaped = (*KafkaSink)(nil)
-var _ apis.Convertible = (*KafkaSink)(nil)
 var _ kmeta.OwnerRefable = (*KafkaSink)(nil)
 
 // KafkaSinkSpec defines the desired state of the Kafka Sink.
