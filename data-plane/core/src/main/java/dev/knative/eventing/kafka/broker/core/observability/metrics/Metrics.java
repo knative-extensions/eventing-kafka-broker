@@ -148,8 +148,8 @@ public class Metrics {
         public static final String RESPONSE_CODE = "http.response.status_code";
         public static final String EVENT_TYPE = "cloudevents.type";
 
-        public static final String RESOURCE_NAME_TEMPLATE = "kn.eventing.%s.name";
-        public static final String RESOURCE_NAMESPACE_TEMPLATE = "kn.eventing.%s.namespace";
+        public static final String RESOURCE_NAME_TEMPLATE = "kn.%s.name";
+        public static final String RESOURCE_NAMESPACE_TEMPLATE = "kn.%s.namespace";
         public static final String CONSUMER_NAME = "messaging.consumer.group.name";
         public static final String PARTITION_ID = "messaging.destination.partition.id";
         public static final String DESTINATION_NAME = "messaging.destination.name";
