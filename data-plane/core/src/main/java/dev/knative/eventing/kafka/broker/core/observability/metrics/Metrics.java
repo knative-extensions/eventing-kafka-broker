@@ -160,8 +160,8 @@ public class Metrics {
         public static io.micrometer.core.instrument.Tags resourceTags(
                 final String resourceKind, final String resourceName, final String resourceNamespace) {
             return io.micrometer.core.instrument.Tags.of(
-                    Tag.of(String.format(RESOURCE_NAME_TEMPLATE, resourceKind), resourceName),
-                    Tag.of(String.format(RESOURCE_NAMESPACE_TEMPLATE, resourceKind), resourceNamespace));
+                    Tag.of(String.format(RESOURCE_NAME_TEMPLATE, resourceKind.toLowerCase()), resourceName),
+                    Tag.of(String.format(RESOURCE_NAMESPACE_TEMPLATE, resourceKind.toLowerCase()), resourceNamespace));
         }
     }
 
