@@ -44,8 +44,8 @@ func SetupNamespacedBroker(name string) *feature.Feature {
 		broker.WithBrokerClass(kafka.NamespacedBrokerClass),
 		broker.WithConfig("kafka-broker-config"),
 	))
-	f.Setup("Broker is ready", broker.IsReady(name))
-	f.Setup("Broker is addressable", broker.IsAddressable(name))
+	f.Requirement("Broker is ready", broker.IsReady(name))
+	f.Requirement("Broker is addressable", broker.IsAddressable(name))
 
 	return f
 }

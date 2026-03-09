@@ -49,12 +49,12 @@ func RotateSinkTLSCertificates(ctx context.Context) *feature.Feature {
 	topic := feature.MakeRandomK8sName("topic")
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 
 	f.Setup("Install kafkasink", kafkasink.Install(sink, topic, testpkg.BootstrapServersPlaintextArr,
 		kafkasink.WithNumPartitions(10),
 		kafkasink.WithReplicationFactor(1)))
-	f.Setup("KafkaSink is ready", kafkasink.IsReady(sink))
+	f.Requirement("KafkaSink is ready", kafkasink.IsReady(sink))
 
 	f.Setup("Rotate ingress certificate", certificate.Rotate(certificate.RotateCertificate{
 		Certificate: types.NamespacedName{
@@ -63,7 +63,7 @@ func RotateSinkTLSCertificates(ctx context.Context) *feature.Feature {
 		},
 	}))
 
-	f.Setup("Sink has HTTPS address", kafkasink.ValidateAddress(sink, addressable.AssertHTTPSAddress))
+	f.Requirement("Sink has HTTPS address", kafkasink.ValidateAddress(sink, addressable.AssertHTTPSAddress))
 	event := cetest.FullEvent()
 	event.SetID(uuid.New().String())
 

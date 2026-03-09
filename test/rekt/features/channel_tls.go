@@ -64,7 +64,7 @@ func RotateChannelTLSCertificates() *feature.Feature {
 		kafkachannel.WithReplicationFactor("1"),
 		kafkachannel.WithRetentionDuration("P1D"),
 	))
-	f.Setup("channel is ready", kafkachannel.IsReady(channelName))
+	f.Requirement("channel is ready", kafkachannel.IsReady(channelName))
 
 	f.Setup("install subscription", func(ctx context.Context, t feature.T) {
 		d := service.AsDestinationRef(sink)
@@ -77,9 +77,9 @@ func RotateChannelTLSCertificates() *feature.Feature {
 			subscription.WithSubscriberFromDestination(d))(ctx, t)
 	})
 
-	f.Setup("subscription is ready", subscription.IsReady(subscriptionName))
+	f.Requirement("subscription is ready", subscription.IsReady(subscriptionName))
 
-	f.Setup("Channel has HTTPS address", kafkachannel.ValidateAddress(channelName, addressable.AssertHTTPSAddress))
+	f.Requirement("Channel has HTTPS address", kafkachannel.ValidateAddress(channelName, addressable.AssertHTTPSAddress))
 
 	event := cetest.FullEvent()
 	event.SetID(uuid.New().String())

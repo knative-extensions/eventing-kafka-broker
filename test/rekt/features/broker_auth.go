@@ -111,14 +111,14 @@ func SetupBrokerAuth(bootstrapServer string, authSecretOptions ...manifest.CfgFn
 		broker.WithEnvConfig(),
 		broker.WithConfig(brokerConfigName))...,
 	))
-	f.Setup("Broker ready", broker.IsReady(brokerName))
+	f.Requirement("Broker ready", broker.IsReady(brokerName))
 
 	f.Setup("Install sink", eventshub.Install(sinkName,
 		eventshub.StartReceiver))
 
 	f.Setup("Create trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(svc.AsKReference(sinkName), "")))
-	f.Setup("Trigger ready", trigger.IsReady(triggerName))
+	f.Requirement("Trigger ready", trigger.IsReady(triggerName))
 
 	f.Requirement("Send matching event", eventshub.Install(senderName,
 		eventshub.InputEvent(eventToSend),
@@ -169,8 +169,8 @@ func TriggerUsesConsumerGroupIDTemplate() *feature.Feature {
 	f.Setup("install broker", broker.Install(brokerName))
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Requirement("install trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sinkName), "")))
 	f.Requirement("trigger is ready", trigger.IsReady(triggerName))

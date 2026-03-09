@@ -57,8 +57,8 @@ func brokerAddsKnativeKafkaCEExtensions() *feature.Feature {
 	inputEvent := test.FullEvent()
 
 	f.Setup("install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 
@@ -96,7 +96,7 @@ func channelAddsKnativeKafkaCEExtensions() *feature.Feature {
 		kafkachannel.WithNumPartitions("3"),
 		kafkachannel.WithReplicationFactor("1"),
 	))
-	f.Setup("channel is ready", kafkachannel.IsReady(channelName))
+	f.Requirement("channel is ready", kafkachannel.IsReady(channelName))
 
 	f.Setup("install sink", eventshub.Install(sinkName, eventshub.StartReceiver))
 
@@ -136,11 +136,11 @@ func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
 	event.SetID(uuid.New().String())
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 
 	// Binary content mode is default for Kafka Sink.
 	f.Setup("install kafkasink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
-	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 
 	f.Setup("install eventshub receiver", eventshub.Install(sinkName, eventshub.StartReceiver))
 
@@ -151,7 +151,7 @@ func sourceAddsKnativeKafkaCEExtensions() *feature.Feature {
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	options := []eventshub.EventsHubOption{
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
