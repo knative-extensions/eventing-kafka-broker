@@ -20,6 +20,7 @@
 package e2enew
 
 import (
+	"context"
 	"testing"
 
 	"knative.dev/reconciler-test/pkg/environment"
@@ -72,9 +73,6 @@ func SendsEventWithRetries() *feature.Feature {
 		broker.WithEnvConfig()...,
 	))
 
-	f.Requirement("broker is ready", broker.IsReady(brokerName))
-	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
-
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
 		eventshub.StartReceiver,
@@ -93,13 +91,17 @@ func SendsEventWithRetries() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("receive event on sink",
 		OnStore(sinkName).
@@ -132,9 +134,6 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 		broker.WithEnvConfig()...,
 	))
 
-	f.Requirement("broker is ready", broker.IsReady(brokerName))
-	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
-
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
 		eventshub.StartReceiver,
@@ -154,13 +153,17 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("receive event on sink",
 		OnStore(sinkName).
@@ -193,9 +196,6 @@ func SendsEventNoRetries() *feature.Feature {
 		broker.WithEnvConfig()...,
 	))
 
-	f.Requirement("broker is ready", broker.IsReady(brokerName))
-	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
-
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
 		eventshub.StartReceiver,
@@ -212,13 +212,17 @@ func SendsEventNoRetries() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("receive event on sink",
 		OnStore(sinkName).

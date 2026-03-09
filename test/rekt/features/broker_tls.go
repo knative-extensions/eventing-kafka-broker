@@ -74,25 +74,27 @@ func RotateBrokerTLSCertificates() *feature.Feature {
 		broker.WithEnvConfig(),
 		broker.WithConfig(brokerConfig))...,
 	))
-	f.Requirement("Broker is ready", broker.IsReady(brokerName))
 	f.Setup("install trigger", func(ctx context.Context, t feature.T) {
 		d := service.AsDestinationRef(sink)
 		d.CACerts = eventshub.GetCaCerts(ctx)
 		trigger.Install(triggerName, trigger.WithBrokerName(brokerName), trigger.WithSubscriberFromDestination(d))(ctx, t)
 	})
-	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
-	f.Requirement("Broker has HTTPS address", broker.ValidateAddress(brokerName, addressable.AssertHTTPSAddress))
 
 	event := cetest.FullEvent()
 	event.SetID(uuid.New().String())
 
-	f.Requirement("install source", eventshub.Install(source,
-		eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, nil),
-		eventshub.InputEvent(event),
-		// Send multiple events so that we take into account that the certificate rotation might
-		// be detected by the server after some time.
-		eventshub.SendMultipleEvents(100, 3*time.Second),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		broker.ValidateAddress(brokerName, addressable.AssertHTTPSAddress)(ctx, t)
+		eventshub.Install(source,
+			eventshub.StartSenderToResourceTLS(broker.GVR(), brokerName, nil),
+			eventshub.InputEvent(event),
+			// Send multiple events so that we take into account that the certificate rotation might
+			// be detected by the server after some time.
+			eventshub.SendMultipleEvents(100, 3*time.Second),
+		)(ctx, t)
+	})
 
 	f.Assert("Event sent", assert.OnStore(source).
 		MatchSentEvent(cetest.HasId(event.ID())).

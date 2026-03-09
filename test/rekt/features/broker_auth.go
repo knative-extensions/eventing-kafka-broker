@@ -111,18 +111,20 @@ func SetupBrokerAuth(bootstrapServer string, authSecretOptions ...manifest.CfgFn
 		broker.WithEnvConfig(),
 		broker.WithConfig(brokerConfigName))...,
 	))
-	f.Requirement("Broker ready", broker.IsReady(brokerName))
 
 	f.Setup("Install sink", eventshub.Install(sinkName,
 		eventshub.StartReceiver))
 
 	f.Setup("Create trigger", trigger.Install(triggerName, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(svc.AsKReference(sinkName), "")))
-	f.Requirement("Trigger ready", trigger.IsReady(triggerName))
 
-	f.Requirement("Send matching event", eventshub.Install(senderName,
-		eventshub.InputEvent(eventToSend),
-		eventshub.StartSenderToResource(broker.GVR(), brokerName)))
+	f.Requirement("Send matching event", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(senderName,
+			eventshub.InputEvent(eventToSend),
+			eventshub.StartSenderToResource(broker.GVR(), brokerName))(ctx, t)
+	})
 
 	f.Assert("Event received", assert.OnStore(sinkName).MatchEvent(test.HasId(eventID)).Exact(1))
 

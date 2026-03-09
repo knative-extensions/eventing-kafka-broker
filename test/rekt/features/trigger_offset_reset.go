@@ -60,14 +60,16 @@ func TriggerLatestOffset() *feature.Feature {
 
 	f.Setup("install config", configmap.Copy(types.NamespacedName{Namespace: system.Namespace(), Name: "kafka-broker-config"}, cmName))
 	f.Setup("install broker", broker.Install(brokerName, append(broker.WithEnvConfig(), broker.WithConfig(cmName))...))
-	f.Requirement("broker is ready", broker.IsReady(brokerName))
 
 	f.Setup("install sink1", eventshub.Install(sink1, eventshub.StartReceiver))
 	f.Setup("install sink2", eventshub.Install(sink2, eventshub.StartReceiver))
 	f.Setup("install trigger 1", trigger.Install(trigger1Name, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sink1), "")))
-	f.Requirement("trigger 1 is ready", trigger.IsReady(trigger1Name))
 
-	f.Requirement("send event 1", eventshub.Install(source1, eventshub.InputEvent(event1), eventshub.StartSenderToResource(broker.GVR(), brokerName)))
+	f.Requirement("send event 1", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		trigger.IsReady(trigger1Name)(ctx, t)
+		eventshub.Install(source1, eventshub.InputEvent(event1), eventshub.StartSenderToResource(broker.GVR(), brokerName))(ctx, t)
+	})
 	f.Requirement("event 1 received", assert.OnStore(sink1).MatchEvent(test.HasId(eventID1)).Exact(1))
 
 	f.Assert("install trigger 2", trigger.Install(trigger2Name, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sink2), "")))

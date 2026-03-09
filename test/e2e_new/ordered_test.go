@@ -81,8 +81,6 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Requirement("broker is ready", broker.IsReady(brokerName))
-	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -97,15 +95,19 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
 	))
-	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
+			eventshub.AddSequence,
+			eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+		)(ctx, t)
+	})
 
 	f.Assert("receive events in order", assertDeliveryOrderAndTiming(
 		sinkName,
@@ -139,8 +141,6 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(multiplepartitionconfig.ConfigMapName),
 	))
-	f.Requirement("broker is ready", broker.IsReady(brokerName))
-	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -155,29 +155,33 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
 	))
-	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source for events keyed 'a'", eventshub.Install(
-		feature.MakeRandomK8sName("source-a"),
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEventWithEncoding(evA, cloudevents.EncodingBinary),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
-	))
-	f.Requirement("install source for events keyed 'b'", eventshub.Install(
-		feature.MakeRandomK8sName("source-b"),
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEventWithEncoding(evB, cloudevents.EncodingBinary),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
-	))
-	f.Requirement("install source for events keyed 'c'", eventshub.Install(
-		feature.MakeRandomK8sName("source-c"),
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEventWithEncoding(evC, cloudevents.EncodingBinary),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(20, 100*time.Millisecond),
-	))
+	f.Requirement("install sources", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			feature.MakeRandomK8sName("source-a"),
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEventWithEncoding(evA, cloudevents.EncodingBinary),
+			eventshub.AddSequence,
+			eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+		)(ctx, t)
+		eventshub.Install(
+			feature.MakeRandomK8sName("source-b"),
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEventWithEncoding(evB, cloudevents.EncodingBinary),
+			eventshub.AddSequence,
+			eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+		)(ctx, t)
+		eventshub.Install(
+			feature.MakeRandomK8sName("source-c"),
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEventWithEncoding(evC, cloudevents.EncodingBinary),
+			eventshub.AddSequence,
+			eventshub.SendMultipleEvents(20, 100*time.Millisecond),
+		)(ctx, t)
+	})
 
 	f.Assert("receive events keyed 'a' in order", assertDeliveryOrderAndTiming(
 		sinkName,
