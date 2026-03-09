@@ -81,8 +81,8 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -97,7 +97,7 @@ func SinglePartitionOrderedDelivery() *feature.Feature {
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -139,8 +139,8 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 		broker.WithBrokerClass(broker.EnvCfg.BrokerClass),
 		broker.WithConfig(multiplepartitionconfig.ConfigMapName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -155,7 +155,7 @@ func MultiplePartitionOrderedDelivery() *feature.Feature {
 			"kafka.eventing.knative.dev/delivery.order": "ordered",
 		}),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source for events keyed 'a'", eventshub.Install(
 		feature.MakeRandomK8sName("source-a"),

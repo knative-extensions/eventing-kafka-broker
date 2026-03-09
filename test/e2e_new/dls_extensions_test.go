@@ -80,8 +80,8 @@ func SubscriberUnreachable() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install dead letter sink", eventshub.Install(
 		deadLetterSinkName,
@@ -93,7 +93,7 @@ func SubscriberUnreachable() *feature.Feature {
 		trigger.WithSubscriber(nil, "http://fake.svc.cluster.local"),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -132,8 +132,8 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 	))
 
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -153,7 +153,7 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -195,8 +195,8 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorData := `{ "message": "catastrophic failure" }`
 	f.Setup("install sink", eventshub.Install(
@@ -216,7 +216,7 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -260,8 +260,8 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorDataTruncated := strings.Repeat("X", 1024)
 	errorData := errorDataTruncated + "YYYYYYY"
@@ -282,7 +282,7 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -326,8 +326,8 @@ func SubscriberReturnedHTMLWebpage() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorData := "<!doctype html>\n<html>\n<head>\n    <title>Error Page(tm)</title>\n</head>\n<body>\n<p>Quoth the server, 404!\n</body></html>"
 	f.Setup("install sink", eventshub.Install(
@@ -347,7 +347,7 @@ func SubscriberReturnedHTMLWebpage() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -391,8 +391,8 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorData := `{ "message": "catastrophic failure" }`
 	f.Setup("install sink", eventshub.Install(
@@ -413,7 +413,7 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,

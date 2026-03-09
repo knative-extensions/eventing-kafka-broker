@@ -72,8 +72,8 @@ func SendsEventWithRetries() *feature.Feature {
 		broker.WithEnvConfig()...,
 	))
 
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -93,7 +93,7 @@ func SendsEventWithRetries() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -132,8 +132,8 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 		broker.WithEnvConfig()...,
 	))
 
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -154,7 +154,7 @@ func SendsEventErrorWithoutRetries() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,
@@ -193,8 +193,8 @@ func SendsEventNoRetries() *feature.Feature {
 		broker.WithEnvConfig()...,
 	))
 
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
+	f.Requirement("broker is ready", broker.IsReady(brokerName))
+	f.Requirement("broker is addressable", broker.IsAddressable(brokerName))
 
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
@@ -212,7 +212,7 @@ func SendsEventNoRetries() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
+	f.Requirement("trigger is ready", trigger.IsReady(triggerName))
 
 	f.Requirement("install source", eventshub.Install(
 		sourceName,

@@ -141,7 +141,7 @@ func BrokerConsumer(brokerName string) *feature.Feature {
 		trigger.WithFilter(filter1),
 		trigger.WithSubscriber(service.AsKReference(sink1), ""),
 	))
-	f.Setup("trigger1 goes ready", trigger.IsReady(trigger1))
+	f.Requirement("trigger1 goes ready", trigger.IsReady(trigger1))
 
 	filter2 := eventingv1.TriggerFilterAttributes{
 		"source": filteredEventSource,
@@ -153,7 +153,7 @@ func BrokerConsumer(brokerName string) *feature.Feature {
 		trigger.WithFilter(filter2),
 		trigger.WithSubscriber(service.AsKReference(sink2), ""),
 	))
-	f.Setup("trigger2 goes ready", trigger.IsReady(trigger2))
+	f.Requirement("trigger2 goes ready", trigger.IsReady(trigger2))
 
 	filterTransformer := eventingv1.TriggerFilterAttributes{
 		"source": replySource,
@@ -166,7 +166,7 @@ func BrokerConsumer(brokerName string) *feature.Feature {
 		trigger.WithFilter(filterTransformer),
 		trigger.WithSubscriber(service.AsKReference(sinkTransformer), ""),
 	))
-	f.Setup("trigger transformer goes ready", trigger.IsReady(triggerTransformer))
+	f.Requirement("trigger transformer goes ready", trigger.IsReady(triggerTransformer))
 
 	filterReply := eventingv1.TriggerFilterAttributes{
 		"source": transformedEventSource,
@@ -179,7 +179,7 @@ func BrokerConsumer(brokerName string) *feature.Feature {
 		trigger.WithFilter(filterReply),
 		trigger.WithSubscriber(service.AsKReference(sink1), ""),
 	))
-	f.Setup("trigger transformer goes ready", trigger.IsReady(triggerTransformer))
+	f.Requirement("trigger transformer goes ready", trigger.IsReady(triggerTransformer))
 
 	f.Stable("Conformance").
 		ShouldNot("The Broker SHOULD NOT upgrade the CloudEvents version",
