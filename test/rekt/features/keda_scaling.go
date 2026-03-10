@@ -68,11 +68,11 @@ func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {
 	event.SetID(uuid.New().String())
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 
 	// Binary content mode is default for Kafka Sink.
 	f.Setup("install kafkasink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
-	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
@@ -83,7 +83,7 @@ func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	// after the event is sent, the source should scale down to zero replicas
 	f.Alpha("kafka source consumergroup scaled object").MustNot("have an authentication ref set on the trigger", verifyScaledObjectTriggerRef(getKafkaSourceCg(kafkaSource)))
@@ -107,11 +107,11 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	event.SetID(uuid.New().String())
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 
 	// Binary content mode is default for Kafka Sink.
 	f.Setup("install kafkasink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
-	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
@@ -122,7 +122,7 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	// check that the source initially has replicas = 0
 	f.Setup("Source should start with replicas = 0", verifyConsumerGroupReplicas(getKafkaSourceCg(kafkaSource), 0, true))

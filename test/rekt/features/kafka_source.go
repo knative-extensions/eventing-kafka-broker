@@ -219,7 +219,7 @@ func KafkaSourceInitialOffsetEarliest(count int, topic string) *feature.Feature 
 		kafkasource.WithInitialOffset(sources.OffsetEarliest),
 		kafkasource.WithSink(service.AsDestinationRef(sink)),
 	))
-	f.Setup("KafkaSource is ready", kafkasource.IsReady(source))
+	f.Requirement("KafkaSource is ready", kafkasource.IsReady(source))
 
 	f.Requirement("consumergroup has earliest offset set", compareConsumerGroup(
 		source,
@@ -302,13 +302,13 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 	secretName := feature.MakeRandomK8sName("secret")
 
 	f.Setup("install kafka topic", kafkatopic.Install(kafkaSourceCfg.topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(kafkaSourceCfg.topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(kafkaSourceCfg.topic))
 
 	// Binary content mode is default for Kafka Sink.
 	f.Setup("install kafkasink", kafkasink.Install(kafkaSinkCfg.sinkName, kafkaSourceCfg.topic,
 		testpkg.BootstrapServersPlaintextArr,
 		kafkaSinkCfg.opts...))
-	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSinkCfg.sinkName))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSinkCfg.sinkName))
 
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
 
@@ -343,7 +343,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 	}
 
 	f.Setup("install kafka source", kafkasource.Install(kafkaSourceCfg.sourceName, kafkaSourceOpts...))
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSourceCfg.sourceName))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSourceCfg.sourceName))
 
 	return kafkaSinkCfg.sinkName, receiver
 }
@@ -610,11 +610,11 @@ func KafkaSourceTLSSink() *feature.Feature {
 	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 
 	// Binary content mode is default for Kafka Sink.
 	f.Setup("install KafkaSink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
-	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 
 	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiverTLS))
 
@@ -627,7 +627,7 @@ func KafkaSourceTLSSink() *feature.Feature {
 			kafkasource.WithSink(d),
 		)(ctx, t)
 	})
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	f.Requirement("install eventshub sender", eventshub.Install(sender,
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
@@ -660,11 +660,11 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 
 	// Binary content mode is default for Kafka Sink.
 	f.Setup("install KafkaSink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
-	f.Setup("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 
 	f.Setup("install eventshub receiver", eventshub.Install(receiver,
 		eventshub.StartReceiverTLS,
@@ -685,7 +685,7 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 			kafkasource.WithSink(d),
 		)(ctx, t)
 	})
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	f.Requirement("install eventshub sender", eventshub.Install(sender,
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
@@ -755,7 +755,7 @@ func KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic string) *feat
 	}
 
 	f.Setup("update kafka source", kafkasource.Install(kafkaSource, kafkaSourceUpdateOpts...))
-	f.Setup("kafka source is ready", kafkasource.IsReady(kafkaSource))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
 	e := cetest.FullEvent()
 

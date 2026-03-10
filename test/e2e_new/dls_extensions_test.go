@@ -80,9 +80,6 @@ func SubscriberUnreachable() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
-
 	f.Setup("install dead letter sink", eventshub.Install(
 		deadLetterSinkName,
 		eventshub.StartReceiver,
@@ -93,15 +90,19 @@ func SubscriberUnreachable() *feature.Feature {
 		trigger.WithSubscriber(nil, "http://fake.svc.cluster.local"),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
-		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(1, 100*time.Millisecond),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEventWithEncoding(ev, cloudevents.EncodingBinary),
+			eventshub.AddSequence,
+			eventshub.SendMultipleEvents(1, 100*time.Millisecond),
+		)(ctx, t)
+	})
 
 	f.Assert("knativeerrordest added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
@@ -132,9 +133,6 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 	))
 
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
-
 	f.Setup("install sink", eventshub.Install(
 		sinkName,
 		eventshub.StartReceiver,
@@ -153,13 +151,17 @@ func SubscriberReturnedErrorNoData() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("knativeerrordest & knativeerrorcode added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
@@ -195,8 +197,6 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorData := `{ "message": "catastrophic failure" }`
 	f.Setup("install sink", eventshub.Install(
@@ -216,13 +216,17 @@ func SubscriberReturnedErrorSmallData() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
@@ -260,8 +264,6 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorDataTruncated := strings.Repeat("X", 1024)
 	errorData := errorDataTruncated + "YYYYYYY"
@@ -282,13 +284,17 @@ func SubscriberReturnedErrorLargeData() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("knativeerrordest, knativeerrorcode, truncated knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
@@ -326,8 +332,6 @@ func SubscriberReturnedHTMLWebpage() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorData := "<!doctype html>\n<html>\n<head>\n    <title>Error Page(tm)</title>\n</head>\n<body>\n<p>Quoth the server, 404!\n</body></html>"
 	f.Setup("install sink", eventshub.Install(
@@ -347,13 +351,17 @@ func SubscriberReturnedHTMLWebpage() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,
@@ -391,8 +399,6 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 		broker.WithBrokerClass(kafka.BrokerClass),
 		broker.WithConfig(cmName),
 	))
-	f.Setup("broker is ready", broker.IsReady(brokerName))
-	f.Setup("broker is addressable", broker.IsAddressable(brokerName))
 
 	errorData := `{ "message": "catastrophic failure" }`
 	f.Setup("install sink", eventshub.Install(
@@ -413,13 +419,17 @@ func SubscriberReturnedCustomExtensionHeader() *feature.Feature {
 		trigger.WithSubscriber(service.AsKReference(sinkName), ""),
 		trigger.WithDeadLetterSink(service.AsKReference(deadLetterSinkName), ""),
 	))
-	f.Setup("trigger is ready", trigger.IsReady(triggerName))
 
-	f.Requirement("install source", eventshub.Install(
-		sourceName,
-		eventshub.StartSenderToResource(broker.GVR(), brokerName),
-		eventshub.InputEvent(ev),
-	))
+	f.Requirement("install source", func(ctx context.Context, t feature.T) {
+		broker.IsReady(brokerName)(ctx, t)
+		broker.IsAddressable(brokerName)(ctx, t)
+		trigger.IsReady(triggerName)(ctx, t)
+		eventshub.Install(
+			sourceName,
+			eventshub.StartSenderToResource(broker.GVR(), brokerName),
+			eventshub.InputEvent(ev),
+		)(ctx, t)
+	})
 
 	f.Assert("knativeerrordest, knativeerrorcode, knativeerrordata and custom extension header added", assertEnhancedWithKnativeErrorExtensions(
 		deadLetterSinkName,

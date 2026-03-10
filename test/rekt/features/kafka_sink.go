@@ -80,27 +80,27 @@ func BrokerWithTriggersAndKafkaSink(env environment.Environment) *feature.Featur
 	}
 
 	f.Setup("Install broker", broker.Install(brokerName, broker.WithEnvConfig()...))
-	f.Setup("Broker is ready", broker.IsReady(brokerName))
-	f.Setup("Topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("Broker is ready", broker.IsReady(brokerName))
+	f.Requirement("Topic is ready", kafkatopic.IsReady(topic))
 
 	f.Setup("Install kafkasink", kafkasink.Install(sink, topic, testpkg.BootstrapServersPlaintextArr,
 		kafkasink.WithNumPartitions(10),
 		kafkasink.WithReplicationFactor(1)))
-	f.Setup("KafkaSink is ready", kafkasink.IsReady(sink))
+	f.Requirement("KafkaSink is ready", kafkasink.IsReady(sink))
 
 	f.Setup("Create trigger 1", trigger.Install(trigger1Name, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(kafkasink.AsKReference(sink, env.Namespace()), ""),
 		trigger.WithFilter(map[string]string{
 			"type": trigger1FilterType,
 		})))
-	f.Setup("Trigger 1 is ready", trigger.IsReady(trigger1Name))
+	f.Requirement("Trigger 1 is ready", trigger.IsReady(trigger1Name))
 
 	f.Setup("Create trigger 2", trigger.Install(trigger2Name, trigger.WithBrokerName(brokerName),
 		trigger.WithSubscriber(kafkasink.AsKReference(sink, env.Namespace()), ""),
 		trigger.WithFilter(map[string]string{
 			"type": trigger2FilterType,
 		})))
-	f.Setup("Trigger 2 is ready", trigger.IsReady(trigger2Name))
+	f.Requirement("Trigger 2 is ready", trigger.IsReady(trigger2Name))
 
 	f.Requirement("Send event for trigger 1", eventshub.Install(feature.MakeRandomK8sName("sender-1"),
 		eventshub.InputEvent(eventTrigger1),
@@ -132,9 +132,9 @@ func SetupKafkaTopicWithEvents(count int, topic string) *feature.Feature {
 	source := feature.MakeRandomK8sName("source-to-ksink")
 
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
-	f.Setup("topic is ready", kafkatopic.IsReady(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
 	f.Setup("install kafkasink", kafkasink.Install(ksink, topic, testpkg.BootstrapServersPlaintextArr))
-	f.Setup("KafkaSink is ready", kafkasink.IsReady(ksink))
+	f.Requirement("KafkaSink is ready", kafkasink.IsReady(ksink))
 
 	f.Requirement("install source for ksink", eventshub.Install(source,
 		eventshub.StartSenderToResource(kafkasink.GVR(), ksink),

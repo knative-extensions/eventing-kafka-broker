@@ -44,6 +44,7 @@ EVENTING_KAFKA_BROKER_UPGRADE_TESTS_FINISHEDSLEEP="5m" \
 go_test_e2e -v \
   -tags=upgrade \
   -timeout="${TIMEOUT}" \
+  -parallel=16 \
   ./test/upgrade ||
   fail_test
 

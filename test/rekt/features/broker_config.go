@@ -49,7 +49,7 @@ func BrokerWithCustomReplicationFactorAndNumPartitions(env environment.Environme
 		broker.WithEnvConfig(),
 		broker.WithConfig(brokerConfig))...,
 	))
-	f.Setup("Broker ready", broker.IsReady(brokerName))
+	f.Requirement("Broker ready", broker.IsReady(brokerName))
 
 	topic, err := apisconfig.DefaultFeaturesConfig().ExecuteBrokersTopicTemplate(metav1.ObjectMeta{Name: brokerName, Namespace: env.Namespace()})
 	if err != nil {
