@@ -109,7 +109,9 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         // Decorate the span with event specific attributed
         TracingSpan.decorateCurrentWithEvent(record.value());
 
-        final var eventTypeTag = Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
+        final var eventTypeTag = Metrics.DISABLE_EVENT_TYPE_TAG
+                ? UNKNOWN_EVENT_TYPE_TAG
+                : Tag.of(Metrics.Tags.EVENT_TYPE, record.value().getType());
 
         publishRecord(producer, record)
                 .onSuccess(m -> {
