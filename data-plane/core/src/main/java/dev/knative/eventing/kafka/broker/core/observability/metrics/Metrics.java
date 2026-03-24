@@ -61,6 +61,9 @@ public class Metrics {
     public static final boolean DISABLE_KAFKA_CLIENTS_METRICS =
             Boolean.parseBoolean(System.getenv("DISABLE_KAFKA_CLIENTS_METRICS"));
 
+    public static final boolean DISABLE_EVENT_TYPE_TAG =
+            Boolean.parseBoolean(System.getenv("METRICS_DISABLE_EVENT_TYPE_TAG"));
+
     // There are different thread polls usable, mainly, each with its own drawbacks
     // for our use case:
     // - cached thread pools
