@@ -421,16 +421,16 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private Tags getTags(HttpResponse<?> response, ConsumerRecordContext recordContext) {
         final var eventTypeTag = Metrics.DISABLE_EVENT_TYPE_TAG
                 ? UNKNOWN_EVENT_TYPE_TAG
-                : Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType());
+                : Tag.of(
+                        Metrics.Tags.EVENT_TYPE,
+                        recordContext.getRecord().value().getType());
         Tags tags;
         if (response == null) {
             tags = Tags.of(eventTypeTag);
         } else {
             tags = this.consumerVerticleContext
                     .getTags()
-                    .and(
-                            Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())),
-                            eventTypeTag);
+                    .and(Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())), eventTypeTag);
         }
         return tags;
     }
@@ -444,7 +444,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         }
         final var eventTypeTag = Metrics.DISABLE_EVENT_TYPE_TAG
                 ? UNKNOWN_EVENT_TYPE_TAG
-                : Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType());
+                : Tag.of(
+                        Metrics.Tags.EVENT_TYPE,
+                        recordContext.getRecord().value().getType());
         return this.consumerVerticleContext.getTags().and(eventTypeTag);
     }
 
