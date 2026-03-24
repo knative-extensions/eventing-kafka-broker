@@ -68,6 +68,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     // Invalid cloud event records that are discarded by dispatch may not have a record type. So we set Tag as below.
     private static final Tag INVALID_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "InvalidCloudEvent");
     private static final Tag OFFSET_SKIPPING_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "OffsetSkippingCloudEvent");
+    private static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
 
     private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
     private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
@@ -418,18 +419,18 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     }
 
     private Tags getTags(HttpResponse<?> response, ConsumerRecordContext recordContext) {
+        final var eventTypeTag = Metrics.DISABLE_EVENT_TYPE_TAG
+                ? UNKNOWN_EVENT_TYPE_TAG
+                : Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType());
         Tags tags;
         if (response == null) {
-            tags = Tags.of(
-                    Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType());
+            tags = Tags.of(eventTypeTag);
         } else {
             tags = this.consumerVerticleContext
                     .getTags()
                     .and(
                             Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())),
-                            Tag.of(
-                                    Metrics.Tags.EVENT_TYPE,
-                                    recordContext.getRecord().value().getType()));
+                            eventTypeTag);
         }
         return tags;
     }
@@ -441,11 +442,10 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         if (recordContext.getRecord().value() instanceof OffsetSkippingCloudEvent) {
             return this.consumerVerticleContext.getTags().and(OFFSET_SKIPPING_TYPE_TAG);
         }
-        return this.consumerVerticleContext
-                .getTags()
-                .and(Tag.of(
-                        Metrics.Tags.EVENT_TYPE,
-                        recordContext.getRecord().value().getType()));
+        final var eventTypeTag = Metrics.DISABLE_EVENT_TYPE_TAG
+                ? UNKNOWN_EVENT_TYPE_TAG
+                : Tag.of(Metrics.Tags.EVENT_TYPE, recordContext.getRecord().value().getType());
+        return this.consumerVerticleContext.getTags().and(eventTypeTag);
     }
 
     private void logError(final String msg, final ConsumerRecord<Object, CloudEvent> record, final Throwable cause) {
