@@ -139,38 +139,53 @@ public final class WebClientCloudEventSender implements CloudEventSender {
             }
         }
 
-        // Handle closed return value.
-        return promise.future()
-                .compose(
-                        r -> {
-                            if (r == null) {
-                                return Future.failedFuture("Sender closed for target=" + target);
-                            }
-                            return Future.succeededFuture(r);
-                        },
-                        // Retry and failures
-                        cause -> {
-                            if (cause instanceof ResponseFailureException) {
-                                final var response = ((ResponseFailureException) cause).getResponse();
-                                if (isRetryableStatusCode(response.statusCode())
-                                        && retryCounter
-                                                < consumerVerticleContext
-                                                        .getEgressConfig()
-                                                        .getRetry()) {
-                                    return retry(retryCounter, event);
-                                }
-                                return Future.failedFuture(cause);
-                            } else if (cause instanceof OIDCTokenRequestException) {
-                                return Future.failedFuture(cause);
-                            }
+            // Handle closed return value.
+    return promise.future()
+            .compose(
+                    r -> {
+                        if (r == null) {
+                            return Future.failedFuture("Sender closed for target=" + target);
+                        }
+                        return Future.succeededFuture(r);
+                    },
+                    // Retry and failures
+                    cause -> {
+                        final boolean canRetry =
+                                retryCounter < consumerVerticleContext.getEgressConfig().getRetry();
 
-                            if (retryCounter
-                                    < consumerVerticleContext.getEgressConfig().getRetry()) {
+                        if (cause instanceof ResponseFailureException) {
+                            final var response = ((ResponseFailureException) cause).getResponse();
+                            if (isRetryableStatusCode(response.statusCode()) && canRetry) {
                                 return retry(retryCounter, event);
                             }
 
+                            // no more retries for this HTTP response -> count sink failure
+                            Metrics.getRegistry()
+                                    .counter(Metrics.TRIGGER_SINK_FAILURES)
+                                    .increment();
+
                             return Future.failedFuture(cause);
-                        });
+                        } else if (cause instanceof OIDCTokenRequestException) {
+                            // do not retry on OIDC token errors, but count as sink failure
+                            Metrics.getRegistry()
+                                    .counter(Metrics.TRIGGER_SINK_FAILURES)
+                                    .increment();
+
+                            return Future.failedFuture(cause);
+                        }
+
+                        if (canRetry) {
+                            // network/other error, but still retryable
+                            return retry(retryCounter, event);
+                        }
+
+                        // generic final failure (no more retries)
+                        Metrics.getRegistry()
+                                .counter(Metrics.TRIGGER_SINK_FAILURES)
+                                .increment();
+
+                        return Future.failedFuture(cause);
+                    });
     }
 
     private Future<HttpResponse<Buffer>> retry(int retryCounter, CloudEvent event) {
