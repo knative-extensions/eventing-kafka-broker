@@ -25,6 +25,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 	v1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
 	v1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
+	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	v1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	internalskafkaeventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1"
@@ -66,6 +67,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=bindings.knative.dev, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("kafkabindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Bindings().V1beta1().KafkaBindings().Informer()}, nil
+
+		// Group=eventing.knative.dev, Version=v1
+	case eventingv1.SchemeGroupVersion.WithResource("kafkasinks"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Eventing().V1().KafkaSinks().Informer()}, nil
 
 		// Group=eventing.knative.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("kafkasinks"):
