@@ -23,7 +23,7 @@ jobs:
         with:
           java-version: 21
 
-      - run: mvn --no-transfer-progress -B --file data-plane/pom.xml -Dlicense.outputDirectory=. license:aggregate-add-third-party
+      - run: mvn --no-transfer-progress -B --file data-plane/pom.xml -Dlicense.outputDirectory=. org.codehaus.mojo:license-maven-plugin:aggregate-add-third-party
       - run: mkdir ./dependabot-pr
       - name: Save branch ref
         run: echo ${{ github.ref }} | sed 's/refs\/heads\///' > ./dependabot-pr/BRANCH_REF
