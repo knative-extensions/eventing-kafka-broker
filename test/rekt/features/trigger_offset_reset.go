@@ -72,22 +72,19 @@ func TriggerLatestOffset() *feature.Feature {
 	})
 	f.Requirement("event 1 received", assert.OnStore(sink1).MatchEvent(test.HasId(eventID1)).Exact(1))
 
-	f.Assert("install trigger 2", trigger.Install(trigger2Name, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sink2), "")))
-	f.Assert("trigger 2 is ready", trigger.IsReady(trigger2Name))
+	// Trigger 1 receives event 1.
+	f.Assert("event 2 is received by sink 1", assert.OnStore(sink1).MatchEvent(test.HasId(eventID2)).Exact(1))
 
-	f.Assert("send event 2", func(ctx context.Context, t feature.T) {
+	// Run the second trigger assertions serially in the Assert timing, so we can be sure this all happens _after_ the first event has already been sent
+	f.Assert("install trigger 2, send and receive event 2", func(ctx context.Context, t feature.T) {
+		trigger.Install(trigger2Name, trigger.WithBrokerName(brokerName), trigger.WithSubscriber(service.AsKReference(sink2), ""))(ctx, t)
 		trigger.IsReady(trigger2Name)(ctx, t) // Wait for trigger ready
 		eventshub.Install(source2, eventshub.InputEvent(event2), eventshub.StartSenderToResource(broker.GVR(), brokerName))(ctx, t)
-	})
+		// Trigger 2 receives event 2
+		assert.OnStore(sink2).MatchEvent(test.HasId(eventID2)).Exact(1)(ctx, t)
 
-	// Both triggers receive event 1 and 2.
-	f.Assert("event 2 is received by sink 1", assert.OnStore(sink1).MatchEvent(test.HasId(eventID2)).Exact(1))
-	f.Assert("event 2 is received by sink 2", assert.OnStore(sink2).MatchEvent(test.HasId(eventID2)).Exact(1))
-
-	// Trigger 2 doesn't receive event 1 (sent before it was ready)
-	f.Assert("event 1 is not received by sink 2", func(ctx context.Context, t feature.T) {
-		trigger.IsReady(trigger2Name)(ctx, t) // Wait for trigger ready
-		time.Sleep(20 * time.Second)          // eventually
+		// Trigger 2 doesn't receive event 1 (sent before it was ready)
+		time.Sleep(20 * time.Second) // eventually
 		assert.OnStore(sink2).MatchEvent(test.HasId(eventID1)).Not()(ctx, t)
 	})
 
