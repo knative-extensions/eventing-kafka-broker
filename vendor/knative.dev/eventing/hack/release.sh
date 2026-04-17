@@ -65,12 +65,12 @@ function build_release() {
   # branch since the detail of building may change over time.
   local YAML_LIST="$(mktemp)"
   export TAG
-  $(dirname $0)/generate-yamls.sh "${REPO_ROOT_DIR}" "${YAML_LIST}"
-  ARTIFACTS_TO_PUBLISH=$(cat "${YAML_LIST}" | tr '\n' ' ')
+  "$(dirname "$0")/generate-yamls.sh" "${REPO_ROOT_DIR}" "${YAML_LIST}"
+  mapfile -t artifacts < "${YAML_LIST}"
   if (( ! PUBLISH_RELEASE )); then
     # Copy the generated YAML files to the repo root dir if not publishing.
-    cp ${ARTIFACTS_TO_PUBLISH} ${REPO_ROOT_DIR}
+    cp "${artifacts[@]}" "${REPO_ROOT_DIR}"
   fi
 }
 
-main $@
+main "$@"
