@@ -33,6 +33,11 @@ function fail_test() {
 }
 
 function build_tests() {
+  header "Running Spotless format check"
+  pushd "$(dirname "$0")/../data-plane" >/dev/null || exit 1
+  ./mvnw spotless:check || fail_test "Spotless formatting failed"
+  popd >/dev/null || exit 1
+
   header "Running control plane build tests"
   default_build_test_runner || fail_test "Control plane build tests failed"
 }
