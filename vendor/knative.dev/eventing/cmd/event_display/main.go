@@ -101,9 +101,9 @@ func run(ctx context.Context) {
 
 	ctx = observability.WithConfig(ctx, cfg)
 
-	otelResource, err := resource.Default("hearbeat")
+	otelResource, err := resource.Default("heartbeat")
 	if err != nil {
-		log.Printf("failed to correctly initialize otel resource, resouce may be missing some attributes: %s\n", err.Error())
+		log.Printf("failed to correctly initialize otel resource, resource may be missing some attributes: %s\n", err.Error())
 	}
 
 	meterProvider, err := metrics.NewMeterProvider(
