@@ -113,7 +113,7 @@ function create_knsubscribe_rolebinding() {
 
 # Install Knative Monitoring in the current cluster.
 # Parameters: $1 - Knative Monitoring manifest.
-# This is a lightly modified verion of start_knative_monitoring() from test-infra's library.sh.
+# This is a lightly modified version of start_knative_monitoring() from test-infra's library.sh.
 function start_knative_eventing_monitoring() {
   header "Starting Knative Eventing Monitoring"
   subheader "Installing Knative Eventing Monitoring"

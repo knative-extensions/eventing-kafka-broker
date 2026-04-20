@@ -109,7 +109,7 @@ func channelSpecAllowsSubscribersArray(t *testing.T, client *testlib.Client, cha
 			return e
 		})
 		if err == nil {
-			return fmt.Errorf("channel validation should prevent direct updates to spec.subcribers except when made by eventing-controller")
+			return fmt.Errorf("channel validation should prevent direct updates to spec.subscribers except when made by eventing-controller")
 		}
 		subscriptionName := names.SimpleNameGenerator.GenerateName("channel-spec-subscribers-")
 		subscriberUrl, _ := apis.ParseURL("http://localhost")
