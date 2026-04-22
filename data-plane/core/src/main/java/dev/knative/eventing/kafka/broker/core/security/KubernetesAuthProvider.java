@@ -19,54 +19,63 @@ import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 class KubernetesAuthProvider implements AuthProvider {
 
     private final Vertx vertx;
     private final KubernetesClient kubernetesClient;
+    private final ExecutorService secretFetchExecutor;
 
     KubernetesAuthProvider(final Vertx vertx, final KubernetesClient client) {
         this.vertx = vertx;
         this.kubernetesClient = client;
+        this.secretFetchExecutor = Executors.newVirtualThreadPerTaskExecutor();
     }
 
     private Future<Credentials> getCredentials(final DataPlaneContract.Reference secretReference) {
-        return this.vertx.executeBlocking(p -> {
+        final Promise<Credentials> promise = Promise.promise();
+        secretFetchExecutor.execute(() -> {
             try {
                 final Secret secret = getSecretFromKubernetes(secretReference);
                 final var credentials = new KubernetesCredentials(secret);
                 final var error = CredentialsValidator.validate(credentials);
                 if (error != null) {
-                    p.fail(error);
+                    vertx.runOnContext(v -> promise.fail(error));
                     return;
                 }
-                p.complete(credentials);
+                vertx.runOnContext(v -> promise.complete(credentials));
             } catch (final Exception ex) {
-                p.fail(ex);
+                vertx.runOnContext(v -> promise.fail(ex));
             }
         });
+        return promise.future();
     }
 
     private Future<Credentials> getCredentials(final DataPlaneContract.MultiSecretReference secretReferences) {
-        return this.vertx.executeBlocking(p -> {
+        final Promise<Credentials> promise = Promise.promise();
+        secretFetchExecutor.execute(() -> {
             try {
                 final var credentials = new KubernetesCredentials(secretDataOf(secretReferences));
                 final var error = CredentialsValidator.validate(credentials);
                 if (error != null) {
-                    p.fail(error);
+                    vertx.runOnContext(v -> promise.fail(error));
                     return;
                 }
-                p.complete(credentials);
+                vertx.runOnContext(v -> promise.complete(credentials));
             } catch (final Exception ex) {
-                p.fail(ex);
+                vertx.runOnContext(v -> promise.fail(ex));
             }
         });
+        return promise.future();
     }
 
     private Map<String, String> secretDataOf(final DataPlaneContract.MultiSecretReference secretReferences) {
