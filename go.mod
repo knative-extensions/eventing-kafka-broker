@@ -28,17 +28,17 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.1
 	google.golang.org/protobuf v1.36.11
-	k8s.io/api v0.35.3
-	k8s.io/apiextensions-apiserver v0.35.3
-	k8s.io/apimachinery v0.35.3
-	k8s.io/apiserver v0.35.3
-	k8s.io/client-go v0.35.3
-	k8s.io/code-generator v0.35.3
+	k8s.io/api v0.35.4
+	k8s.io/apiextensions-apiserver v0.35.4
+	k8s.io/apimachinery v0.35.4
+	k8s.io/apiserver v0.35.4
+	k8s.io/client-go v0.35.4
+	k8s.io/code-generator v0.35.4
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
-	knative.dev/eventing v0.48.1-0.20260416124637-ae92548e56ea
-	knative.dev/hack v0.0.0-20260416140237-504af4d2178f
-	knative.dev/pkg v0.0.0-20260416015135-a395c1078b3d
-	knative.dev/reconciler-test v0.0.0-20260416021839-91ea43c111d9
+	knative.dev/eventing v0.48.1-0.20260421222011-4c2bc608123c
+	knative.dev/hack v0.0.0-20260421155212-aeb7b4a9bf96
+	knative.dev/pkg v0.0.0-20260422015212-ec452872dcc1
+	knative.dev/reconciler-test v0.0.0-20260421022012-298b588e0905
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/yaml v1.6.0

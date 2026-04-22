@@ -40,7 +40,7 @@ import (
 type Receiver struct {
 	// Name is the name of this Receiver, used to filter if multiple observers.
 	Name string
-	// EventLogs is the list of EventLogger implementors to vent observed events.
+	// EventLogs is the list of EventLogger implementers to vent observed events.
 	EventLogs *recordevents.EventLogs
 
 	ctx       context.Context

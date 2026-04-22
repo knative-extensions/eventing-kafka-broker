@@ -62,5 +62,5 @@ func InitializeEventingFlags() {
 	flag.StringVar(&EventingFlags.BrokerNamespace, "brokernamespace", "", BrokerNamespaceUsage)
 	// Might be useful in restricted environments where namespaces need to be
 	// created by a user with increased privileges (admin).
-	flag.BoolVar(&EventingFlags.ReuseNamespace, "reusenamespace", false, "Whether to re-use namespace for a test if it already exists.")
+	flag.BoolVar(&EventingFlags.ReuseNamespace, "reusenamespace", false, "Whether to reuse namespace for a test if it already exists.")
 }

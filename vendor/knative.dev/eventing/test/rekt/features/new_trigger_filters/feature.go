@@ -433,7 +433,7 @@ func MissingAttributesFeature(installBroker InstallBrokerFunc) *feature.Feature 
 		{
 			shouldDeliver: false,
 		},
-		// This event has the extension, so the filters shold all pass
+		// This event has the extension, so the filters should all pass
 		{
 			eventExtensions: map[string]interface{}{
 				"extensionattribute": "extensionvalue",
