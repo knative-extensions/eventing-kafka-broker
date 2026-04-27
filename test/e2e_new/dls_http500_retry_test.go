@@ -23,6 +23,7 @@ import (
 	"context"
 	"math"
 	"testing"
+	"time"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
 	"k8s.io/utils/ptr"
@@ -54,6 +55,7 @@ func TestDeadLetterSinkHTTP500Retry(t *testing.T) {
 		knative.WithObservabilityConfig,
 		k8s.WithEventListener,
 		environment.Managed(t),
+		environment.WithPollTimings(5*time.Second, 20*time.Minute),
 	)
 
 	env.Test(ctx, t, HTTP500RetriesWithTriggerDelivery())
