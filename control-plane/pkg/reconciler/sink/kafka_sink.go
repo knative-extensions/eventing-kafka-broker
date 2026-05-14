@@ -21,41 +21,34 @@ import (
 	"fmt"
 	"time"
 
-	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-
-	corev1 "k8s.io/api/core/v1"
-	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-
-	"k8s.io/utils/ptr"
-	"knative.dev/eventing/pkg/auth"
-	"knative.dev/pkg/logging"
-
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"knative.dev/pkg/controller"
-	pointer "knative.dev/pkg/ptr"
-	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/resolver"
-
-	"knative.dev/eventing/pkg/apis/feature"
-
+	"k8s.io/utils/ptr"
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
-	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
+	pointer "knative.dev/pkg/ptr"
+	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 )
 
 const (
@@ -127,7 +120,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventingv1alpha1.Kaf
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, ks.Spec.BootstrapServers, secret)
 	if err != nil {
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		return statusConditionManager.FailedToGetKafkaClusterAdmin(err)
 	}
 	defer kafkaClusterAdminClient.Close()
 
