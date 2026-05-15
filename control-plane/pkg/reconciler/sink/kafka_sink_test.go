@@ -22,45 +22,36 @@ import (
 	"io"
 	"testing"
 
-	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
-
-	"knative.dev/eventing/pkg/auth"
-
-	pointer "knative.dev/pkg/ptr"
-
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/network"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
-
 	"github.com/IBM/sarama"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/pkg/apis"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
-
-	. "knative.dev/pkg/reconciler/testing"
-
-	"knative.dev/eventing/pkg/apis/feature"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing"
 	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	sinkreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/eventing/v1alpha1/kafkasink"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
 	eventingtlstesting "knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
+	. "knative.dev/pkg/reconciler/testing"
 )
 
 var (
@@ -75,6 +66,7 @@ const (
 	wantTopicName                  = "wantTopicName"
 	wantErrorOnCreateTopic         = "wantErrorOnCreateTopic"
 	wantErrorOnDeleteTopic         = "wantErrorOnDeleteTopic"
+	wantErrorOnGetClusterAdmin     = "wantErrorOnGetClusterAdmin"
 	ExpectedTopicDetail            = "expectedTopicDetail"
 	ExpectedTopicsOnDescribeTopics = "expectedTopicsOnDescribeTopics"
 	ExpectedTopicIsPresent         = "expectedTopicIsPresent"
@@ -116,6 +108,8 @@ var (
 	errCreateTopic = fmt.Errorf("failed to create topic")
 
 	errDeleteTopic = fmt.Errorf("failed to delete topic")
+
+	errGetClusterAdmin = fmt.Errorf("failed to get cluster admin")
 )
 
 var DefaultEnv = &config.Env{
@@ -598,6 +592,44 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnCreateTopic: errCreateTopic,
+			},
+		},
+		{
+			Name: "Failed to get Kafka cluster admin",
+			Objects: []runtime.Object{
+				NewSink(
+					StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+					BootstrapServers(bootstrapServersArr),
+				),
+				SinkReceiverPod(env.SystemNamespace, nil),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"cannot obtain Kafka cluster admin: %v",
+					errGetClusterAdmin,
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSink(
+						StatusControllerOwnsTopic(sink.ControllerTopicOwner),
+						InitSinkConditions,
+						StatusDataPlaneAvailable,
+						BootstrapServers(bootstrapServersArr),
+						StatusFailedToGetKafkaClusterAdmin(errGetClusterAdmin),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				wantErrorOnGetClusterAdmin: errGetClusterAdmin,
 			},
 		},
 		{
@@ -1978,6 +2010,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			ConfigMapLister:   listers.GetConfigMapLister(),
 			EventPolicyLister: listers.GetEventPolicyLister(),
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
+				if errClusterAdmin, ok := row.OtherTestData[wantErrorOnGetClusterAdmin]; ok {
+					return nil, errClusterAdmin.(error)
+				}
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
 					ExpectedTopicDetail:                    expectedTopicDetail,

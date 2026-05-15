@@ -22,32 +22,28 @@ import (
 	"time"
 
 	"github.com/magiconair/properties"
-	appsv1 "k8s.io/api/apps/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/types"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
-
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
+	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	pointer "knative.dev/pkg/ptr"
-
-	kafkaeventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
 const (
@@ -532,6 +528,17 @@ func StatusFailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
 			fmt.Sprintf("Failed to create topic: %s", topicName),
 			"%v",
 			fmt.Errorf("failed to create topic"),
+		)
+	}
+}
+
+func StatusFailedToGetKafkaClusterAdmin(err error) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			"Failed to obtain Kafka cluster admin",
+			"%v",
+			err,
 		)
 	}
 }
