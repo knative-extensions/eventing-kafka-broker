@@ -26,7 +26,7 @@ data:
       keepAlive: true
     receiver:
       port: 8080
-      timeout: 30m
+      timeout: 40m
       maxDuplicatesPercentage: 0.1
       fault:
         minSleepDuration: 3s
