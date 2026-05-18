@@ -15,7 +15,7 @@ https://github.com/knative/community/issues/new?template=ADOPTERS.yaml&title=%5B
 **Problem**
 A short explanation of the problem, including relevant restrictions.
 
-**[Persona:](https://github.com/knative/eventing/blob/master/docs/personas.md)** 
+**[Persona:](https://github.com/knative/eventing/blob/main/docs/personas.md)** 
 Which persona is this feature for?
 
 **Exit Criteria**
