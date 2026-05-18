@@ -23,14 +23,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/reconciler"
-
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
 
 const (
@@ -182,6 +180,18 @@ func (manager *StatusConditionManager) TopicReady(topic string) {
 		fmt.Sprintf("Topic %s created", topic),
 		"",
 	)
+}
+
+func (manager *StatusConditionManager) FailedToGetKafkaClusterAdmin(err error) reconciler.Event {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionTopicReady,
+		"Failed to obtain Kafka cluster admin",
+		"%v",
+		err,
+	)
+
+	return fmt.Errorf("cannot obtain Kafka cluster admin: %w", err)
 }
 
 func (manager *StatusConditionManager) FailedToGetBrokerAuthSecret(err error) reconciler.Event {
