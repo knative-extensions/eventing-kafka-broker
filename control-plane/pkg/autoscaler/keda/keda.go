@@ -66,6 +66,21 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 		return nil, err
 	}
 
+	authenticationName, err := GetStringValueFromMap(cg.GetAnnotations(), autoscaler.AutoscalingAuthenticationName, aconfig.AutoscalerAuthentication[autoscaler.AutoscalingAuthenticationName])
+	if err != nil {
+		return nil, err
+	}
+
+	authenticationKind, err := GetStringValueFromMap(cg.GetAnnotations(), autoscaler.AutoscalingAuthenticationKind, aconfig.AutoscalerAuthentication[autoscaler.AutoscalingAuthenticationKind])
+	if err != nil {
+		return nil, err
+	}
+
+	awsRegion, err := GetStringValueFromMap(cg.GetAnnotations(), autoscaler.AutoscalingAwsRegion, aconfig.AutoscalerAuthentication[autoscaler.AutoscalingAwsRegion])
+	if err != nil {
+		return nil, err
+	}
+
 	allowIdleConsumers := "false"
 	if cg.Status.Placements != nil {
 		allowIdleConsumers = "true"
@@ -80,6 +95,10 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 			"allowIdleConsumers": allowIdleConsumers,
 		}
 
+		if *awsRegion != "" {
+			triggerMetadata["awsRegion"] = *awsRegion
+		}
+
 		trigger := kedav1alpha1.ScaleTriggers{
 			Type:     "kafka",
 			Metadata: triggerMetadata,
@@ -89,6 +108,13 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 			trigger.AuthenticationRef = &kedav1alpha1.ScaledObjectAuthRef{
 				Name: triggerAuthentication.Name,
 			}
+		} else if *authenticationName != "" {
+			trigger.AuthenticationRef = &kedav1alpha1.ScaledObjectAuthRef{
+				Name: *authenticationName,
+			}
+			if *authenticationKind != "" {
+				trigger.AuthenticationRef.Kind = *authenticationKind
+			}
 		}
 
 		triggers = append(triggers, trigger)
@@ -97,7 +123,18 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 	return triggers, nil
 }
 
-func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData map[string][]byte) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
+func GenerateTriggerAuthentication(cg *kafkainternals.ConsumerGroup, secretData map[string][]byte, aconfig autoscaler.AutoscalerConfig) (*kedav1alpha1.TriggerAuthentication, *corev1.Secret, error) {
+
+	authenticationName, err := GetStringValueFromMap(cg.GetAnnotations(), autoscaler.AutoscalingAuthenticationName, aconfig.AutoscalerAuthentication[autoscaler.AutoscalingAuthenticationName])
+	if err != nil {
+		return nil, nil, err
+	}
+	// If the user has specified a TriggerAuthentication name, we skip creating one
+	// and assume it already exists.
+	if authenticationName != nil && *authenticationName != "" {
+		return nil, nil, nil
+	}
+
 	// Make sure secretData is never nil
 	if secretData == nil {
 		secretData = make(map[string][]byte)
@@ -247,6 +284,9 @@ func SetAutoscalingAnnotations(objAnnotations map[string]string) map[string]stri
 		setAnnotation(objAnnotations, autoscaler.AutoscalingCooldownPeriodAnnotation, cgAnnotations)
 		setAnnotation(objAnnotations, autoscaler.AutoscalingLagThreshold, cgAnnotations)
 		setAnnotation(objAnnotations, autoscaler.AutoscalingActivationLagThreshold, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingAuthenticationName, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingAuthenticationKind, cgAnnotations)
+		setAnnotation(objAnnotations, autoscaler.AutoscalingAwsRegion, cgAnnotations)
 		return cgAnnotations
 	}
 	return nil
