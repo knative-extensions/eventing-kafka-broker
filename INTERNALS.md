@@ -36,7 +36,7 @@ following the
   **control-plane** `<->` **data-plane** communication.
 - `test` directory contains end to end tests and associated scripts for running
   them.
-- `thirdy_party` contains dependencies licences
+- `third_party` contains dependencies licences
 - `vendor` directory contains vendored Go dependencies.
 
 # Collecting Prometheus metrics

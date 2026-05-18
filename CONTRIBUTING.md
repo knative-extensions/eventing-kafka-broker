@@ -14,12 +14,12 @@ You need to install:
 - [`ko`](https://github.com/google/ko) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
     - check
-      [go \<version\>](https://github.com/knative-extensions/eventing-kafka-broker/blob/master/go.mod)
+      [go \<version\>](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/go.mod)
       for the required Go version used in this project
 - [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) -
   (_required_)
     - check
-      [java.version](https://github.com/knative-extensions/eventing-kafka-broker/blob/master/data-plane/pom.xml)
+      [java.version](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/pom.xml)
       maven property for the required Java version used in this project
 - [`GNU sed`](https://www.gnu.org/software/sed/) - (_required_)
     - To install on macOS, run `brew install gnu-sed`. Follow the brew post-install instructions to replace the default 

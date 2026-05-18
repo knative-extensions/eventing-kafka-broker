@@ -9,12 +9,12 @@ This document gives a rough overview over the architecture of the Knative Eventi
 The `kafka-controller` is kind of the heart of the Broker for Apache Kafkas control plane and has the following responsibilities:
 
 * Watch specific resources and incorporate relevant details about the resource into the `kafka-broker-brokers-triggers` configmap (step 3 in the diagram), including:
-  * `Broker`s with the `eventing.kantive.dev/broker.class: Kafka` annotation (step 2 in the diagram),
+  * `Broker`s with the `eventing.knative.dev/broker.class: Kafka` annotation (step 2 in the diagram),
   * `Trigger`s referencing a Knative Eventing Broker for Apache Kafka,
   * `KafkaChannel`s,
   * `KafkaSink`s 
   * `KafkaSource`s
-* Update the status on `Broker` resources that have the `eventing.kantive.dev/broker.class: Kafka` annotation with the ingress address of the broker.
+* Update the status on `Broker` resources that have the `eventing.knative.dev/broker.class: Kafka` annotation with the ingress address of the broker.
 
 The `kafka-broker-brokers-triggers` configmap contains information about the resources in the [contract.proto](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/proto/contract.proto) schema. This makes it easily accessible to other components, such as those operating in the data plane.
 
