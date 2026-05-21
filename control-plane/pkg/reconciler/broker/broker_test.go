@@ -23,60 +23,53 @@ import (
 	"testing"
 	"text/template"
 
-	"knative.dev/eventing/pkg/auth"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	pointer "knative.dev/pkg/ptr"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-
 	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
-	"knative.dev/pkg/apis"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/network"
-	. "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/tracker"
-
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
-	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober/probertesting"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
+	. "knative.dev/pkg/reconciler/testing"
+	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
 )
 
 const (
-	wantErrorOnCreateTopic = "wantErrorOnCreateTopic"
-	wantErrorOnDeleteTopic = "wantErrorOnDeleteTopic"
-	ExpectedTopicDetail    = "expectedTopicDetail"
-	testProber             = "testProber"
-	externalTopic          = "externalTopic"
+	wantErrorOnCreateTopic     = "wantErrorOnCreateTopic"
+	wantErrorOnDeleteTopic     = "wantErrorOnDeleteTopic"
+	wantErrorOnGetClusterAdmin = "wantErrorOnGetClusterAdmin"
+	ExpectedTopicDetail        = "expectedTopicDetail"
+	testProber                 = "testProber"
+	externalTopic              = "externalTopic"
 
 	kafkaFeatureFlags = "kafka-feature-flags"
 
@@ -113,6 +106,8 @@ var (
 
 	errCreateTopic = fmt.Errorf("failed to create topic")
 	errDeleteTopic = fmt.Errorf("failed to delete topic")
+
+	errGetClusterAdmin = fmt.Errorf("failed to get cluster admin")
 
 	linear                    = eventingduck.BackoffPolicyLinear
 	exponential               = eventingduck.BackoffPolicyExponential
@@ -663,6 +658,47 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnCreateTopic: errCreateTopic,
+			},
+		},
+		{
+			Name: "Failed to get Kafka cluster admin",
+			Objects: []runtime.Object{
+				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
+				BrokerReceiverPod(env.SystemNamespace, nil),
+				BrokerDispatcherPod(env.SystemNamespace, nil),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"cannot obtain Kafka cluster admin: %v",
+					errGetClusterAdmin,
+				),
+			},
+			SkipNamespaceValidation: true,
+			WantCreates: []runtime.Object{
+				NewConfigMapWithBinaryData(env.DataPlaneConfigMapNamespace, env.ContractConfigMapName, nil),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewBroker(
+						reconcilertesting.WithInitBrokerConditions,
+						StatusBrokerDataPlaneAvailable,
+						StatusBrokerConfigParsed,
+						StatusBrokerFailedToGetKafkaClusterAdmin(errGetClusterAdmin),
+						BrokerConfigMapAnnotations(),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				wantErrorOnGetClusterAdmin: errGetClusterAdmin,
 			},
 		},
 		{
@@ -3306,6 +3342,9 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			},
 			ConfigMapLister: listers.GetConfigMapLister(),
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
+				if errClusterAdmin, ok := row.OtherTestData[wantErrorOnGetClusterAdmin]; ok {
+					return nil, errClusterAdmin.(error)
+				}
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      expectedTopicName,
 					ExpectedTopicDetail:                    expectedTopicDetail,

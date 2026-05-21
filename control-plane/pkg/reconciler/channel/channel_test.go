@@ -23,29 +23,19 @@ import (
 	"testing"
 	"text/template"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/IBM/sarama"
+	"github.com/rickb777/date/period"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
-	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/network"
-	pointer "knative.dev/pkg/ptr"
-	. "knative.dev/pkg/reconciler/testing"
-	"knative.dev/pkg/system"
-
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
+	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
+	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -56,16 +46,20 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-
-	messagingv1beta "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
-	fakeeventingkafkaclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
-	messagingv1beta1kafkachannelreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
-
-	"github.com/rickb777/date/period"
-
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/eventingtls/eventingtlstesting"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
-
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
+	. "knative.dev/pkg/reconciler/testing"
+	"knative.dev/pkg/system"
 )
 
 const (
@@ -75,6 +69,8 @@ const (
 	TestExpectedDataNumPartitions = "TestExpectedDataNumPartitions"
 	TestExpectedReplicationFactor = "TestExpectedReplicationFactor"
 	TestExpectedRetentionDuration = "TestExpectedRetentionDuration"
+
+	wantErrorOnGetClusterAdmin = "wantErrorOnGetClusterAdmin"
 
 	readyEventPolicyName   = "test-event-policy-ready"
 	unreadyEventPolicyName = "test-event-policy-unready"
@@ -107,6 +103,8 @@ var (
 		Version: "v1beta1",
 		Kind:    "KafkaChannel",
 	}
+
+	errGetClusterAdmin = fmt.Errorf("failed to get cluster admin")
 )
 
 func TestReconcileKind(t *testing.T) {
@@ -334,6 +332,42 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
+			},
+		},
+		{
+			Name: "Failed to get Kafka cluster admin",
+			Objects: []runtime.Object{
+				NewChannel(),
+				NewConfigMapWithTextData(env.SystemNamespace, DefaultEnv.GeneralConfigMapName, map[string]string{
+					kafka.BootstrapServersConfigMapKey: ChannelBootstrapServers,
+				}),
+			},
+			Key:     testKey,
+			WantErr: true,
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				Eventf(
+					corev1.EventTypeWarning,
+					"InternalError",
+					"cannot obtain Kafka cluster admin: %v",
+					errGetClusterAdmin,
+				),
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewChannel(
+						WithInitKafkaChannelConditions,
+						StatusConfigParsed,
+						WithChannelTopicStatusAnnotation(ChannelTopic()),
+						StatusFailedToGetKafkaClusterAdmin(errGetClusterAdmin),
+					),
+				},
+			},
+			OtherTestData: map[string]interface{}{
+				wantErrorOnGetClusterAdmin: errGetClusterAdmin,
 			},
 		},
 		{
@@ -2343,6 +2377,9 @@ func TestReconcileKind(t *testing.T) {
 			},
 			Env: env,
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
+				if errClusterAdmin, ok := row.OtherTestData[wantErrorOnGetClusterAdmin]; ok {
+					return nil, errClusterAdmin.(error)
+				}
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName: expectedTopicName,
 					ExpectedTopicDetail: sarama.TopicDetail{
