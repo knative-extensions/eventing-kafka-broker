@@ -24,14 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-
-	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
-
-	"knative.dev/eventing/pkg/auth"
-	"knative.dev/pkg/logging"
-	pointer "knative.dev/pkg/ptr"
-
 	"github.com/IBM/sarama"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
@@ -42,42 +34,41 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/pkg/network"
-	"knative.dev/pkg/resolver"
-	"knative.dev/pkg/system"
-
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
+	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
+	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
+	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
+	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel/resources"
-
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
 	messaging "knative.dev/eventing/pkg/apis/messaging/v1"
+	"knative.dev/eventing/pkg/auth"
+	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
 	"knative.dev/pkg/reconciler"
-
-	messagingv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/messaging/v1beta1"
-
-	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
-	kedafunc "knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-
-	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
-	internalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned"
-	internalslst "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
-	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
-
-	messaginglisters "knative.dev/eventing/pkg/client/listers/messaging/v1"
+	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/system"
 )
 
 const (
@@ -195,7 +186,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, authContext.VirtualSecret)
 	if err != nil {
-		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
+		return statusConditionManager.FailedToGetKafkaClusterAdmin(err)
 	}
 	defer kafkaClusterAdminClient.Close()
 

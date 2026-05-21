@@ -38,33 +38,30 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/eventing/pkg/observability"
-	"knative.dev/pkg/apis"
-	"knative.dev/pkg/logging"
-	"knative.dev/pkg/observability/attributekey"
-	pointer "knative.dev/pkg/ptr"
-	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/resolver"
-
-	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-
-	"knative.dev/eventing/pkg/scheduler"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	internalsapi "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
+	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
 	kafkainternalslisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/internalskafkaeventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	kedav1alpha1 "knative.dev/eventing-kafka-broker/third_party/pkg/apis/keda/v1alpha1"
 	kedaclientset "knative.dev/eventing-kafka-broker/third_party/pkg/client/clientset/versioned"
+	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/observability"
+	"knative.dev/eventing/pkg/scheduler"
+	"knative.dev/pkg/apis"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/observability/attributekey"
+	pointer "knative.dev/pkg/ptr"
+	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 )
 
 var (
@@ -158,7 +155,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consu
 
 	logger.Debugw("Reconciling initial offset")
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
-		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
+		return err
 	}
 
 	logger.Debugw("Scheduling consumergroup")
@@ -567,20 +564,20 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 
 	kafkaSecret, err := r.newAuthSecret(ctx, cg)
 	if err != nil {
-		return fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err)
+		return cg.MarkInitializeOffsetFailed("AuthSecret", fmt.Errorf("failed to get secret for Kafka cluster auth: %w", err))
 	}
 
 	bootstrapServers := kafka.BootstrapServersArray(cg.Spec.Template.Spec.Configs.Configs["bootstrap.servers"])
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, bootstrapServers, kafkaSecret)
 	if err != nil {
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		return cg.MarkInitializeOffsetFailed("KafkaClusterAdmin", fmt.Errorf("cannot obtain Kafka cluster admin: %w", err))
 	}
 	defer kafkaClusterAdminClient.Close()
 
 	kafkaClient, err := r.GetKafkaClient(ctx, bootstrapServers, kafkaSecret)
 	if err != nil {
-		return fmt.Errorf("failed to create Kafka cluster client: %w", err)
+		return cg.MarkInitializeOffsetFailed("KafkaClient", fmt.Errorf("failed to create Kafka cluster client: %w", err))
 	}
 	defer kafkaClient.Close()
 
@@ -588,7 +585,7 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkaintern
 	topics := cg.Spec.Template.Spec.Topics
 
 	if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, topics, groupID); err != nil {
-		return fmt.Errorf("failed to initialize offset: %w", err)
+		return cg.MarkInitializeOffsetFailed("InitializeOffset", fmt.Errorf("failed to initialize offset: %w", err))
 	}
 
 	r.InitOffsetLatestInitialOffsetCache.UpsertStatus(keyOf(cg), prober.StatusReady, struct{}{}, func(key string, _ prober.Status, _ struct{}) {

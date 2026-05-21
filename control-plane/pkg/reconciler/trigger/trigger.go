@@ -27,17 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/resolver"
-
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	"knative.dev/eventing/pkg/auth"
-	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
-	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
@@ -49,6 +38,15 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
+	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
+	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 )
 
 const (
@@ -422,7 +420,8 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 
 	kafkaClusterAdmin, err := r.GetKafkaClusterAdmin(ctx, bootstrapServersArr, secret)
 	if err != nil {
-		return false, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		trigger.Status.MarkDependencyFailed("KafkaClusterAdmin", "cannot obtain Kafka cluster admin: %v", err)
+		return false, fmt.Errorf("cannot obtain Kafka cluster admin: %w", err)
 	}
 	defer kafkaClusterAdmin.Close()
 

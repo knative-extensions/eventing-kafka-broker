@@ -31,35 +31,27 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/pkg/apis"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	pointer "knative.dev/pkg/ptr"
-
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
-	. "knative.dev/pkg/reconciler/testing"
-
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/eventing/pkg/scheduler"
-
+	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
-
-	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-
-	cm "knative.dev/pkg/configmap/testing"
-
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
+	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/scheduler"
+	"knative.dev/pkg/apis"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	cm "knative.dev/pkg/configmap/testing"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
+	pointer "knative.dev/pkg/ptr"
+	. "knative.dev/pkg/reconciler/testing"
 )
 
 type SchedulerFunc func(ctx context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error)
@@ -348,7 +340,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to get secret for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("AuthSecret", errors.New("failed to get secret for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
 						return cg
 					}(),
 				},
@@ -769,7 +761,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to get secret for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("AuthSecret", errors.New("failed to get secret for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
 						return cg
 					}(),
 				},
