@@ -22,13 +22,6 @@ import (
 	"strings"
 	"time"
 
-	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
-
-	"k8s.io/utils/ptr"
-
-	"knative.dev/eventing/pkg/auth"
-	"knative.dev/pkg/logging"
-
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,15 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	"knative.dev/eventing/pkg/apis/feature"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/network"
-	pointer "knative.dev/pkg/ptr"
-	"knative.dev/pkg/reconciler"
-	"knative.dev/pkg/resolver"
-
+	"k8s.io/utils/ptr"
 	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -57,7 +42,18 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	eventingv1alpha1 "knative.dev/eventing/pkg/apis/eventing/v1alpha1"
+	"knative.dev/eventing/pkg/apis/feature"
+	"knative.dev/eventing/pkg/auth"
 	eventingv1alpha1listers "knative.dev/eventing/pkg/client/listers/eventing/v1alpha1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
+	pointer "knative.dev/pkg/ptr"
+	"knative.dev/pkg/reconciler"
+	"knative.dev/pkg/resolver"
 )
 
 const (
@@ -309,7 +305,7 @@ func (r *Reconciler) reconcileBrokerTopic(ctx context.Context, broker *eventing.
 
 	kafkaClusterAdminClient, err := r.GetKafkaClusterAdmin(ctx, topicConfig.BootstrapServers, secret)
 	if err != nil {
-		return "", statusConditionManager.FailedToResolveConfig(fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
+		return "", statusConditionManager.FailedToGetKafkaClusterAdmin(err)
 	}
 	defer kafkaClusterAdminClient.Close()
 

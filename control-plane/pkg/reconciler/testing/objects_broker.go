@@ -27,6 +27,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
@@ -34,16 +42,6 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 	pointer "knative.dev/pkg/ptr"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-
-	apisconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
@@ -405,6 +403,12 @@ func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
 
 func StatusBrokerFailedToCreateTopic(broker *eventing.Broker) {
 	StatusFailedToCreateTopic(BrokerTopic())(broker)
+}
+
+func StatusBrokerFailedToGetKafkaClusterAdmin(err error) func(broker *eventing.Broker) {
+	return func(broker *eventing.Broker) {
+		StatusFailedToGetKafkaClusterAdmin(err)(broker)
+	}
 }
 
 func StatusExternalBrokerTopicNotPresentOrInvalid(topicname string, availableTopics []string) func(broker *eventing.Broker) {

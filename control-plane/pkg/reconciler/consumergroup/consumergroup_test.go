@@ -31,35 +31,27 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/pkg/apis"
-	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
-	pointer "knative.dev/pkg/ptr"
-
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
-
-	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
-	. "knative.dev/pkg/reconciler/testing"
-
-	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
-	"knative.dev/eventing/pkg/scheduler"
-
+	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internalskafkaeventing/v1alpha1"
 	kafkasource "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1"
 	fakekafkainternalsclient "knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/client/fake"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/reconciler/internalskafkaeventing/v1alpha1/consumergroup"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
-
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/counter"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
-
-	configapis "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
-
-	cm "knative.dev/pkg/configmap/testing"
-
 	kedaclient "knative.dev/eventing-kafka-broker/third_party/pkg/client/injection/client/fake"
+	eventingduckv1alpha1 "knative.dev/eventing/pkg/apis/duck/v1alpha1"
+	"knative.dev/eventing/pkg/scheduler"
+	"knative.dev/pkg/apis"
+	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
+	cm "knative.dev/pkg/configmap/testing"
+	"knative.dev/pkg/controller"
+	"knative.dev/pkg/logging"
+	pointer "knative.dev/pkg/ptr"
+	. "knative.dev/pkg/reconciler/testing"
 )
 
 type SchedulerFunc func(ctx context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error)
@@ -69,8 +61,9 @@ func (f SchedulerFunc) Schedule(ctx context.Context, vpod scheduler.VPod) ([]eve
 }
 
 const (
-	testSchedulerKey = "scheduler"
-	noTestScheduler  = "no-scheduler"
+	testSchedulerKey           = "scheduler"
+	noTestScheduler            = "no-scheduler"
+	wantErrorOnGetClusterAdmin = "wantErrorOnGetClusterAdmin"
 
 	systemNamespace = "knative-eventing"
 	finalizerName   = "consumergroups.internal.kafka.eventing.knative.dev"
@@ -348,7 +341,7 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to get secret for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("AuthSecret", errors.New("failed to get secret for Kafka cluster auth: failed to get secret non-existing secret/non-existing secret: secrets \"non-existing secret\" not found"))
 						return cg
 					}(),
 				},
@@ -769,7 +762,183 @@ func TestReconcileKind(t *testing.T) {
 							ConsumerForTrigger(),
 						)
 						cg.InitializeConditions()
-						_ = cg.MarkInitializeOffsetFailed("InitializeOffset", errors.New("failed to get secret for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
+						_ = cg.MarkInitializeOffsetFailed("AuthSecret", errors.New("failed to get secret for Kafka cluster auth: failed to read secret test-cg-ns/non-existing secret: secret \"non-existing secret\" not found"))
+						return cg
+					}(),
+				},
+			},
+		},
+		{
+			Name: "Consumers in multiple pods, with net spec - failed to get Kafka cluster admin",
+			Objects: []runtime.Object{
+				NewSASLSSLSecret(ConsumerGroupNamespace, SecretName),
+				NewConsumer(2,
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIDConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{
+							PodName:      "p2",
+							PodNamespace: systemNamespace,
+						}),
+					)),
+					ConsumerReady(),
+				),
+				NewConsumerGroup(
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerTopics("t1", "t2"),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIDConfig("my.group.id"),
+						),
+						ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
+						ConsumerAuth(&kafkainternals.Auth{
+							NetSpec: &bindings.KafkaNetSpec{
+								SASL: bindings.KafkaSASLSpec{
+									Enable: true,
+									User: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "user",
+										},
+									},
+									Password: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "password",
+										},
+									},
+									Type: bindings.SecretValueFromSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: SecretName,
+											},
+											Key: "type",
+										},
+									},
+								},
+								TLS: bindings.KafkaTLSSpec{
+									Enable: true,
+								},
+							},
+						}),
+					)),
+					ConsumerGroupReplicas(2),
+					ConsumerForTrigger(),
+				),
+			},
+			Key: ConsumerGroupTestKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return []eventingduckv1alpha1.Placement{
+						{PodName: "p1", VReplicas: 1},
+						{PodName: "p2", VReplicas: 1},
+					}, nil
+				}),
+				wantErrorOnGetClusterAdmin: fmt.Errorf("failed to get cluster admin"),
+			},
+			WantErr: true,
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				"Warning InternalError failed to initialize consumer group offset: cannot obtain Kafka cluster admin: failed to get cluster admin",
+			},
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: func() runtime.Object {
+						cg := NewConsumerGroup(
+							ConsumerGroupConsumerSpec(NewConsumerSpec(
+								ConsumerTopics("t1", "t2"),
+								ConsumerConfigs(
+									ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+									ConsumerGroupIDConfig("my.group.id"),
+								),
+								ConsumerDelivery(NewConsumerSpecDelivery("", ConsumerInitialOffset(kafkasource.OffsetLatest))),
+								ConsumerAuth(&kafkainternals.Auth{
+									NetSpec: &bindings.KafkaNetSpec{
+										SASL: bindings.KafkaSASLSpec{
+											Enable: true,
+											User: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: SecretName,
+													},
+													Key: "user",
+												},
+											},
+											Password: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: SecretName,
+													},
+													Key: "password",
+												},
+											},
+											Type: bindings.SecretValueFromSource{
+												SecretKeyRef: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: SecretName,
+													},
+													Key: "type",
+												},
+											},
+										},
+										TLS: bindings.KafkaTLSSpec{
+											Enable: true,
+										},
+									},
+								}),
+							)),
+							ConsumerGroupReplicas(2),
+							ConsumerGroupStatusSelector(ConsumerLabels),
+							ConsumerForTrigger(),
+						)
+						cg.InitializeConditions()
+						_ = cg.MarkInitializeOffsetFailed("KafkaClusterAdmin", errors.New("cannot obtain Kafka cluster admin: failed to get cluster admin"))
 						return cg
 					}(),
 				},
@@ -1699,6 +1868,9 @@ func TestReconcileKind(t *testing.T) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
+				if errClusterAdmin, ok := row.OtherTestData[wantErrorOnGetClusterAdmin]; ok {
+					return nil, errClusterAdmin.(error)
+				}
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T: t,
 				}, nil
@@ -1857,6 +2029,9 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 				return &kafkatesting.MockKafkaClient{}, nil
 			},
 			GetKafkaClusterAdmin: func(_ context.Context, _ []string, _ *corev1.Secret) (sarama.ClusterAdmin, error) {
+				if errClusterAdmin, ok := row.OtherTestData[wantErrorOnGetClusterAdmin]; ok {
+					return nil, errClusterAdmin.(error)
+				}
 				return &kafkatesting.MockKafkaClusterAdmin{
 					T: t,
 				}, nil
