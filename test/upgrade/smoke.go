@@ -19,6 +19,7 @@ package upgrade
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -85,7 +86,7 @@ func KafkaSinkSourceBinaryEventFeature(glob environment.GlobalEnvironment,
 		f := feature.NewFeatureNamed(setupF.Name)
 		f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 		f.Requirement("kafkasource is ready", kafkasource.IsReady(kafkaSource))
-		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceBinaryEventCustomizeFunc())
+		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceBinaryEventCustomizeFunc(), eventshub.SendMultipleEvents(10, 3*time.Second))
 		return f
 	}
 
@@ -100,7 +101,7 @@ func KafkaSinkSourceStructuredEventFeature(glob environment.GlobalEnvironment,
 		f := feature.NewFeatureNamed(setupF.Name)
 		f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
 		f.Requirement("kafkasource is ready", kafkasource.IsReady(kafkaSource))
-		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceStructuredEventCustomizeFunc())
+		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceStructuredEventCustomizeFunc(), eventshub.SendMultipleEvents(10, 3*time.Second))
 		return f
 	}
 
