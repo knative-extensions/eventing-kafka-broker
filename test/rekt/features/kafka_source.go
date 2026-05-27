@@ -348,7 +348,7 @@ func KafkaSourceFeatureSetup(f *feature.Feature,
 	return kafkaSinkCfg.sinkName, kafkaSourceCfg.sourceName, receiver
 }
 
-func KafkaSourceFeatureAssert(f *feature.Feature, kafkaSink, receiver string, customizeFunc CustomizeEventFunc) {
+func KafkaSourceFeatureAssert(f *feature.Feature, kafkaSink, receiver string, customizeFunc CustomizeEventFunc, extraOpts ...eventshub.EventsHubOption) {
 	sender := feature.MakeRandomK8sName("eventshub-sender")
 	options := []eventshub.EventsHubOption{
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
@@ -357,6 +357,7 @@ func KafkaSourceFeatureAssert(f *feature.Feature, kafkaSink, receiver string, cu
 	senderOpts, matcher := customizeFunc()
 
 	options = append(options, senderOpts...)
+	options = append(options, extraOpts...)
 
 	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
 
