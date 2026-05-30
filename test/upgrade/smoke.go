@@ -19,10 +19,13 @@ package upgrade
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	"knative.dev/eventing-kafka-broker/test/rekt/features"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasink"
+	"knative.dev/eventing-kafka-broker/test/rekt/resources/kafkasource"
 	brokerfeatures "knative.dev/eventing/test/rekt/features/broker"
 	channelfeatures "knative.dev/eventing/test/rekt/features/channel"
 	"knative.dev/eventing/test/rekt/features/knconf"
@@ -77,11 +80,13 @@ func KafkaChannelFeature(glob environment.GlobalEnvironment) *eventingupgrade.Du
 func KafkaSinkSourceBinaryEventFeature(glob environment.GlobalEnvironment,
 ) *eventingupgrade.DurableFeature {
 	setupF := feature.NewFeature()
-	kafkaSink, receiver := features.KafkaSourceBinaryEventFeatureSetup(setupF)
+	kafkaSink, kafkaSource, receiver := features.KafkaSourceBinaryEventFeatureSetup(setupF)
 
 	verifyF := func() *feature.Feature {
 		f := feature.NewFeatureNamed(setupF.Name)
-		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceBinaryEventCustomizeFunc())
+		f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+		f.Requirement("kafkasource is ready", kafkasource.IsReady(kafkaSource))
+		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceBinaryEventCustomizeFunc(), eventshub.SendMultipleEvents(10, 3*time.Second))
 		return f
 	}
 
@@ -91,10 +96,12 @@ func KafkaSinkSourceBinaryEventFeature(glob environment.GlobalEnvironment,
 func KafkaSinkSourceStructuredEventFeature(glob environment.GlobalEnvironment,
 ) *eventingupgrade.DurableFeature {
 	setupF := feature.NewFeature()
-	kafkaSink, receiver := features.KafkaSourceStructuredEventFeatureSetup(setupF)
+	kafkaSink, kafkaSource, receiver := features.KafkaSourceStructuredEventFeatureSetup(setupF)
 	verifyF := func() *feature.Feature {
 		f := feature.NewFeatureNamed(setupF.Name)
-		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceStructuredEventCustomizeFunc())
+		f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+		f.Requirement("kafkasource is ready", kafkasource.IsReady(kafkaSource))
+		features.KafkaSourceFeatureAssert(f, kafkaSink, receiver, features.KafkaSourceStructuredEventCustomizeFunc(), eventshub.SendMultipleEvents(10, 3*time.Second))
 		return f
 	}
 
@@ -113,6 +120,8 @@ func BrokerEventTransformationForTrigger(glob environment.GlobalEnvironment,
 
 	verifyF := func() *feature.Feature {
 		f := feature.NewFeatureNamed(setupF.Name)
+		f.Requirement("broker is ready", brokerresources.IsReady(cfg.Broker))
+		f.Requirement("broker is addressable", brokerresources.IsAddressable(cfg.Broker))
 		brokerfeatures.BrokerEventTransformationForTriggerAssert(f, cfg)
 		return f
 	}
@@ -134,6 +143,8 @@ func NamespacedBrokerEventTransformationForTrigger(glob environment.GlobalEnviro
 
 	verifyF := func() *feature.Feature {
 		f := feature.NewFeatureNamed(setupF.Name)
+		f.Requirement("broker is ready", brokerresources.IsReady(broker))
+		f.Requirement("broker is addressable", brokerresources.IsAddressable(broker))
 		brokerAcceptsBinaryContentModeAssert(f, broker)
 		return f
 	}
