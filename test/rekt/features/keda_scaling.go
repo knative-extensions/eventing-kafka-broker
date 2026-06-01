@@ -155,7 +155,7 @@ func KafkaSourceSASLScalesToZeroWithKeda() *feature.Feature {
 	sinkCfg := kafkaSinkConfig{
 		sinkName: feature.MakeRandomK8sName("kafka-sink"),
 	}
-	sinkName, receiver := KafkaSourceFeatureSetup(f, sourceCfg, sinkCfg)
+	sinkName, _, receiver := KafkaSourceFeatureSetup(f, sourceCfg, sinkCfg)
 
 	sender := feature.MakeRandomK8sName("eventshub-sender")
 
