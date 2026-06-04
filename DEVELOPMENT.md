@@ -204,7 +204,7 @@ For more information on the profiler test, see [the profiler test doc](./data-pl
 
 ### Run Filter Benchmarks
 
-If you are building a fitler benchmark or want to benchmark the performance delta caused when changing the filters, you can run:
+If you are building a filter benchmark or want to benchmark the performance delta caused when changing the filters, you can run:
 
 ```shell
 ./hack/run.sh benchmark-filter <filter_class_name>
