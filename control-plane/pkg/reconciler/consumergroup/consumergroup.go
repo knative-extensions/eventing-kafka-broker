@@ -610,7 +610,7 @@ func (r *Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternal
 			return err
 		}
 
-		triggerAuthentication, secret, err = keda.GenerateTriggerAuthentication(cg, secretData)
+		triggerAuthentication, secret, err = keda.GenerateTriggerAuthentication(cg, secretData, *autoscalerDefaults)
 		if err != nil {
 			return err
 		}

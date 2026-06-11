@@ -49,6 +49,19 @@ const (
 	// current consumer group that's used for activation (0<->1)
 	AutoscalingActivationLagThreshold = Autoscaling + "/activation-lag-threshold"
 
+	// AutoscalingAuthenticationName is the annotation that refers to the name of the TriggerAuthentication
+	// or ClusterTriggerAuthentication that's used to authenticate the ScaledObject.
+	AutoscalingAuthenticationName = Autoscaling + "/authentication-name"
+
+	// AutoscalingAuthenticationKind is the annotation that refers to the kind of the TriggerAuthentication
+	// or ClusterTriggerAuthentication that's used to authenticate the ScaledObject.
+	AutoscalingAuthenticationKind = Autoscaling + "/authentication-kind"
+
+	// AutoscalingAwsRegion is the annotation that refers to the AWS region of the MSK cluster.
+	// KEDA requires this to be set when using AWS IAM authentication as an explicit property
+	// in the trigger.metadata section.
+	AutoscalingAwsRegion = Autoscaling + "/aws-region"
+
 	// DefaultPollingInterval is the default value for AutoscalingPollingIntervalAnnotation.
 	DefaultPollingInterval = 10
 	// DefaultCooldownPeriod is the default value for AutoscalingCooldownPeriodAnnotation.
@@ -59,4 +72,10 @@ const (
 	DefaultMaxReplicaCount = 50
 	// DefaultLagThreshold is the default value for AutoscalingLagThreshold.
 	DefaultLagThreshold = 100
+	// DefaultAuthenticationName is the default value for AutoscalingAuthenticationName.
+	DefaultAuthenticationName = ""
+	// DefaultAuthenticationKind is the default value for AutoscalingAuthenticationKind.
+	DefaultAuthenticationKind = ""
+	// DefaultAwsRegion is the default value for AutoscalingAwsRegion.
+	DefaultAwsRegion = ""
 )
