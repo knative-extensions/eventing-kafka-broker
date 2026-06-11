@@ -50,6 +50,13 @@ func TestCreateTopic(t *testing.T) {
 			name: "Topic created no error",
 			args: args{
 				admin: &kafkatesting.MockKafkaClusterAdmin{
+					ExpectedTopics: []string{"topic-name-1"},
+					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+						{
+							Name: "topic-name-1",
+							Err:  sarama.ErrUnknownTopicOrPartition,
+						},
+					},
 					ExpectedTopicName: "topic-name-1",
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     10,
@@ -74,15 +81,21 @@ func TestCreateTopic(t *testing.T) {
 			name: "Topic already exists",
 			args: args{
 				admin: &kafkatesting.MockKafkaClusterAdmin{
+					ExpectedTopics: []string{"topic-name-1"},
+					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+						{
+							Name:       "topic-name-1",
+							IsInternal: false,
+							Partitions: []*sarama.PartitionMetadata{{}},
+							Err:        sarama.ErrNoError,
+						},
+					},
+
 					ExpectedTopicName: "topic-name-1",
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     10,
 						ReplicationFactor: 3,
 					},
-					ErrorOnCreateTopic: &sarama.TopicError{
-						Err: sarama.ErrTopicAlreadyExists,
-					},
-					T: t,
 				},
 				logger: zap.NewNop(),
 				topic:  "topic-name-1",
@@ -101,6 +114,13 @@ func TestCreateTopic(t *testing.T) {
 			name: "Create Topic error",
 			args: args{
 				admin: &kafkatesting.MockKafkaClusterAdmin{
+					ExpectedTopics: []string{"topic-name-1"},
+					ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+						{
+							Name: "topic-name-1",
+							Err:  sarama.ErrUnknownTopicOrPartition,
+						},
+					},
 					ExpectedTopicName: "topic-name-1",
 					ExpectedTopicDetail: sarama.TopicDetail{
 						NumPartitions:     10,
@@ -297,16 +317,20 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 		},
 	}
 	topic := BrokerTopic("", b)
-	errMsg := "topic already exists"
 
 	ca := &kafkatesting.MockKafkaClusterAdmin{
+		ExpectedTopics: []string{topic},
+		ExpectedTopicsMetadataOnDescribeTopics: []*sarama.TopicMetadata{
+			{
+				Name:       topic,
+				IsInternal: false,
+				Partitions: []*sarama.PartitionMetadata{{}},
+				Err:        sarama.ErrNoError,
+			},
+		},
+
 		ExpectedTopicName:   topic,
 		ExpectedTopicDetail: sarama.TopicDetail{},
-		ErrorOnCreateTopic: &sarama.TopicError{
-			Err:    sarama.ErrTopicAlreadyExists,
-			ErrMsg: &errMsg,
-		},
-		T: t,
 	}
 
 	topicRet, err := CreateTopicIfDoesntExist(ca, zap.NewNop(), topic, &TopicConfig{})
