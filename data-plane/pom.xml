@@ -61,6 +61,7 @@
     <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.6</jib.version>
     <quarkus.version>3.28.0</quarkus.version>
+    <netty.version>4.1.135.Final</netty.version> <!-- Overwritting quarkus's netty version.-->
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
     <palantirJavaFormat.version>2.81.0</palantirJavaFormat.version>
@@ -116,6 +117,16 @@
 
   <dependencyManagement>
     <dependencies>
+
+      <!-- Netty -->
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-bom</artifactId>
+          <version>${netty.version}</version>
+          <type>pom</type>
+          <scope>import</scope>
+      </dependency>
+
       <!-- Vertx -->
       <dependency>
         <groupId>io.quarkus</groupId>
