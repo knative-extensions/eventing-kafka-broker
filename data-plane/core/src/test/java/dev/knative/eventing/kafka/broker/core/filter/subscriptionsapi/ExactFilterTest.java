@@ -109,6 +109,29 @@ public class ExactFilterTest {
     }
 
     @Test
+    public void shouldNotPassOnNonExistentAttributes() {
+
+        final var event = CloudEventBuilder.v1()
+                .withId("123")
+                .withType("type")
+                .withSource(URI.create("/api/source"))
+                .withExtension("extension2", "valueExtension2")
+                .build();
+
+        final var attributes = Map.of(
+                "source", "/api/source",
+                "extension1", "",
+                "extension2", "valueExtension2",
+                "subject", "someSubject"); // CloudEvent::getSubject == null on test
+
+        final var filter = new ExactFilter(attributes);
+
+        final boolean match = filter.test(event);
+
+        assertThat(match).isFalse();
+    }
+
+    @Test
     public void test() {
 
         final var event = CloudEventBuilder.v1()

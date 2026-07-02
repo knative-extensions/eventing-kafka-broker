@@ -26,6 +26,6 @@ public class ExactFilter extends AttributesFilter {
 
     @Override
     public boolean match(String given, String wanted) {
-        return given.equals(wanted);
+        return given != null && given.equals(wanted);
     }
 }
