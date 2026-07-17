@@ -118,6 +118,17 @@
   <dependencyManagement>
     <dependencies>
 
+      <!-- OpenTelemetry BOM must be imported before quarkus-bom to ensure
+           the explicitly declared opentelemetry.version takes precedence
+           over the version transitively managed by Quarkus. -->
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- Netty -->
       <dependency>
           <groupId>io.netty</groupId>
@@ -170,14 +181,6 @@
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-bom</artifactId>
         <version>${micrometer.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-bom</artifactId>
-        <version>${opentelemetry.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
