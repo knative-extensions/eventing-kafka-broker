@@ -86,7 +86,7 @@ func GenerateScaleTriggers(cg *kafkainternals.ConsumerGroup, triggerAuthenticati
 		}
 
 		if triggerAuthentication != nil {
-			trigger.AuthenticationRef = &kedav1alpha1.ScaledObjectAuthRef{
+			trigger.AuthenticationRef = &kedav1alpha1.AuthenticationRef{
 				Name: triggerAuthentication.Name,
 			}
 		}

@@ -19,6 +19,6 @@ set -euo pipefail
 source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
 header "Applying KEDA Operator file"
-kubectl apply -f $(dirname $0)/../../third_party/keda/keda.yaml
+kubectl apply --server-side --force-conflicts -f $(dirname $0)/../../third_party/keda/keda.yaml
 
 wait_until_pods_running keda || fail_test "Failed to start up KEDA operator"
