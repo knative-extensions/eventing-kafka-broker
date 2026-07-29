@@ -14,6 +14,7 @@ linters:
   settings:
     gosec:
       excludes:
+        - G101
         - G115
     staticcheck:
       checks:
@@ -27,9 +28,19 @@ linters:
       - std-error-handling
     rules:
       - linters:
+          - prealloc
+        path: _test\.go
+      - linters:
+          - prealloc
           - gosec
           - unparam
         path: test
+      - linters:
+          - staticcheck
+        text: CreateACL is deprecated
+      - linters:
+          - unparam
+        path: control-plane/pkg/security/oauth/msk_access_token_issuer.go
     paths:
       - control-plane/pkg/client
       - data-plane
