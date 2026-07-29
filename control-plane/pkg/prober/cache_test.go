@@ -104,3 +104,76 @@ func verifyOnExpired(expectedKey string, expectedArg int, wg *sync.WaitGroup, er
 		wg.Done()
 	}
 }
+
+func TestExpireCallbackDoesNotDeadlock(t *testing.T) {
+	d := 200 * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	c := NewLocalExpiringCache[string, int, int](ctx, d)
+
+	done := make(chan struct{})
+	go func() {
+		c.UpsertStatus("k1", 1, 1, func(key string, val int, arg int) {
+			// Callback that touches the cache — would deadlock if called under lock.
+			c.Get("k1")
+			c.UpsertStatus("k2", 2, 2, func(string, int, int) {})
+		})
+		c.Expire("k1")
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-ctx.Done():
+		t.Fatal("deadlock: Expire callback that touches cache did not complete in time")
+	}
+}
+
+func TestRemoveExpiredEntriesCallbackDoesNotDeadlock(t *testing.T) {
+	d := 200 * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	c := NewLocalExpiringCache[string, int, int](ctx, d)
+
+	callbackCalled := make(chan struct{})
+	c.UpsertStatus("k1", 1, 1, func(key string, val int, arg int) {
+		// Callback that touches the cache — would deadlock if called under lock.
+		c.Get("k1")
+		close(callbackCalled)
+	})
+
+	select {
+	case <-callbackCalled:
+	case <-ctx.Done():
+		t.Fatal("deadlock: removeExpiredEntries callback that touches cache did not complete in time")
+	}
+}
+
+func TestPanicInCallbackDoesNotKillGoroutine(t *testing.T) {
+	d := 200 * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	c := NewLocalExpiringCache[string, int, int](ctx, d)
+
+	secondExpired := make(chan struct{})
+
+	c.UpsertStatus("k1", 1, 1, func(string, int, int) {
+		panic("test panic")
+	})
+
+	// Wait for the panicking callback to fire, then insert a second entry
+	time.Sleep(d + 100*time.Millisecond)
+
+	c.UpsertStatus("k2", 2, 2, func(string, int, int) {
+		close(secondExpired)
+	})
+
+	select {
+	case <-secondExpired:
+	case <-ctx.Done():
+		t.Fatal("background goroutine died after panic in onExpired callback")
+	}
+}
