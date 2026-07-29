@@ -45,7 +45,6 @@ const (
 
 	// The Content-Type values for the different wire protocols. Do not do direct
 	// comparisons to these constants, instead use the comparison functions.
-	//
 	// Deprecated: Use expfmt.NewFormat(expfmt.TypeUnknown) instead.
 	FmtUnknown Format = `<unknown>`
 	// Deprecated: Use expfmt.NewFormat(expfmt.TypeTextPlain) instead.
@@ -122,7 +121,7 @@ func NewOpenMetricsFormat(version string) (Format, error) {
 // removed.
 func (f Format) WithEscapingScheme(s model.EscapingScheme) Format {
 	var terms []string
-	for p := range strings.SplitSeq(string(f), ";") {
+	for _, p := range strings.Split(string(f), ";") {
 		toks := strings.Split(p, "=")
 		if len(toks) != 2 {
 			trimmed := strings.TrimSpace(p)
@@ -194,7 +193,7 @@ func (f Format) FormatType() FormatType {
 // "escaping" term exists, that will be used. Otherwise, the global default will
 // be returned.
 func (f Format) ToEscapingScheme() model.EscapingScheme {
-	for p := range strings.SplitSeq(string(f), ";") {
+	for _, p := range strings.Split(string(f), ";") {
 		toks := strings.Split(p, "=")
 		if len(toks) != 2 {
 			continue

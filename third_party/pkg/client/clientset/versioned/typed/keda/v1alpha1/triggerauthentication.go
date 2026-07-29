@@ -39,6 +39,8 @@ type TriggerAuthenticationsGetter interface {
 type TriggerAuthenticationInterface interface {
 	Create(ctx context.Context, triggerAuthentication *kedav1alpha1.TriggerAuthentication, opts v1.CreateOptions) (*kedav1alpha1.TriggerAuthentication, error)
 	Update(ctx context.Context, triggerAuthentication *kedav1alpha1.TriggerAuthentication, opts v1.UpdateOptions) (*kedav1alpha1.TriggerAuthentication, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, triggerAuthentication *kedav1alpha1.TriggerAuthentication, opts v1.UpdateOptions) (*kedav1alpha1.TriggerAuthentication, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*kedav1alpha1.TriggerAuthentication, error)
