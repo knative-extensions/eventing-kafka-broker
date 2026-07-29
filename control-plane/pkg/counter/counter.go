@@ -18,12 +18,14 @@ package counter
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 )
 
 type Counter struct {
+	mu    sync.Mutex
 	cache prober.Cache[string, int, struct{}]
 }
 
@@ -35,11 +37,17 @@ func NewExpiringCounter(ctx context.Context) *Counter {
 }
 
 func (c *Counter) Inc(uuid string) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	value, _ := c.cache.Get(uuid)
 	c.cache.UpsertStatus(uuid, value+1, struct{}{}, func(key string, value int, arg struct{}) {})
 	return value + 1
 }
 
 func (c *Counter) Del(uuid string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.cache.Expire(uuid)
 }

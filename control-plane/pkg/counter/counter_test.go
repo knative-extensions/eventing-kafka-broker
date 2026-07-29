@@ -18,6 +18,7 @@ package counter_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,4 +41,27 @@ func TestCounter(t *testing.T) {
 	c.Del(key)
 	v3 := c.Inc(key)
 	assert.Equal(t, 1, v3)
+}
+
+func TestCounterConcurrentInc(t *testing.T) {
+	ctx := context.Background()
+	c := counter.NewExpiringCounter(ctx)
+
+	const goroutines = 100
+	const key = "concurrent-key"
+
+	var wg sync.WaitGroup
+	wg.Add(goroutines)
+
+	for range goroutines {
+		go func() {
+			defer wg.Done()
+			c.Inc(key)
+		}()
+	}
+
+	wg.Wait()
+
+	final := c.Inc(key)
+	assert.Equal(t, goroutines+1, final)
 }

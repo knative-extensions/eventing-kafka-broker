@@ -19,6 +19,8 @@ package prober
 import (
 	"container/list"
 	"context"
+	"fmt"
+	"os"
 	"sync"
 	"time"
 )
@@ -102,11 +104,13 @@ func NewLocalExpiringCacheWithDefault[K comparable, V, A interface{}](ctx contex
 		defaultValue: defaultValue,
 	}
 	go func() {
+		ticker := time.NewTicker(expiration)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(expiration):
+			case <-ticker.C:
 				c.removeExpiredEntries(time.Now())
 			}
 		}
@@ -141,33 +145,45 @@ func (c *localExpiringCache[K, V, A]) UpsertStatus(key K, val V, arg A, onExpire
 
 func (c *localExpiringCache[K, V, A]) Expire(key K) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	element, ok := c.targets[key]
 	if !ok {
+		c.mu.Unlock()
 		return
 	}
 	c.entries.Remove(element)
 	delete(c.targets, key)
+	c.mu.Unlock()
 
 	v := element.Value.(*value[K, V, A])
-
 	v.onExpired(v.key, v.value, v.arg)
 }
 
 func (c *localExpiringCache[K, V, A]) removeExpiredEntries(now time.Time) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	var expiredEntries []*value[K, V, A]
 
+	c.mu.Lock()
 	for curr := c.entries.Front(); curr != nil && c.isExpired(curr.Value.(*value[K, V, A]), now); {
 		v := curr.Value.(*value[K, V, A])
 		delete(c.targets, v.key)
 		prev := curr
 		curr = curr.Next()
 		c.entries.Remove(prev)
-
-		v.onExpired(v.key, v.value, v.arg)
+		expiredEntries = append(expiredEntries, v)
 	}
+	c.mu.Unlock()
+
+	for _, v := range expiredEntries {
+		callOnExpired(v)
+	}
+}
+
+func callOnExpired[K comparable, V, A interface{}](v *value[K, V, A]) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "recovered panic in cache expiration callback: %v\n", r)
+		}
+	}()
+	v.onExpired(v.key, v.value, v.arg)
 }
 
 func (c *localExpiringCache[K, V, A]) isExpired(v *value[K, V, A], now time.Time) bool {
