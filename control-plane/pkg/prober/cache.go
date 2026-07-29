@@ -102,11 +102,13 @@ func NewLocalExpiringCacheWithDefault[K comparable, V, A interface{}](ctx contex
 		defaultValue: defaultValue,
 	}
 	go func() {
+		ticker := time.NewTicker(expiration)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(expiration):
+			case <-ticker.C:
 				c.removeExpiredEntries(time.Now())
 			}
 		}
