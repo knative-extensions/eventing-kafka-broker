@@ -673,6 +673,9 @@ func (r *Reconciler) reconcileScaledObject(ctx context.Context, expectedScaledOb
 	if apierrors.IsNotFound(err) {
 		_, err = r.KedaClient.KedaV1alpha1().ScaledObjects(expectedScaledObject.Namespace).Create(ctx, expectedScaledObject, metav1.CreateOptions{})
 		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				return nil
+			}
 			return fmt.Errorf("failed to create scaledobject %s/%s: %w", expectedScaledObject.Namespace, expectedScaledObject.Name, err)
 		}
 		return nil
@@ -697,6 +700,9 @@ func (r *Reconciler) reconcileTriggerAuthentication(ctx context.Context, expecte
 	if apierrors.IsNotFound(err) {
 		_, err = r.KedaClient.KedaV1alpha1().TriggerAuthentications(expectedTriggerAuth.Namespace).Create(ctx, expectedTriggerAuth, metav1.CreateOptions{})
 		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				return nil
+			}
 			return fmt.Errorf("failed to create triggerauthentication  object %s/%s: %w", expectedTriggerAuth.Namespace, expectedTriggerAuth.Name, err)
 		}
 		return nil
@@ -721,6 +727,9 @@ func (r *Reconciler) reconcileSecret(ctx context.Context, expectedSecret *corev1
 	if apierrors.IsNotFound(err) {
 		_, err = r.KubeClient.CoreV1().Secrets(expectedSecret.Namespace).Create(ctx, expectedSecret, metav1.CreateOptions{})
 		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				return nil
+			}
 			return fmt.Errorf("failed to create secret %s/%s: %w", expectedSecret.Namespace, expectedSecret.Name, err)
 		}
 		return nil
