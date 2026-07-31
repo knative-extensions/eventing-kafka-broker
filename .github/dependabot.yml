@@ -9,8 +9,30 @@ updates:
     directory: "/data-plane" # Location of package manifests
     schedule:
       interval: "daily"
-    assignees:
-      - "pierDipi"
     commit-message:
       prefix: "[data-plane]"
     target-branch: "main"
+    groups:
+      maven-all:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "[github-actions]"
+    target-branch: "main"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "knative/actions/*"
