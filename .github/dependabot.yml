@@ -9,8 +9,6 @@ updates:
     directory: "/data-plane" # Location of package manifests
     schedule:
       interval: "daily"
-    assignees:
-      - "knative-extensions/eventing-kafka-broker-approvers"
     commit-message:
       prefix: "[data-plane]"
     target-branch: "main"
@@ -21,12 +19,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
-    assignees:
-      - "knative-extensions/eventing-kafka-broker-approvers"
     commit-message:
       prefix: "[github-actions]"
     target-branch: "main"
