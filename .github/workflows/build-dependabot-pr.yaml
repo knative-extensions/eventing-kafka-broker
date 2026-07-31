@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: 21
+          distribution: "temurin"
 
       - run: mvn --no-transfer-progress -B --file data-plane/pom.xml -Dlicense.outputDirectory=. org.codehaus.mojo:license-maven-plugin:aggregate-add-third-party
       - run: mkdir ./dependabot-pr
