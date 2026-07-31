@@ -10,7 +10,29 @@ updates:
     schedule:
       interval: "daily"
     assignees:
-      - "pierDipi"
+      - "knative-extensions/eventing-kafka-broker-approvers"
     commit-message:
       prefix: "[data-plane]"
     target-branch: "main"
+    groups:
+      maven-all:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    assignees:
+      - "knative-extensions/eventing-kafka-broker-approvers"
+    commit-message:
+      prefix: "[github-actions]"
+    target-branch: "main"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "knative/actions/*"
