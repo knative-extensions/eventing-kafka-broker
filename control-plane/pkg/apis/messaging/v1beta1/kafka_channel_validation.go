@@ -26,9 +26,10 @@ import (
 	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/kmp"
+	"knative.dev/pkg/system"
 )
 
-const eventingControllerSAName = "system:serviceaccount:knative-eventing:eventing-controller"
+var eventingControllerSAName = fmt.Sprintf("system:serviceaccount:%s:eventing-controller", system.Namespace())
 
 func (kc *KafkaChannel) Validate(ctx context.Context) *apis.FieldError {
 	errs := kc.Spec.Validate(ctx).ViaField("spec")
