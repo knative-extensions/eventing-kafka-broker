@@ -105,11 +105,10 @@ function install_eventing_core() {
 
 function knative_eventing() {
   # we need cert-manager installed to be able to create the issuers
-  helm repo add jetstack https://charts.jetstack.io --force-update
-  helm upgrade --install cert-manager jetstack/cert-manager \
+  helm upgrade --install cert-manager oci://quay.io/jetstack/charts/cert-manager \
     --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 10m \
     ${CERTMANAGER_VERSION:+--version ${CERTMANAGER_VERSION}}
-  helm upgrade --install trust-manager jetstack/trust-manager \
+  helm upgrade --install trust-manager oci://quay.io/jetstack/charts/trust-manager \
     --namespace cert-manager --set crds.enabled=true --wait --timeout 10m \
     ${TRUSTMANAGER_VERSION:+--version ${TRUSTMANAGER_VERSION}}
 
