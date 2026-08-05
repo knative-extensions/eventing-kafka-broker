@@ -137,8 +137,8 @@ function wait_for_cloudevent {
 
   while true; do
     podname=$(kubectl get pod -n $ns -o name -l app=event-display 2>/dev/null)
-    if [ -n $podname ]; then
-      kubectl logs -n $ns $podname 2>/dev/null | grep -q "☁️  cloudevents.Event" && break
+    if [ -n "$podname" ]; then
+      kubectl logs -n "$ns" "$podname" 2>/dev/null | grep -q "☁️  cloudevents.Event" && break
     fi
     sleep 1
     count=$((count + 1))
