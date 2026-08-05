@@ -40,7 +40,8 @@ readonly LATEST_RELEASE_VERSION=$(latest_version)
 readonly PREVIOUS_RELEASE_URL="${PREVIOUS_RELEASE_URL:-"https://github.com/knative-extensions/eventing-kafka-broker/releases/download/${LATEST_RELEASE_VERSION}"}"
 
 readonly EVENTING_CONFIG=${EVENTING_CONFIG:-"./third_party/eventing-latest/"}
-readonly CERTMANAGER_CONFIG=${CERTMANAGER_CONFIG:-"./third_party/cert-manager"}
+readonly CERTMANAGER_VERSION=${CERTMANAGER_VERSION:-""}
+readonly TRUSTMANAGER_VERSION=${TRUSTMANAGER_VERSION:-""}
 
 # Vendored eventing test images.
 readonly VENDOR_EVENTING_TEST_IMAGES="vendor/knative.dev/eventing/test/test_images/"
@@ -104,13 +105,13 @@ function install_eventing_core() {
 
 function knative_eventing() {
   # we need cert-manager installed to be able to create the issuers
-  kubectl apply -f "${CERTMANAGER_CONFIG}/00-namespace.yaml"
-
-  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/01-cert-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "cert-manager" || fail_test "Failed to install cert manager"
-
-  timeout 600 bash -c "until kubectl apply -f ${CERTMANAGER_CONFIG}/02-trust-manager.yaml; do sleep 5; done"
-  wait_until_pods_running "cert-manager" || fail_test "Failed to install trust manager"
+  helm repo add jetstack https://charts.jetstack.io --force-update
+  helm upgrade --install cert-manager jetstack/cert-manager \
+    --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 10m \
+    ${CERTMANAGER_VERSION:+--version ${CERTMANAGER_VERSION}}
+  helm upgrade --install trust-manager jetstack/trust-manager \
+    --namespace cert-manager --set crds.enabled=true --wait --timeout 10m \
+    ${TRUSTMANAGER_VERSION:+--version ${TRUSTMANAGER_VERSION}}
 
   install_eventing_core
 
