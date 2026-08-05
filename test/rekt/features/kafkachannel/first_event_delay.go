@@ -19,7 +19,8 @@
 package kafkachannel
 
 import (
-	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"context"
+
 	cloudeventtest "github.com/cloudevents/sdk-go/v2/test"
 	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
 	"knative.dev/reconciler-test/pkg/eventshub"
@@ -42,16 +43,6 @@ func FirstEventDelay(channelName, numPartitions string) *feature.Feature {
 
 	f := feature.NewFeatureNamed("First Event Delay - " + channelName)
 
-	// Create the CloudEvent to send
-	event := cloudevents.NewEvent()
-	event.SetSource(senderName)
-	event.SetType("first-event-delay-test")
-	event.SetSubject("first-event")
-	if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"channel": channelName}); err != nil {
-		// This error should not happen with valid input, but handle it defensively
-		panic(err)
-	}
-
 	// Setup: receiver first, then channel, then subscription
 	setupEventsHubReceiver(f, receiverName)
 
@@ -67,16 +58,22 @@ func FirstEventDelay(channelName, numPartitions string) *feature.Feature {
 	assertSubscriptionReady(f, channelName)
 
 	// Send exactly 1 event using StartSenderToResource
-	f.Requirement("Install sender", eventshub.Install(senderName,
-		eventshub.StartSenderToResource(kafkachannelresources.GVR(), channelName),
-		eventshub.InputEvent(event),
-		eventshub.SendMultipleEvents(1, 0),
-	))
+	f.Requirement("Install sender", func(ctx context.Context, t feature.T) {
+		event, err := newEvent(channelName, senderName)
+		if err != nil {
+			t.Fatal("Failed to create event:", err)
+		}
+		eventshub.Install(senderName,
+			eventshub.StartSenderToResource(kafkachannelresources.GVR(), channelName),
+			eventshub.InputEvent(event),
+			eventshub.SendMultipleEvents(1, 0),
+		)(ctx, t)
+	})
 
 	// Assert the event was received with correct type and source
 	f.Assert("Event received with correct type and source", assert.OnStore(receiverName).
 		MatchEvent(
-			cloudeventtest.HasType("first-event-delay-test"),
+			cloudeventtest.HasType(channelName+"-type"),
 			cloudeventtest.HasSource(senderName),
 		).AtLeast(1),
 	)
