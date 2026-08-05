@@ -42,30 +42,20 @@
     <spotless.plugin.version>2.46.1</spotless.plugin.version>
 
     <!-- dependencies version -->
-    <vertx.version>4.5.27</vertx.version>
-    <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
-    <micrometer.version>1.15.4</micrometer.version>
+    <quarkus.version>3.33.3.1</quarkus.version>
     <opentelemetry.version>1.62.0</opentelemetry.version>
-    <jackson.version>2.22.0</jackson.version>
-    <protobuf.version>3.25.5</protobuf.version>
+    <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
+    <strimzi-test-container.version>0.116.0</strimzi-test-container.version>
+    <antlr.version>4.9.2</antlr.version> <!-- antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
     <bucket4j.version>7.6.0</bucket4j.version>
-    <slf4j.version>2.0.17</slf4j.version>
     <ch.qos.logback.version>1.5.34</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>8.0</net.logstash.logback.encoder.version>
     <assertj.version>3.27.7</assertj.version>
-    <awaitility.version>4.2.0</awaitility.version>
-    <junit.jupiter.version>5.13.2</junit.jupiter.version>
-    <mockito.junit.jupiter.version>5.23.0</mockito.junit.jupiter.version>
-    <fabric8.kubernetes.version>7.3.1</fabric8.kubernetes.version>
-    <kafka.version>3.9.2</kafka.version>
-    <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.6</jib.version>
-    <quarkus.version>3.28.0</quarkus.version>
-    <netty.version>4.1.135.Final</netty.version> <!-- Overwritting quarkus's netty version.-->
-    <antlr.version>4.9.2
-    </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
+    <mockwebserver.version>4.12.0</mockwebserver.version>
+    <aws.msk.iam.auth.version>2.3.2</aws.msk.iam.auth.version>
+    <commons.logging.version>1.2</commons.logging.version>
     <palantirJavaFormat.version>2.81.0</palantirJavaFormat.version>
-    <jose4j.version>0.9.6</jose4j.version>
   </properties>
 
   <modules>
@@ -129,18 +119,8 @@
         <scope>import</scope>
       </dependency>
 
-      <!-- Netty -->
       <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-bom</artifactId>
-          <version>${netty.version}</version>
-          <type>pom</type>
-          <scope>import</scope>
-      </dependency>
-
-      <!-- Vertx -->
-      <dependency>
-        <groupId>io.quarkus</groupId>
+        <groupId>io.quarkus.platform</groupId>
         <artifactId>quarkus-bom</artifactId>
         <version>${quarkus.version}</version>
         <type>pom</type>
@@ -159,119 +139,13 @@
       </dependency>
 
       <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-opentelemetry</artifactId>
-        <version>${vertx.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka-clients</artifactId>
-        <version>${kafka.version}</version>
-      </dependency>
-
-      <!-- Micrometer -->
-      <dependency>
-        <groupId>io.micrometer</groupId>
-        <artifactId>micrometer-bom</artifactId>
-        <version>${micrometer.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>io.opentelemetry</groupId>
-        <artifactId>opentelemetry-extension-trace-propagators</artifactId>
-        <version>${opentelemetry.version}</version>
-      </dependency>
-
-      <!-- Kubernetes -->
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-client</artifactId>
-        <version>${fabric8.kubernetes.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-httpclient-okhttp</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-client-api</artifactId>
-        <version>${fabric8.kubernetes.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-httpclient-jdk</artifactId>
-        <version>${fabric8.kubernetes.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>kubernetes-server-mock</artifactId>
-        <version>${fabric8.kubernetes.version}</version>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <artifactId>okhttp</artifactId>
-            <groupId>com.squareup.okhttp3</groupId>
-          </exclusion>
-          <exclusion>
-            <artifactId>mockwebserver</artifactId>
-            <groupId>com.squareup.okhttp3</groupId>
-          </exclusion>
-          <exclusion>
-            <artifactId>builder-annotations</artifactId>
-            <groupId>io.sundr</groupId>
-          </exclusion>
-          <exclusion>
-            <artifactId>junit-jupiter-api</artifactId>
-            <groupId>org.junit.jupiter</groupId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <artifactId>mockwebserver</artifactId>
         <groupId>com.squareup.okhttp3</groupId>
-        <version>4.12.0</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
         <artifactId>mockwebserver</artifactId>
-        <groupId>com.squareup.okhttp3</groupId>
-        <version>4.12.0</version>
+        <version>${mockwebserver.version}</version>
         <scope>test</scope>
-      </dependency>
-
-      <!-- Jackson -->
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.bitbucket.b_c</groupId>
-        <artifactId>jose4j</artifactId>
-        <version>${jose4j.version}</version>
       </dependency>
 
       <!-- Logback -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${slf4j.version}</version>
-      </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-core</artifactId>
@@ -332,18 +206,6 @@
         <version>${cloudevents.sdk.version}</version>
       </dependency>
 
-      <!-- Protobuf -->
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-
       <!-- Rate Limiter -->
       <dependency>
         <groupId>com.github.vladimir-bukhtoyarov</groupId>
@@ -355,7 +217,7 @@
       <dependency>
         <groupId>software.amazon.msk</groupId>
         <artifactId>aws-msk-iam-auth</artifactId>
-        <version>2.3.2</version>
+        <version>${aws.msk.iam.auth.version}</version>
       </dependency>
       <dependency>
         <!-- This had to be explicitly added to avoid the error below:
@@ -366,110 +228,21 @@
           Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.NoClassDefFoundError: org/apache/commons/logging/LogFactory [in thread \"vert.x-eventloop-thread-0\"]-->
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.2</version>
+        <version>${commons.logging.version}</version>
       </dependency>
 
       <!-- Testing -->
-      <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-junit5</artifactId>
-        <version>${vertx.version}</version>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>${junit.jupiter.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-migrationsupport</artifactId>
-        <version>${junit.jupiter.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-junit-jupiter</artifactId>
-        <version>${mockito.junit.jupiter.version}</version>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
         <scope>test</scope>
       </dependency>
+      <!-- Strimzi test container for embedded Kafka testing -->
       <dependency>
-        <groupId>org.awaitility</groupId>
-        <artifactId>awaitility</artifactId>
-        <version>${awaitility.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <!--
-        For testing Kafka integrations, Debezium has nice utilities to create Kafka clusters
-        programmatically.
-      -->
-      <dependency>
-        <groupId>io.debezium</groupId>
-        <artifactId>debezium-core</artifactId>
-        <version>${debezium.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.debezium</groupId>
-        <artifactId>debezium-core</artifactId>
-        <version>${debezium.version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka_2.13</artifactId>
-        <version>${kafka.version}</version>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-reflect</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>2.13.14</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-reflect</artifactId>
-        <version>2.13.14</version>
+        <groupId>io.strimzi</groupId>
+        <artifactId>strimzi-test-container</artifactId>
+        <version>${strimzi-test-container.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>

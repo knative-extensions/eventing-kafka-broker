@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -289,12 +290,12 @@ public class InvalidCloudEventInterceptorTest {
                         0,
                         1L,
                         TimestampType.CREATE_TIME,
-                        null,
                         1,
                         2,
                         "a",
                         new InvalidCloudEvent(new byte[] {1}),
-                        new RecordHeaders().add(new RecordHeader("hello", "world".getBytes()))))));
+                        new RecordHeaders().add(new RecordHeader("hello", "world".getBytes())),
+                        Optional.empty()))));
     }
 
     private static void withKindPlural(final Map<String, String> configs) {

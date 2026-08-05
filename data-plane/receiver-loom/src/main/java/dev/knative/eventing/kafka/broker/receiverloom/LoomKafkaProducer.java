@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiverloom;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.observability.tracing.kafka.ProducerTracer;
 import io.opentelemetry.context.Context;
@@ -29,6 +28,7 @@ import io.vertx.core.tracing.TracingPolicy;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -124,7 +124,14 @@ public class LoomKafkaProducer<K, V> implements ReactiveKafkaProducer<K, V> {
             try {
                 executorService.shutdown();
                 logger.debug("Waiting for tasks to complete");
-                Uninterruptibles.awaitTerminationUninterruptibly(executorService);
+                boolean terminated = false;
+                while (!terminated) {
+                    try {
+                        terminated = executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                    } catch (InterruptedException e) {
+                        // Keep waiting, uninterruptibly
+                    }
+                }
                 logger.debug("Closing the producer");
                 producer.close();
                 closePromise.complete();

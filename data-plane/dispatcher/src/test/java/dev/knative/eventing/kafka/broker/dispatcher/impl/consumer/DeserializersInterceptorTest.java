@@ -30,6 +30,7 @@ import java.time.ZoneId;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -193,12 +194,12 @@ public class DeserializersInterceptorTest {
                         0,
                         0,
                         TimestampType.CREATE_TIME,
-                        0L,
                         tc.key == null ? 0 : tc.key.length,
                         tc.value == null ? 0 : tc.value.length,
                         key,
                         value,
-                        tc.headers == null ? new RecordHeaders() : tc.headers))));
+                        tc.headers == null ? new RecordHeaders() : tc.headers,
+                        Optional.empty()))));
 
         final var outputRecords = interceptor.onConsume(inputRecords).records(tp);
 

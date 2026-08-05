@@ -52,7 +52,7 @@ import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.kafka.CloudEventSerializer;
-import io.debezium.kafka.KafkaCluster;
+import io.strimzi.test.container.StrimziKafkaCluster;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.client.WebClient;
@@ -62,8 +62,6 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Properties;
@@ -71,6 +69,9 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.StickyAssignor;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -85,9 +86,6 @@ public abstract class AbstractDataPlaneTest {
     private static final String BROKER_NAMESPACE = "knative-eventing-42";
     private static final String BROKER_NAME = "kafka-broker-42";
     private static final String TOPIC = format("%s-%s", BROKER_NAMESPACE, BROKER_NAME);
-    private static final int NUM_BROKERS = 1;
-    private static final int ZK_PORT = 2181;
-    private static final int KAFKA_PORT = 9092;
     private static final int NUM_PARTITIONS = 10;
     private static final int REPLICATION_FACTOR = 1;
     private static final int INGRESS_PORT = 12345;
@@ -110,8 +108,7 @@ public abstract class AbstractDataPlaneTest {
                 new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME), null);
     }
 
-    private static File dataDir;
-    private static KafkaCluster kafkaCluster;
+    private static StrimziKafkaCluster kafkaCluster;
     private static ConsumerDeployerVerticle consumerDeployerVerticle;
     private static ReceiverVerticle receiverVerticle;
 
@@ -120,7 +117,7 @@ public abstract class AbstractDataPlaneTest {
     protected abstract ReactiveConsumerFactory getReactiveConsumerFactory();
 
     @BeforeEach
-    public void setUp(final Vertx vertx, final VertxTestContext context) throws IOException, InterruptedException {
+    public void setUp(final Vertx vertx, final VertxTestContext context) throws InterruptedException {
         setUpKafkaCluster();
         ContractMessageCodec.register(vertx.eventBus());
         consumerDeployerVerticle = setUpDispatcher(vertx, context);
@@ -318,35 +315,35 @@ public abstract class AbstractDataPlaneTest {
 
     private static void teardownKafkaCluster() {
         if (kafkaCluster != null) {
-            kafkaCluster.shutdown();
+            kafkaCluster.stop();
             kafkaCluster = null;
-            if (!dataDir.delete()) {
-                dataDir.deleteOnExit();
-            }
         }
     }
 
-    private static void setUpKafkaCluster() throws IOException {
+    private static void setUpKafkaCluster() {
+        kafkaCluster = new StrimziKafkaCluster.StrimziKafkaClusterBuilder()
+                .withNumberOfBrokers(1)
+                .build();
+        kafkaCluster.start();
 
-        dataDir = File.createTempFile("kafka", "kafka");
-
-        kafkaCluster = new KafkaCluster()
-                .withPorts(ZK_PORT, KAFKA_PORT)
-                .deleteDataPriorToStartup(true)
-                .addBrokers(NUM_BROKERS)
-                .usingDirectory(dataDir)
-                .startup();
-
-        kafkaCluster.createTopic(TOPIC, NUM_PARTITIONS, REPLICATION_FACTOR);
+        try (var admin =
+                AdminClient.create(java.util.Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers()))) {
+            admin.createTopics(List.of(new NewTopic(TOPIC, NUM_PARTITIONS, (short) REPLICATION_FACTOR)))
+                    .all()
+                    .get(30, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create topic", e);
+        }
     }
 
     private ConsumerDeployerVerticle setUpDispatcher(final Vertx vertx, final VertxTestContext context)
             throws InterruptedException {
 
         final var consumerConfigs = new Properties();
-        consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, format("localhost:%d", KAFKA_PORT));
+        consumerConfigs.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers());
         consumerConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, KeyDeserializer.class.getName());
         consumerConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, CloudEventDeserializer.class.getName());
+        consumerConfigs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerConfigs.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 100);
         consumerConfigs.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, StickyAssignor.class.getName());
         consumerConfigs.put(
@@ -417,6 +414,6 @@ public abstract class AbstractDataPlaneTest {
     }
 
     private static String bootstrapServers() {
-        return format("localhost:%d", KAFKA_PORT);
+        return kafkaCluster.getBootstrapServers().replaceAll("^PLAINTEXT://", "");
     }
 }

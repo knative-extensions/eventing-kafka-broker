@@ -55,6 +55,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
     private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx, Properties producerConfigs) {
         return new MockReactiveKafkaProducer<>(new MockProducer<>(
                 true,
+                null,
                 new StringSerializer(),
                 (topic, data) -> new byte[0] // No need to use the real one, since it doesn't support headers
                 ));
