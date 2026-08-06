@@ -15,8 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.auth;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import dev.knative.eventing.kafka.broker.core.NamespacedName;
 import io.fabric8.kubernetes.api.model.authentication.TokenRequest;
 import io.fabric8.kubernetes.api.model.authentication.TokenRequestBuilder;
@@ -49,7 +49,7 @@ public class TokenProvider implements Closeable {
                 .withConfig(new ConfigBuilder().build())
                 .withHttpClientFactory(new VertxHttpClientFactory(vertx))
                 .build();
-        this.tokenCache = CacheBuilder.newBuilder()
+        this.tokenCache = Caffeine.newBuilder()
                 .expireAfterWrite(CACHE_EXPIRATION_TIME_SECONDS, TimeUnit.SECONDS)
                 .maximumSize(CACHE_MAXIMUM_SIZE)
                 .initialCapacity(2)

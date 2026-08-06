@@ -43,6 +43,12 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.fabric8</groupId>
+          <artifactId>kubernetes-httpclient-okhttp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.fabric8</groupId>
@@ -54,20 +60,22 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <artifactId>mockwebserver</artifactId>
           <groupId>com.squareup.okhttp3</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp3</groupId>
+          <artifactId>mockwebserver</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.sundr</groupId>
+          <artifactId>builder-annotations</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>mockwebserver</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.19.0</version>
     </dependency>
 
     <dependency>
@@ -92,18 +100,18 @@
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-sdk</artifactId>
     </dependency>
-      <dependency>
-          <groupId>io.opentelemetry</groupId>
-          <artifactId>opentelemetry-exporter-otlp</artifactId>
-      </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-logging</artifactId>
     </dependency>
-      <dependency>
-          <groupId>io.opentelemetry</groupId>
-          <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
-      </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-logging-otlp</artifactId>
+    </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-extension-trace-propagators</artifactId>
@@ -148,10 +156,10 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-micrometer-metrics</artifactId>
     </dependency>
-      <dependency>
-          <groupId>io.micrometer</groupId>
-          <artifactId>micrometer-registry-otlp</artifactId>
-      </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-otlp</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.vertx</groupId>
@@ -165,12 +173,6 @@
     <dependency>
       <groupId>io.cloudevents</groupId>
       <artifactId>cloudevents-kafka</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.kafka</groupId>
-          <artifactId>kafka-clients</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.cloudevents</groupId>
@@ -215,13 +217,6 @@
     <dependency>
       <groupId>software.amazon.msk</groupId>
       <artifactId>aws-msk-iam-auth</artifactId>
-      <version>2.3.2</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <!-- This had to be explicitly added to avoid the error below:
@@ -232,7 +227,6 @@
         Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.NoClassDefFoundError: org/apache/commons/logging/LogFactory [in thread \"vert.x-eventloop-thread-0\"]-->
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
-      <version>1.2</version>
     </dependency>
 
     <dependency>
@@ -244,12 +238,6 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>junit-jupiter-api</artifactId>
-          <groupId>org.junit.jupiter</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>

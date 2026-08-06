@@ -56,16 +56,6 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter-engine</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter-params</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -83,24 +73,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.debezium</groupId>
-      <artifactId>debezium-core</artifactId>
+      <groupId>io.strimzi</groupId>
+      <artifactId>strimzi-test-container</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.debezium</groupId>
-      <artifactId>debezium-core</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.13</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
@@ -111,15 +86,6 @@
 
   <build>
     <plugins>
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>${maven.compiler.plugin.version}</version>
-      <configuration>
-        <source>${java.version}</source>
-        <target>${java.version}</target>
-      </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>

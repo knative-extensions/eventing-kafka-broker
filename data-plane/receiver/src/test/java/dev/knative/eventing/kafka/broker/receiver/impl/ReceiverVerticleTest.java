@@ -121,7 +121,7 @@ public class ReceiverVerticleTest {
 
         webClient = WebClient.create(vertx);
         ReceiverVerticleTest.mockProducer =
-                new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+                new MockProducer<>(true, null, new StringSerializer(), new CloudEventSerializerMock());
         ReactiveKafkaProducer<String, CloudEvent> producer = new MockReactiveKafkaProducer<>(mockProducer);
 
         store = new IngressProducerReconcilableStore(

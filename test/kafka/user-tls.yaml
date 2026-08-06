@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kafka.strimzi.io/v1beta2
+apiVersion: kafka.strimzi.io/v1
 kind: KafkaUser
 metadata:
   name: my-tls-user
@@ -24,54 +24,22 @@ spec:
   authorization:
     type: simple
     acls:
-      # Example ACL rules for consuming from a topic.
       - resource:
           type: topic
           name: "*"
           patternType: literal
-        operation: Read
-        host: "*"
-      - resource:
-          type: topic
-          name: "*"
-          patternType: literal
-        operation: Describe
+        operations:
+          - Read
+          - Write
+          - Create
+          - Describe
+          - Delete
         host: "*"
       - resource:
           type: group
           name: "*"
           patternType: literal
-        operation: Read
-        host: "*"
-      - resource:
-          type: group
-          name: "*"
-        operation: Delete
-        host: "*"
-      # Example ACL rules for producing to a topic.
-      - resource:
-          type: topic
-          name: "*"
-          patternType: literal
-        operation: Write
-        host: "*"
-      - resource:
-          type: topic
-          name: "*"
-          patternType: literal
-        operation: Create
-        host: "*"
-      - resource:
-          type: topic
-          name: "*"
-          patternType: literal
-        operation: Describe
-        host: "*"
-      # Required ACL rule to be able to delete topics
-      # (Note: this is needed to be able to successfully delete KafkaChannel resources)
-      - resource:
-          type: topic
-          name: "*"
-          patternType: literal
-        operation: Delete
+        operations:
+          - Read
+          - Delete
         host: "*"

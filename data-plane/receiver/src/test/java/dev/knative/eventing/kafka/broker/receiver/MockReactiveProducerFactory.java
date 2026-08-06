@@ -25,6 +25,6 @@ public class MockReactiveProducerFactory<K, V> implements ReactiveProducerFactor
 
     @Override
     public ReactiveKafkaProducer<K, V> create(Vertx v, Properties configs) {
-        return new MockReactiveKafkaProducer<>(new MockProducer<>(true, null, null));
+        return new MockReactiveKafkaProducer<>(new MockProducer<>(true, null, null, null));
     }
 }

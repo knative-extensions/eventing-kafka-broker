@@ -60,7 +60,7 @@ public class ResponseToKafkaTopicHandlerTest {
 
     @Test
     public void shouldSucceedOnUnknownEncodingAndEmptyResponse(final Vertx vertx, final VertxTestContext context) {
-        final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+        final var producer = new MockProducer<>(true, null, new StringSerializer(), new CloudEventSerializerMock());
         final var handler =
                 new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(producer), TOPIC);
 
@@ -74,7 +74,7 @@ public class ResponseToKafkaTopicHandlerTest {
 
     @Test
     public void shouldSucceedOnUnknownEncodingAndNullResponseBody(final Vertx vertx, final VertxTestContext context) {
-        final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+        final var producer = new MockProducer<>(true, null, new StringSerializer(), new CloudEventSerializerMock());
         final var handler =
                 new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(producer), TOPIC);
 
@@ -89,7 +89,7 @@ public class ResponseToKafkaTopicHandlerTest {
     @Test
     public void shouldFailOnUnknownEncodingAndNonEmptyResponse(final Vertx vertx, final VertxTestContext context) {
 
-        final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+        final var producer = new MockProducer<>(true, null, new StringSerializer(), new CloudEventSerializerMock());
         final var handler =
                 new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(producer), TOPIC);
 
@@ -105,7 +105,7 @@ public class ResponseToKafkaTopicHandlerTest {
 
     @Test
     public void shouldSendRecord(final Vertx vertx, final VertxTestContext context) throws InterruptedException {
-        final var producer = new MockProducer<>(true, new StringSerializer(), new CloudEventSerializerMock());
+        final var producer = new MockProducer<>(true, null, new StringSerializer(), new CloudEventSerializerMock());
         final var handler =
                 new ResponseToKafkaTopicHandler(new MockReactiveKafkaProducer<String, CloudEvent>(producer), TOPIC);
 

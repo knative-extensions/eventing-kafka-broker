@@ -18,6 +18,8 @@ metadata:
   name: my-cluster-kafka
 spec:
   secretName: my-cluster-kafka-certmanager-cert
+  privateKey:
+    encoding: PKCS8
   dnsNames:
     - my-cluster-kafka-bootstrap.kafka
     - my-cluster-kafka-bootstrap.kafka.svc

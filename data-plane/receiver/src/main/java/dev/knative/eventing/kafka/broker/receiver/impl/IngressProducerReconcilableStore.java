@@ -15,7 +15,6 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
-import com.google.common.base.Strings;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
@@ -177,7 +176,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
                             resource.getReference().getNamespace()),
                     EventPolicy.fromContract(ingress.getEventPoliciesList()));
 
-            if (isRootPath(ingress.getPath()) && Strings.isNullOrEmpty(ingress.getHost())) {
+            if (isRootPath(ingress.getPath()) && isNullOrEmpty(ingress.getHost())) {
                 throw new IllegalArgumentException(
                         "Ingress path and host is blank. One of them should be defined. Resource UID: "
                                 + resource.getUid());
@@ -186,7 +185,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             if (!isRootPath(ingress.getPath())) {
                 this.pathMapper.put(ingress.getPath(), ingressInfo);
             }
-            if (!Strings.isNullOrEmpty(ingress.getHost())) {
+            if (!isNullOrEmpty(ingress.getHost())) {
                 this.hostMapper.put(ingress.getHost(), ingressInfo);
             }
             this.ingressInfos.put(resource.getUid(), ingressInfo);
@@ -228,7 +227,7 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
             if (!isRootPath(ingressInfo.getPath())) {
                 this.pathMapper.remove(ingressInfo.getPath());
             }
-            if (!Strings.isNullOrEmpty(ingressInfo.getHost())) {
+            if (!isNullOrEmpty(ingressInfo.getHost())) {
                 this.hostMapper.remove(ingressInfo.getHost());
             }
             this.ingressInfos.remove(resource.getUid());
@@ -359,6 +358,10 @@ public class IngressProducerReconcilableStore implements IngressReconcilerListen
     }
 
     private boolean isRootPath(String path) {
-        return Strings.isNullOrEmpty(path) || path.equals("/");
+        return isNullOrEmpty(path) || path.equals("/");
+    }
+
+    private static boolean isNullOrEmpty(String s) {
+        return s == null || s.isEmpty();
     }
 }

@@ -44,7 +44,10 @@
       <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-httpclient-vertx</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
     <dependency>
       <groupId>dev.knative.eventing.kafka.broker</groupId>
       <artifactId>core</artifactId>

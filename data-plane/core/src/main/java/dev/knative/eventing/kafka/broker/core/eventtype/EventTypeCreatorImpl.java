@@ -28,7 +28,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import org.apache.commons.codec.binary.Hex;
+import java.util.HexFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +57,7 @@ public class EventTypeCreatorImpl implements EventTypeCreator {
         final var suffixString = event.getType() + event.getSource() + reference.getNamespace() + reference.getName();
         this.messageDigest.reset();
         this.messageDigest.update(suffixString.getBytes());
-        final var suffix = Hex.encodeHexString(this.messageDigest.digest());
+        final var suffix = HexFormat.of().formatHex(this.messageDigest.digest());
         final var name = String.format("et-%s-%s", reference.getName(), suffix).toLowerCase();
         if (name.length() > DNS1123_SUBDOMAIN_MAX_LENGTH) {
             return name.substring(0, DNS1123_SUBDOMAIN_MAX_LENGTH);
