@@ -20,9 +20,11 @@ package kafkachannel
 
 import (
 	"context"
+	"time"
 
 	cloudeventtest "github.com/cloudevents/sdk-go/v2/test"
 	kafkachannelresources "knative.dev/eventing-kafka-broker/test/rekt/resources/kafkachannel"
+	subscriptionresources "knative.dev/eventing/test/rekt/resources/subscription"
 	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
@@ -53,11 +55,14 @@ func FirstEventDelay(channelName, numPartitions string) *feature.Feature {
 
 	setupSubscription(f, channelName, receiverName)
 
-	// Wait for readiness
-	assertKafkaChannelReady(f, channelName)
-	assertSubscriptionReady(f, channelName)
+	// Wait for readiness before sending — these must be Requirements (not Asserts)
+	// so they execute before the sender fires its single event.
+	f.Requirement("KafkaChannel Is Ready", kafkachannelresources.IsReady(channelName))
+	f.Requirement("Subscription Is Ready", subscriptionresources.IsReady(channelName))
 
-	// Send exactly 1 event using StartSenderToResource
+	// Send events repeatedly to ride through the data-plane startup delay.
+	// Control-plane readiness doesn't guarantee the Kafka consumer group is
+	// operational; early events may be lost, matching the old heartbeat behavior.
 	f.Requirement("Install sender", func(ctx context.Context, t feature.T) {
 		event, err := newEvent(channelName, senderName)
 		if err != nil {
@@ -66,7 +71,7 @@ func FirstEventDelay(channelName, numPartitions string) *feature.Feature {
 		eventshub.Install(senderName,
 			eventshub.StartSenderToResource(kafkachannelresources.GVR(), channelName),
 			eventshub.InputEvent(event),
-			eventshub.SendMultipleEvents(1, 0),
+			eventshub.SendMultipleEvents(60, time.Second),
 		)(ctx, t)
 	})
 

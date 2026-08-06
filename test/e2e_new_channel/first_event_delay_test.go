@@ -50,7 +50,7 @@ func TestKafkaChannelFirstEventDelay(t *testing.T) {
 				knative.WithLoggingConfig,
 				knative.WithObservabilityConfig,
 				k8s.WithEventListener,
-				environment.WithPollTimings(2*time.Second, 3*time.Minute),
+				environment.WithPollTimings(2*time.Second, time.Minute),
 				environment.Managed(t),
 			)
 
