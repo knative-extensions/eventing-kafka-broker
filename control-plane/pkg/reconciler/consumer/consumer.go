@@ -27,6 +27,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/apis"
@@ -102,11 +103,60 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, c *kafkainternals.Consume
 
 	logger := logging.FromContext(ctx).Desugar()
 
-	if _, err := r.schedule(ctx, logger, c, removeResource, FalseAnyStatus); err != nil {
+	scheduled, err := r.schedule(ctx, logger, c, removeResource, FalseAnyStatus)
+	if err != nil {
 		return c.MarkBindFailed(err)
+	}
+	if !scheduled && c.Spec.PodBind != nil {
+		// The pod is gone but its contract ConfigMap (named after the pod) may outlive it
+		// and be re-mounted by a same-named StatefulSet pod, resurrecting the egress.
+		if err := r.removeResourceFromLeftoverConfigMap(ctx, logger, c); err != nil {
+			return c.MarkBindFailed(err)
+		}
 	}
 
 	return nil
+}
+
+// removeResourceFromLeftoverConfigMap removes the consumer's resource from the contract
+// ConfigMap bound to a pod that no longer exists.
+func (r *Reconciler) removeResourceFromLeftoverConfigMap(ctx context.Context, logger *zap.Logger, c *kafkainternals.Consumer) error {
+	ns := c.Spec.PodBind.PodNamespace
+	// The contract ConfigMap of a StatefulSet dispatcher pod is named after the pod,
+	// see core.DispatcherPodsDefaulting.
+	cmName := c.Spec.PodBind.PodName
+
+	cm, err := r.KubeClient.CoreV1().ConfigMaps(ns).Get(ctx, cmName, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("failed to get data plane ConfigMap %s/%s: %w", ns, cmName, err)
+	}
+
+	b := base.Reconciler{
+		KubeClient:                  r.KubeClient,
+		PodLister:                   r.PodLister,
+		SecretLister:                r.SecretLister,
+		Tracker:                     r.Tracker,
+		DataPlaneConfigMapNamespace: ns,
+		ContractConfigMapName:       cmName,
+		ContractConfigMapFormat:     string(r.SerDe.Format),
+		DataPlaneNamespace:          ns,
+	}
+
+	ct, err := b.GetDataPlaneConfigMapData(logger, cm)
+	if err != nil {
+		return fmt.Errorf("failed to get contract from ConfigMap %s/%s: %w", ns, cmName, err)
+	}
+
+	if coreconfig.FindResource(ct, c.GetUID()) == coreconfig.NoResource {
+		return nil
+	}
+
+	removeResource(logger, ct, c)
+
+	return b.UpdateDataPlaneConfigMap(ctx, ct, cm)
 }
 
 func (r *Reconciler) reconcileContractResource(ctx context.Context, c *kafkainternals.Consumer) (*contract.Resource, error) {

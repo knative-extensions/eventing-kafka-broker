@@ -826,6 +826,116 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
+			Name: "Finalized normal - pod gone, leftover ConfigMap cleaned up",
+			Objects: []runtime.Object{
+				NewService(),
+				NewConsumerGroup(ConsumerGroupOwnerRef(SourceAsOwnerReference())),
+				NewConsumer(1,
+					ConsumerDeletedTimeStamp(),
+					ConsumerUID(ConsumerUUID),
+					ConsumerSpec(NewConsumerSpec(
+						ConsumerTopics(SourceTopics...),
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(SourceBootstrapServers),
+							ConsumerGroupIDConfig(SourceConsumerGroup),
+						),
+						ConsumerSubscriber(NewSourceSinkReference()),
+						ConsumerVReplicas(1),
+						ConsumerPlacement(kafkainternals.PodBind{PodName: "p1", PodNamespace: SystemNamespace}),
+					)),
+					ConsumerOwnerRef(ConsumerGroupAsOwnerRef()),
+				),
+				NewConfigMapFromContract(
+					&contract.Contract{
+						Generation: 1,
+						Resources: []*contract.Resource{
+							{
+								Uid:              ConsumerUUID,
+								Topics:           SourceTopics,
+								BootstrapServers: SourceBootstrapServers,
+								Egresses: []*contract.Egress{{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           ConsumerUUID,
+									DeliveryOrder: contract.DeliveryOrder_UNORDERED,
+									VReplicas:     1,
+									Reference: &contract.Reference{
+										Uuid:      SourceUUID,
+										Namespace: ConsumerNamespace,
+										Name:      SourceName,
+									},
+									FeatureFlags: defaultContractFeatureFlags,
+								}},
+								Reference: &contract.Reference{
+									Uuid:      SourceUUID,
+									Namespace: ConsumerNamespace,
+									Name:      SourceName,
+								},
+							},
+							{
+								Uid:              ConsumerUUID + "a",
+								Topics:           SourceTopics,
+								BootstrapServers: SourceBootstrapServers,
+								Egresses: []*contract.Egress{{
+									ConsumerGroup: SourceConsumerGroup,
+									Destination:   ServiceURL,
+									Uid:           ConsumerUUID + "a",
+									DeliveryOrder: contract.DeliveryOrder_UNORDERED,
+									VReplicas:     1,
+									Reference: &contract.Reference{
+										Uuid:      SourceUUID,
+										Namespace: ConsumerNamespace,
+										Name:      SourceName,
+									},
+									FeatureFlags: defaultContractFeatureFlags,
+								}},
+								Reference: &contract.Reference{
+									Uuid:      SourceUUID,
+									Namespace: ConsumerNamespace,
+									Name:      SourceName,
+								},
+							},
+						},
+					},
+					SystemNamespace,
+					"p1",
+					base.JSON,
+				),
+			},
+			Key:                     testKey,
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantUpdates: []clientgotesting.UpdateActionImpl{
+				ConfigMapUpdate(SystemNamespace, "p1", base.JSON, &contract.Contract{
+					Generation: 2,
+					Resources: []*contract.Resource{
+						{
+							Uid:              ConsumerUUID + "a",
+							Topics:           SourceTopics,
+							BootstrapServers: SourceBootstrapServers,
+							Egresses: []*contract.Egress{{
+								ConsumerGroup: SourceConsumerGroup,
+								Destination:   ServiceURL,
+								Uid:           ConsumerUUID + "a",
+								DeliveryOrder: contract.DeliveryOrder_UNORDERED,
+								VReplicas:     1,
+								Reference: &contract.Reference{
+									Uuid:      SourceUUID,
+									Namespace: ConsumerNamespace,
+									Name:      SourceName,
+								},
+								FeatureFlags: defaultContractFeatureFlags,
+							}},
+							Reference: &contract.Reference{
+								Uuid:      SourceUUID,
+								Namespace: ConsumerNamespace,
+								Name:      SourceName,
+							},
+						},
+					},
+				}),
+			},
+		},
+		{
 			Name: "Reconciled normal - With CA Cert",
 			Objects: []runtime.Object{
 				NewService(),

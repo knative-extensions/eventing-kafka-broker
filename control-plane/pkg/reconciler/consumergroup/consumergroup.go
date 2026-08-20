@@ -243,8 +243,22 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 		}
 	}
 
+	// Deleting the consumer group from Kafka while consumers are still being finalized fails
+	// with GROUP_NOT_EMPTY, since dispatchers only leave the group once consumer finalization
+	// has removed their egresses from the contract. Wait for consumers to be gone; consumer
+	// deletion events re-enqueue this ConsumerGroup.
+	if len(existingConsumers) > 0 {
+		return cg.MarkReconcileConsumersFailed("FinalizeConsumers", fmt.Errorf("waiting for %d consumer(s) to be finalized", len(existingConsumers)))
+	}
+
 	logger.Debugw("Deleteing consumergroup metadata from Kafka cluster")
 	if err := r.deleteConsumerGroupMetadata(ctx, cg); err != nil {
+		// The group still has active members (dispatchers that haven't observed the contract
+		// update yet), so retry without consuming the bounded retry budget used for
+		// unreachable clusters.
+		if errorIsOneOf(err, sarama.ErrNonEmptyGroup) {
+			return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", err)
+		}
 		// We retry a few times to delete Consumer group metadata from Kafka before giving up.
 		if v := r.DeleteConsumerGroupMetadataCounter.Inc(string(cg.GetUID())); v <= 5 {
 			return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", fmt.Errorf("%w (retry num %d)", err, v))
