@@ -46,7 +46,7 @@
     <cloudevents.sdk.version>4.0.1</cloudevents.sdk.version>
     <micrometer.version>1.15.4</micrometer.version>
     <opentelemetry.version>1.62.0</opentelemetry.version>
-    <jackson.version>2.22.0</jackson.version>
+    <jackson.version>2.22.1</jackson.version>
     <protobuf.version>3.25.5</protobuf.version>
     <bucket4j.version>7.6.0</bucket4j.version>
     <slf4j.version>2.0.17</slf4j.version>
@@ -61,7 +61,7 @@
     <debezium.version>3.0.7.Final</debezium.version>
     <jib.version>3.4.6</jib.version>
     <quarkus.version>3.28.0</quarkus.version>
-    <netty.version>4.1.135.Final</netty.version> <!-- Overwritting quarkus's netty version.-->
+    <netty.version>4.1.137.Final</netty.version> <!-- Overwritting quarkus's netty version.-->
     <antlr.version>4.9.2
     </antlr.version> <!-- Overwritting quarkus's antlr version. Reminder: antlr4-maven-plugin,antlr4-runtime, antlr4 need to have the same version -->
     <palantirJavaFormat.version>2.81.0</palantirJavaFormat.version>
@@ -129,13 +129,26 @@
         <scope>import</scope>
       </dependency>
 
-      <!-- Netty -->
+      <!-- Netty BOM must be imported before quarkus-bom to ensure
+           the explicitly declared netty.version takes precedence
+           over the version transitively managed by Quarkus. -->
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-bom</artifactId>
           <version>${netty.version}</version>
           <type>pom</type>
           <scope>import</scope>
+      </dependency>
+
+      <!-- Jackson BOM must be imported before quarkus-bom to ensure
+           the explicitly declared jackson.version takes precedence
+           over the version transitively managed by Quarkus. -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- Vertx -->
@@ -249,15 +262,6 @@
         <groupId>com.squareup.okhttp3</groupId>
         <version>4.12.0</version>
         <scope>test</scope>
-      </dependency>
-
-      <!-- Jackson -->
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
 
       <dependency>
