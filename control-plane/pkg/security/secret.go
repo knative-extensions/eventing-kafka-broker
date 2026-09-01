@@ -133,6 +133,11 @@ func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 					return fmt.Errorf("[protocol %s] failed to create OAUTHBEARER token provider: %w", protocol, err)
 				}
 				config.Net.SASL.TokenProvider = tokenProvider
+			} else {
+				config.Net.SASL.TokenProvider = oauth.UnsupportedTokenProvider(
+					"OAUTHBEARER without tokenProvider is not supported by the Go control plane " +
+						"(sasl.jaas.config/sasl.login.callback.handler.class are consumed by the Java data plane only); " +
+						"topic and consumer group management will fail")
 			}
 			return nil
 		}

@@ -223,7 +223,10 @@ func TestSASLOAuthMissingTokenProvider(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeOAuth), config.Net.SASL.Mechanism)
-	assert.Nil(t, config.Net.SASL.TokenProvider)
+	assert.NotNil(t, config.Net.SASL.TokenProvider)
+	_, tokenErr := config.Net.SASL.TokenProvider.Token()
+	assert.NotNil(t, tokenErr)
+	assert.Contains(t, tokenErr.Error(), "not supported by the Go control plane")
 }
 
 func TestSASLOAuthInvalidTokenProvider(t *testing.T) {
@@ -257,7 +260,10 @@ func TestSASLOAuthWithJavaPassthroughKeys(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, config.Net.SASL.Enable)
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeOAuth), config.Net.SASL.Mechanism)
-	assert.Nil(t, config.Net.SASL.TokenProvider)
+	assert.NotNil(t, config.Net.SASL.TokenProvider)
+	_, tokenErr := config.Net.SASL.TokenProvider.Token()
+	assert.NotNil(t, tokenErr)
+	assert.Contains(t, tokenErr.Error(), "not supported by the Go control plane")
 	assert.True(t, config.Net.TLS.Enable)
 }
 

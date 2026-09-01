@@ -65,3 +65,22 @@ func NewTokenProvider(data map[string][]byte) (*TokenProvider, error) {
 		tokenIssuer: tokenIssuer,
 	}, nil
 }
+
+// errorTokenProvider is a sarama.AccessTokenProvider that always fails with a
+// descriptive error. It is used when an OAUTHBEARER secret has no tokenProvider
+// (the sasl.jaas.config / sasl.login.callback.handler.class keys are consumed by
+// the Java data plane only). Setting this instead of leaving TokenProvider nil
+// prevents a nil-pointer panic in sarama's OAUTHBEARER auth path when the Go
+// control plane attempts an admin connection, turning it into a clear reconciler
+// error instead.
+type errorTokenProvider struct{ msg string }
+
+func (e *errorTokenProvider) Token() (*sarama.AccessToken, error) {
+	return nil, fmt.Errorf("%s", e.msg)
+}
+
+// UnsupportedTokenProvider returns an AccessTokenProvider that always fails with
+// the given message. See errorTokenProvider for rationale.
+func UnsupportedTokenProvider(msg string) sarama.AccessTokenProvider {
+	return &errorTokenProvider{msg: msg}
+}
