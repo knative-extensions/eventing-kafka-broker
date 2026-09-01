@@ -87,8 +87,10 @@ implementations.
     - `type`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
     - `user`: Username to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
     - `password`: Password to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
-    - `tokenProvider`: Name of the OAuth token provider. Only `MSKAccessTokenProvider` and `MSKRoleAccessTokenProvider` currently supported. Required for `OAUTHBEARER`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+    - `tokenProvider`: Name of the OAuth token provider. Only `MSKAccessTokenProvider` and `MSKRoleAccessTokenProvider` currently supported. Required for `OAUTHBEARER` **when using the Go control-plane token provider (AWS MSK)**. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
     - `roleARN`: ARN of the AWS IAM role to assume. Required for `OAUTHBEARER` and `MSKRoleAccessTokenProvider`.
+    - `sasl.jaas.config`: Full JAAS configuration string for the Kafka client. Optional, applies only when `sasl.mechanism=OAUTHBEARER`. Used by the Java data plane to configure a custom login module (e.g. for Azure Event Hubs, Keycloak, Confluent OIDC). Ignored by the Go control plane.
+    - `sasl.login.callback.handler.class`: Fully qualified class name of an `AuthenticateCallbackHandler` that provides OAuth tokens. Optional, applies only when `sasl.mechanism=OAUTHBEARER`. The class must be present on the data-plane classpath (not shipped by this project). Ignored by the Go control plane.
 
     For using encryption, these values must exist in the secret:
     - `ca.crt`: Certificate authority certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
@@ -155,7 +157,26 @@ implementations.
       auth.secret.ref.namespace: knative-eventing
     ```
 
-7. If using `sasl.mechanism: OAUTHBEARER`, update java properties for the data plane.
+7. If using `sasl.mechanism: OAUTHBEARER`, configure the data plane.
+
+    **Option A: Via the auth secret (recommended when the callback handler jar is on the data-plane classpath)**
+
+    Add `sasl.jaas.config` and `sasl.login.callback.handler.class` directly in the auth secret:
+    ```sh
+    kubectl create secret --namespace knative-eventing generic kafka-auth-secret \
+      --from-literal=protocol="SASL_SSL" \
+      --from-literal=sasl.mechanism="OAUTHBEARER" \
+      --from-literal=sasl.jaas.config="org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required scope=\"https://<namespace>.servicebus.windows.net/.default\";" \
+      --from-literal=sasl.login.callback.handler.class="io.conduktor.kafka.security.oauthbearer.azure.AzureManagedIdentityCallbackHandler"
+    ```
+
+    This is the cleanest approach: all auth configuration lives in a single Secret.
+
+    > **Note:** The callback handler class is not shipped with this project. You must build a
+    > derived data-plane image that includes the handler jar on the classpath. See the
+    > [Azure Event Hubs example](#azure-event-hubs-with-managed-identity) below.
+
+    **Option B: Via ConfigMap properties (fallback / legacy)**
 
     The following java properties files need sasl properties set:
     1. config-kafka-source-producer.properties
@@ -559,3 +580,71 @@ This will save you additional HTTP hops, from channel to broker and broker to ch
 
 - [Namespace dispatchers](https://github.com/knative-extensions/eventing-kafka/blob/main/pkg/channel/consolidated/README.md#namespace-dispatchers)
   are not supported at the moment.
+
+## Azure Event Hubs with Managed Identity
+
+This section describes how to use Azure Event Hubs (Kafka-compatible) with
+OAUTHBEARER authentication via Azure Workload Identity. No static credentials
+(SAS keys) are required.
+
+### Prerequisites
+
+- AKS cluster with OIDC Issuer and Workload Identity enabled
+- Azure Event Hubs namespace (Standard or Premium)
+- Managed Identity with `Azure Event Hubs Data Owner` role on the namespace
+- Federated credential trusting the AKS OIDC issuer for the data-plane ServiceAccount
+
+### 1. Build a derived data-plane image
+
+The callback handler jar is **not** shipped with this project. You must add it
+to the data-plane classpath. Example using the
+[Conduktor Azure OAUTHBEARER handler](https://github.com/conduktor/azure-kafka-oauthbearer):
+
+```dockerfile
+FROM gcr.io/knative-releases/knative.dev/eventing-kafka-broker/cmd/receiver@sha256:<digest>
+COPY azure-kafka-oauthbearer-0.5.0.jar /app/libs/
+RUN echo "/app/libs/azure-kafka-oauthbearer-0.5.0.jar" >> /app/jib-classpath-file
+```
+
+Repeat for the dispatcher image.
+
+### 2. Create the auth secret
+
+```sh
+kubectl create secret --namespace knative-eventing generic kafka-auth-secret \
+  --from-literal=protocol="SASL_SSL" \
+  --from-literal=sasl.mechanism="OAUTHBEARER" \
+  --from-literal=sasl.jaas.config="org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required scope=\"https://<namespace>.servicebus.windows.net/.default\";" \
+  --from-literal=sasl.login.callback.handler.class="io.conduktor.kafka.security.oauthbearer.azure.AzureManagedIdentityCallbackHandler"
+```
+
+### 3. Configure Workload Identity
+
+Annotate the data-plane ServiceAccount and label pods:
+
+```sh
+kubectl annotate serviceaccount knative-kafka-broker-data-plane \
+  -n knative-eventing \
+  azure.workload.identity/client-id="<MANAGED_IDENTITY_CLIENT_ID>" \
+  --overwrite
+
+kubectl label serviceaccount knative-kafka-broker-data-plane \
+  -n knative-eventing \
+  azure.workload.identity/use=true --overwrite
+```
+
+Patch the dispatcher StatefulSet and receiver Deployment to add the pod label
+`azure.workload.identity/use=true` so the mutating webhook injects
+`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_FEDERATED_TOKEN_FILE`.
+
+### 4. Known limitations
+
+- **Control-plane limitation:** The Go control plane cannot use a Java callback
+  handler. When `tokenProvider` is absent from the secret, the control plane
+  configures SASL/OAUTHBEARER as enabled but without a token provider. This means
+  the control plane cannot produce/consume directly from Event Hubs. This is
+  acceptable because the control plane only manages configuration — the data plane
+  handles all Kafka traffic.
+- **Token refresh:** Azure tokens expire after ~1 hour. The Kafka client's built-in
+  re-authentication (Kafka 2.2+) handles refresh transparently, provided the callback
+  handler returns fresh tokens on each invocation.

@@ -46,6 +46,11 @@ const (
 	SaslTypeLegacy   = "saslType" // legacy secrets
 	SaslUsernameKey  = "username" // legacy secrets
 
+	// OAUTHBEARER passthrough keys — used by the Java data plane only.
+	// The Go control plane tolerates and ignores them.
+	SaslJaasConfigKey                = "sasl.jaas.config"
+	SaslLoginCallbackHandlerClassKey = "sasl.login.callback.handler.class"
+
 	ProtocolPlaintext     = "PLAINTEXT"
 	ProtocolSASLPlaintext = "SASL_PLAINTEXT"
 	ProtocolSSL           = "SSL"
@@ -116,11 +121,19 @@ func saslConfig(protocol string, data map[string][]byte) kafka.ConfigOption {
 		if saslMechanism == SaslOAuth {
 			config.Net.SASL.Enable = true
 			config.Net.SASL.Mechanism = sarama.SASLTypeOAuth
-			tokenProvider, err := oauth.NewTokenProvider(data)
-			if err != nil {
-				return fmt.Errorf("[protocol %s] failed to create OAUTHBEARER token provider: %w", protocol, err)
+
+			// If the secret contains a tokenProvider key (MSK), use the Go-native token provider.
+			// If not, the secret likely contains sasl.jaas.config / sasl.login.callback.handler.class
+			// for the Java data plane (Azure, Keycloak, etc.). The control plane cannot use a Java
+			// callback handler, so we configure SASL/OAUTHBEARER as enabled but skip the token
+			// provider — the control plane will not produce/consume from Kafka in this mode.
+			if oauth.HasTokenProvider(data) {
+				tokenProvider, err := oauth.NewTokenProvider(data)
+				if err != nil {
+					return fmt.Errorf("[protocol %s] failed to create OAUTHBEARER token provider: %w", protocol, err)
+				}
+				config.Net.SASL.TokenProvider = tokenProvider
 			}
-			config.Net.SASL.TokenProvider = tokenProvider
 			return nil
 		}
 

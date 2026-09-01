@@ -58,3 +58,9 @@ func getAWSRegion(data map[string][]byte) string {
 
 	return defaultAWSRegion
 }
+
+// HasTokenProvider returns true if the secret data contains a tokenProvider key.
+func HasTokenProvider(data map[string][]byte) bool {
+	_, ok := data[saslTokenProviderKey]
+	return ok
+}

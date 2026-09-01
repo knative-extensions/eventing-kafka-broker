@@ -209,6 +209,9 @@ func TestSASLOAuthWithMSKRoleProvider(t *testing.T) {
 }
 
 func TestSASLOAuthMissingTokenProvider(t *testing.T) {
+	// When tokenProvider is absent, OAUTHBEARER is still valid — the secret may contain
+	// sasl.jaas.config / sasl.login.callback.handler.class for the Java data plane.
+	// The Go control plane tolerates this and configures SASL as enabled without a token provider.
 	secret := map[string][]byte{
 		"protocol":       []byte("SASL_PLAINTEXT"),
 		"sasl.mechanism": []byte("OAUTHBEARER"),
@@ -217,8 +220,10 @@ func TestSASLOAuthMissingTokenProvider(t *testing.T) {
 
 	err := kafka.Options(config, secretData(secret))
 
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "OAUTHBEARER token provider required")
+	assert.Nil(t, err)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeOAuth), config.Net.SASL.Mechanism)
+	assert.Nil(t, config.Net.SASL.TokenProvider)
 }
 
 func TestSASLOAuthInvalidTokenProvider(t *testing.T) {
@@ -233,6 +238,27 @@ func TestSASLOAuthInvalidTokenProvider(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "unsupported OAUTHBEARER token provider")
+}
+
+func TestSASLOAuthWithJavaPassthroughKeys(t *testing.T) {
+	// When the secret contains sasl.jaas.config and sasl.login.callback.handler.class
+	// but no tokenProvider, the Go control plane should accept it without error.
+	// These keys are consumed by the Java data plane only.
+	secret := map[string][]byte{
+		"protocol":                          []byte("SASL_SSL"),
+		"sasl.mechanism":                    []byte("OAUTHBEARER"),
+		"sasl.jaas.config":                  []byte("org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;"),
+		"sasl.login.callback.handler.class": []byte("io.conduktor.kafka.security.oauthbearer.azure.AzureManagedIdentityCallbackHandler"),
+	}
+	config := sarama.NewConfig()
+
+	err := kafka.Options(config, secretData(secret))
+
+	assert.Nil(t, err)
+	assert.True(t, config.Net.SASL.Enable)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeOAuth), config.Net.SASL.Mechanism)
+	assert.Nil(t, config.Net.SASL.TokenProvider)
+	assert.True(t, config.Net.TLS.Enable)
 }
 
 func TestSSL(t *testing.T) {
