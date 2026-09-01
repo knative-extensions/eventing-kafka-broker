@@ -139,3 +139,15 @@ func TestNewTokenProvider(t *testing.T) {
 		})
 	}
 }
+
+func TestUnsupportedTokenProvider(t *testing.T) {
+	const msg = "OAUTHBEARER without a Go token provider is not supported by the control plane"
+
+	provider := UnsupportedTokenProvider(msg)
+	assert.NotNil(t, provider)
+
+	token, err := provider.Token()
+	assert.Nil(t, token)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), msg)
+}
