@@ -76,4 +76,30 @@ public interface Credentials {
      * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
      */
     String SASLPassword();
+
+    /**
+     * Client key: sasl.jaas.config
+     *
+     * <p>When set, this value is used verbatim as the JAAS configuration for the Kafka client.
+     * Primarily useful for OAUTHBEARER, where the operator supplies a custom login module
+     * and its configuration (e.g. scope, token endpoint).
+     *
+     * @return the full JAAS config string, or null if not specified.
+     */
+    default String SASLJaasConfig() {
+        return null;
+    }
+
+    /**
+     * Client key: sasl.login.callback.handler.class
+     *
+     * <p>Fully qualified class name of an {@code AuthenticateCallbackHandler} implementation
+     * that the Kafka client will use to obtain tokens. The class must be on the data-plane
+     * classpath — this project does not ship any vendor-specific handler.
+     *
+     * @return the handler class name, or null if not specified.
+     */
+    default String SASLLoginCallbackHandlerClass() {
+        return null;
+    }
 }

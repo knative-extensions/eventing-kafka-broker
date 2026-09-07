@@ -24,8 +24,12 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.security.scram.ScramLoginModule;
 import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KafkaClientsAuth {
+
+    private static final Logger logger = LoggerFactory.getLogger(KafkaClientsAuth.class);
 
     public static Properties attachCredentials(final Properties properties, final Credentials credentials) {
         clientsProperties(properties::setProperty, credentials);
@@ -72,7 +76,19 @@ public class KafkaClientsAuth {
                             credentials.SASLUsername(),
                             credentials.SASLPassword()));
         } else if ("OAUTHBEARER".equals(mechanism)) {
-            // OAUTHBEARER does not require username and password, so we do not set them.
+            // Propagate JAAS config and callback handler class when provided in the secret.
+            // This enables vendor-neutral OAUTHBEARER auth (Azure Event Hubs, Keycloak, etc.)
+            // without adding any vendor dependency to this project.
+            // When neither key is present, this is a no-op — preserving the current behaviour
+            // for AWS MSK IAM, which supplies its own login module via the classpath.
+            final var jaasConfig = credentials.SASLJaasConfig();
+            if (jaasConfig != null) {
+                propertiesSetter.accept(SaslConfigs.SASL_JAAS_CONFIG, jaasConfig);
+            }
+            final var callbackHandler = credentials.SASLLoginCallbackHandlerClass();
+            if (callbackHandler != null) {
+                propertiesSetter.accept(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, callbackHandler);
+            }
         } else {
             propertiesSetter.accept(
                     SaslConfigs.SASL_JAAS_CONFIG,
@@ -80,6 +96,13 @@ public class KafkaClientsAuth {
                             ScramLoginModule.class.getName() + " required username=\"%s\" password=\"%s\";",
                             credentials.SASLUsername(),
                             credentials.SASLPassword()));
+            // Warn if callback handler class is set on a non-OAUTHBEARER mechanism — likely misconfiguration.
+            if (credentials.SASLLoginCallbackHandlerClass() != null) {
+                logger.warn(
+                        "sasl.login.callback.handler.class is set but sasl.mechanism is '{}', not OAUTHBEARER. "
+                                + "The callback handler class will be ignored.",
+                        mechanism);
+            }
         }
     }
 

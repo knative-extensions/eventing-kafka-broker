@@ -97,6 +97,53 @@ public class KubernetesCredentialsTest {
     }
 
     @Test
+    public void saslJaasConfigAndCallbackHandlerAreDecoded() {
+        final var data = Map.of(
+                KubernetesCredentials.SASL_MECHANISM, "OAUTHBEARER",
+                KubernetesCredentials.SASL_JAAS_CONFIG_KEY,
+                        "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;",
+                KubernetesCredentials.SASL_LOGIN_CALLBACK_HANDLER_CLASS_KEY, "com.example.MyCallbackHandler");
+
+        final var credentials = getKubernetesCredentialsFromSecretData(data);
+
+        assertThat(credentials.SASLJaasConfig())
+                .isEqualTo("org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;");
+        assertThat(credentials.SASLLoginCallbackHandlerClass()).isEqualTo("com.example.MyCallbackHandler");
+    }
+
+    @Test
+    public void saslJaasConfigAndCallbackHandlerAbsentReturnNull() {
+        final var data = Map.of(KubernetesCredentials.SASL_MECHANISM, "OAUTHBEARER");
+
+        final var credentials = getKubernetesCredentialsFromSecretData(data);
+
+        assertThat(credentials.SASLJaasConfig()).isNull();
+        assertThat(credentials.SASLLoginCallbackHandlerClass()).isNull();
+    }
+
+    @Test
+    public void saslJaasConfigAndCallbackHandlerNullOnNullSecret() {
+        final Secret secret = null;
+        final var credentials = new KubernetesCredentials(secret);
+
+        assertThat(credentials.SASLJaasConfig()).isNull();
+        assertThat(credentials.SASLLoginCallbackHandlerClass()).isNull();
+    }
+
+    @Test
+    public void saslJaasConfigAndCallbackHandlerNullOnNullSecretData() {
+        final var credentials = new KubernetesCredentials(new SecretBuilder()
+                .withNewMetadata()
+                .withNamespace("ns1")
+                .withName("name1")
+                .endMetadata()
+                .build());
+
+        assertThat(credentials.SASLJaasConfig()).isNull();
+        assertThat(credentials.SASLLoginCallbackHandlerClass()).isNull();
+    }
+
+    @Test
     public void unknownSecurityProtocolReturnsNull() {
         final var data = Map.of(KubernetesCredentials.SECURITY_PROTOCOL, "SASSO_PLAINTEXT");
 

@@ -27,6 +27,7 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
 import org.apache.kafka.common.security.plain.PlainLoginModule;
 import org.apache.kafka.common.security.scram.ScramLoginModule;
 import org.apache.kafka.common.security.ssl.DefaultSslEngineFactory;
@@ -202,5 +203,95 @@ public class KafkaClientsAuthTest {
 
         assertThat(producerConfigs).isEqualTo(expected);
         assertThat(consumerConfigs).isEqualTo(expected);
+    }
+
+    // --- OAUTHBEARER tests ---
+
+    @Test
+    public void shouldConfigureOauthbearerWithBothKeys() {
+        final var props = new Properties();
+
+        final var jaasConfig = OAuthBearerLoginModule.class.getName()
+                + " required scope=\"https://example.servicebus.windows.net/.default\";";
+        final var handlerClass = "io.conduktor.kafka.security.oauthbearer.azure.AzureManagedIdentityCallbackHandler";
+
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credentials.SASLMechanism()).thenReturn("OAUTHBEARER");
+        when(credentials.SASLJaasConfig()).thenReturn(jaasConfig);
+        when(credentials.SASLLoginCallbackHandlerClass()).thenReturn(handlerClass);
+        when(credentials.caCertificates()).thenReturn(null);
+
+        KafkaClientsAuth.attachCredentials(props, credentials);
+
+        assertThat(props.getProperty(SaslConfigs.SASL_MECHANISM)).isEqualTo("OAUTHBEARER");
+        assertThat(props.getProperty(SaslConfigs.SASL_JAAS_CONFIG)).isEqualTo(jaasConfig);
+        assertThat(props.getProperty(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS))
+                .isEqualTo(handlerClass);
+        assertThat(props.getProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG))
+                .isEqualTo(SecurityProtocol.SASL_SSL.name());
+    }
+
+    @Test
+    public void shouldConfigureOauthbearerWithNeitherKey_mskIamRegression() {
+        // When neither sasl.jaas.config nor sasl.login.callback.handler.class is set,
+        // the properties must be identical to the previous behaviour (empty block).
+        // This preserves AWS MSK IAM which relies on its own classpath-provided login module.
+        final var props = new Properties();
+
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credentials.SASLMechanism()).thenReturn("OAUTHBEARER");
+        when(credentials.SASLJaasConfig()).thenReturn(null);
+        when(credentials.SASLLoginCallbackHandlerClass()).thenReturn(null);
+        when(credentials.caCertificates()).thenReturn(null);
+
+        KafkaClientsAuth.attachCredentials(props, credentials);
+
+        assertThat(props.getProperty(SaslConfigs.SASL_MECHANISM)).isEqualTo("OAUTHBEARER");
+        assertThat(props).doesNotContainKey(SaslConfigs.SASL_JAAS_CONFIG);
+        assertThat(props).doesNotContainKey(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS);
+    }
+
+    @Test
+    public void shouldConfigureOauthbearerWithOnlyHandlerClass() {
+        final var props = new Properties();
+        final var handlerClass = "com.example.MyOAuthHandler";
+
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credentials.SASLMechanism()).thenReturn("OAUTHBEARER");
+        when(credentials.SASLJaasConfig()).thenReturn(null);
+        when(credentials.SASLLoginCallbackHandlerClass()).thenReturn(handlerClass);
+        when(credentials.caCertificates()).thenReturn(null);
+
+        KafkaClientsAuth.attachCredentials(props, credentials);
+
+        assertThat(props.getProperty(SaslConfigs.SASL_MECHANISM)).isEqualTo("OAUTHBEARER");
+        assertThat(props).doesNotContainKey(SaslConfigs.SASL_JAAS_CONFIG);
+        assertThat(props.getProperty(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS))
+                .isEqualTo(handlerClass);
+    }
+
+    @Test
+    public void shouldIgnoreHandlerClassOnNonOauthbearerMechanism() {
+        // If sasl.login.callback.handler.class is set but mechanism is SCRAM, warn and ignore.
+        final var props = new Properties();
+
+        final var credentials = mock(Credentials.class);
+        when(credentials.securityProtocol()).thenReturn(SecurityProtocol.SASL_SSL);
+        when(credentials.SASLMechanism()).thenReturn("SCRAM-SHA-512");
+        when(credentials.SASLUsername()).thenReturn("user");
+        when(credentials.SASLPassword()).thenReturn("pass");
+        when(credentials.SASLLoginCallbackHandlerClass()).thenReturn("com.example.Handler");
+        when(credentials.caCertificates()).thenReturn(null);
+
+        KafkaClientsAuth.attachCredentials(props, credentials);
+
+        // Handler class must NOT be set
+        assertThat(props).doesNotContainKey(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS);
+        // Normal SCRAM config must still work
+        assertThat(props.getProperty(SaslConfigs.SASL_MECHANISM)).isEqualTo("SCRAM-SHA-512");
+        assertThat(props.getProperty(SaslConfigs.SASL_JAAS_CONFIG)).contains("ScramLoginModule");
     }
 }

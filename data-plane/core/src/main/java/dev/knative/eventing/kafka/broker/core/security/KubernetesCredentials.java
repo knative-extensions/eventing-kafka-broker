@@ -43,6 +43,8 @@ class KubernetesCredentials implements Credentials {
 
     static final String SECURITY_PROTOCOL = "protocol";
     static final String SASL_MECHANISM = "sasl.mechanism";
+    static final String SASL_JAAS_CONFIG_KEY = "sasl.jaas.config";
+    static final String SASL_LOGIN_CALLBACK_HANDLER_CLASS_KEY = "sasl.login.callback.handler.class";
 
     private final Secret secret;
 
@@ -54,6 +56,10 @@ class KubernetesCredentials implements Credentials {
     private String SASLMechanism;
     private String SASLUsername;
     private String SASLPassword;
+    private String SASLJaasConfig;
+    private String SASLLoginCallbackHandlerClass;
+    private boolean SASLJaasConfigResolved;
+    private boolean SASLLoginCallbackHandlerClassResolved;
 
     KubernetesCredentials(final Secret secret) {
         this.secret = secret;
@@ -199,5 +205,36 @@ class KubernetesCredentials implements Credentials {
             this.SASLPassword = new String(Base64.getDecoder().decode(SASLPassword));
         }
         return this.SASLPassword;
+    }
+
+    @Override
+    public String SASLJaasConfig() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (!SASLJaasConfigResolved) {
+            final var value = secret.getData().get(SASL_JAAS_CONFIG_KEY);
+            if (value != null) {
+                this.SASLJaasConfig = new String(Base64.getDecoder().decode(value));
+            }
+            this.SASLJaasConfigResolved = true;
+        }
+        return this.SASLJaasConfig;
+    }
+
+    @Override
+    public String SASLLoginCallbackHandlerClass() {
+        if (secret == null || secret.getData() == null) {
+            return null;
+        }
+        if (!SASLLoginCallbackHandlerClassResolved) {
+            final var value = secret.getData().get(SASL_LOGIN_CALLBACK_HANDLER_CLASS_KEY);
+            if (value != null) {
+                this.SASLLoginCallbackHandlerClass =
+                        new String(Base64.getDecoder().decode(value));
+            }
+            this.SASLLoginCallbackHandlerClassResolved = true;
+        }
+        return this.SASLLoginCallbackHandlerClass;
     }
 }
