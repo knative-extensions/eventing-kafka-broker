@@ -191,7 +191,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 	coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 	// Update the configuration map with the new dataPlaneConfig data.
 	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
+		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), "%s", err.Error())
 		return err
 	}
 

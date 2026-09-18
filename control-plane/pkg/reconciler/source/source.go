@@ -87,7 +87,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource)
 
 	cg, err := r.reconcileConsumerGroup(ctx, ks)
 	if err != nil {
-		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", err.Error())
+		ks.GetConditionSet().Manage(&ks.Status).MarkFalse(KafkaConditionConsumerGroup, "failed to reconcile consumer group", "%s", err.Error())
 		return err
 	}
 
@@ -259,6 +259,7 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, ks *sources.Kaf
 			ks.GetConditionSet().Manage(&ks.Status).MarkFalse(
 				KafkaConditionConsumerGroup,
 				topLevelCondition.Reason,
+				"%s",
 				topLevelCondition.Message,
 			)
 		}

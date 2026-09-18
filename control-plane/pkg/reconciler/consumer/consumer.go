@@ -83,7 +83,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, c *kafkainternals.Consum
 	var sErr *PodStatusSummary
 	if errors.As(err, &sErr) {
 		// Resource will get queued once we have all resources to schedule the Consumer.
-		c.MarkBindInProgressWithMessage(sErr.Error())
+		c.MarkBindInProgressWithMessage("%s", sErr.Error())
 		return nil
 	}
 	if err != nil {

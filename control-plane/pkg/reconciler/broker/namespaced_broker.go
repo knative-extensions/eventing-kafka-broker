@@ -751,7 +751,7 @@ func filterMetadataMap(metadata map[string]string) map[string]string {
 }
 
 func propagateErrorCondition(broker *eventing.Broker, err error) error {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionDataPlaneAvailable, "CreateDataPlane", err.Error())
+	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionDataPlaneAvailable, "CreateDataPlane", "%s", err.Error())
 	return err
 }
 

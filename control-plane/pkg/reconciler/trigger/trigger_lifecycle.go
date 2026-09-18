@@ -113,7 +113,8 @@ func (m *statusConditionManager) subscriberResolved(egress *contract.Egress) {
 	m.Trigger.GetConditionSet().Manage(&m.Trigger.Status).MarkTrueWithReason(
 		eventing.TriggerConditionSubscriberResolved,
 		string(eventing.TriggerConditionSubscriberResolved),
-		fmt.Sprintf("Subscriber will receive events with the delivery order: %s", egress.DeliveryOrder.String()),
+		"Subscriber will receive events with the delivery order: %s",
+		egress.DeliveryOrder.String(),
 	)
 
 	if isDeadLetterSinkConfigured(egress.EgressConfig) {

@@ -1645,7 +1645,7 @@ func StatusSourceConsumerGroup() KRShapedOption {
 func StatusSourceConsumerGroupFailed(reason string, msg string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(KafkaConditionConsumerGroup, reason, msg)
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(KafkaConditionConsumerGroup, reason, "%s", msg)
 	}
 }
 

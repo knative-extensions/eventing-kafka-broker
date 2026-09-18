@@ -252,6 +252,7 @@ func StatusSourceSinkNotResolved(err string) KRShapedOption {
 		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(
 			sources.KafkaConditionSinkProvided,
 			"FailedToResolveSink",
+			"%s",
 			err,
 		)
 	}

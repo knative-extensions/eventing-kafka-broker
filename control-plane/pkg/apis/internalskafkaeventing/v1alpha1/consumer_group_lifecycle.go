@@ -51,7 +51,7 @@ func (cg *ConsumerGroup) GetConditionSet() apis.ConditionSet {
 
 func (cg *ConsumerGroup) MarkReconcileConsumersFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to reconcile consumers: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, "%s", err.Error())
 	return err
 }
 
@@ -59,6 +59,7 @@ func (cg *ConsumerGroup) MarkReconcileConsumersFailedCondition(condition *apis.C
 	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(
 		ConditionConsumerGroupConsumers,
 		condition.GetReason(),
+		"%s",
 		condition.GetMessage(),
 	)
 
@@ -74,19 +75,19 @@ func (cg *ConsumerGroup) MarkReconcileConsumersSucceeded() {
 
 func (cg *ConsumerGroup) MarkScheduleConsumerFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to schedule consumers: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, "%s", err.Error())
 	return err
 }
 
 func (cg *ConsumerGroup) MarkInitializeOffsetFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to initialize consumer group offset: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, "%s", err.Error())
 	return err
 }
 
 func (cg *ConsumerGroup) MarkDeleteOffsetFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to delete consumer group offset: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, err.Error())
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionConsumerGroupConsumers, reason, "%s", err.Error())
 	return err
 }
 
@@ -104,6 +105,6 @@ func (cg *ConsumerGroup) MarkAutoscalerDisabled() {
 
 func (cg *ConsumerGroup) MarkAutoscalerFailed(reason string, err error) error {
 	err = fmt.Errorf("failed to set up autoscaler: %w", err)
-	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionAutoscaling, reason, err.Error())
+	cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(ConditionAutoscaling, reason, "%s", err.Error())
 	return err
 }
