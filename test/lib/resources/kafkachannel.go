@@ -81,7 +81,7 @@ func WithKafkaChannelConfigReady() KafkaChannelOption {
 
 func WithKafkaChannelDeploymentNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		messaging.MarkDispatcherFailed(&nc.Status, reason, message)
+		messaging.MarkDispatcherFailed(&nc.Status, reason, "%s", message)
 	}
 }
 
@@ -93,7 +93,7 @@ func WithKafkaChannelDeploymentReady() KafkaChannelOption {
 
 func WithKafkaChannelServicetNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		messaging.MarkServiceFailed(&nc.Status, reason, message)
+		messaging.MarkServiceFailed(&nc.Status, reason, "%s", message)
 	}
 }
 
@@ -105,7 +105,7 @@ func WithKafkaChannelServiceReady() KafkaChannelOption {
 
 func WithKafkaChannelChannelServicetNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		nc.Status.MarkChannelServiceFailed(reason, message)
+		nc.Status.MarkChannelServiceFailed(reason, "%s", message)
 	}
 }
 
@@ -117,7 +117,7 @@ func WithKafkaChannelChannelServiceReady() KafkaChannelOption {
 
 func WithKafkaChannelEndpointsNotReady(reason, message string) KafkaChannelOption {
 	return func(nc *v1beta1.KafkaChannel) {
-		messaging.MarkEndpointsFailed(&nc.Status, reason, message)
+		messaging.MarkEndpointsFailed(&nc.Status, reason, "%s", message)
 	}
 }
 

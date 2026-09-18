@@ -41,7 +41,7 @@ func (c *Consumer) GetConditionSet() apis.ConditionSet {
 
 func (c *Consumer) MarkReconcileContractFailed(err error) reconciler.Event {
 	err = fmt.Errorf("failed to reconcile contract: %w", err)
-	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionContract, "ReconcileContract", err.Error())
+	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionContract, "ReconcileContract", "%s", err.Error())
 	return err
 }
 
@@ -51,7 +51,7 @@ func (c *Consumer) MarkReconcileContractSucceeded() {
 
 func (c *Consumer) MarkBindFailed(err error) reconciler.Event {
 	err = fmt.Errorf("failed to bind resource to pod: %w", err)
-	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionBind, "ConsumerBinding", err.Error())
+	c.GetConditionSet().Manage(c.GetStatus()).MarkFalse(ConsumerConditionBind, "ConsumerBinding", "%s", err.Error())
 	return err
 }
 

@@ -132,7 +132,7 @@ func ConsumerGroupReady(cg *kafkainternals.ConsumerGroup) {
 
 func WithConsumerGroupFailed(reason string, msg string) ConsumerGroupOption {
 	return func(cg *kafkainternals.ConsumerGroup) {
-		cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(kafkainternals.ConditionConsumerGroupConsumers, reason, msg)
+		cg.GetConditionSet().Manage(cg.GetStatus()).MarkFalse(kafkainternals.ConditionConsumerGroupConsumers, reason, "%s", msg)
 	}
 }
 

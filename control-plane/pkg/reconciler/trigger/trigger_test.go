@@ -3328,7 +3328,8 @@ func withTriggerSubscriberResolvedSucceeded(deliveryOrder contract.DeliveryOrder
 		t.GetConditionSet().Manage(&t.Status).MarkTrueWithReason(
 			eventingv1.TriggerConditionSubscriberResolved,
 			string(eventingv1.TriggerConditionSubscriberResolved),
-			fmt.Sprintf("Subscriber will receive events with the delivery order: %s", deliveryOrder.String()),
+			"Subscriber will receive events with the delivery order: %s",
+			deliveryOrder.String(),
 		)
 	}
 }

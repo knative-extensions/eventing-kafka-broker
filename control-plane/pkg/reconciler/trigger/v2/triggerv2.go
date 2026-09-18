@@ -121,7 +121,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	cg, err := r.reconcileConsumerGroup(ctx, broker, trigger)
 	if err != nil {
-		trigger.Status.MarkDependencyFailed("failed to reconcile consumer group", err.Error())
+		trigger.Status.MarkDependencyFailed("failed to reconcile consumer group", "%s", err.Error())
 		return err
 	}
 	propagateConsumerGroupStatus(cg, trigger)
@@ -304,7 +304,7 @@ func propagateConsumerGroupStatus(cg *internalscg.ConsumerGroup, trigger *eventi
 		if topLevelCondition == nil {
 			trigger.Status.MarkDependencyUnknown("failed to reconcile consumer group", "consumer group is not ready")
 		} else {
-			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, topLevelCondition.Message)
+			trigger.Status.MarkDependencyFailed(topLevelCondition.Reason, "%s", topLevelCondition.Message)
 		}
 	}
 	trigger.Status.SubscriberURI = cg.Status.SubscriberURI

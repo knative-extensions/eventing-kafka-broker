@@ -2434,7 +2434,7 @@ func StatusChannelSubscribersUnknown() KRShapedOption {
 func StatusChannelSubscribersFailed(reason string, msg string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta.KafkaChannel)
-		ch.GetConditionSet().Manage(ch.GetStatus()).MarkFalse(KafkaChannelConditionSubscribersReady, reason, msg)
+		ch.GetConditionSet().Manage(ch.GetStatus()).MarkFalse(KafkaChannelConditionSubscribersReady, reason, "%s", msg)
 	}
 }
 

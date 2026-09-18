@@ -460,7 +460,7 @@ func WithChannelEventPoliciesReady() KRShapedOption {
 func WithChannelEventPoliciesNotReady(reason, message string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*messagingv1beta1.KafkaChannel)
-		ks.Status.MarkEventPoliciesFailed(reason, message)
+		ks.Status.MarkEventPoliciesFailed(reason, "%s", message)
 	}
 }
 

@@ -218,7 +218,7 @@ func WithSinkEventPoliciesReady() KRShapedOption {
 func WithSinkEventPoliciesNotReady(reason, message string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*eventing.KafkaSink)
-		ks.Status.MarkEventPoliciesFailed(reason, message)
+		ks.Status.MarkEventPoliciesFailed(reason, "%s", message)
 	}
 }
 

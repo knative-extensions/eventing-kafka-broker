@@ -479,6 +479,7 @@ func StatusConfigMapNotUpdatedReady(reason, message string) func(obj duckv1.KRSh
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionConfigMapUpdated,
 			reason,
+			"%s",
 			message,
 		)
 	}
@@ -516,7 +517,10 @@ func StatusTopicNotPresentErr(topic string, err error) func(obj duckv1.KRShaped)
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionTopicReady,
 			base.ReasonTopicNotPresentOrInvalid,
-			fmt.Sprintf("topics %v: "+SinkNotPresentErrFormat, []string{topic}, []string{topic}, err),
+			"topics %v: "+SinkNotPresentErrFormat,
+			[]string{topic},
+			[]string{topic},
+			err,
 		)
 	}
 }
@@ -548,7 +552,10 @@ func StatusTopicNotPresentOrInvalid(topicName string, availableTopics []string) 
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionTopicReady,
 			base.ReasonTopicNotPresentOrInvalid,
-			fmt.Sprintf("topics %v: invalid topic %s: topic not found in metadata response, got topics: %v", []string{topicName}, topicName, availableTopics),
+			"topics %v: invalid topic %s: topic not found in metadata response, got topics: %v",
+			[]string{topicName},
+			topicName,
+			availableTopics,
 		)
 	}
 }
@@ -578,7 +585,8 @@ func StatusProbeFailed(status prober.Status) func(obj duckv1.KRShaped) {
 		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
 			base.ConditionProbeSucceeded,
 			"ProbeStatus",
-			fmt.Sprintf("status: %s", status.String()),
+			"status: %s",
+			status.String(),
 		)
 	}
 }

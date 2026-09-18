@@ -69,7 +69,7 @@ func (kbs *KafkaBindingStatus) InitializeConditions() {
 // MarkBindingUnavailable marks the KafkaBinding's Ready condition to False with
 // the provided reason and message.
 func (kbs *KafkaBindingStatus) MarkBindingUnavailable(reason, message string) {
-	kfbCondSet.Manage(kbs).MarkFalse(KafkaBindingConditionReady, reason, message)
+	kfbCondSet.Manage(kbs).MarkFalse(KafkaBindingConditionReady, reason, "%s", message)
 }
 
 // MarkBindingAvailable marks the KafkaBinding's Ready condition to True.

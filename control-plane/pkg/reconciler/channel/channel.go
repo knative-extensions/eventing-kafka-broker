@@ -240,7 +240,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta
 
 	allReady, subscribersError := r.reconcileSubscribers(ctx, channel, topicName, topicConfig.BootstrapServers, secret)
 	if subscribersError != nil {
-		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", subscribersError.Error())
+		channel.GetConditionSet().Manage(&channel.Status).MarkFalse(KafkaChannelConditionSubscribersReady, "failed to reconcile all subscribers", "%s", subscribersError.Error())
 		return subscribersError
 	}
 	if !allReady { //no need to return error. Not ready because of consumer group status. Will be ok once consumer group is reconciled

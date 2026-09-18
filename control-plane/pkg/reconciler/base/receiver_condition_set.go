@@ -271,6 +271,7 @@ func (manager *StatusConditionManager) InitialOffsetNotCommitted(err error) erro
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionInitialOffsetsCommitted,
 		"InitialOffsetsNotCommitted",
+		"%s",
 		err.Error(),
 	)
 	return err
@@ -288,6 +289,7 @@ func (manager *StatusConditionManager) FailedToResolveSink(err error) error {
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		sources.KafkaConditionSinkProvided,
 		"FailedToResolveSink",
+		"%s",
 		err.Error(),
 	)
 	return fmt.Errorf("failed to resolve sink: %w", err)
@@ -297,7 +299,8 @@ func (manager *StatusConditionManager) ProbesStatusNotReady(status prober.Status
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
 		ConditionProbeSucceeded,
 		"ProbeStatus",
-		fmt.Sprintf("status: %s", status.String()),
+		"status: %s",
+		status.String(),
 	)
 }
 
