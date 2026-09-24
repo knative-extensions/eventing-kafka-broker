@@ -103,12 +103,15 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
             final var egress = entry.getKey();
             final var resource = entry.getValue();
 
+            // Optimistic cache removal: remove before the async operation so that a
+            // concurrent reconcile() call sees the correct state. Restore on failure.
+            this.cachedEgresses.remove(uid);
             futures.add(this.egressReconcilerListener
                     .onDeleteEgress(new EgressContext(resource, egress, newTrustBundle))
-                    // If we succeed to delete the egress we can remove it from the cache.
-                    .onSuccess(r -> this.cachedEgresses.remove(uid))
-                    .onFailure(cause ->
-                            logFailure("Failed to reconcile [onDeleteEgress] egress", egress, cause, generation)));
+                    .onFailure(cause -> {
+                        this.cachedEgresses.put(uid, entry);
+                        logFailure("Failed to reconcile [onDeleteEgress] egress", egress, cause, generation);
+                    }));
         });
 
         diff.getAdded().forEach(uid -> {
@@ -116,13 +119,15 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
             final var egress = entry.getKey();
             final var resource = entry.getValue();
 
+            // Optimistic cache insertion: add before the async operation so that a
+            // concurrent reconcile() call sees the correct state. Remove on failure.
+            this.cachedEgresses.put(egress.getUid(), new SimpleImmutableEntry<>(egress, resource));
             futures.add(this.egressReconcilerListener
                     .onNewEgress(new EgressContext(resource, egress, newTrustBundle))
-                    // If we fail to create the egress we can't put it in the cache.
-                    .onSuccess(
-                            r -> this.cachedEgresses.put(egress.getUid(), new SimpleImmutableEntry<>(egress, resource)))
-                    .onFailure(cause ->
-                            logFailure("Failed to reconcile [onNewEgress] egress ", egress, cause, generation)));
+                    .onFailure(cause -> {
+                        this.cachedEgresses.remove(egress.getUid());
+                        logFailure("Failed to reconcile [onNewEgress] egress ", egress, cause, generation);
+                    }));
         });
 
         diff.getIntersection().forEach(uid -> {
@@ -145,13 +150,15 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
                     keyValue("destination", newEgress.getDestination()),
                     keyValue("contractGeneration", generation));
 
+            // Optimistic cache update: replace before the async operation so that a
+            // concurrent reconcile() call sees the correct state. Restore on failure.
+            this.cachedEgresses.put(newEgress.getUid(), new SimpleImmutableEntry<>(newEgress, newResource));
             futures.add(this.egressReconcilerListener
                     .onUpdateEgress(new EgressContext(newResource, newEgress, newTrustBundle))
-                    // If we fail to update the egress we can't put it in the cache.
-                    .onSuccess(r -> this.cachedEgresses.put(
-                            newEgress.getUid(), new SimpleImmutableEntry<>(newEgress, newResource)))
-                    .onFailure(cause ->
-                            logFailure("Failed to reconcile [onUpdateEgress] egress ", newEgress, cause, generation)));
+                    .onFailure(cause -> {
+                        this.cachedEgresses.put(uid, cachedEgress);
+                        logFailure("Failed to reconcile [onUpdateEgress] egress ", newEgress, cause, generation);
+                    }));
         });
 
         // We want to complete the future, once all futures are complete, so use join.
@@ -177,22 +184,28 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
         final var diff = CollectionsUtils.diff(this.cachedResources.keySet(), newResourcesMap.keySet());
         logger.info("Reconcile ingress diff {} {}", keyValue("diff", diff), keyValue("contractGeneration", generation));
 
-        diff.getRemoved().stream()
-                .map(this.cachedResources::get)
-                .forEach(r -> futures.add(this.ingressReconcilerListener
-                        .onDeleteIngress(r, r.getIngress())
-                        .onSuccess(v -> this.cachedResources.remove(r.getUid()))
-                        .onFailure(cause ->
-                                logFailure("Failed to reconcile [onDeleteIngress] ingress", r, cause, generation))));
+        diff.getRemoved().stream().map(this.cachedResources::get).forEach(r -> {
+            this.cachedResources.remove(r.getUid());
+            futures.add(this.ingressReconcilerListener
+                    .onDeleteIngress(r, r.getIngress())
+                    .onFailure(cause -> {
+                        this.cachedResources.put(r.getUid(), r);
+                        logFailure("Failed to reconcile [onDeleteIngress] ingress", r, cause, generation);
+                    }));
+        });
 
         diff.getAdded().stream()
                 .map(newResourcesMap::get)
                 .filter(DataPlaneContract.Resource::hasIngress)
-                .forEach(r -> futures.add(this.ingressReconcilerListener
-                        .onNewIngress(r, r.getIngress())
-                        .onSuccess(v -> this.cachedResources.put(r.getUid(), r))
-                        .onFailure(cause ->
-                                logFailure("Failed to reconcile [onNewIngress] ingress", r, cause, generation))));
+                .forEach(r -> {
+                    this.cachedResources.put(r.getUid(), r);
+                    futures.add(this.ingressReconcilerListener
+                            .onNewIngress(r, r.getIngress())
+                            .onFailure(cause -> {
+                                this.cachedResources.remove(r.getUid());
+                                logFailure("Failed to reconcile [onNewIngress] ingress", r, cause, generation);
+                            }));
+                });
 
         diff.getIntersection().forEach(uid -> {
             final var oldResource = this.cachedResources.get(uid);
@@ -202,19 +215,23 @@ public class ResourcesReconcilerImpl implements ResourcesReconciler {
             }
             // Add only resources with ingress.
             if (!newResource.hasIngress()) {
+                this.cachedResources.remove(uid);
                 futures.add(this.ingressReconcilerListener
                         .onDeleteIngress(oldResource, oldResource.getIngress())
-                        .onSuccess(r -> this.cachedResources.remove(uid))
-                        .onFailure(cause -> logFailure(
-                                "Failed to reconcile [onDeleteIngress] ingress", oldResource, cause, generation)));
+                        .onFailure(cause -> {
+                            this.cachedResources.put(uid, oldResource);
+                            logFailure("Failed to reconcile [onDeleteIngress] ingress", oldResource, cause, generation);
+                        }));
                 return;
             }
 
+            this.cachedResources.put(uid, newResource);
             futures.add(this.ingressReconcilerListener
                     .onUpdateIngress(newResource, newResource.getIngress())
-                    .onSuccess(r -> this.cachedResources.put(uid, newResource))
-                    .onFailure(cause -> logFailure(
-                            "Failed to reconcile [onUpdateIngress] ingress", newResource, cause, generation)));
+                    .onFailure(cause -> {
+                        this.cachedResources.put(uid, oldResource);
+                        logFailure("Failed to reconcile [onUpdateIngress] ingress", newResource, cause, generation);
+                    }));
         });
 
         // We want to complete the future, once all futures are complete, so use join.

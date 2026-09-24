@@ -35,6 +35,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,13 +109,23 @@ public class LoomKafkaConsumer<K, V> implements ReactiveKafkaConsumer<K, V> {
 
         taskQueue.add(() -> {
             try {
+                // Drain any pending wakeup so coordinator.close() can flush LeaveGroup.
+                try {
+                    consumer.poll(Duration.ZERO);
+                } catch (WakeupException ignored) {
+                }
                 logger.debug("Closing underlying Kafka consumer client");
-                consumer.wakeup();
                 consumer.close();
             } catch (Exception e) {
                 closePromise.tryFail(e);
             }
         });
+
+        // Wake up any poll() currently blocking on the task-runner thread so the close
+        // task above is processed promptly. Must be called after taskQueue.add() to avoid
+        // a race where the task-runner exits (isClosed=true + empty queue) before the
+        // close task is enqueued.
+        consumer.wakeup();
 
         logger.debug("Closing consumer {}", keyValue("size", taskQueue.size()));
 

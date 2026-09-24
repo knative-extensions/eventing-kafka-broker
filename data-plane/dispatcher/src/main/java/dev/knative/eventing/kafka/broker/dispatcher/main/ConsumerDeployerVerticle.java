@@ -29,6 +29,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,7 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
     private static final Logger logger = LoggerFactory.getLogger(ConsumerDeployerVerticle.class);
 
     private final Map<String, String> deployedDispatchers;
+    private final Map<String, Future<Void>> inFlightOps;
     private final ConsumerVerticleFactory consumerFactory;
 
     private MessageConsumer<Object> messageConsumer;
@@ -57,6 +59,7 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
         }
         this.consumerFactory = consumerFactory;
         this.deployedDispatchers = new ConcurrentHashMap<>(egressesInitialCapacity);
+        this.inFlightOps = new ConcurrentHashMap<>(egressesInitialCapacity);
     }
 
     @Override
@@ -71,6 +74,31 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
 
     @Override
     public Future<Void> onNewEgress(final EgressContext egressContext) {
+        return serializeOperation(egressContext.egress().getUid(), v -> doNewEgress(egressContext));
+    }
+
+    @Override
+    public Future<Void> onUpdateEgress(final EgressContext egressContext) {
+        return serializeOperation(egressContext.egress().getUid(), v -> doDeleteEgress(egressContext)
+                .compose(vv -> doNewEgress(egressContext)));
+    }
+
+    @Override
+    public Future<Void> onDeleteEgress(final EgressContext egressContext) {
+        return serializeOperation(egressContext.egress().getUid(), v -> doDeleteEgress(egressContext));
+    }
+
+    private Future<Void> serializeOperation(final String uid, final Function<Void, Future<Void>> operation) {
+        final Future<Void> serialized = inFlightOps
+                .getOrDefault(uid, Future.succeededFuture())
+                .recover(e -> Future.succeededFuture())
+                .compose(operation);
+        inFlightOps.put(uid, serialized);
+        serialized.onComplete(ar -> inFlightOps.remove(uid, serialized));
+        return serialized;
+    }
+
+    private Future<Void> doNewEgress(final EgressContext egressContext) {
         // TODO we should check if the consumer is still running
         if (this.deployedDispatchers.containsKey(egressContext.egress().getUid())) {
             return Future.succeededFuture();
@@ -111,13 +139,7 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
         }
     }
 
-    @Override
-    public Future<Void> onUpdateEgress(final EgressContext egressContext) {
-        return onDeleteEgress(egressContext).compose(v -> onNewEgress(egressContext));
-    }
-
-    @Override
-    public Future<Void> onDeleteEgress(final EgressContext egressContext) {
+    private Future<Void> doDeleteEgress(final EgressContext egressContext) {
         if (!this.deployedDispatchers.containsKey(egressContext.egress().getUid())) {
             return Future.succeededFuture();
         }

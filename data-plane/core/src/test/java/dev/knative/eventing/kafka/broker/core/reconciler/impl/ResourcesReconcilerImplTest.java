@@ -18,11 +18,16 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Filter;
 import static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressContext;
+import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -838,6 +843,64 @@ class ResourcesReconcilerImplTest {
                 .deletedEgress("ccc")
                 .then()
                 .run();
+    }
+
+    /**
+     * Regression test for the cache race: if a second reconcile() arrives before the first
+     * reconcile's onNewEgress future completes, the cache optimistic update must ensure the
+     * second reconcile still sees and removes egresses from the first contract.
+     *
+     * Without the fix (cache updated in .onSuccess()), the second reconcile would see an
+     * empty cache and miss the removal of egress-A entirely — onDeleteEgress never called.
+     */
+    @Test
+    public void reconcileEgressCacheRaceSlowDeployment() {
+        final Promise<Void> deployPromise = Promise.promise();
+
+        final var deletedEgresses = new ArrayList<String>();
+        final EgressReconcilerListener listener = new EgressReconcilerListener() {
+            @Override
+            public Future<Void> onNewEgress(final EgressContext ctx) {
+                return deployPromise.future();
+            }
+
+            @Override
+            public Future<Void> onUpdateEgress(final EgressContext ctx) {
+                return Future.succeededFuture();
+            }
+
+            @Override
+            public Future<Void> onDeleteEgress(final EgressContext ctx) {
+                deletedEgresses.add(ctx.egress().getUid());
+                return Future.succeededFuture();
+            }
+        };
+
+        final var reconciler =
+                ResourcesReconciler.builder().watchEgress(listener).build();
+
+        // Step 1: reconcile with egress-A — deployment future is still pending
+        final var contract1 = DataPlaneContract.Contract.newBuilder()
+                .addResources(baseResource("r1").addEgresses(egress("A")).build())
+                .build();
+        reconciler.reconcile(contract1);
+
+        // Step 2: reconcile with empty contract — before step 1's future completes
+        // With the fix, egress-A is already in the cache (optimistic), so it is diffed as
+        // removed and onDeleteEgress is called immediately.
+        final var contract2 = DataPlaneContract.Contract.newBuilder().build();
+        reconciler.reconcile(contract2);
+
+        assertThat(deletedEgresses)
+                .as("onDeleteEgress must be called for egress-A even before its deployment future completes")
+                .containsExactly("A");
+
+        // Complete the deployment — should not re-add egress-A to the cache
+        deployPromise.complete();
+
+        assertThat(deletedEgresses)
+                .as("onDeleteEgress must only be called once")
+                .containsExactly("A");
     }
 
     private Resource.Builder baseResource(String uid) {

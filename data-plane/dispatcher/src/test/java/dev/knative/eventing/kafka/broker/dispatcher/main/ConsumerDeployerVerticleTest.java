@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -359,6 +360,73 @@ public class ConsumerDeployerVerticleTest {
     public void shouldThrowIfEgressesInitialCapacityIsLessOrEqualToZero(final Vertx vertx) {
         Assertions.assertThrows(
                 IllegalArgumentException.class, () -> new ConsumerDeployerVerticle(egressContext -> null, -1));
+    }
+
+    @Test
+    @Timeout(value = 5)
+    public void shouldNotOrphanVerticleWhenUpdateOverlapsInFlightDeploy(
+            final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
+
+        // Simulate a slow-deploying verticle: the first deploy completes only after we manually complete the promise.
+        final Promise<Void> slowDeployGate = Promise.promise();
+        final int[] deployCount = {0};
+
+        final var consumerDeployer = new ConsumerDeployerVerticle(
+                egressContext -> new AbstractVerticle() {
+                    @Override
+                    public void start(Promise<Void> startPromise) {
+                        deployCount[0]++;
+                        if (deployCount[0] == 1) {
+                            // First deploy: block until the gate is released (simulates slow startup)
+                            slowDeployGate.future().onComplete(startPromise);
+                        } else {
+                            startPromise.complete();
+                        }
+                    }
+                },
+                100);
+
+        vertx.deployVerticle(consumerDeployer)
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get();
+
+        final var resource = DataPlaneContract.Resource.newBuilder()
+                .setUid("test-resource")
+                .addTopics("test-topic")
+                .addEgresses(egress1())
+                .build();
+
+        final var reconciler =
+                ResourcesReconciler.builder().watchEgress(consumerDeployer).build();
+
+        // Start first new-egress deploy (will block in start())
+        final var firstDeploy = reconciler.reconcile(
+                DataPlaneContract.Contract.newBuilder().addResources(resource).build());
+
+        // Fire an update while the first deploy is still in-flight (gate not yet released).
+        // Without the serialization fix this races with the in-flight deploy and orphans a verticle.
+        final var update = reconciler.reconcile(DataPlaneContract.Contract.newBuilder()
+                .addResources(DataPlaneContract.Resource.newBuilder()
+                        .setUid("test-resource")
+                        .addTopics("test-topic")
+                        .addEgresses(DataPlaneContract.Egress.newBuilder(egress1())
+                                .setDestination("http://updated-destination/")
+                                .build())
+                        .build())
+                .build());
+
+        // Release the gate so the first deploy can finish.
+        slowDeployGate.complete();
+
+        // Wait for both operations to settle, then verify exactly one verticle is running.
+        firstDeploy
+                .compose(v -> update)
+                .onComplete(r -> context.verify(() -> {
+                    // The consumerDeployer verticle itself + exactly one consumer verticle.
+                    assertThat(vertx.deploymentIDs()).hasSize(NUM_SYSTEM_VERTICLES + 1);
+                    context.completeNow();
+                }));
     }
 
     private static int numEgresses(Collection<DataPlaneContract.Resource> resources) {
