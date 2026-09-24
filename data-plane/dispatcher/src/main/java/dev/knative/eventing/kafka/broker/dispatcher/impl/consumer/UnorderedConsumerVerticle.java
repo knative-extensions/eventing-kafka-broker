@@ -22,6 +22,8 @@ import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerVerticleContext
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -165,7 +167,13 @@ public final class UnorderedConsumerVerticle extends ConsumerVerticle {
 
             lastOffsets.put(topicPartition, record.offset());
 
-            recordDispatcherFutures.add(this.recordDispatcher.dispatch(record));
+            // Dispatch on a duplicated context so each record gets its own
+            // isolated tracing span instead of overwriting the shared context.
+            final Promise<Void> dispatchPromise = Promise.promise();
+            recordDispatcherFutures.add(dispatchPromise.future());
+            ((ContextInternal) Vertx.currentContext())
+                    .duplicate()
+                    .emit(v -> this.recordDispatcher.dispatch(record).onComplete(dispatchPromise));
 
             Future.all(recordDispatcherFutures).onComplete(v -> {
                 this.inFlightRecords.decrementAndGet();
