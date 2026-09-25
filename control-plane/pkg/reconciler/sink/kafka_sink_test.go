@@ -553,7 +553,8 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				},
 			},
 			OtherTestData: map[string]interface{}{
-				wantTopicName: "my-topic-1",
+				wantTopicName:                  "my-topic-1",
+				ExpectedTopicsOnDescribeTopics: []string{"my-topic-1"},
 			},
 		},
 		{
@@ -592,6 +593,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 			},
 			OtherTestData: map[string]interface{}{
 				wantErrorOnCreateTopic: errCreateTopic,
+				ExpectedTopicIsPresent: false,
 			},
 		},
 		{
@@ -1923,9 +1925,10 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 				}),
 			},
 			OtherTestData: map[string]interface{}{
-				wantErrorOnDeleteTopic: errDeleteTopic,
-				wantTopicName:          "topic-2",
-				testProber:             probertesting.MockNewProber(prober.StatusNotReady),
+				wantErrorOnDeleteTopic:         errDeleteTopic,
+				wantTopicName:                  "topic-2",
+				ExpectedTopicsOnDescribeTopics: []string{"topic-2"},
+				testProber:                     probertesting.MockNewProber(prober.StatusNotReady),
 			},
 		},
 	}
