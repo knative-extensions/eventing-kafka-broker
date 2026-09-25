@@ -151,6 +151,16 @@
         <scope>import</scope>
       </dependency>
 
+      <!-- Vertx-core must be imported before quarkus-bom to ensure
+      the explicitly declared vertx.version takes precedence
+      over the version transitively managed by Quarkus. -->
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-core</artifactId>
+        <version>4.5.27</version>
+        <scope>compile</scope>
+      </dependency>
+
       <!-- Vertx -->
       <dependency>
         <groupId>io.quarkus</groupId>
