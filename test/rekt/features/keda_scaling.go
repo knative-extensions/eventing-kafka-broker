@@ -19,6 +19,7 @@ package features
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/autoscaler/keda"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
@@ -28,10 +29,12 @@ import (
 	"knative.dev/eventing/test/rekt/resources/trigger"
 
 	cetest "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"k8s.io/utils/ptr"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client"
 	"knative.dev/eventing/test/rekt/resources/broker"
 	subscriptionresources "knative.dev/eventing/test/rekt/resources/subscription"
@@ -87,6 +90,63 @@ func KafkaSourceScaledObjectHasNoEmptyAuthRef() *feature.Feature {
 
 	// after the event is sent, the source should scale down to zero replicas
 	f.Alpha("kafka source consumergroup scaled object").MustNot("have an authentication ref set on the trigger", verifyScaledObjectTriggerRef(getKafkaSourceCg(kafkaSource)))
+
+	return f
+}
+
+func KafkaSourceScaledObjectHasCorrectAnnotations() *feature.Feature {
+	f := feature.NewFeature()
+
+	// we need to ensure that autoscaling is enabled for the rest of the feature to work
+	f.Prerequisite("Autoscaling is enabled", kafkafeatureflags.AutoscalingEnabled())
+
+	kafkaSource := feature.MakeRandomK8sName("kafka-source")
+	topic := feature.MakeRandomK8sName("topic")
+	kafkaSink := feature.MakeRandomK8sName("kafkaSink")
+	receiver := feature.MakeRandomK8sName("eventshub-receiver")
+
+	const (
+		pollingInterval = "15"
+		cooldownPeriod  = "45"
+		minReplicaCount = "1"
+		maxReplicaCount = "10"
+		lagThreshold    = "200"
+	)
+
+	f.Setup("install kafka topic", kafkatopic.Install(topic))
+	f.Requirement("topic is ready", kafkatopic.IsReady(topic))
+
+	f.Setup("install kafkasink", kafkasink.Install(kafkaSink, topic, testpkg.BootstrapServersPlaintextArr))
+	f.Requirement("kafkasink is ready", kafkasink.IsReady(kafkaSink))
+
+	f.Setup("install eventshub receiver", eventshub.Install(receiver, eventshub.StartReceiver))
+
+	kafkaSourceOpts := []manifest.CfgFn{
+		kafkasource.WithSink(service.AsDestinationRef(receiver)),
+		kafkasource.WithTopics([]string{topic}),
+		kafkasource.WithBootstrapServers(testpkg.BootstrapServersPlaintextArr),
+		kafkasource.WithAnnotations(map[string]string{
+			"autoscaling.eventing.knative.dev/class":            "keda.autoscaling.knative.dev",
+			"autoscaling.eventing.knative.dev/polling-interval": pollingInterval,
+			"autoscaling.eventing.knative.dev/cooldown-period":  cooldownPeriod,
+			"autoscaling.eventing.knative.dev/min-scale":        minReplicaCount,
+			"autoscaling.eventing.knative.dev/max-scale":        maxReplicaCount,
+			"autoscaling.eventing.knative.dev/lag-threshold":    lagThreshold,
+		}),
+	}
+
+	f.Setup("install kafka source", kafkasource.Install(kafkaSource, kafkaSourceOpts...))
+	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
+
+	f.Alpha("kafka source consumergroup scaled object").
+		Must("have spec fields matching the source autoscaling annotations",
+			verifyScaledObjectAnnotationApplied(getKafkaSourceCg(kafkaSource), scaledObjectExpectation{
+				pollingInterval: pollingInterval,
+				cooldownPeriod:  cooldownPeriod,
+				minReplicaCount: minReplicaCount,
+				maxReplicaCount: maxReplicaCount,
+				lagThreshold:    lagThreshold,
+			}))
 
 	return f
 }
@@ -463,5 +523,70 @@ func verifyScaledObjectTriggerRef(getConsumerGroupName getCgName) feature.StepFn
 			}
 		}
 
+	}
+}
+
+type scaledObjectExpectation struct {
+	pollingInterval string
+	cooldownPeriod  string
+	minReplicaCount string
+	maxReplicaCount string
+	lagThreshold    string
+}
+
+func verifyScaledObjectAnnotationApplied(getConsumerGroupName getCgName, want scaledObjectExpectation) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		kedaClient := kedaclient.Get(ctx)
+		internalsClient := sourcesclient.Get(ctx)
+		ns := environment.FromContext(ctx).Namespace()
+		interval, timeout := environment.PollTimingsFromContext(ctx)
+
+		expected := map[string]string{
+			"pollingInterval": want.pollingInterval,
+			"cooldownPeriod":  want.cooldownPeriod,
+			"minReplicaCount": want.minReplicaCount,
+			"maxReplicaCount": want.maxReplicaCount,
+			"lagThreshold":    want.lagThreshold,
+		}
+
+		var lastErr error
+		err := wait.PollUntilContextTimeout(ctx, interval, timeout, true, func(ctx context.Context) (bool, error) {
+			lastErr = nil
+			cgName, err := getConsumerGroupName(ctx)
+			if err != nil {
+				lastErr = err
+				return false, nil
+			}
+			cg, err := internalsClient.InternalV1alpha1().ConsumerGroups(ns).Get(ctx, cgName, metav1.GetOptions{})
+			if err != nil {
+				lastErr = err
+				return false, nil
+			}
+			so, err := kedaClient.KedaV1alpha1().ScaledObjects(ns).Get(ctx, keda.GenerateScaledObjectName(cg), metav1.GetOptions{})
+			if err != nil {
+				lastErr = err
+				return false, nil
+			}
+			if len(so.Spec.Triggers) == 0 {
+				lastErr = fmt.Errorf("no triggers found on scaledObject")
+				return false, nil
+			}
+
+			got := map[string]string{
+				"pollingInterval": strconv.Itoa(int(ptr.Deref(so.Spec.PollingInterval, 0))),
+				"cooldownPeriod":  strconv.Itoa(int(ptr.Deref(so.Spec.CooldownPeriod, 0))),
+				"minReplicaCount": strconv.Itoa(int(ptr.Deref(so.Spec.MinReplicaCount, 0))),
+				"maxReplicaCount": strconv.Itoa(int(ptr.Deref(so.Spec.MaxReplicaCount, 0))),
+				"lagThreshold":    so.Spec.Triggers[0].Metadata["lagThreshold"],
+			}
+			if diff := cmp.Diff(expected, got); diff != "" {
+				lastErr = fmt.Errorf("scaledObject fields mismatch (-want +got):\n%s", diff)
+				return false, nil
+			}
+			return true, nil
+		})
+		if err != nil {
+			t.Errorf("ScaledObject did not match expected annotation values: %v", lastErr)
+		}
 	}
 }
