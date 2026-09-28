@@ -176,12 +176,26 @@ func CreateTopicIfDoesntExist(admin sarama.ClusterAdmin, logger *zap.Logger, top
 		zap.Int32("numPartitions", config.TopicDetail.NumPartitions),
 	)
 
-	createTopicError := admin.CreateTopic(topic, &config.TopicDetail, false)
-	if err, ok := createTopicError.(*sarama.TopicError); ok && err.Err == sarama.ErrTopicAlreadyExists {
-		return topic, nil
+	metadata, err := admin.DescribeTopics([]string{topic})
+	if err == nil && len(metadata) == 1 {
+		m := metadata[0]
+		if m.Err == sarama.ErrNoError {
+			if err := validateSingleTopicMetadata(m, topic); err == nil {
+				logger.Debug("topic already exists, skipping create", zap.String("topic", topic))
+				return topic, nil
+			}
+		}
 	}
 
-	return topic, createTopicError
+	if err := admin.CreateTopic(topic, &config.TopicDetail, false); err != nil {
+		if topicErr, ok := err.(*sarama.TopicError); ok && topicErr.Err == sarama.ErrTopicAlreadyExists {
+			return topic, nil
+		}
+		return topic, err
+	}
+
+	logger.Info("created topic", zap.String("topic", topic))
+	return topic, nil
 }
 
 func DeleteTopic(admin sarama.ClusterAdmin, topic string) (string, error) {
