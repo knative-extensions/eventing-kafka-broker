@@ -101,7 +101,7 @@ type AccessToken struct {
 	Extensions map[string]string
 }
 
-// AccessTokenProvider is the interface that encapsulates how implementors
+// AccessTokenProvider is the interface that encapsulates how implementers
 // can generate access tokens for Kafka broker authentication.
 type AccessTokenProvider interface {
 	// Token returns an access token. The implementation should ensure token
@@ -246,14 +246,20 @@ func (b *Broker) Open(conf *Config) error {
 		// It will be used to determine the supported API versions for each request.
 		// This should happen before SASL authentication: https://kafka.apache.org/42/design/protocol/#retrieving-supported-api-versions
 		if conf.ApiVersionsRequest {
-			apiVersionsResponse, err := b.sendAndReceiveApiVersions(3)
+			// v4 additionally includes supported features whose min version is 0,
+			// which v0-v3 omit from the response
+			apiVersionsVersion := int16(3)
+			if conf.Version.IsAtLeast(V3_9_0_0) {
+				apiVersionsVersion = 4
+			}
+			apiVersionsResponse, err := b.sendAndReceiveApiVersions(apiVersionsVersion)
 			if err != nil {
 				if b.maybeCloseLocked(err) {
 					// Open is async, so we can't return the error here; surface it via Connected().
 					return
 				}
 
-				Logger.Printf("Error while sending ApiVersionsRequest V3 to broker %s: %s\n", b.addr, err)
+				Logger.Printf("Error while sending ApiVersionsRequest V%d to broker %s: %s\n", apiVersionsVersion, b.addr, err)
 				// send a lower version request in case remote cluster is <= 2.4.0.0
 				maxVersion := int16(0)
 				if apiVersionsResponse != nil {
@@ -577,11 +583,16 @@ func (b *Broker) Produce(request *ProduceRequest) (*ProduceResponse, error) {
 // Fetch returns a FetchResponse or error
 func (b *Broker) Fetch(request *FetchRequest) (*FetchResponse, error) {
 	defer func() {
-		if b.fetchRate != nil {
-			b.fetchRate.Mark(1)
+		// snapshot meters under the lock; Open may reassign them on reconnect
+		b.lock.Lock()
+		fetchRate, brokerFetchRate := b.fetchRate, b.brokerFetchRate
+		b.lock.Unlock()
+
+		if fetchRate != nil {
+			fetchRate.Mark(1)
 		}
-		if b.brokerFetchRate != nil {
-			b.brokerFetchRate.Mark(1)
+		if brokerFetchRate != nil {
+			brokerFetchRate.Mark(1)
 		}
 	}()
 
@@ -998,6 +1009,57 @@ func (b *Broker) AlterUserScramCredentials(req *AlterUserScramCredentialsRequest
 	return res, nil
 }
 
+// UpdateFeatures sends a request to update finalized feature versions
+func (b *Broker) UpdateFeatures(req *UpdateFeaturesRequest) (*UpdateFeaturesResponse, error) {
+	res := new(UpdateFeaturesResponse)
+
+	err := b.sendAndReceive(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// DescribeProducers sends a request to list the active producer state for
+// topic partitions led by this broker
+func (b *Broker) DescribeProducers(req *DescribeProducersRequest) (*DescribeProducersResponse, error) {
+	res := new(DescribeProducersResponse)
+
+	err := b.sendAndReceive(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// DescribeTransactions sends a request to retrieve the current state of
+// transactions from the transaction coordinator
+func (b *Broker) DescribeTransactions(req *DescribeTransactionsRequest) (*DescribeTransactionsResponse, error) {
+	res := new(DescribeTransactionsResponse)
+
+	err := b.sendAndReceive(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// ListTransactions sends a request to list the transactions known to the
+// transaction coordinator
+func (b *Broker) ListTransactions(req *ListTransactionsRequest) (*ListTransactionsResponse, error) {
+	res := new(ListTransactionsResponse)
+
+	err := b.sendAndReceive(req, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // DescribeClientQuotas sends a request to get the broker's quotas
 func (b *Broker) DescribeClientQuotas(request *DescribeClientQuotasRequest) (*DescribeClientQuotasResponse, error) {
 	response := new(DescribeClientQuotasResponse)
@@ -1170,6 +1232,22 @@ func (b *Broker) sendAndReceive(req protocolBody, res protocolBody) error {
 		b.handleThrottledResponse(res)
 	}
 	return nil
+}
+
+// negotiateApiVersion clamps pb's version to the broker's advertised maximum
+// for pb's API (treating pb's current version as the client max). When the
+// broker has not advertised ApiVersions info, pb's version is left untouched
+// (optimistic). Returns (0, false) if the resulting version is below
+// minVersion.
+func (b *Broker) negotiateApiVersion(pb protocolBody, minVersion int16) (int16, bool) {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+
+	_ = restrictApiVersion(pb, b.brokerAPIVersions)
+	if pb.version() < minVersion {
+		return 0, false
+	}
+	return pb.version(), true
 }
 
 func handleResponsePromise(req protocolBody, res protocolBody, promise *responsePromise, metricRegistry metrics.Registry) error {
@@ -1688,7 +1766,11 @@ func (b *Broker) sendAndReceiveSASLSCRAMv0() error {
 			Logger.Printf("Failed to read response header while authenticating with SASL to broker %s: %s\n", b.addr, err.Error())
 			return err
 		}
-		payload := make([]byte, int32(binary.BigEndian.Uint32(header)))
+		payloadLength := binary.BigEndian.Uint32(header)
+		if int64(payloadLength) > int64(MaxResponseSize) {
+			return PacketDecodingError{fmt.Sprintf("SASL response of length %d too large", payloadLength)}
+		}
+		payload := make([]byte, int(payloadLength))
 		n, err := b.readFull(payload)
 		if err != nil {
 			b.addRequestInFlightMetrics(-1)

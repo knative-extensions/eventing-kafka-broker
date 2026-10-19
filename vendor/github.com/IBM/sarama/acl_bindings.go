@@ -128,9 +128,12 @@ func (r *ResourceAcls) decode(pd packetDecoder, version int16) error {
 	if err != nil {
 		return err
 	}
+	if n < 0 {
+		return errInvalidArrayLength
+	}
 
 	r.Acls = make([]*Acl, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		r.Acls[i] = new(Acl)
 		if err := r.Acls[i].decode(pd, version); err != nil {
 			return err

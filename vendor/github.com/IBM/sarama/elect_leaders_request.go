@@ -54,24 +54,14 @@ func (r *ElectLeadersRequest) decode(pd packetDecoder, version int16) (err error
 	}
 	if topicCount > 0 {
 		r.TopicPartitions = make(map[string][]int32)
-		for i := 0; i < topicCount; i++ {
+		for range topicCount {
 			topic, err := pd.getString()
 			if err != nil {
 				return err
 			}
-			partitionCount, err := pd.getArrayLength()
-			if err != nil {
+			if r.TopicPartitions[topic], err = pd.getInt32Array(); err != nil {
 				return err
 			}
-			partitions := make([]int32, partitionCount)
-			for j := 0; j < partitionCount; j++ {
-				partition, err := pd.getInt32()
-				if err != nil {
-					return err
-				}
-				partitions[j] = partition
-			}
-			r.TopicPartitions[topic] = partitions
 			if _, err := pd.getEmptyTaggedFieldArray(); err != nil {
 				return err
 			}

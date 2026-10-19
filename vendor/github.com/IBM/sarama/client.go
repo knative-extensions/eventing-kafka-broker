@@ -275,7 +275,7 @@ func (client *client) Broker(brokerID int32) (*Broker, error) {
 }
 
 func (client *client) InitProducerID() (*InitProducerIDResponse, error) {
-	// FIXME: this InitProducerID seems to only be called from client_test.go (TestInitProducerIDConnectionRefused) and has been superceded by transaction_manager.go?
+	// FIXME: this InitProducerID seems to only be called from client_test.go (TestInitProducerIDConnectionRefused) and has been superseded by transaction_manager.go?
 	brokerErrors := make([]error, 0)
 	for broker := client.LeastLoadedBroker(); broker != nil; broker = client.LeastLoadedBroker() {
 		request := &InitProducerIDRequest{}
@@ -939,6 +939,10 @@ func (client *client) backgroundMetadataUpdater() {
 		select {
 		case <-ticker.C:
 			if err := client.refreshMetadata(); err != nil {
+				// expected no-op, not worth logging every tick
+				if errors.Is(err, ErrNoTopicsToUpdateMetadata) {
+					continue
+				}
 				Logger.Println("Client background metadata update:", err)
 			}
 		case <-client.closer:
