@@ -28,17 +28,17 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.28.0
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
-	k8s.io/api v0.36.0
-	k8s.io/apiextensions-apiserver v0.36.0
-	k8s.io/apimachinery v0.36.0
-	k8s.io/apiserver v0.36.0
+	k8s.io/api v0.36.5
+	k8s.io/apiextensions-apiserver v0.36.5
+	k8s.io/apimachinery v0.36.5
+	k8s.io/apiserver v0.36.5
 	k8s.io/client-go v1.5.2
-	k8s.io/code-generator v0.36.0
+	k8s.io/code-generator v0.36.5
 	k8s.io/utils v0.0.0-20260319190234-28399d86e0b5
-	knative.dev/eventing v0.50.1-0.20260921114233-7c892cfc4d72
-	knative.dev/hack v0.0.0-20260428014158-b2a37f1b6e7b
-	knative.dev/pkg v0.0.0-20260918182429-5dc1978f0042
-	knative.dev/reconciler-test v0.0.0-20260921021034-087b0fddd896
+	knative.dev/eventing v0.50.1-0.20261020094935-67422b41cd48
+	knative.dev/hack v0.0.0-20261021112836-4b87852b7bf9
+	knative.dev/pkg v0.0.0-20261021131637-a9cb74f8504a
+	knative.dev/reconciler-test v0.0.0-20261014132141-9ccf601d4e8c
 	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -150,16 +150,16 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/mod v0.39.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/term v0.45.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/term v0.46.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
