@@ -46,7 +46,7 @@
     <opentelemetry.version>1.67.0</opentelemetry.version>
     <cloudevents.sdk.version>5.1.0</cloudevents.sdk.version>
     <strimzi-test-container.version>0.117.0</strimzi-test-container.version>
-    <antlr.version>4.13.2</antlr.version> <!-- antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
+    <antlr.version>4.9.3</antlr.version> <!-- Match the version used to generate cloudevents-sql's parser; antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
     <bucket4j.version>7.6.1</bucket4j.version>
     <ch.qos.logback.version>1.6.5</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>8.1</net.logstash.logback.encoder.version>
