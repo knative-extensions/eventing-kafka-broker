@@ -336,6 +336,10 @@ func (s *saramaClientMock) DescribeConfig(sarama.ConfigResource) ([]sarama.Confi
 	panic("implement me")
 }
 
+func (s *saramaClientMock) DescribeConfigs([]*sarama.ConfigResource, sarama.DescribeConfigsOptions) ([]*sarama.ConfigResourceResult, error) {
+	panic("implement me")
+}
+
 func (s *saramaClientMock) AlterConfig(sarama.ConfigResourceType, string, map[string]*string, bool) error {
 	panic("implement me")
 }
@@ -382,6 +386,10 @@ func (s *saramaClientMock) ListConsumerGroupOffsets(group string, topicPartition
 	return response, nil
 }
 
+func (s *saramaClientMock) ListConsumerGroupOffsetsBatch(map[string]map[string][]int32) (map[string]*sarama.OffsetFetchResponseGroup, error) {
+	panic("implement me")
+}
+
 func (s *saramaClientMock) hasTopicPartitions(topicPartitions map[string][]int32) {
 	for topic, partitions := range topicPartitions {
 		s.hasTopic(topic)
@@ -401,6 +409,10 @@ func (s *saramaClientMock) DescribeCluster() (brokers []*sarama.Broker, controll
 }
 
 func (s *saramaClientMock) DescribeLogDirs([]int32) (map[int32][]sarama.DescribeLogDirsResponseDirMetadata, error) {
+	panic("implement me")
+}
+
+func (s *saramaClientMock) UpdateFeatures([]sarama.FeatureUpdate) ([]sarama.UpdatableFeatureResult, error) {
 	panic("implement me")
 }
 

@@ -21,12 +21,61 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/utils/ptr"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
 )
 
 func makeMockClusterAdminFromClient(_ sarama.Client) (sarama.ClusterAdmin, error) {
 	return &kafkatesting.MockKafkaClusterAdmin{ErrorBrokenPipe: true}, nil
+}
+
+type describeConfigsAdmin struct {
+	sarama.ClusterAdmin
+	results   []*sarama.ConfigResourceResult
+	resources []*sarama.ConfigResource
+	options   sarama.DescribeConfigsOptions
+}
+
+func (a *describeConfigsAdmin) DescribeConfigs(resources []*sarama.ConfigResource, options sarama.DescribeConfigsOptions) ([]*sarama.ConfigResourceResult, error) {
+	a.resources = resources
+	a.options = options
+	return a.results, nil
+}
+
+func TestDescribeConfigReturnsRequestedResourceEntries(t *testing.T) {
+	resource := sarama.ConfigResource{Type: sarama.TopicResource, Name: "topic"}
+	entries := []sarama.ConfigEntry{{Name: "retention.ms", Value: "1000"}}
+	admin := &describeConfigsAdmin{results: []*sarama.ConfigResourceResult{
+		{Name: "other", Configs: []sarama.ConfigEntry{{Name: "other"}}},
+		{Name: resource.Name, Configs: entries},
+	}}
+	a := &clusterAdmin{clusterAdmin: admin, isFatalError: func(error) bool { return false }}
+
+	got, err := a.DescribeConfig(resource)
+
+	require.NoError(t, err)
+	require.Equal(t, entries, got)
+	require.Len(t, admin.resources, 1)
+	require.Equal(t, resource, *admin.resources[0])
+	require.Equal(t, sarama.DescribeConfigsOptions{}, admin.options)
+}
+
+func TestDescribeConfigReturnsResourceError(t *testing.T) {
+	admin := &describeConfigsAdmin{results: []*sarama.ConfigResourceResult{{
+		Name:      "topic",
+		ErrorCode: sarama.ErrUnknownTopicOrPartition,
+		ErrorMsg:  "missing topic",
+	}}}
+	a := &clusterAdmin{clusterAdmin: admin, isFatalError: func(error) bool { return false }}
+
+	entries, err := a.DescribeConfig(sarama.ConfigResource{Name: "topic"})
+
+	require.Nil(t, entries)
+	var configErr *sarama.DescribeConfigError
+	require.ErrorAs(t, err, &configErr)
+	require.Equal(t, sarama.ErrUnknownTopicOrPartition, configErr.Err)
+	require.Equal(t, "missing topic", configErr.ErrMsg)
 }
 
 // TestProxyClusterAdminHandlesFatalErrors verifies that the cluster admin proxy identifies
@@ -124,4 +173,13 @@ func TestProxyClusterAdminHandlesFatalErrors(t *testing.T) {
 
 	a.RemoveMemberFromConsumerGroup("", nil)
 	assert.Equal(t, 29, *errorCount)
+
+	a.DescribeConfigs(nil, sarama.DescribeConfigsOptions{})
+	assert.Equal(t, 30, *errorCount)
+
+	a.ListConsumerGroupOffsetsBatch(nil)
+	assert.Equal(t, 31, *errorCount)
+
+	a.UpdateFeatures(nil)
+	assert.Equal(t, 32, *errorCount)
 }

@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		config, err := pkgtest.Flags.GetRESTConfig()
+		config, err := pkgtest.Flags.GetRESTConfig() //nolint:staticcheck // Knative's E2E flags still provide this REST config.
 		if err != nil {
 			log.Printf("Failed to create REST config: %v\n", err)
 		}
