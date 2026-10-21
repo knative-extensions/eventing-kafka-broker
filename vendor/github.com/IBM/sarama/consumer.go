@@ -100,12 +100,16 @@ type Consumer interface {
 const partitionConsumersBatchTimeout = 100 * time.Millisecond
 
 type consumer struct {
-	conf            *Config
+	conf           *Config
+	client         Client
+	metricRegistry metrics.Registry
+
+	// lock guards the fields below it
+	lock            sync.Mutex
 	children        map[string]map[int32]*partitionConsumer
 	brokerConsumers map[*Broker]*brokerConsumer
-	client          Client
-	metricRegistry  metrics.Registry
-	lock            sync.Mutex
+	// paused retains pause state while a partition is reassigned
+	paused map[string]map[int32]none
 }
 
 // NewConsumer creates a new consumer using the given broker addresses and configuration.
@@ -137,6 +141,7 @@ func newConsumer(client Client) (Consumer, error) {
 		conf:            client.Config(),
 		children:        make(map[string]map[int32]*partitionConsumer),
 		brokerConsumers: make(map[*Broker]*brokerConsumer),
+		paused:          make(map[string]map[int32]none),
 		metricRegistry:  newCleanupRegistry(client.Config().MetricRegistry),
 	}
 
@@ -234,6 +239,10 @@ func (c *consumer) addChild(child *partitionConsumer) error {
 		return ConfigurationError("That topic/partition is already being consumed")
 	}
 
+	if _, paused := c.paused[child.topic][child.partition]; paused {
+		child.Pause()
+	}
+
 	topicChildren[child.partition] = child
 	return nil
 }
@@ -267,7 +276,7 @@ func (c *consumer) unrefBrokerConsumer(brokerWorker *brokerConsumer) {
 	brokerWorker.refs--
 
 	if brokerWorker.refs == 0 {
-		close(brokerWorker.input)
+		brokerWorker.stopConsuming()
 		if c.brokerConsumers[brokerWorker.broker] == brokerWorker {
 			delete(c.brokerConsumers, brokerWorker.broker)
 		}
@@ -290,6 +299,10 @@ func (c *consumer) Pause(topicPartitions map[string][]int32) {
 		for _, partition := range partitions {
 			if topicConsumers, ok := c.children[topic]; ok {
 				if partitionConsumer, ok := topicConsumers[partition]; ok {
+					if c.paused[topic] == nil {
+						c.paused[topic] = make(map[int32]none)
+					}
+					c.paused[topic][partition] = none{}
 					partitionConsumer.Pause()
 				}
 			}
@@ -304,6 +317,11 @@ func (c *consumer) Resume(topicPartitions map[string][]int32) {
 
 	for topic, partitions := range topicPartitions {
 		for _, partition := range partitions {
+			delete(c.paused[topic], partition)
+			if len(c.paused[topic]) == 0 {
+				delete(c.paused, topic)
+			}
+
 			if topicConsumers, ok := c.children[topic]; ok {
 				if partitionConsumer, ok := topicConsumers[partition]; ok {
 					partitionConsumer.Resume()
@@ -318,8 +336,13 @@ func (c *consumer) PauseAll() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	for _, partitions := range c.children {
-		for _, partitionConsumer := range partitions {
+	for topic, partitions := range c.children {
+		for partition, partitionConsumer := range partitions {
+			if c.paused[topic] == nil {
+				c.paused[topic] = make(map[int32]none)
+			}
+			c.paused[topic][partition] = none{}
+
 			partitionConsumer.Pause()
 		}
 	}
@@ -330,6 +353,7 @@ func (c *consumer) ResumeAll() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	clear(c.paused)
 	for _, partitions := range c.children {
 		for _, partitionConsumer := range partitions {
 			partitionConsumer.Resume()
@@ -1066,10 +1090,7 @@ func (bc *brokerConsumer) subscriptionManager() {
 		select {
 		case <-bc.stop:
 			return
-		case subscription, ok := <-bc.input:
-			if !ok {
-				return
-			}
+		case subscription := <-bc.input:
 			subscriptions = append(subscriptions, subscription)
 		case bc.newSubscriptions <- nil:
 			continue
@@ -1077,18 +1098,12 @@ func (bc *brokerConsumer) subscriptionManager() {
 
 		// drain input of any further incoming subscriptions
 		timer := time.NewTimer(partitionConsumersBatchTimeout)
-		inputClosed := false
 		for batchComplete := false; !batchComplete; {
 			select {
 			case <-bc.stop:
 				stopping = true
 				batchComplete = true
-			case subscription, ok := <-bc.input:
-				if !ok {
-					inputClosed = true
-					batchComplete = true
-					continue
-				}
+			case subscription := <-bc.input:
 				subscriptions = append(subscriptions, subscription)
 			case <-timer.C:
 				batchComplete = true
@@ -1101,7 +1116,7 @@ func (bc *brokerConsumer) subscriptionManager() {
 			bc.broker.ID(), len(subscriptions))
 
 		bc.newSubscriptions <- subscriptions
-		if inputClosed || stopping {
+		if stopping {
 			return
 		}
 	}
@@ -1291,56 +1306,58 @@ func (bc *brokerConsumer) fetchNewMessages() (*FetchResponse, error) {
 		MinBytes:    bc.consumer.conf.Consumer.Fetch.Min,
 		MaxWaitTime: int32(bc.consumer.conf.Consumer.MaxWaitTime / time.Millisecond),
 	}
+	// pick the highest Fetch version supported by the negotiated Kafka version
+	switch {
+	// Version 12 adds flexible version support and last fetched epoch.
+	case bc.consumer.conf.Version.IsAtLeast(V2_7_0_0):
+		request.Version = 12
+	// Version 11 adds RackID for KIP-392 fetch from closest replica.
+	case bc.consumer.conf.Version.IsAtLeast(V2_3_0_0):
+		request.Version = 11
+	// Version 9 adds CurrentLeaderEpoch (KIP-320); version 10 allows the ZStd
+	// compression algorithm (KIP-110).
+	case bc.consumer.conf.Version.IsAtLeast(V2_1_0_0):
+		request.Version = 10
+	// Version 8 is the same as version 7.
+	case bc.consumer.conf.Version.IsAtLeast(V2_0_0_0):
+		request.Version = 8
+	// Version 7 adds incremental fetch request support.
+	case bc.consumer.conf.Version.IsAtLeast(V1_1_0_0):
+		request.Version = 7
+	// Version 6 is the same as version 5.
+	case bc.consumer.conf.Version.IsAtLeast(V1_0_0_0):
+		request.Version = 6
+	// Version 4 adds IsolationLevel and requires Kafka log message format
+	// version 2; version 5 adds LogStartOffset.
+	case bc.consumer.conf.Version.IsAtLeast(V0_11_0_0):
+		request.Version = 5
+	// Version 3 adds MaxBytes and makes partition ordering significant:
+	// partitions are processed in the order they appear in the request.
+	case bc.consumer.conf.Version.IsAtLeast(V0_10_1_0):
+		request.Version = 3
+	// Starting in version 2, the requester must be able to handle Kafka log
+	// message format version 1.
+	case bc.consumer.conf.Version.IsAtLeast(V0_10_0_0):
+		request.Version = 2
 	// Version 1 is the same as version 0.
-	if bc.consumer.conf.Version.IsAtLeast(V0_9_0_0) {
+	case bc.consumer.conf.Version.IsAtLeast(V0_9_0_0):
 		request.Version = 1
 	}
-	// Starting in Version 2, the requestor must be able to handle Kafka Log
-	// Message format version 1.
-	if bc.consumer.conf.Version.IsAtLeast(V0_10_0_0) {
-		request.Version = 2
-	}
-	// Version 3 adds MaxBytes.  Starting in version 3, the partition ordering in
-	// the request is now relevant.  Partitions will be processed in the order
-	// they appear in the request.
-	if bc.consumer.conf.Version.IsAtLeast(V0_10_1_0) {
-		request.Version = 3
+
+	if request.Version >= 3 {
 		request.MaxBytes = bc.consumer.conf.Consumer.Fetch.MaxBytes
 	}
-	// Version 4 adds IsolationLevel.  Starting in version 4, the reqestor must be
-	// able to handle Kafka log message format version 2.
-	// Version 5 adds LogStartOffset to indicate the earliest available offset of
-	// partition data that can be consumed.
-	if bc.consumer.conf.Version.IsAtLeast(V0_11_0_0) {
-		request.Version = 5
+	if request.Version >= 4 {
 		request.Isolation = bc.consumer.conf.Consumer.IsolationLevel
 	}
-	// Version 6 is the same as version 5.
-	if bc.consumer.conf.Version.IsAtLeast(V1_0_0_0) {
-		request.Version = 6
-	}
-	// Version 7 adds incremental fetch request support.
-	if bc.consumer.conf.Version.IsAtLeast(V1_1_0_0) {
-		request.Version = 7
+	if request.Version >= 7 {
 		// We do not currently implement KIP-227 FetchSessions. Setting the id to 0
 		// and the epoch to -1 tells the broker not to generate as session ID we're going
 		// to just ignore anyway.
 		request.SessionID = 0
 		request.SessionEpoch = -1
 	}
-	// Version 8 is the same as version 7.
-	if bc.consumer.conf.Version.IsAtLeast(V2_0_0_0) {
-		request.Version = 8
-	}
-	// Version 9 adds CurrentLeaderEpoch, as described in KIP-320.
-	// Version 10 indicates that we can use the ZStd compression algorithm, as
-	// described in KIP-110.
-	if bc.consumer.conf.Version.IsAtLeast(V2_1_0_0) {
-		request.Version = 10
-	}
-	// Version 11 adds RackID for KIP-392 fetch from closest replica
-	if bc.consumer.conf.Version.IsAtLeast(V2_3_0_0) {
-		request.Version = 11
+	if request.Version >= 11 {
 		request.RackID = bc.consumer.conf.RackID
 	}
 

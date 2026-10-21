@@ -144,13 +144,16 @@ func (r *JoinGroupResponse) decode(pd packetDecoder, version int16) (err error) 
 	if err != nil {
 		return err
 	}
+	if n < 0 {
+		return errInvalidArrayLength
+	}
 	if n == 0 {
 		_, err = pd.getEmptyTaggedFieldArray()
 		return err
 	}
 
 	r.Members = make([]GroupMember, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		memberId, err := pd.getString()
 		if err != nil {
 			return err
@@ -196,7 +199,7 @@ func (r *JoinGroupResponse) headerVersion() int16 {
 }
 
 func (r *JoinGroupResponse) isValidVersion() bool {
-	return r.Version >= 0 && r.Version <= 7
+	return r.Version >= 0 && r.Version <= 8
 }
 
 func (r *JoinGroupResponse) isFlexible() bool {
@@ -209,6 +212,8 @@ func (r *JoinGroupResponse) isFlexibleVersion(version int16) bool {
 
 func (r *JoinGroupResponse) requiredVersion() KafkaVersion {
 	switch r.Version {
+	case 8:
+		return V3_2_0_0
 	case 7:
 		return V2_5_0_0
 	case 6:

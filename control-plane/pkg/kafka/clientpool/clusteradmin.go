@@ -134,7 +134,30 @@ func (a *clusterAdmin) DeleteRecords(topic string, partitionOffsets map[int32]in
 }
 
 func (a *clusterAdmin) DescribeConfig(resource sarama.ConfigResource) ([]sarama.ConfigEntry, error) {
-	x, err := a.clusterAdmin.DescribeConfig(resource)
+	results, err := a.clusterAdmin.DescribeConfigs([]*sarama.ConfigResource{&resource}, sarama.DescribeConfigsOptions{})
+	var entries []sarama.ConfigEntry
+	if err == nil {
+		entries = make([]sarama.ConfigEntry, 0, len(results))
+		for _, result := range results {
+			if result.Name != resource.Name {
+				continue
+			}
+			if result.ErrorCode != 0 {
+				err = &sarama.DescribeConfigError{Err: result.ErrorCode, ErrMsg: result.ErrorMsg}
+				entries = nil
+				break
+			}
+			entries = append(entries, result.Configs...)
+		}
+	}
+	if a.isFatalError(err) {
+		a.onFatalError(err)
+	}
+	return entries, err
+}
+
+func (a *clusterAdmin) DescribeConfigs(resources []*sarama.ConfigResource, options sarama.DescribeConfigsOptions) ([]*sarama.ConfigResourceResult, error) {
+	x, err := a.clusterAdmin.DescribeConfigs(resources, options)
 	if a.isFatalError(err) {
 		a.onFatalError(err)
 	}
@@ -213,6 +236,14 @@ func (a *clusterAdmin) ListConsumerGroupOffsets(group string, topicPartitions ma
 	return x, err
 }
 
+func (a *clusterAdmin) ListConsumerGroupOffsetsBatch(groupTopics map[string]map[string][]int32) (map[string]*sarama.OffsetFetchResponseGroup, error) {
+	x, err := a.clusterAdmin.ListConsumerGroupOffsetsBatch(groupTopics)
+	if a.isFatalError(err) {
+		a.onFatalError(err)
+	}
+	return x, err
+}
+
 func (a *clusterAdmin) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
 	err := a.clusterAdmin.DeleteConsumerGroupOffset(group, topic, partition)
 	if a.isFatalError(err) {
@@ -279,6 +310,14 @@ func (a *clusterAdmin) DeleteUserScramCredentials(delete []sarama.AlterUserScram
 
 func (a *clusterAdmin) UpsertUserScramCredentials(upsert []sarama.AlterUserScramCredentialsUpsert) ([]*sarama.AlterUserScramCredentialsResult, error) {
 	x, err := a.clusterAdmin.UpsertUserScramCredentials(upsert)
+	if a.isFatalError(err) {
+		a.onFatalError(err)
+	}
+	return x, err
+}
+
+func (a *clusterAdmin) UpdateFeatures(featureUpdates []sarama.FeatureUpdate) ([]sarama.UpdatableFeatureResult, error) {
+	x, err := a.clusterAdmin.UpdateFeatures(featureUpdates)
 	if a.isFatalError(err) {
 		a.onFatalError(err)
 	}

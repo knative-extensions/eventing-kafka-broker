@@ -40,8 +40,11 @@ func (c *CreatePartitionsRequest) decode(pd packetDecoder, version int16) (err e
 	if err != nil {
 		return err
 	}
+	if n < 0 {
+		return errInvalidArrayLength
+	}
 	c.TopicPartitions = make(map[string]*TopicPartition, n)
-	for i := 0; i < n; i++ {
+	for range n {
 		topic, err := pd.getString()
 		if err != nil {
 			return err
@@ -82,7 +85,7 @@ func (r *CreatePartitionsRequest) headerVersion() int16 {
 }
 
 func (r *CreatePartitionsRequest) isValidVersion() bool {
-	return r.Version >= 0 && r.Version <= 2
+	return r.Version >= 0 && r.Version <= 3
 }
 
 func (r *CreatePartitionsRequest) isFlexible() bool {
@@ -95,6 +98,8 @@ func (r *CreatePartitionsRequest) isFlexibleVersion(version int16) bool {
 
 func (r *CreatePartitionsRequest) requiredVersion() KafkaVersion {
 	switch r.Version {
+	case 3:
+		return V2_7_0_0
 	case 2:
 		return V2_5_0_0
 	case 1:
@@ -152,7 +157,7 @@ func (t *TopicPartition) decode(pd packetDecoder, version int16) (err error) {
 	}
 	t.Assignment = make([][]int32, n)
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if t.Assignment[i], err = pd.getInt32Array(); err != nil {
 			return err
 		}

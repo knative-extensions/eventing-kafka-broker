@@ -227,6 +227,13 @@ func (m *MockKafkaClusterAdmin) DescribeConfig(resource sarama.ConfigResource) (
 	panic("implement me")
 }
 
+func (m *MockKafkaClusterAdmin) DescribeConfigs(resources []*sarama.ConfigResource, options sarama.DescribeConfigsOptions) ([]*sarama.ConfigResourceResult, error) {
+	if m.ErrorBrokenPipe {
+		return nil, brokenPipeError{}
+	}
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) AlterConfig(resourceType sarama.ConfigResourceType, name string, entries map[string]*string, validateOnly bool) error {
 	if m.ErrorBrokenPipe {
 		return brokenPipeError{}
@@ -287,6 +294,13 @@ func (m *MockKafkaClusterAdmin) ListConsumerGroupOffsets(group string, topicPart
 	panic("implement me")
 }
 
+func (m *MockKafkaClusterAdmin) ListConsumerGroupOffsetsBatch(groupTopics map[string]map[string][]int32) (map[string]*sarama.OffsetFetchResponseGroup, error) {
+	if m.ErrorBrokenPipe {
+		return nil, brokenPipeError{}
+	}
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) AlterConsumerGroupOffsets(group string, offsets map[string]map[int32]sarama.OffsetAndMetadata, options *sarama.AlterConsumerGroupOffsetsOptions) (*sarama.OffsetCommitResponse, error) {
 	if m.ErrorBrokenPipe {
 		return nil, brokenPipeError{}
@@ -316,6 +330,13 @@ func (m *MockKafkaClusterAdmin) DescribeCluster() (brokers []*sarama.Broker, con
 }
 
 func (m *MockKafkaClusterAdmin) DescribeLogDirs(brokers []int32) (map[int32][]sarama.DescribeLogDirsResponseDirMetadata, error) {
+	if m.ErrorBrokenPipe {
+		return nil, brokenPipeError{}
+	}
+	panic("implement me")
+}
+
+func (m *MockKafkaClusterAdmin) UpdateFeatures(featureUpdates []sarama.FeatureUpdate) ([]sarama.UpdatableFeatureResult, error) {
 	if m.ErrorBrokenPipe {
 		return nil, brokenPipeError{}
 	}
