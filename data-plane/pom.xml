@@ -42,7 +42,7 @@
     <spotless.plugin.version>2.46.1</spotless.plugin.version>
 
     <!-- dependencies version -->
-    <quarkus.version>3.40.1</quarkus.version>
+    <quarkus.version>3.40.1.1</quarkus.version>
     <opentelemetry.version>1.67.0</opentelemetry.version>
     <cloudevents.sdk.version>5.1.0</cloudevents.sdk.version>
     <strimzi-test-container.version>0.117.0</strimzi-test-container.version>
