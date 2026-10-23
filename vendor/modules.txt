@@ -1515,7 +1515,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/third_party/forked/golang/btree
 k8s.io/utils/trace
-# knative.dev/eventing v0.50.1-0.20261022103733-c51c2d39dc33
+# knative.dev/eventing v0.50.1-0.20261023132104-eb226f1e7fab
 ## explicit; go 1.26.0
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
@@ -1702,10 +1702,10 @@ knative.dev/eventing/test/upgrade/prober/wathola/fetcher
 knative.dev/eventing/test/upgrade/prober/wathola/forwarder
 knative.dev/eventing/test/upgrade/prober/wathola/receiver
 knative.dev/eventing/test/upgrade/prober/wathola/sender
-# knative.dev/hack v0.0.0-20261021112836-4b87852b7bf9
+# knative.dev/hack v0.0.0-20261023132104-4a15c76c8f70
 ## explicit; go 1.24
 knative.dev/hack
-# knative.dev/pkg v0.0.0-20261022132244-2a1a4a3ea290
+# knative.dev/pkg v0.0.0-20261023132203-c36432dafbb3
 ## explicit; go 1.26.0
 knative.dev/pkg/apiextensions/storageversion
 knative.dev/pkg/apiextensions/storageversion/cmd/migrate
@@ -1836,7 +1836,7 @@ knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/conversion
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20261022014936-8ee3f00fcc8c
+# knative.dev/reconciler-test v0.0.0-20261023132204-9c28c893817c
 ## explicit; go 1.26.0
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
