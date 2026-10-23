@@ -218,8 +218,11 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		return nil, err
 	}
 	if apierrors.IsNotFound(err) {
-		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
-		if err != nil && !apierrors.IsAlreadyExists(err) {
+		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
+		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				return r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Get(ctx, expectedCg.GetName(), metav1.GetOptions{})
+			}
 			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
 		return cg, nil

@@ -140,6 +140,11 @@ func (r *Reconciler) GetOrCreateDataPlaneConfigMap(ctx context.Context) (*corev1
 
 	if apierrors.IsNotFound(err) {
 		cm, err = r.createDataPlaneConfigMap(ctx)
+		if apierrors.IsAlreadyExists(err) {
+			cm, err = r.KubeClient.CoreV1().
+				ConfigMaps(r.DataPlaneConfigMapNamespace).
+				Get(ctx, r.ContractConfigMapName, metav1.GetOptions{})
+		}
 	}
 
 	if r.DataPlaneConfigMapTransformer != nil {

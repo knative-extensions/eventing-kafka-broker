@@ -363,6 +363,9 @@ func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messa
 		if apierrors.IsNotFound(err) {
 			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
 			if err != nil {
+				if apierrors.IsAlreadyExists(err) {
+					return expected, nil
+				}
 				return expected, fmt.Errorf("failed to create the channel service object: %w", err)
 			}
 			return expected, nil
@@ -674,7 +677,10 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, channel *messag
 	}
 	if apierrors.IsNotFound(err) {
 		cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
-		if err != nil && !apierrors.IsAlreadyExists(err) {
+		if err != nil {
+			if apierrors.IsAlreadyExists(err) {
+				return r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Get(ctx, expectedCg.GetName(), metav1.GetOptions{})
+			}
 			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
 		}
 		return cg, nil
