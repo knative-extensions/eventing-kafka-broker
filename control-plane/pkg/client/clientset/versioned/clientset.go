@@ -27,6 +27,7 @@ import (
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	bindingsv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1"
 	bindingsv1beta1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/bindings/v1beta1"
+	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/eventing/v1alpha1"
 	internalv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/internalskafkaeventing/v1alpha1"
 	messagingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/typed/messaging/v1"
@@ -39,6 +40,7 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	BindingsV1() bindingsv1.BindingsV1Interface
 	BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface
+	EventingV1() eventingv1.EventingV1Interface
 	EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface
 	InternalV1alpha1() internalv1alpha1.InternalV1alpha1Interface
 	MessagingV1() messagingv1.MessagingV1Interface
@@ -52,6 +54,7 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	bindingsV1       *bindingsv1.BindingsV1Client
 	bindingsV1beta1  *bindingsv1beta1.BindingsV1beta1Client
+	eventingV1       *eventingv1.EventingV1Client
 	eventingV1alpha1 *eventingv1alpha1.EventingV1alpha1Client
 	internalV1alpha1 *internalv1alpha1.InternalV1alpha1Client
 	messagingV1      *messagingv1.MessagingV1Client
@@ -68,6 +71,11 @@ func (c *Clientset) BindingsV1() bindingsv1.BindingsV1Interface {
 // BindingsV1beta1 retrieves the BindingsV1beta1Client
 func (c *Clientset) BindingsV1beta1() bindingsv1beta1.BindingsV1beta1Interface {
 	return c.bindingsV1beta1
+}
+
+// EventingV1 retrieves the EventingV1Client
+func (c *Clientset) EventingV1() eventingv1.EventingV1Interface {
+	return c.eventingV1
 }
 
 // EventingV1alpha1 retrieves the EventingV1alpha1Client
@@ -152,6 +160,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.eventingV1, err = eventingv1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.eventingV1alpha1, err = eventingv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -199,6 +211,7 @@ func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.bindingsV1 = bindingsv1.New(c)
 	cs.bindingsV1beta1 = bindingsv1beta1.New(c)
+	cs.eventingV1 = eventingv1.New(c)
 	cs.eventingV1alpha1 = eventingv1alpha1.New(c)
 	cs.internalV1alpha1 = internalv1alpha1.New(c)
 	cs.messagingV1 = messagingv1.New(c)
