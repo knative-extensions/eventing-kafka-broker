@@ -33,7 +33,7 @@
     <!-- Maven plugins -->
     <maven.compiler.plugin.version>3.16.0</maven.compiler.plugin.version>
     <maven.jar.plugin.version>3.5.1</maven.jar.plugin.version>
-    <maven.surefire.plugin.version>3.6.0</maven.surefire.plugin.version>
+    <maven.surefire.plugin.version>3.6.1</maven.surefire.plugin.version>
     <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
     <maven.jacoco.plugin.version>0.8.15</maven.jacoco.plugin.version>
     <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
@@ -46,13 +46,13 @@
     <opentelemetry.version>1.67.0</opentelemetry.version>
     <cloudevents.sdk.version>5.1.0</cloudevents.sdk.version>
     <strimzi-test-container.version>0.117.0</strimzi-test-container.version>
-    <antlr.version>4.9.3</antlr.version> <!-- Match the version used to generate cloudevents-sql's parser; antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
+    <antlr.version>4.13.2</antlr.version> <!-- Match the version used to generate cloudevents-sql's parser; antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
     <bucket4j.version>7.6.1</bucket4j.version>
     <ch.qos.logback.version>1.6.5</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>8.1</net.logstash.logback.encoder.version>
     <assertj.version>3.27.7</assertj.version>
     <jib.version>3.5.2</jib.version>
-    <mockwebserver.version>4.12.0</mockwebserver.version>
+    <mockwebserver.version>4.12.1</mockwebserver.version>
     <aws.msk.iam.auth.version>2.3.9</aws.msk.iam.auth.version>
     <commons.logging.version>1.4.0</commons.logging.version>
     <palantirJavaFormat.version>2.81.0</palantirJavaFormat.version>
