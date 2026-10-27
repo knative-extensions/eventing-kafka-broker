@@ -17,6 +17,7 @@
 package features
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -136,11 +137,24 @@ func SetupKafkaTopicWithEvents(count int, topic string) *feature.Feature {
 	f.Setup("install kafkasink", kafkasink.Install(ksink, topic, testpkg.BootstrapServersPlaintextArr))
 	f.Requirement("KafkaSink is ready", kafkasink.IsReady(ksink))
 
-	f.Requirement("install source for ksink", eventshub.Install(source,
+	f.Requirement("install source for ksink", afterKafkaSinkIsReady(ksink, eventshub.Install(source,
 		eventshub.StartSenderToResource(kafkasink.GVR(), ksink),
 		eventshub.InputEvent(cetest.FullEvent()),
 		eventshub.AddSequence,
-		eventshub.SendMultipleEvents(count, time.Millisecond)))
+		eventshub.SendMultipleEvents(count, time.Millisecond))))
 
 	return f
+}
+
+// afterKafkaSinkIsReady runs step once the KafkaSink is ready. Steps of the
+// same timing run in parallel, so a separate "KafkaSink is ready" step does
+// not make step wait for it.
+func afterKafkaSinkIsReady(name string, step feature.StepFn) feature.StepFn {
+	return func(ctx context.Context, t feature.T) {
+		kafkasink.IsReady(name)(ctx, t)
+		if t.Failed() {
+			return
+		}
+		step(ctx, t)
+	}
 }

@@ -131,7 +131,7 @@ func KafkaSourceScalesToZeroWithKeda() *feature.Feature {
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
 		eventshub.InputEvent(event),
 	}
-	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
+	f.Requirement("install eventshub sender", afterKafkaSinkIsReady(kafkaSink, eventshub.Install(sender, options...)))
 
 	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
@@ -169,7 +169,7 @@ func KafkaSourceSASLScalesToZeroWithKeda() *feature.Feature {
 		eventshub.StartSenderToResource(kafkasink.GVR(), sinkName),
 		eventshub.InputEvent(event),
 	}
-	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
+	f.Requirement("install eventshub sender", afterKafkaSinkIsReady(sinkName, eventshub.Install(sender, options...)))
 
 	f.Requirement("eventshub receiver gets event", assert.OnStore(receiver).MatchEvent(cetest.HasId(event.ID())).Exact(1))
 
