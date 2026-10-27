@@ -44,6 +44,7 @@ import (
 	"knative.dev/eventing/pkg/observability"
 	"knative.dev/eventing/pkg/scheduler"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/observability/attributekey"
 	pointer "knative.dev/pkg/ptr"
@@ -130,6 +131,10 @@ type Reconciler struct {
 	// DeleteConsumerGroupMetadataCounter is an in-memory counter to count how many times we have
 	// tried to delete consumer group metadata from Kafka.
 	DeleteConsumerGroupMetadataCounter *counter.Counter
+
+	// NonEmptyGroupCounter is an in-memory counter to count how many times we have
+	// found the consumer group in Kafka still having members while deleting it.
+	NonEmptyGroupCounter *counter.Counter
 
 	// InitOffsetLatestInitialOffsetCache is the cache for consumer group offset initialization.
 	//
@@ -257,14 +262,26 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 		// The group still has active members (dispatchers that haven't observed the contract
 		// update yet), so retry without consuming the bounded retry budget used for
 		// unreachable clusters.
+		// A member can stay until its in-flight event delivery ends, which takes up to the
+		// 60s connect timeout. Retry at a fixed interval: returning the error would back
+		// off exponentially, up to 1000s, and retry long after the group became empty.
 		if errorIsOneOf(err, sarama.ErrNonEmptyGroup) {
-			return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", err)
+			// A member that stays for about 5 minutes is not a dispatcher on its way out,
+			// for example another application using the same group.id. Leave the group in
+			// Kafka rather than block the deletion of the owner forever.
+			if r.NonEmptyGroupCounter.Inc(string(cg.GetUID())) <= 60 {
+				_ = cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", err)
+				return controller.NewRequeueAfter(5 * time.Second)
+			}
+			r.NonEmptyGroupCounter.Del(string(cg.GetUID()))
+			logger.Errorw("Leaving the consumer group in Kafka, it still has members", zap.Error(err))
+		} else {
+			// We retry a few times to delete Consumer group metadata from Kafka before giving up.
+			if v := r.DeleteConsumerGroupMetadataCounter.Inc(string(cg.GetUID())); v <= 5 {
+				return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", fmt.Errorf("%w (retry num %d)", err, v))
+			}
+			r.DeleteConsumerGroupMetadataCounter.Del(string(cg.GetUID()))
 		}
-		// We retry a few times to delete Consumer group metadata from Kafka before giving up.
-		if v := r.DeleteConsumerGroupMetadataCounter.Inc(string(cg.GetUID())); v <= 5 {
-			return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", fmt.Errorf("%w (retry num %d)", err, v))
-		}
-		r.DeleteConsumerGroupMetadataCounter.Del(string(cg.GetUID()))
 	}
 
 	r.InitOffsetLatestInitialOffsetCache.Expire(keyOf(cg))

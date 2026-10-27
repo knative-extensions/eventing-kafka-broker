@@ -139,6 +139,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+		NonEmptyGroupCounter:               counter.NewExpiringCounter(ctx),
 		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, 20*time.Minute),
 	}
 
