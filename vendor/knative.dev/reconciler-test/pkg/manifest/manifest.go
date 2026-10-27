@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"knative.dev/pkg/reconciler"
 
@@ -31,8 +32,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/logging"
+
+	"knative.dev/reconciler-test/pkg/k8s"
 )
 
 type Manifest interface {
@@ -83,7 +88,23 @@ func (f *YamlManifest) ApplyAll() error {
 	return nil
 }
 
+// applyRetry is the backoff for retrying transient API errors when applying
+// manifest resources.
+var applyRetry = wait.Backoff{
+	Steps:    5,
+	Duration: 200 * time.Millisecond,
+	Factor:   5.0,
+	Jitter:   0.1,
+}
+
+// Apply creates or updates the given resource, retrying transient errors.
 func (f *YamlManifest) Apply(spec *unstructured.Unstructured) error {
+	return retry.OnError(applyRetry, k8s.IsTransientError, func() error {
+		return f.apply(spec)
+	})
+}
+
+func (f *YamlManifest) apply(spec *unstructured.Unstructured) error {
 	current, err := f.Get(spec)
 	if err != nil {
 		return err
@@ -94,9 +115,9 @@ func (f *YamlManifest) Apply(spec *unstructured.Unstructured) error {
 		if _, err := f.client.Resource(gvr).Namespace(spec.GetNamespace()).Create(context.Background(), spec, v1.CreateOptions{}); err != nil {
 			// We might be applying the same resource in parallel, in that case, update the resource.
 			if errors.IsAlreadyExists(err) {
-				return f.Apply(spec)
+				return f.apply(spec)
 			}
-			return fmt.Errorf("failed to create resource %v - Resource:\n%s", err, toYaml(spec))
+			return fmt.Errorf("failed to create resource %w - Resource:\n%s", err, toYaml(spec))
 		}
 	} else {
 		// Update existing one
@@ -108,7 +129,7 @@ func (f *YamlManifest) Apply(spec *unstructured.Unstructured) error {
 				return err
 			})
 			if err != nil {
-				return fmt.Errorf("failed to update resource %v - Resource:\n%s", err, toYaml(spec))
+				return fmt.Errorf("failed to update resource %w - Resource:\n%s", err, toYaml(spec))
 			}
 		}
 	}

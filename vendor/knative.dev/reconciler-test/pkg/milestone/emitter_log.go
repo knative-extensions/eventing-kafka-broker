@@ -51,7 +51,7 @@ func NewLogEmitter(ctx context.Context, namespace string) *LogEmitter {
 func (l LogEmitter) Environment(env map[string]string) {
 	bytes, err := json.MarshalIndent(env, " ", " ")
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
 		return
 	}
 	l.log().Debug("Environment ", string(bytes))
@@ -77,7 +77,7 @@ func (l LogEmitter) TestFinished(feature string, t feature.T) {
 func (l LogEmitter) StepsPlanned(feature string, steps map[feature.Timing][]feature.Step, t feature.T) {
 	bytes, err := json.MarshalIndent(steps, " ", " ")
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
 		return
 	}
 	l.log().Debug(feature, " Steps Planned ", string(bytes))
@@ -86,7 +86,7 @@ func (l LogEmitter) StepsPlanned(feature string, steps map[feature.Timing][]feat
 func (l LogEmitter) StepStarted(feature string, step *feature.Step, t feature.T) {
 	bytes, err := json.MarshalIndent(step, " ", " ")
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
 		return
 	}
 	l.log().Debug(feature, " Step Started ", string(bytes))
@@ -95,7 +95,7 @@ func (l LogEmitter) StepStarted(feature string, step *feature.Step, t feature.T)
 func (l LogEmitter) StepFinished(feature string, step *feature.Step, t feature.T) {
 	bytes, err := json.MarshalIndent(step, " ", " ")
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
 		return
 	}
 	l.log().Debug(feature, " Step Finished ", string(bytes))
@@ -135,16 +135,21 @@ func (l LogEmitter) dumpEvents() {
 		return
 	}
 	dump := l.newDumpFile()
+	if dump == nil {
+		return
+	}
 	defer func() {
 		_ = dump.Close()
 	}()
 	content, err := json.MarshalIndent(sortEventsByTime(events.Items), "", "  ")
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
+		return
 	}
 	_, err = dump.Write(content)
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
+		return
 	}
 	l.log().Infof("Events (%d) dump written to: %s",
 		len(events.Items), dump.Name())
@@ -154,7 +159,8 @@ func (l LogEmitter) newDumpFile() *os.File {
 	artifacts := os.Getenv("ARTIFACTS")
 	f, err := ioutil.TempFile(artifacts, "events-dump.*.json")
 	if err != nil {
-		l.log().Fatal(err)
+		l.log().Error(err)
+		return nil
 	}
 	return f
 }
