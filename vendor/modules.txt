@@ -1512,7 +1512,7 @@ k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/third_party/forked/golang/btree
 k8s.io/utils/trace
-# knative.dev/eventing v0.50.1-0.20261026111529-23211b7206ad
+# knative.dev/eventing v0.51.0
 ## explicit; go 1.26.0
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
