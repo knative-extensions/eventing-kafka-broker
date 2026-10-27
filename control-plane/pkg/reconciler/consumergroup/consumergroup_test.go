@@ -2578,7 +2578,7 @@ func TestFinalizeKind(t *testing.T) {
 			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
 		},
 		{
-			Name: "Finalize error - failed consumer group deletion with " + sarama.ErrNonEmptyGroup.Error(),
+			Name: "Finalize requeue - failed consumer group deletion with " + sarama.ErrNonEmptyGroup.Error(),
 			Objects: []runtime.Object{
 				NewDeletedConsumeGroup(
 					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
@@ -2597,13 +2597,6 @@ func TestFinalizeKind(t *testing.T) {
 					return nil, nil
 				}),
 				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrNonEmptyGroup,
-			},
-			WantEvents: []string{
-				Eventf(
-					corev1.EventTypeWarning,
-					"InternalError",
-					"failed to delete consumer group offset: unable to delete the consumer group my.group.id: "+sarama.ErrNonEmptyGroup.Error(),
-				),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{

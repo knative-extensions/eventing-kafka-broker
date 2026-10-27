@@ -44,6 +44,7 @@ import (
 	"knative.dev/eventing/pkg/observability"
 	"knative.dev/eventing/pkg/scheduler"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/observability/attributekey"
 	pointer "knative.dev/pkg/ptr"
@@ -257,8 +258,12 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consum
 		// The group still has active members (dispatchers that haven't observed the contract
 		// update yet), so retry without consuming the bounded retry budget used for
 		// unreachable clusters.
+		// A member can stay until its in-flight event delivery ends, which takes up to the
+		// 60s connect timeout. Retry at a fixed interval: returning the error would back
+		// off exponentially, up to 1000s, and retry long after the group became empty.
 		if errorIsOneOf(err, sarama.ErrNonEmptyGroup) {
-			return cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", err)
+			_ = cg.MarkDeleteOffsetFailed("DeleteConsumerGroupOffset", err)
+			return controller.NewRequeueAfter(5 * time.Second)
 		}
 		// We retry a few times to delete Consumer group metadata from Kafka before giving up.
 		if v := r.DeleteConsumerGroupMetadataCounter.Inc(string(cg.GetUID())); v <= 5 {
