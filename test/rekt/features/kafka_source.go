@@ -359,7 +359,7 @@ func KafkaSourceFeatureAssert(f *feature.Feature, kafkaSink, receiver string, cu
 	options = append(options, senderOpts...)
 	options = append(options, extraOpts...)
 
-	f.Requirement("install eventshub sender", eventshub.Install(sender, options...))
+	f.Requirement("install eventshub sender", afterKafkaSinkIsReady(kafkaSink, eventshub.Install(sender, options...)))
 
 	f.Assert("eventshub receiver gets event", matchEvent(receiver, matcher))
 }
@@ -630,10 +630,10 @@ func KafkaSourceTLSSink() *feature.Feature {
 	})
 	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
-	f.Requirement("install eventshub sender", eventshub.Install(sender,
+	f.Requirement("install eventshub sender", afterKafkaSinkIsReady(kafkaSink, eventshub.Install(sender,
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
 		eventshub.InputEvent(event),
-	))
+	)))
 
 	f.Stable("KafkaSource as event source").
 		Must("delivers events on sink with ref",
@@ -688,10 +688,10 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	})
 	f.Requirement("kafka source is ready", kafkasource.IsReady(kafkaSource))
 
-	f.Requirement("install eventshub sender", eventshub.Install(sender,
+	f.Requirement("install eventshub sender", afterKafkaSinkIsReady(kafkaSink, eventshub.Install(sender,
 		eventshub.StartSenderToResource(kafkasink.GVR(), kafkaSink),
 		eventshub.InputEvent(event),
-	))
+	)))
 
 	f.Stable("KafkaSource as event source").
 		Must("delivers events on sink with ref",
