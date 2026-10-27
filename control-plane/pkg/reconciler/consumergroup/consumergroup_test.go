@@ -64,6 +64,7 @@ const (
 	testSchedulerKey           = "scheduler"
 	noTestScheduler            = "no-scheduler"
 	wantErrorOnGetClusterAdmin = "wantErrorOnGetClusterAdmin"
+	nonEmptyGroupAttemptsKey   = "nonEmptyGroupAttempts"
 
 	systemNamespace = "knative-eventing"
 	finalizerName   = "consumergroups.internal.kafka.eventing.knative.dev"
@@ -1881,6 +1882,7 @@ func TestReconcileKind(t *testing.T) {
 			SystemNamespace:                    systemNamespace,
 			AutoscalerConfig:                   "",
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+			NonEmptyGroupCounter:               counter.NewExpiringCounter(ctx),
 			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 			EnqueueKey:                         func(key string) {},
 		}
@@ -2041,6 +2043,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			},
 			SystemNamespace:                    systemNamespace,
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+			NonEmptyGroupCounter:               counter.NewExpiringCounter(ctx),
 			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 			EnqueueKey:                         func(key string) {},
 		}
@@ -2619,6 +2622,29 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
 		},
+		{
+			Name: "Finalize normal - consumer group still has members after 60 attempts",
+			Objects: []runtime.Object{
+				NewDeletedConsumeGroup(
+					ConsumerGroupOwnerRef(SourceAsOwnerReference()),
+					ConsumerGroupConsumerSpec(NewConsumerSpec(
+						ConsumerConfigs(
+							ConsumerBootstrapServersConfig(ChannelBootstrapServers),
+							ConsumerGroupIDConfig("my.group.id"),
+						),
+					)),
+				),
+			},
+			Key: testKey,
+			OtherTestData: map[string]interface{}{
+				testSchedulerKey: SchedulerFunc(func(_ context.Context, vpod scheduler.VPod) ([]eventingduckv1alpha1.Placement, error) {
+					return nil, nil
+				}),
+				kafkatesting.ErrorOnDeleteConsumerGroupTestKey: sarama.ErrNonEmptyGroup,
+				nonEmptyGroupAttemptsKey:                       60,
+			},
+			SkipNamespaceValidation: true, // WantCreates compare the source namespace with configmap namespace, so skip it
+		},
 	}
 
 	table.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
@@ -2655,6 +2681,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			KafkaFeatureFlags:                  configapis.DefaultFeaturesConfig(),
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+			NonEmptyGroupCounter:               counter.NewExpiringCounter(ctx),
 			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache[string, prober.Status, struct{}](ctx, time.Second),
 		}
 
@@ -2662,6 +2689,12 @@ func TestFinalizeKind(t *testing.T) {
 		r.InitializeOffsetLatency, _ = meter.Int64Histogram("kn.eventing.initialize_offset.latency", metric.WithExplicitBucketBoundaries(latencyBoundsMs...))
 		r.ExpectedReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.expected")
 		r.ReadyReplicas, _ = meter.Int64Gauge("kn.eventing.replicas.ready")
+
+		// Earlier attempts on the ConsumerGroup, which has no UID in these tests.
+		attempts, _ := row.OtherTestData[nonEmptyGroupAttemptsKey].(int)
+		for i := 0; i < attempts; i++ {
+			r.NonEmptyGroupCounter.Inc("")
+		}
 
 		return consumergroup.NewReconciler(
 			ctx,
