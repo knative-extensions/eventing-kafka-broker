@@ -52,7 +52,6 @@
     <net.logstash.logback.encoder.version>8.1</net.logstash.logback.encoder.version>
     <assertj.version>3.27.7</assertj.version>
     <jib.version>3.5.2</jib.version>
-    <mockwebserver.version>4.12.0</mockwebserver.version>
     <aws.msk.iam.auth.version>2.3.9</aws.msk.iam.auth.version>
     <commons.logging.version>1.4.0</commons.logging.version>
     <palantirJavaFormat.version>2.81.0</palantirJavaFormat.version>
@@ -136,13 +135,6 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr4</artifactId>
         <version>${antlr.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>mockwebserver</artifactId>
-        <version>${mockwebserver.version}</version>
-        <scope>test</scope>
       </dependency>
 
       <!-- Logback -->

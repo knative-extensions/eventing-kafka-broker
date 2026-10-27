@@ -23,6 +23,10 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+      # antlr4, antlr4-runtime and antlr4-maven-plugin must share the version
+      # used to generate cloudevents-sql's parser, so antlr can only be bumped
+      # together with the CloudEvents SDK.
+      - dependency-name: "org.antlr:*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
