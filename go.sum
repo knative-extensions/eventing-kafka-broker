@@ -1605,8 +1605,8 @@ k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20230209194617-a36077c30491/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3 h1:jVkFFVfXdXP74B/zbO3hM3hpSFD0xvhQ5U686DPurkE=
 k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3/go.mod h1:M2s5JB1lIYP3jzZdorPLHXIPJzt9vv2muW5a6L9DtNM=
-knative.dev/eventing v0.50.1-0.20261026111529-23211b7206ad h1:d4pbxX3gDWOsTUt/It4NYWJr37Ne4DeS/n+57Qfw2s4=
-knative.dev/eventing v0.50.1-0.20261026111529-23211b7206ad/go.mod h1:6FV2R7cscKii+TRTisGaa72xdnz2Dy67DEAk08tQdd0=
+knative.dev/eventing v0.51.0 h1:9qiVuMYif4d6YKcAIR/EQryjfOhWG9DJi8tRj295dfU=
+knative.dev/eventing v0.51.0/go.mod h1:mtUVbhKevvMCIGD/z9EZyCwL9rOcbB5+juI76ChCJEI=
 knative.dev/hack v0.0.0-20261023132104-4a15c76c8f70 h1:ID5j7e0qb9baa6XqzSq/ooRJtQ+tOL6aw5XfyRT+/+w=
 knative.dev/hack v0.0.0-20261023132104-4a15c76c8f70/go.mod h1:L5RzHgbvam0u8QFHfzCX6MKxu/a/gIGEdaRBqNiVbl0=
 knative.dev/pkg v0.0.0-20261026113028-cfa0ac991c5a h1:0eewtjoXS8hjARTeoTB0cs8Xxr6VMk/2Weg/6GjM25U=
