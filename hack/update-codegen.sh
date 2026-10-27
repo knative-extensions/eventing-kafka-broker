@@ -94,4 +94,4 @@ cert_manager_installer="${REPO_ROOT_DIR}/vendor/knative.dev/eventing/hack/update
 # shellcheck source=/dev/null
 source <(grep -v '^update_cert_manager ' "${cert_manager_installer}")
 
-update_cert_manager "v1.20.3" "v0.24.0"
+update_cert_manager "v1.21.3" "v0.26.0"
