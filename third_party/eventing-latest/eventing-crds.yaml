@@ -20,7 +20,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schemas
@@ -307,7 +307,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -347,7 +347,7 @@ spec:
                   type: object
                   properties:
                     backoffDelay:
-                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                       type: string
                     backoffPolicy:
                       description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -522,7 +522,7 @@ metadata:
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -573,7 +573,7 @@ spec:
                   type: object
                   properties:
                     backoffDelay:
-                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                       type: string
                     backoffPolicy:
                       description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -623,7 +623,7 @@ spec:
                         type: object
                         properties:
                           backoffDelay:
-                            description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                            description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                             type: string
                           backoffPolicy:
                             description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -880,7 +880,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
   name: containersources.sources.knative.dev
 spec:
@@ -1055,7 +1055,7 @@ metadata:
   name: eventpolicies.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1268,7 +1268,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1560,7 +1560,7 @@ metadata:
   name: eventtypes.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -1953,7 +1953,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -2351,7 +2351,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
   name: integrationsources.sources.knative.dev
 spec:
@@ -2743,7 +2743,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: sinks.knative.dev
@@ -2894,7 +2894,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -2925,7 +2925,7 @@ spec:
                         type: object
                         properties:
                           backoffDelay:
-                            description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                            description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                             type: string
                           backoffPolicy:
                             description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -3422,7 +3422,7 @@ metadata:
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
   annotations:
     # TODO add schema
@@ -3793,7 +3793,7 @@ metadata:
   name: requestreplies.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -3838,7 +3838,7 @@ spec:
                   type: object
                   properties:
                     backoffDelay:
-                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                       type: string
                     backoffPolicy:
                       description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -4005,7 +4005,7 @@ metadata:
   labels:
     knative.dev/crd-install: "true"
     duck.knative.dev/addressable: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: flows.knative.dev
@@ -4078,7 +4078,7 @@ spec:
                         type: object
                         properties:
                           backoffDelay:
-                            description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                            description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                             type: string
                           backoffPolicy:
                             description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -4389,7 +4389,7 @@ metadata:
     duck.knative.dev/source: "true"
     duck.knative.dev/binding: "true"
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
   name: sinkbindings.sources.knative.dev
 spec:
@@ -4604,7 +4604,7 @@ metadata:
   name: subscriptions.messaging.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: messaging.knative.dev
@@ -4644,7 +4644,7 @@ spec:
                   type: object
                   properties:
                     backoffDelay:
-                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                       type: string
                     backoffPolicy:
                       description: BackoffPolicy is the retry backoff policy (linear, exponential).
@@ -4866,7 +4866,7 @@ metadata:
   name: triggers.eventing.knative.dev
   labels:
     knative.dev/crd-install: "true"
-    app.kubernetes.io/version: "20261024-5272bfed8"
+    app.kubernetes.io/version: "20261027-149a64857"
     app.kubernetes.io/name: knative-eventing
 spec:
   group: eventing.knative.dev
@@ -4927,7 +4927,7 @@ spec:
                   x-kubernetes-preserve-unknown-fields: true # This is necessary to enable the experimental feature delivery-timeout
                   properties:
                     backoffDelay:
-                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.'
+                      description: 'BackoffDelay is the delay before retrying. More information on Duration format: - https://www.iso.org/iso-8601-date-and-time-format.html - https://en.wikipedia.org/wiki/ISO_8601  For linear policy, backoff delay is backoffDelay*<numberOfRetries>. For exponential policy, backoff delay is backoffDelay*2^(<numberOfRetries>-1).'
                       type: string
                     backoffPolicy:
                       description: BackoffPolicy is the retry backoff policy (linear, exponential).
