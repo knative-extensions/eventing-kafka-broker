@@ -23,14 +23,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/pointer"
+	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/observability"
 
@@ -65,8 +69,17 @@ var serviceTLSCertificate embed.FS
 var caTLSCertificates embed.FS
 
 const (
-	caSecretName = "eventshub-ca"
+	caSecretName      = "eventshub-ca"
+	caCertificateName = "selfsigned-ca"
 )
+
+// certificateGVR is the GVR of the cert-manager Certificate backing the
+// eventshub CA.
+var certificateGVR = schema.GroupVersionResource{
+	Group:    "cert-manager.io",
+	Version:  "v1",
+	Resource: "certificates",
+}
 
 // Install starts a new eventshub with the provided name
 // Note: this function expects that the Environment is configured with the
@@ -85,12 +98,11 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 		}
 		env := environment.FromContext(ctx)
 		namespace := env.Namespace()
-		log := logging.FromContext(ctx)
 
 		// Compute the user provided envs
 		envs := make(map[string]string)
 		if err := compose(options...)(ctx, envs); err != nil {
-			log.Fatalf("Error while computing environment variables for eventshub: %s", err)
+			t.Fatalf("Error while computing environment variables for eventshub: %s", err)
 		}
 
 		// eventshub needs observability and logging config
@@ -177,13 +189,13 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 
 		if isEnforceTLS && isReceiver {
 			if _, err := manifest.InstallYamlFS(ctx, serviceTLSCertificate, cfg); err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 		}
 
 		// Deploy Service/Pod
 		if _, err := manifest.InstallYamlFS(ctx, servicePodTemplates, cfg); err != nil {
-			log.Fatal(err)
+			t.Fatal(err)
 		}
 
 		k8s.WaitForPodReadyOrSucceededOrFail(ctx, t, name)
@@ -201,7 +213,7 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 		if withForwarder {
 			sinkURL, err := service.Address(ctx, serviceName)
 			if err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 			// At this point env contains "receiver" so we need to override it.
 			envs[EventGeneratorsEnv] = "forwarder"
@@ -223,7 +235,7 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 
 			// Deploy Forwarder
 			if _, err := manifest.InstallYamlFS(ctx, forwarderTemplates, cfg); err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 			knativeservice.IsReady(name)(ctx, t)
 		}
@@ -239,7 +251,9 @@ func WithTLS(t feature.T) environment.EnvOpts {
 				return ctx, fmt.Errorf("failed to install CA certificates and issuer: %w", err)
 			}
 
-			secret.IsPresent(caSecretName, secret.AssertKey("ca.crt"))(ctx, t)
+			if err := waitForCACertificate(ctx, t); err != nil {
+				return ctx, fmt.Errorf("failed to wait for CA certificate to become ready: %w", err)
+			}
 
 			caCerts, err := getCACertsFromSecret(ctx)
 			if err != nil {
@@ -250,6 +264,33 @@ func WithTLS(t feature.T) environment.EnvOpts {
 
 			return ctx, nil
 		}), nil
+	}
+}
+
+// waitForCACertificate waits until cert-manager has issued the eventshub CA
+// Certificate, surfacing the failure reason when issuance is stuck.
+func waitForCACertificate(ctx context.Context, t feature.T) error {
+	env := environment.FromContext(ctx)
+	return k8s.WaitForResourceCondition(ctx, t, env.Namespace(), caCertificateName, certificateGVR, certificateIsReady(t))
+}
+
+// certificateIsReady is a k8s.ConditionFunc for an issued Certificate.
+func certificateIsReady(t feature.T) k8s.ConditionFunc {
+	lastMsg := ""
+	return func(obj duckv1.KResource) bool {
+		ready := obj.Status.GetCondition(apis.ConditionReady)
+		if ready == nil {
+			return false
+		}
+		if !ready.IsTrue() {
+			msg := fmt.Sprintf("%s: %s", ready.Reason, ready.Message)
+			if msg != lastMsg {
+				t.Logf("CA certificate %q is not ready: %s", caCertificateName, msg)
+				lastMsg = msg
+			}
+			return false
+		}
+		return true
 	}
 }
 
@@ -282,18 +323,39 @@ func GetCaCerts(ctx context.Context) *string {
 	return caCerts.(*string)
 }
 
+// secretReadRetry backs retries of transient API errors when reading the
+// eventshub CA secret.
+var secretReadRetry = wait.Backoff{
+	Steps:    4,
+	Duration: 200 * time.Millisecond,
+	Factor:   5.0,
+	Jitter:   0.1,
+}
+
 func getCACertsFromSecret(ctx context.Context) ([]byte, error) {
 	ns := environment.FromContext(ctx).Namespace()
 
-	s, err := kubeclient.Get(ctx).
-		CoreV1().
-		Secrets(ns).
-		Get(ctx, caSecretName, metav1.GetOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get eventshub CA certs secret: %w", err)
-	}
+	var caCerts []byte
+	err := retry.OnError(secretReadRetry, k8s.IsTransientError, func() error {
+		s, err := kubeclient.Get(ctx).
+			CoreV1().
+			Secrets(ns).
+			Get(ctx, caSecretName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get eventshub CA certs secret: %w", err)
+		}
+		caCerts, err = caCertsFromSecret(s)
+		return err
+	})
+	return caCerts, err
+}
 
-	caCrt, _ := s.Data["ca.crt"]
+// caCertsFromSecret returns the ca.crt data of the eventshub CA secret.
+func caCertsFromSecret(s *corev1.Secret) ([]byte, error) {
+	caCrt, ok := s.Data["ca.crt"]
+	if !ok {
+		return nil, fmt.Errorf("secret %s/%s has no %q key", s.Namespace, s.Name, "ca.crt")
+	}
 	return caCrt, nil
 }
 

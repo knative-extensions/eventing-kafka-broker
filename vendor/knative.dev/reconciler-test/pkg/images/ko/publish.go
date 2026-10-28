@@ -21,10 +21,20 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
+
+	"knative.dev/pkg/logging"
 )
 
 // ErrKoPublishFailed is returned when the ko publish command fails.
 var ErrKoPublishFailed = errors.New("ko publish failed")
+
+const (
+	// publishAttempts is how many times Publish runs ko. ko runs with
+	// go run, so a network error while fetching it fails the publish.
+	publishAttempts   = 3
+	publishRetryDelay = 5 * time.Second
+)
 
 // Publish uses ko to publish the image.
 func Publish(ctx context.Context, path string) (string, error) {
@@ -41,10 +51,17 @@ func Publish(ctx context.Context, path string) (string, error) {
 		args = append(args, "--platform="+platform)
 	}
 	args = append(args, "-B", path)
-	out, err := runCmd(ctx, args)
-	if err != nil {
-		return "", fmt.Errorf("%w: %v -- command: %q",
-			ErrKoPublishFailed, err, args)
+	for attempt := 1; ; attempt++ {
+		out, err := runCmd(ctx, args)
+		if err == nil {
+			return out, nil
+		}
+		if attempt == publishAttempts {
+			return "", fmt.Errorf("%w: %v -- command: %q",
+				ErrKoPublishFailed, err, args)
+		}
+		logging.FromContext(ctx).Warnw("ko publish failed, retrying",
+			"attempt", attempt, "error", err)
+		time.Sleep(publishRetryDelay)
 	}
-	return out, nil
 }

@@ -23,7 +23,6 @@ import (
 	"io/fs"
 	"strings"
 
-	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/injection/clients/dynamicclient"
 	"knative.dev/pkg/logging"
 
@@ -56,14 +55,8 @@ func InstallYamlFS(ctx context.Context, fsys fs.FS, base map[string]interface{})
 		return nil, err
 	}
 
-	// Apply yaml.
-	err = retry.OnError(retry.DefaultRetry, isWebhookError, func() error {
-		// This is a workaround for https://github.com/knative/pkg/issues/1509
-		// Because tests currently fail immediately on any creation failure, this
-		// is problematic. On the reconcilers it's not an issue because they recover,
-		// but tests need this retry.
-		return manifest.ApplyAll()
-	})
+	// Apply yaml. Transient errors are retried by YamlManifest.Apply.
+	err = manifest.ApplyAll()
 	if err != nil {
 		return manifest, err
 	}
@@ -79,7 +72,7 @@ func InstallYamlFS(ctx context.Context, fsys fs.FS, base map[string]interface{})
 	if j, err := json.MarshalIndent(refs, "", "  "); err == nil {
 		log.Debug("Created: ", string(j))
 	} else {
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	return manifest, nil
@@ -96,7 +89,8 @@ func ImagesFromFS(ctx context.Context, fsys fs.FS) []string {
 		if strings.HasSuffix(info.Name(), "yaml") {
 			file, err := fsys.Open(path)
 			if err != nil {
-				log.Fatal(err)
+				log.Error(err)
+				return nil
 			}
 			defer file.Close()
 
@@ -113,24 +107,4 @@ func ImagesFromFS(ctx context.Context, fsys fs.FS) []string {
 	})
 
 	return images
-}
-
-func isWebhookError(err error) bool {
-	str := err.Error()
-
-	// isEOFError is a workaround for https://github.com/knative/pkg/issues/1509.
-	// Example error:
-	// Internal error occurred: failed calling webhook "defaulting.webhook.kafka.eventing.knative.dev": Post "https://kafka-webhook-eventing.knative-eventing.svc:443/defaulting?timeout=2s": EOF
-	isEOFError := strings.Contains(str, "webhook") &&
-		strings.Contains(str, "https") &&
-		strings.Contains(str, "EOF")
-
-	// In addition to the above error we're getting a "context deadline exceeded" generic error
-	// Example error:
-	// Internal error occurred: failed calling webhook "inmemorychannel.eventing.knative.dev": failed to call webhook: Post "https://inmemorychannel-webhook.knative-eventing-9zkohswwf9.svc:443/defaulting?timeout=10s": context deadline exceeded
-	isContextDeadlineExceededError := strings.Contains(str, "webhook") &&
-		strings.Contains(str, "https") &&
-		strings.Contains(str, "context deadline exceeded")
-
-	return isEOFError || isContextDeadlineExceededError
 }
