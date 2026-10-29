@@ -274,6 +274,21 @@ func TestKafkaSourceScaledObject(t *testing.T) {
 
 }
 
+func TestKafkaSourceKedaScaledObjectAnnotations(t *testing.T) {
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithObservabilityConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(5*time.Second, 4*time.Minute),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.KafkaSourceScaledObjectHasCorrectAnnotations())
+}
+
 func TestKafkaSourceTLSSink(t *testing.T) {
 
 	t.Parallel()
