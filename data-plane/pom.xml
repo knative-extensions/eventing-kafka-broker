@@ -33,10 +33,10 @@
     <!-- Maven plugins -->
     <maven.compiler.plugin.version>3.16.0</maven.compiler.plugin.version>
     <maven.jar.plugin.version>3.5.1</maven.jar.plugin.version>
-    <maven.surefire.plugin.version>3.6.0</maven.surefire.plugin.version>
+    <maven.surefire.plugin.version>3.6.1</maven.surefire.plugin.version>
     <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
-    <maven.jacoco.plugin.version>0.8.15</maven.jacoco.plugin.version>
-    <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
+    <maven.jacoco.plugin.version>0.8.16</maven.jacoco.plugin.version>
+    <maven.enforcer.plugin.version>3.7.0</maven.enforcer.plugin.version>
     <maven.license.plugin.version>2.7.1</maven.license.plugin.version>
     <mycila.license.plugin.version>4.6</mycila.license.plugin.version>
     <spotless.plugin.version>2.46.1</spotless.plugin.version>
@@ -48,7 +48,7 @@
     <strimzi-test-container.version>0.117.0</strimzi-test-container.version>
     <antlr.version>4.9.3</antlr.version> <!-- Match the version used to generate cloudevents-sql's parser; antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
     <bucket4j.version>7.6.1</bucket4j.version>
-    <ch.qos.logback.version>1.6.5</ch.qos.logback.version>
+    <ch.qos.logback.version>1.6.6</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>8.1</net.logstash.logback.encoder.version>
     <assertj.version>3.27.7</assertj.version>
     <jib.version>3.5.2</jib.version>
