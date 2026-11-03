@@ -2,7 +2,7 @@
 # At least one WG lead from https://github.com/knative/community/blob/master/working-groups/WORKING-GROUPS.md#event-delivery
 # must be in the "approvers" list.
 approvers:
-- technical-oversight-committee
+- steering-committee
 - knative-release-leads
 - eventing-writers
 - eventing-kafka-broker-approvers
