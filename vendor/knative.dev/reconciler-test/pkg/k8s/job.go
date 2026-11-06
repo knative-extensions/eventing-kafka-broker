@@ -67,7 +67,7 @@ func WaitForJobCondition(ctx context.Context, t feature.T, name string, isCondit
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				t.Logf("%s/%s job transient error: %v", namespace, name, err)
 				return false, nil
 			}
@@ -106,7 +106,7 @@ func WaitForJobTerminationMessage(ctx context.Context, t feature.T, name string,
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				t.Logf("%s/%s job termination transient error: %v", namespace, name, err)
 				return false, nil
 			}

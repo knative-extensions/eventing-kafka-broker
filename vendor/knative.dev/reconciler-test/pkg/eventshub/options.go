@@ -88,14 +88,13 @@ func StartSenderToResource(gvr schema.GroupVersionResource, name string) EventsH
 
 // StartSenderToNamespacedResource starts the sender in the eventshub pointing to the provided resource
 // This can be used together with InputEvent, AddTracing, EnableIncrementalId, InputEncoding and InputHeader options
+// It waits for the resource to have an address, since the step installing the sender can run in
+// parallel with the step that waits for the resource to be ready.
 func StartSenderToNamespacedResource(gvr schema.GroupVersionResource, name, namespace string) EventsHubOption {
 	return func(ctx context.Context, envs map[string]string) error {
-		u, err := k8s.NamespacedAddress(ctx, gvr, name, namespace)
+		u, err := k8s.WaitForNamespacedAddress(ctx, gvr, name, namespace)
 		if err != nil {
-			return err
-		}
-		if u == nil {
-			return fmt.Errorf("resource %v named %s is not addressable", gvr, name)
+			return fmt.Errorf("resource %v named %s is not addressable: %w", gvr, name, err)
 		}
 
 		if u.URL.Scheme == "https" {
@@ -119,14 +118,12 @@ func StartSenderToResourceTLS(gvr schema.GroupVersionResource, name string, caCe
 // StartSenderToNamespacedResourceTLS starts the sender in the eventshub pointing to the provided namespaced resource.
 // `caCerts` parameter is optional, if nil, it will fall back to use the addressable CA certs.
 // This can be used together with InputEvent, AddTracing, EnableIncrementalId, InputEncoding and InputHeader options
+// It waits for the resource to have an address, like StartSenderToNamespacedResource.
 func StartSenderToNamespacedResourceTLS(gvr schema.GroupVersionResource, name, namespace string, caCerts *string) EventsHubOption {
 	return func(ctx context.Context, m map[string]string) error {
-		u, err := k8s.NamespacedAddress(ctx, gvr, name, namespace)
+		u, err := k8s.WaitForNamespacedAddress(ctx, gvr, name, namespace)
 		if err != nil {
-			return err
-		}
-		if u == nil {
-			return fmt.Errorf("resource %v named %s is not addressable", gvr, name)
+			return fmt.Errorf("resource %v named %s is not addressable: %w", gvr, name, err)
 		}
 		u.URL.Scheme = "https"
 

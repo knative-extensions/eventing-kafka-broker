@@ -34,7 +34,8 @@ func LevelFromEnvironment(ctx context.Context) zapcore.Level {
 	level := zapcore.DebugLevel
 	if err := level.UnmarshalText([]byte(levelStr)); err != nil {
 		logging.FromContext(ctx).
-			Fatalf("Invalid level given as %s: %+v, %+v", key, levelStr, err)
+			Errorf("Invalid %s %q: %v; defaulting to debug", key, levelStr, err)
+		return zapcore.DebugLevel
 	}
 	return level
 }

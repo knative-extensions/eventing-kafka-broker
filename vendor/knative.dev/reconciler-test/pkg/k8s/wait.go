@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -137,7 +138,7 @@ func WaitForResourceCondition(ctx context.Context, t feature.T, namespace, name 
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				t.Logf("Transient error getting resource %s/%s: %v", namespace, name, err)
 				return false, nil
 			}
@@ -243,12 +244,28 @@ func readyCondition(obj duckv1.KResource) *apis.Condition {
 	return obj.Status.GetCondition(apis.ConditionReady)
 }
 
-// isTransientError returns true for transient Kubernetes API errors that should
-// be retried, such as temporary credential refresh failures on cloud providers.
-func isTransientError(err error) bool {
-	return apierrors.IsUnauthorized(err) ||
+// IsTransientError reports whether err is a transient Kubernetes API error
+// worth retrying, e.g. 5xx, timeouts, credential refresh, admission webhook
+// or connection failures.
+func IsTransientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// The API server failed to call an admission webhook, e.g. while the
+	// webhook pod was starting: https://github.com/knative/pkg/issues/1509
+	str := err.Error()
+	if strings.Contains(str, "failed calling webhook") ||
+		strings.Contains(str, "failed to call webhook") {
+		return true
+	}
+	if net.IsConnectionReset(err) {
+		return true
+	}
+	return apierrors.IsInternalError(err) ||
+		apierrors.IsUnauthorized(err) ||
 		apierrors.IsServerTimeout(err) ||
 		apierrors.IsServiceUnavailable(err) ||
+		apierrors.IsTimeout(err) ||
 		apierrors.IsTooManyRequests(err)
 }
 
@@ -270,7 +287,7 @@ func WaitForServiceEndpoints(ctx context.Context, t feature.T, name string, numb
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				t.Logf("Transient error getting service %s/%s: %v", ns, name, err)
 				return false, nil
 			}
@@ -293,7 +310,7 @@ func WaitForServiceEndpoints(ctx context.Context, t feature.T, name string, numb
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				t.Logf("Transient error getting endpoints %s/%s: %v", ns, name, err)
 				return false, nil
 			}
@@ -427,7 +444,7 @@ func WaitForPodReadyOrSucceededOrFail(ctx context.Context, t feature.T, podName 
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				t.Logf("Transient error getting pod %s/%s: %v", ns, podName, err)
 				return false, nil
 			}
@@ -485,12 +502,20 @@ func PodLogs(ctx context.Context, podName, containerName, namespace string) ([]b
 // WaitForAddress waits until a resource has an address.
 // Timing is optional but if provided is [interval, timeout].
 func WaitForAddress(ctx context.Context, gvr schema.GroupVersionResource, name string, timing ...time.Duration) (*duckv1.Addressable, error) {
+	env := environment.FromContext(ctx)
+	return WaitForNamespacedAddress(ctx, gvr, name, env.Namespace(), timing...)
+}
+
+// WaitForNamespacedAddress waits until a resource in a specific namespace has
+// an address.
+// Timing is optional but if provided is [interval, timeout].
+func WaitForNamespacedAddress(ctx context.Context, gvr schema.GroupVersionResource, name, namespace string, timing ...time.Duration) (*duckv1.Addressable, error) {
 	interval, timeout := PollTimings(ctx, timing)
 
 	var addr *duckv1.Addressable
 	err := wait.PollImmediate(interval, timeout, func() (bool, error) {
 		var err error
-		addr, err = Address(ctx, gvr, name)
+		addr, err = NamespacedAddress(ctx, gvr, name, namespace)
 		if err == nil && addr == nil {
 			// keep polling
 			return false, nil
@@ -500,7 +525,7 @@ func WaitForAddress(ctx context.Context, gvr schema.GroupVersionResource, name s
 				// keep polling
 				return false, nil
 			}
-			if isTransientError(err) {
+			if IsTransientError(err) {
 				// keep polling
 				return false, nil
 			}

@@ -148,6 +148,16 @@ func (mr *MagicEnvironment) Finish() {
 	}
 }
 
+// failSetup fails the managed test, or the process if the environment is
+// not test-managed.
+func (mr *MagicEnvironment) failSetup(ctx context.Context, err error) {
+	if mr.managedT != nil {
+		mr.managedT.Fatal(err)
+		return
+	}
+	logging.FromContext(ctx).Fatal(err)
+}
+
 // WithPollTimings is an environment option to override default poll timings.
 func WithPollTimings(interval, timeout time.Duration) EnvOpts {
 	return func(ctx context.Context, env Environment) (context.Context, error) {
@@ -159,6 +169,8 @@ func WithPollTimings(interval, timeout time.Duration) EnvOpts {
 // registration of following opts:
 //   - Cleanup,
 //   - WithTestLogger.
+//
+// Managed should be registered first to scope setup failures to the test.
 func Managed(t feature.T) EnvOpts {
 	return UnionOpts(Cleanup(t), WithTestLogger(t))
 }
@@ -203,7 +215,7 @@ func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context,
 
 	for _, opt := range opts {
 		if nctx, err := opt(ctx, env); err != nil {
-			logging.FromContext(ctx).Fatal(err)
+			env.failSetup(ctx, err)
 		} else {
 			ctx = nctx
 		}
@@ -234,13 +246,13 @@ func (mr *MagicGlobalEnvironment) Environment(opts ...EnvOpts) (context.Context,
 	}
 
 	if err := env.CreateNamespaceIfNeeded(); err != nil {
-		logging.FromContext(ctx).Fatal(err)
+		env.failSetup(ctx, err)
 	}
 
 	for _, in := range GetPostInit(ctx) {
 		ctx, err = in(ctx, env)
 		if err != nil {
-			logging.FromContext(ctx).Fatal(err)
+			env.failSetup(ctx, err)
 		}
 	}
 
