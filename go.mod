@@ -35,10 +35,10 @@ require (
 	k8s.io/client-go v0.36.5
 	k8s.io/code-generator v0.36.5
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
-	knative.dev/eventing v0.51.0
-	knative.dev/hack v0.0.0-20261023132104-4a15c76c8f70
-	knative.dev/pkg v0.0.0-20261026113028-cfa0ac991c5a
-	knative.dev/reconciler-test v0.0.0-20261026141430-d915e180051b
+	knative.dev/eventing v0.51.1-0.20261106033240-495a0f9afe89
+	knative.dev/hack v0.0.0-20261106011541-9aee2b079953
+	knative.dev/pkg v0.0.0-20261110182720-ae1437a8b141
+	knative.dev/reconciler-test v0.0.0-20261106011656-329aad7c53d9
 	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -125,7 +125,7 @@ require (
 	github.com/rickb777/plural v1.2.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/spf13/pflag v1.1.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/wavesoftware/go-ensure v1.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
