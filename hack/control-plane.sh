@@ -20,13 +20,36 @@ readonly CONTROL_PLANE_CONFIG_DIR=control-plane/config/eventing-kafka-broker
 readonly CONTROL_PLANE_POST_INSTALL_CONFIG_DIR=control-plane/config/post-install
 readonly CONTROL_PLANE_SOURCE_CONFIG_DIR=control-plane/config/eventing-kafka-source
 
+# Resolve the migrator separately so the other post-install image keeps its name.
+function resolve_post_install() {
+  case "${KO_DOCKER_REPO}" in
+    ko.local|kind.local)
+      ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}"
+      ;;
+    *)
+      local manifest
+      local manifest_flags=()
+      for manifest in "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}"/*.yaml; do
+        [[ "${manifest}" == "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}/500-storage-version-migrator.yaml" ]] && continue
+        manifest_flags+=(-f "${manifest}")
+      done
+      ko resolve ${KO_FLAGS} "${manifest_flags[@]}" || return $?
+      echo "---"
+      # Disable inherited naming flags, which otherwise take precedence over --bare.
+      KO_DOCKER_REPO="${KO_DOCKER_REPO}/knative.dev/eventing-kafka-broker/storage-version-migration" \
+        ko resolve ${KO_FLAGS} --preserve-import-paths=false --base-import-paths=false --bare \
+        -f "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}/500-storage-version-migrator.yaml"
+      ;;
+  esac
+}
+
 # Note: do not change this function name, it's used during releases.
 function control_plane_setup() {
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_CONFIG_DIR}" | LABEL_YAML_CMD >>"${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" || return $?
-  ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}" | LABEL_YAML_CMD >"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+  resolve_post_install | LABEL_YAML_CMD >"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
 }
 
 function control_plane_source_setup() {
-  ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}" | LABEL_YAML_CMD >"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
+  resolve_post_install | LABEL_YAML_CMD >"${EVENTING_KAFKA_POST_INSTALL_ARTIFACT}" || return $?
   ko resolve ${KO_FLAGS} -Rf "${CONTROL_PLANE_SOURCE_CONFIG_DIR}" | LABEL_YAML_CMD >>"${EVENTING_KAFKA_SOURCE_BUNDLE_ARTIFACT}" || return $?
 }
