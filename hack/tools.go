@@ -27,9 +27,6 @@ import (
 
 	_ "k8s.io/code-generator/cmd/validation-gen"
 
-	// Needed for the storage version migration.
-	_ "knative.dev/pkg/apiextensions/storageversion/cmd/migrate"
-
 	// Test images from eventing
 	_ "knative.dev/eventing/test/test_images/event-sender"
 	_ "knative.dev/eventing/test/test_images/print"

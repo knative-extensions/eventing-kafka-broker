@@ -36,7 +36,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: ko://knative.dev/pkg/apiextensions/storageversion/cmd/migrate
+          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/storage-version-migration
           env:
             - name: IGNORE_NOT_FOUND
               value: "true"
