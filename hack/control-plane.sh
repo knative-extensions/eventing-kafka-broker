@@ -36,7 +36,7 @@ function resolve_post_install() {
       ko resolve ${KO_FLAGS} "${manifest_flags[@]}" || return $?
       echo "---"
       # Disable inherited naming flags, which otherwise take precedence over --bare.
-      KO_DOCKER_REPO="${KO_DOCKER_REPO}/knative.dev/eventing-kafka-broker/storage-version-migration" \
+      KO_DOCKER_REPO="${KO_DOCKER_REPO}/knative.dev/${REPO_NAME}/storage-version-migration" \
         ko resolve ${KO_FLAGS} --preserve-import-paths=false --base-import-paths=false --bare \
         -f "${CONTROL_PLANE_POST_INSTALL_CONFIG_DIR}/500-storage-version-migrator.yaml"
       ;;
