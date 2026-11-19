@@ -36,9 +36,9 @@ require (
 	k8s.io/code-generator v0.36.5
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	knative.dev/eventing v0.51.1-0.20261116221356-c1a0757074b1
-	knative.dev/hack v0.0.0-20261106011541-9aee2b079953
-	knative.dev/pkg v0.0.0-20261116144155-e02e9574667d
-	knative.dev/reconciler-test v0.0.0-20261116013858-9522fd840108
+	knative.dev/hack v0.0.0-20261118025754-120c8f556283
+	knative.dev/pkg v0.0.0-20261118131257-b2f62414bc1e
+	knative.dev/reconciler-test v0.0.0-20261118134110-1778c18b2a9a
 	sigs.k8s.io/randfill v1.0.0
 	sigs.k8s.io/yaml v1.6.0
 )
