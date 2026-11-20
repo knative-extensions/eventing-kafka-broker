@@ -68,7 +68,7 @@ public class SuffixFilterBenchmark {
                     CloudEventV1.TYPE, "ate",
                     CloudEventV1.DATASCHEMA, "ema",
                     CloudEventV1.DATACONTENTTYPE, "ype",
-                    CloudEventV1.SUBJECT, "ect"));
+                    CloudEventV1.SUBJECT, "etc"));
         }
 
         @Override
