@@ -289,7 +289,7 @@ func (r *Reconciler) reconcileConsumerGroup(ctx context.Context, broker *eventin
 }
 
 func deliverySpec(broker *eventing.Broker, trigger *eventing.Trigger) *eventingduck.DeliverySpec {
-	// TOOD(pierDipi) use `Merge` in https://github.com/knative/eventing/pull/6277/files
+	// TODO(pierDipi) use `Merge` in https://github.com/knative/eventing/pull/6277/files
 	if trigger.Spec.Delivery != nil {
 		return trigger.Spec.Delivery
 	}
