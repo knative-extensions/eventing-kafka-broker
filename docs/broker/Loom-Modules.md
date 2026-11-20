@@ -10,16 +10,17 @@ In these implementations we use [Project Loom](https://openjdk.org/projects/loom
 **Pre-requisites:** You have followed the [CONTRIBUTING](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/CONTRIBUTING.md) & [DEVELOPMENT](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/DEVELOPMENT.md) guides and have a Kubernetes cluster up and running and reachable.
 
 To install you can run the following command:
-    
+
 ```shell
 ./hack/run.sh deploy-loom
 ```
 
-OR  
+OR
 
 Export the environment variable `USE_LOOM=true`
 
 ```shell
 export USE_LOOM=true
 ```
+
 And run any command that is available in the [run.sh](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/hack/run.sh) script or any other command that you want to run.

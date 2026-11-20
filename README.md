@@ -55,6 +55,6 @@
 
 ## Working Group
 
-| Sponsoring WG                                                                                                      |
-| ------------------------------------------------------------------------------------------------------------------ |
-| [Eventing](https://github.com/knative/community/blob/main/working-groups/WORKING-GROUPS.md#eventing)               |
+| Sponsoring WG                                                                                        |
+| ---------------------------------------------------------------------------------------------------- |
+| [Eventing](https://github.com/knative/community/blob/main/working-groups/WORKING-GROUPS.md#eventing) |

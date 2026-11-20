@@ -13,22 +13,22 @@ You need to install:
 
 - [`ko`](https://github.com/google/ko) - (_required_)
 - [`Go`](https://golang.org/) - (_required_)
-    - check
-      [go \<version\>](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/go.mod)
-      for the required Go version used in this project
+  - check
+    [go \<version\>](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/go.mod)
+    for the required Go version used in this project
 - [`Java`](https://www.java.com/en/) (we recommend an `openjdk` build) -
   (_required_)
-    - check
-      [java.version](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/pom.xml)
-      maven property for the required Java version used in this project
+  - check
+    [java.version](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/pom.xml)
+    maven property for the required Java version used in this project
 - [`GNU sed`](https://www.gnu.org/software/sed/) - (_required_)
-    - To install on macOS, run `brew install gnu-sed`. Follow the brew post-install instructions to replace the default 
-      macOS sed with GNU sed. If you miss the post-install message, run `brew info gnu-sed` for instructions on making 
-      GNU sed the default.
+  - To install on macOS, run `brew install gnu-sed`. Follow the brew post-install instructions to replace the default
+    macOS sed with GNU sed. If you miss the post-install message, run `brew info gnu-sed` for instructions on making
+    GNU sed the default.
 - [`protoc`](https://github.com/protocolbuffers/protobuf)
-     - To install protoc, you can follow https://grpc.io/docs/protoc-installation/
+  - To install protoc, you can follow https://grpc.io/docs/protoc-installation/
 - `protoc-gen-go`
-     - To install `protoc-gen-go` run `go install google.golang.org/protobuf/cmd/protoc-gen-go@[version]`
+  - To install `protoc-gen-go` run `go install google.golang.org/protobuf/cmd/protoc-gen-go@[version]`
 
 _Note: See [`protoc` and `protoc-gen-go` current used versions](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/control-plane/pkg/contract/contract.pb.go#L3)_
 

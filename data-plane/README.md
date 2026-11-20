@@ -3,9 +3,9 @@
 The data-plane uses [Vertx](https://vertx.io/) and is composed of two components:
 
 - [**Receiver**](#receiver), it's responsible for accepting incoming events and send them to the appropriate Kafka
-topic. It acts as Kafka producers and broker ingress.
+  topic. It acts as Kafka producers and broker ingress.
 - [**Dispatcher**](#dispatcher), it's responsible for consuming events and send them to Triggers' subscribers. It acts
-as Kafka consumer.
+  as Kafka consumer.
 
 ## Receiver
 
