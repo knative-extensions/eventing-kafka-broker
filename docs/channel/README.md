@@ -4,14 +4,14 @@
 
 This repository contains another KafkaChannel implementation, which we believe is more flexible and scalable.
 
-
 While working on other KafkaChannel implementations we realized we could reuse the dataplane for other Knative Kafka
 components, namely Knative KafkaBroker and the Knative KafkaSink.
 
 The dataplane is designed in a way that it only communicates the control plane via a configmap and thus it is:
-* More loosely-coupled
-* Easier to test standalone
-* Using a different stack that we find more suitable for the dataplane
+
+- More loosely-coupled
+- Easier to test standalone
+- Using a different stack that we find more suitable for the dataplane
 
 ## Comparison with other KafkaChannel implementations
 
@@ -24,8 +24,8 @@ and
 the [deprecated distributed KafkaChannel](https://github.com/knative-extensions/eventing-kafka/blob/75310cc459911463d4885d662ce3789996075142/pkg/channel/distributed/README.md)
 implementations.
 
-|                         | New KafkaChannel                                        | Consolidated KafkaChannel (Not supported anymore)                               | Distributed KafkaChannel (Not supported anymore)                                                             |
-|-------------------------|---------------------------------------------------------|---------------------------------------------------------|--------------------------------------------------------------------------------------|
+|                         | New KafkaChannel                                        | Consolidated KafkaChannel (Not supported anymore)       | Distributed KafkaChannel (Not supported anymore)                                     |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | Delivery Guarantees     | At least once                                           | At least once                                           | At least once                                                                        |
 | Scalability             | Ingress and egress are in different pods and scalable** | Ingress and egress are in the same pod and not scalable | Ingress and egress are in different pods but not scalable                            |
 | Data plane multitenancy | All KafkaChannel resources leverage the same dataplane  | All KafkaChannel resources leverage the same dataplane  | All KafkaChannel resources leverage the same ingress but each has a dedicated egress |
@@ -52,56 +52,55 @@ implementations.
 
 3. Apply the channel manifests that are listed as assets in [releases](https://github.com/knative-extensions/eventing-kafka-broker/releases):
 
-    ```sh
-    # The whole suite
-    kubectl apply -f eventing-kafka.yaml
+   ```sh
+   # The whole suite
+   kubectl apply -f eventing-kafka.yaml
 
-    # Or, only the KafkaChannel
-    kubectl apply -f eventing-kafka-controller.yaml
-    kubectl apply -f eventing-kafka-channel.yaml
+   # Or, only the KafkaChannel
+   kubectl apply -f eventing-kafka-controller.yaml
+   kubectl apply -f eventing-kafka-channel.yaml
 
-    # Then apply the post-install job (if available)
-    kubectl apply -f eventing-kafka-post-install.yaml
-    ```
-
+   # Then apply the post-install job (if available)
+   kubectl apply -f eventing-kafka-post-install.yaml
+   ```
 
 4. Configure the `bootstrap.servers` value in the `kafka-channel-config` ConfigMap in the
    `knative-eventing` namespace.
 
-    ```yaml
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: kafka-channel-config
-      namespace: knative-eventing
-    data:
-      # Replace this with the URLs for your kafka cluster,
-      # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
-      bootstrap.servers: "REPLACE_WITH_CLUSTER_URL"
-    ```
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: kafka-channel-config
+     namespace: knative-eventing
+   data:
+     # Replace this with the URLs for your kafka cluster,
+     # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+     bootstrap.servers: "REPLACE_WITH_CLUSTER_URL"
+   ```
 
 5. If you are going to use authentication or encryption, create your secret.
 
-    For using authentication, these values must exist in the secret:
-    - `sasl.mechanism`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
-    - `type`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
-    - `user`: Username to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
-    - `password`: Password to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
-    - `tokenProvider`: Name of the OAuth token provider. Only `MSKAccessTokenProvider` and `MSKRoleAccessTokenProvider` currently supported. Required for `OAUTHBEARER` **when using the Go control-plane token provider (AWS MSK)**. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
-    - `roleARN`: ARN of the AWS IAM role to assume. Required for `OAUTHBEARER` and `MSKRoleAccessTokenProvider`.
-    - `sasl.jaas.config`: Full JAAS configuration string for the Kafka client. Optional, applies only when `sasl.mechanism=OAUTHBEARER`. Used by the Java data plane to configure a custom login module (e.g. for Azure Event Hubs, Keycloak, Confluent OIDC). Ignored by the Go control plane.
-    - `sasl.login.callback.handler.class`: Fully qualified class name of an `AuthenticateCallbackHandler` that provides OAuth tokens. Optional, applies only when `sasl.mechanism=OAUTHBEARER`. The class must be present on the data-plane classpath (not shipped by this project). Ignored by the Go control plane.
+   For using authentication, these values must exist in the secret:
+   - `sasl.mechanism`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+   - `type`: Can be one of `PLAIN`, `OAUTHBEARER`, `SCRAM-SHA-256` or `SCRAM-SHA-512`. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+   - `user`: Username to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+   - `password`: Password to use in the authentication context. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+   - `tokenProvider`: Name of the OAuth token provider. Only `MSKAccessTokenProvider` and `MSKRoleAccessTokenProvider` currently supported. Required for `OAUTHBEARER` **when using the Go control-plane token provider (AWS MSK)**. See Apache Kafka [SASL configuration documentation](https://kafka.apache.org/documentation/#security_sasl_config) for more information.
+   - `roleARN`: ARN of the AWS IAM role to assume. Required for `OAUTHBEARER` and `MSKRoleAccessTokenProvider`.
+   - `sasl.jaas.config`: Full JAAS configuration string for the Kafka client. Optional, applies only when `sasl.mechanism=OAUTHBEARER`. Used by the Java data plane to configure a custom login module (e.g. for Azure Event Hubs, Keycloak, Confluent OIDC). Ignored by the Go control plane.
+   - `sasl.login.callback.handler.class`: Fully qualified class name of an `AuthenticateCallbackHandler` that provides OAuth tokens. Optional, applies only when `sasl.mechanism=OAUTHBEARER`. The class must be present on the data-plane classpath (not shipped by this project). Ignored by the Go control plane.
 
-    For using encryption, these values must exist in the secret:
-    - `ca.crt`: Certificate authority certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
-    - `user.crt`: User certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
-    - `user.key`: User certificate key. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
+   For using encryption, these values must exist in the secret:
+   - `ca.crt`: Certificate authority certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
+   - `user.crt`: User certificate. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
+   - `user.key`: User certificate key. See Apache Kafka [SSL configuration documentation](https://kafka.apache.org/documentation/#security_ssl) for more information.
 
-    In any case, `protocol` value must be set explicitly to one of:
-    - `PLAINTEXT`: No authentication and encryption are used.
-    - `SSL`: Only encryption is used
-    - `SASL_PLAINTEXT`: Only authentication is used
-    - `SASL_SSL`: Both authentication and encryption are used
+   In any case, `protocol` value must be set explicitly to one of:
+   - `PLAINTEXT`: No authentication and encryption are used.
+   - `SSL`: Only encryption is used
+   - `SASL_PLAINTEXT`: Only authentication is used
+   - `SASL_SSL`: Both authentication and encryption are used
 
    ```sh
     ca_cert_secret="my-cluster-cluster-ca-cert"
@@ -142,78 +141,81 @@ implementations.
 6. Configure `auth.secret.ref.name` and `auth.secret.ref.namespace` values in the `kafka-channel-config` ConfigMap in the
    `knative-eventing` namespace.
 
-    ```yaml
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: kafka-channel-config
-      namespace: knative-eventing
-    data:
-      # Replace this with the URLs for your kafka cluster,
-      # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
-      bootstrap.servers: "REPLACE_WITH_CLUSTER_URL"
-      # Replace with secret name, such as strimzi-sasl-secret as created above
-      auth.secret.ref.name: REPLACE_WITH_SECRET_NAME
-      auth.secret.ref.namespace: knative-eventing
-    ```
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: kafka-channel-config
+     namespace: knative-eventing
+   data:
+     # Replace this with the URLs for your kafka cluster,
+     # which is in the format of my-cluster-kafka-bootstrap.my-kafka-namespace:9092.
+     bootstrap.servers: "REPLACE_WITH_CLUSTER_URL"
+     # Replace with secret name, such as strimzi-sasl-secret as created above
+     auth.secret.ref.name: REPLACE_WITH_SECRET_NAME
+     auth.secret.ref.namespace: knative-eventing
+   ```
 
 7. If using `sasl.mechanism: OAUTHBEARER`, configure the data plane.
 
-    **Option A: Via the auth secret (recommended when the callback handler jar is on the data-plane classpath)**
+   **Option A: Via the auth secret (recommended when the callback handler jar is on the data-plane classpath)**
 
-    Add `sasl.jaas.config` and `sasl.login.callback.handler.class` directly in the auth secret:
-    ```sh
-    kubectl create secret --namespace knative-eventing generic kafka-auth-secret \
-      --from-literal=protocol="SASL_SSL" \
-      --from-literal=sasl.mechanism="OAUTHBEARER" \
-      --from-literal=sasl.jaas.config="org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required scope=\"https://<namespace>.servicebus.windows.net/.default\";" \
-      --from-literal=sasl.login.callback.handler.class="io.conduktor.kafka.security.oauthbearer.azure.AzureManagedIdentityCallbackHandler"
-    ```
+   Add `sasl.jaas.config` and `sasl.login.callback.handler.class` directly in the auth secret:
 
-    This is the cleanest approach: all auth configuration lives in a single Secret.
+   ```sh
+   kubectl create secret --namespace knative-eventing generic kafka-auth-secret \
+     --from-literal=protocol="SASL_SSL" \
+     --from-literal=sasl.mechanism="OAUTHBEARER" \
+     --from-literal=sasl.jaas.config="org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required scope=\"https://<namespace>.servicebus.windows.net/.default\";" \
+     --from-literal=sasl.login.callback.handler.class="io.conduktor.kafka.security.oauthbearer.azure.AzureManagedIdentityCallbackHandler"
+   ```
 
-    > **Note:** The callback handler class is not shipped with this project. You must build a
-    > derived data-plane image that includes the handler jar on the classpath. See the
-    > [Azure Event Hubs example](#azure-event-hubs-with-managed-identity) below.
+   This is the cleanest approach: all auth configuration lives in a single Secret.
 
-    **Option B: Via ConfigMap properties (fallback / legacy)**
+   > **Note:** The callback handler class is not shipped with this project. You must build a
+   > derived data-plane image that includes the handler jar on the classpath. See the
+   > [Azure Event Hubs example](#azure-event-hubs-with-managed-identity) below.
 
-    The following java properties files need sasl properties set:
-    1. config-kafka-source-producer.properties
-    2. config-kafka-source-consumer.properties
-    3. config-kafka-channel-producer.properties
-    4. config-kafka-channel-consumer.properties
-    5. config-kafka-broker-producer.properties
-    6. config-kafka-broker-consumer.properties
+   **Option B: Via ConfigMap properties (fallback / legacy)**
 
-    The following properties should be added:
-    ```
-    security.protocol=SASL_SSL
-    sasl.mechanism=OAUTHBEARER
-    sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required awsStsRegion="<REGION>";
-    sasl.login.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
-    sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
-    ```
+   The following java properties files need sasl properties set:
+   1. config-kafka-source-producer.properties
+   2. config-kafka-source-consumer.properties
+   3. config-kafka-channel-producer.properties
+   4. config-kafka-channel-consumer.properties
+   5. config-kafka-broker-producer.properties
+   6. config-kafka-broker-consumer.properties
 
-    If you need to assume a role to connect to MSK, add a `awsRoleArn` value to `sasl.jaas.config` and make sure to use the `MSKRoleAccessTokenProvider`:
-    ```
-    sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required awsStsRegion="<REGION>" awsRoleArn="<ROLE_ARN>";
-    ```
+   The following properties should be added:
+
+   ```
+   security.protocol=SASL_SSL
+   sasl.mechanism=OAUTHBEARER
+   sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required awsStsRegion="<REGION>";
+   sasl.login.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
+   sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMOAuthBearerLoginCallbackHandler
+   ```
+
+   If you need to assume a role to connect to MSK, add a `awsRoleArn` value to `sasl.jaas.config` and make sure to use the `MSKRoleAccessTokenProvider`:
+
+   ```
+   sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required awsStsRegion="<REGION>" awsRoleArn="<ROLE_ARN>";
+   ```
 
 ## Usage
 
 You can create the `KafkaChannel` custom objects just like:
 
-   ```yaml
-   apiVersion: messaging.knative.dev/v1beta1
-   kind: KafkaChannel
-   metadata:
-     name: my-kafka-channel
-   spec:
-     numPartitions: 1
-     replicationFactor: 1
-     retentionDuration: PT168H
-   ```
+```yaml
+apiVersion: messaging.knative.dev/v1beta1
+kind: KafkaChannel
+metadata:
+  name: my-kafka-channel
+spec:
+  numPartitions: 1
+  replicationFactor: 1
+  retentionDuration: PT168H
+```
 
 You can configure the number of partitions with `numPartitions`, as well as
 the replication factor with `replicationFactor`, and the Kafka message
@@ -224,6 +226,7 @@ the WebHook to `1`, `1`, and `PT168H` respectively.
 
 > [!NOTE]
 > Consolidated and Distributed KafkaChannel are not supported anymore, please migrate to the new implementation.
+
 ### Breaking changes from consolidated channel
 
 There are a few breaking changes however automated migration is possible for migrations from the consolidated channel
@@ -310,6 +313,7 @@ See [configuring dataplane](#configuring-dataplane) section for more details.
 #### Secret
 
 The new channel implementation requires the secret to have
+
 - A new key in the secret called `protocol`
 - Key called `sasl.mechanism` instead of `saslType`
 
@@ -323,6 +327,7 @@ in the new channel, we will ask users to explicitly define the protocol.
 Also the key `saslType` is changed to `sasl.mechanism` with the same possible values.
 
 Using SASL authentication with SSL encryption looks like this in the previous secret format:
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -342,6 +347,7 @@ data:
 ```
 
 New implementation requires specifying the protocol explicitly:
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -357,9 +363,9 @@ data:
   # SASL authentication
   user: ...
   password: ...
-  sasl.mechanism: ...   # RENAMED from saslType
+  sasl.mechanism: ... # RENAMED from saslType
   # Protocol
-  protocol: ...   # NEW
+  protocol: ... # NEW
 ```
 
 Possible values for the protocol are:
@@ -402,9 +408,9 @@ This job:
 
 All configuration options in the previous configmap are ignored, except these:
 
-* `eventing-kafka.kafka.brokers`: Copied over to `bootstrap.servers` in  new configmap
-* `eventing-kafka.kafka.authSecretName`: Copied over to `auth.secret.ref.name` in  new configmap
-* `eventing-kafka.kafka.authSecretNamespace`: Copied over to `auth.secret.ref.namespace` in  new configmap
+- `eventing-kafka.kafka.brokers`: Copied over to `bootstrap.servers` in new configmap
+- `eventing-kafka.kafka.authSecretName`: Copied over to `auth.secret.ref.name` in new configmap
+- `eventing-kafka.kafka.authSecretNamespace`: Copied over to `auth.secret.ref.namespace` in new configmap
 
 Secret is not modified and the `protocol` information is inferred from what's available in the secret and the
 previous configmap. However, this inferring will be deprecated and removed soon.
@@ -432,6 +438,7 @@ kafka-webhook-9c549589b-ghmkb          1/1     Running   0          91s
 ```
 
 Create a channel, subscription, a logger pod (event-display) and an event source (ping-source):
+
 ```sh
 # Create a channel
 ❯ cat <<-EOF | kubectl apply -f -
@@ -529,16 +536,19 @@ Data,
 ```
 
 Apply new channel manifest (applying the whole Knative Kafka suite with broker, sink, source and channel):
+
 ```sh
 ❯ kubectl apply -f https://github.com/knative-extensions/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka.yaml
 ```
 
 Apply post-install manifest:
+
 ```sh
 ❯ kubectl apply -f https://github.com/knative-extensions/eventing-kafka-broker/releases/download/knative-v1.4.2/eventing-kafka-post-install.yaml
 ```
 
 Watch the logs of the post-install job:
+
 ```sh
 ❯ kubectl logs -n knative-eventing kafka-controller-post-install-5ds4v --follow
 {"severity":"INFO","timestamp":"2022-06-03T11:10:46.640412574Z","caller":"logging/config.go:116","message":"Successfully created the logger."}
@@ -555,7 +565,6 @@ Watch the logs of the post-install job:
 {"level":"info","ts":1654255246.859558,"logger":"fallback","caller":"post-install/kafka_channel_post_migration_deleter.go:64","msg":"Done waiting 10m0s. Deleting old data plane..."}
 ```
 
-
 ## Configuring dataplane
 
 Configmap `config-kafka-channel-data-plane` contains 4 different keys to configure dataplane defaults.
@@ -568,7 +577,6 @@ Configmap `config-kafka-channel-data-plane` contains 4 different keys to configu
 Values of these keys are in [.properties format](https://en.wikipedia.org/wiki/.properties#Format).
 
 You may find the default value of this configmap [in the repository](https://github.com/knative-extensions/eventing-kafka-broker/blob/main/data-plane/config/channel/100-config-kafka-channel-data-plane.yaml).
-
 
 ## Best practices
 

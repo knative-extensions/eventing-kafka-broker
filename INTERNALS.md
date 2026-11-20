@@ -12,6 +12,7 @@ following the
 [Knative Kubernetes controllers](https://github.com/knative-extensions/sample-controller).
 
 - data-plane internals: [data-plane/README.md](data-plane/README.md).
+
 <!--- TODO add control-plane internals --->
 
 # Directory structure
