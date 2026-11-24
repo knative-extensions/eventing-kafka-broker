@@ -48,7 +48,7 @@
     <strimzi-test-container.version>0.118.0</strimzi-test-container.version>
     <antlr.version>4.9.3</antlr.version> <!-- Match the version used to generate cloudevents-sql's parser; antlr4-maven-plugin, antlr4-runtime, antlr4 must have the same version -->
     <bucket4j.version>7.6.1</bucket4j.version>
-    <ch.qos.logback.version>1.6.7</ch.qos.logback.version>
+    <ch.qos.logback.version>1.6.8</ch.qos.logback.version>
     <net.logstash.logback.encoder.version>8.1</net.logstash.logback.encoder.version>
     <assertj.version>3.27.7</assertj.version>
     <jib.version>3.5.2</jib.version>
