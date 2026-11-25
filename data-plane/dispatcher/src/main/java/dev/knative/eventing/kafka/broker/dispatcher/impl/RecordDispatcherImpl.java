@@ -404,7 +404,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         logger.debug(
                 "Dispatch latency {} {}", consumerVerticleContext.getLoggingKeyValue(), keyValue("latency", latency));
 
-        if (meterRegistry != null) {
+        // Deliveries can finish after close() has removed their meters.
+        if (meterRegistry != null && !closed.get()) {
             Metrics.eventDispatchLatency(getTags(response, recordContext))
                     .register(meterRegistry)
                     .record(latency);
@@ -503,11 +504,11 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     }
 
     public Future<Void> close() {
-        this.closed.set(true);
-
-        Metrics.searchEgressMeters(
-                        meterRegistry, consumerVerticleContext.getEgress().getReference())
-                .forEach(meterRegistry::remove);
+        if (closed.compareAndSet(false, true) && meterRegistry != null) {
+            Metrics.searchEgressMeters(
+                            meterRegistry, consumerVerticleContext.getEgress().getReference())
+                    .forEach(meterRegistry::remove);
+        }
 
         if (inFlightEvents.get() == 0) {
             closePromise.tryComplete();
