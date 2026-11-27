@@ -404,7 +404,6 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         logger.debug(
                 "Dispatch latency {} {}", consumerVerticleContext.getLoggingKeyValue(), keyValue("latency", latency));
 
-        // Deliveries can finish after close() has removed their meters.
         if (meterRegistry != null && !closed.get()) {
             Metrics.eventDispatchLatency(getTags(response, recordContext))
                     .register(meterRegistry)
