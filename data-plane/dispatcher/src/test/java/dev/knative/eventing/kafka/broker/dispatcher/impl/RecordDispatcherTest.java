@@ -46,13 +46,16 @@ import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpVersion;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.impl.HttpResponseImpl;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import java.net.ConnectException;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,6 +73,16 @@ public class RecordDispatcherTest {
             DataPlaneContract.Egress.newBuilder(
                             FakeConsumerVerticleContext.get().getEgress())
                     .setDestination("testdest")
+                    .build());
+
+    private static final ConsumerVerticleContext channelSubscriptionContext = FakeConsumerVerticleContext.get(
+            FakeConsumerVerticleContext.get().getResource(),
+            DataPlaneContract.Egress.newBuilder(
+                            FakeConsumerVerticleContext.get().getEgress())
+                    .setReference(DataPlaneContract.Reference.newBuilder()
+                            .setKind("KafkaChannel")
+                            .setName("channel")
+                            .setNamespace("channel-namespace"))
                     .build());
 
     static {
@@ -463,6 +476,134 @@ public class RecordDispatcherTest {
     }
 
     @Test
+    public void shouldExportDispatchLatencyOfDeliveriesWithAndWithoutAnswer() {
+        final var subscriberAnswers = new AtomicBoolean(false);
+        final var dispatcherHandler = new RecordDispatcherImpl(
+                channelSubscriptionContext,
+                value -> true,
+                new CloudEventSenderMock(record -> subscriberAnswers.get()
+                        ? Future.succeededFuture(makeHttpResponse(202, ""))
+                        : Future.failedFuture(new ConnectException("Connection refused"))),
+                CloudEventSender.noop("No DLS configured"),
+                new ResponseHandlerMock(),
+                offsetManagerMock(),
+                null,
+                registry);
+
+        dispatcherHandler.dispatch(record());
+        subscriberAnswers.set(true);
+        dispatcherHandler.dispatch(record());
+
+        await().untilAsserted(() -> assertThat(registry.scrape())
+                .containsPattern(scrapedDispatchCount("500", 1))
+                .containsPattern(scrapedDispatchCount("202", 1)));
+    }
+
+    @Test
+    public void shouldRemoveDispatchLatencyWithoutAnswerOnClose(final VertxTestContext context) {
+        final var dispatcherHandler = new RecordDispatcherImpl(
+                channelSubscriptionContext,
+                value -> true,
+                new CloudEventSenderMock(record -> Future.failedFuture(new ConnectException("Connection refused"))),
+                CloudEventSender.noop("No DLS configured"),
+                new ResponseHandlerMock(),
+                offsetManagerMock(),
+                null,
+                registry);
+
+        dispatcherHandler
+                .dispatch(record())
+                .compose(v -> dispatcherHandler.close())
+                .onComplete(context.succeeding(v -> context.verify(() -> {
+                    assertThat(registry.find(Metrics.EVENT_DISPATCH_LATENCY).meters())
+                            .isEmpty();
+                    context.completeNow();
+                })));
+    }
+
+    @Test
+    public void shouldRemoveDispatchLatencyWhenDeliveryFailsDuringClose(final VertxTestContext context) {
+        final var subscriberResponse = Promise.<HttpResponse<Buffer>>promise();
+        final var dispatcher = new RecordDispatcherImpl(
+                channelSubscriptionContext,
+                value -> true,
+                new CloudEventSenderMock(record -> subscriberResponse.future()),
+                CloudEventSender.noop("No DLS configured"),
+                new ResponseHandlerMock(),
+                offsetManagerMock(),
+                null,
+                registry);
+
+        final var dispatch = dispatcher.dispatch(record());
+        final var close = dispatcher.close();
+        assertThat(close.isComplete()).isFalse();
+
+        subscriberResponse.fail(new ConnectException("Connection refused"));
+
+        Future.all(dispatch, close)
+                .onComplete(context.succeeding(v -> context.verify(() -> {
+                    assertThat(registry.scrape()).doesNotContain("kn_eventing_dispatch_latency_ms");
+                    context.completeNow();
+                })));
+    }
+
+    @Test
+    public void shouldKeepMetricsForSubscriptionStartedDuringClose(final VertxTestContext context) {
+        final var subscriberResponse = Promise.<HttpResponse<Buffer>>promise();
+        final var stoppingDispatcher = new RecordDispatcherImpl(
+                channelSubscriptionContext,
+                value -> true,
+                new CloudEventSenderMock(record -> subscriberResponse.future()),
+                CloudEventSender.noop("No DLS configured"),
+                new ResponseHandlerMock(),
+                offsetManagerMock(),
+                null,
+                registry);
+        final var pendingDispatch = stoppingDispatcher.dispatch(record());
+        final var close = stoppingDispatcher.close();
+        assertThat(close.isComplete()).isFalse();
+
+        final var nextSubscriptionContext = FakeConsumerVerticleContext.get(
+                channelSubscriptionContext.getResource(),
+                DataPlaneContract.Egress.newBuilder(channelSubscriptionContext.getEgress())
+                        .setUid("subscription-b")
+                        .setConsumerGroup("subscription-b")
+                        .build());
+        final var subscriberTags = nextSubscriptionContext
+                .getTags()
+                .and(
+                        Metrics.Tags.OPERATION_NAME, "send",
+                        Metrics.Tags.OPERATION_TYPE, "send",
+                        Metrics.Tags.DESTINATION_TEMPLATE, "subscriber");
+        final var inFlightRequests =
+                Metrics.eventDispatchInFlightCount(subscriberTags, () -> 1).register(registry);
+        final var nextDispatcher = new RecordDispatcherImpl(
+                nextSubscriptionContext,
+                value -> true,
+                new CloudEventSenderMock(record -> Future.succeededFuture(makeHttpResponse(202, ""))),
+                CloudEventSender.noop("No DLS configured"),
+                new ResponseHandlerMock(),
+                offsetManagerMock(),
+                null,
+                registry);
+
+        nextDispatcher
+                .dispatch(record())
+                .compose(v -> {
+                    subscriberResponse.fail(new ConnectException("Connection refused"));
+                    return Future.all(pendingDispatch, close);
+                })
+                .onComplete(context.succeeding(v -> context.verify(() -> {
+                    assertThat(registry.find(Metrics.EVENT_DISPATCH_IN_FLIGHT_REQUESTS)
+                                    .tags(subscriberTags)
+                                    .gauge())
+                            .isSameAs(inFlightRequests);
+                    assertThat(registry.scrape()).containsPattern(scrapedDispatchCount("202", 1));
+                    context.completeNow();
+                })));
+    }
+
+    @Test
     public void shouldCloseSinkResponseHandlerSubscriberSenderAndDeadLetterSinkSender(final VertxTestContext context) {
 
         final var subscriberSender = mock(CloudEventSender.class);
@@ -583,6 +724,12 @@ public class RecordDispatcherTest {
                         .get()
                         .count())
                 .isGreaterThan(0);
+    }
+
+    private static String scrapedDispatchCount(final String statusCode, final int count) {
+        return "kn_eventing_dispatch_latency_ms_count\\{[^}]*http_response_status_code=\"" + statusCode
+                + "\",kn_kafkachannel_name=\"channel\",kn_kafkachannel_namespace=\"channel-namespace\",[^}]*} "
+                + count + "\\.0";
     }
 
     private void simulateLatency() {

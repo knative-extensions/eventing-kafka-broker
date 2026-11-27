@@ -70,6 +70,8 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     private static final Tag OFFSET_SKIPPING_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "OffsetSkippingCloudEvent");
     private static final Tag UNKNOWN_EVENT_TYPE_TAG = Tag.of(Metrics.Tags.EVENT_TYPE, "unknown");
 
+    private static final String INTERNAL_SERVER_ERROR_STATUS_CODE = "500";
+
     private static final String KN_ERROR_DEST_EXT_NAME = "knativeerrordest";
     private static final String KN_ERROR_CODE_EXT_NAME = "knativeerrorcode";
     private static final String KN_ERROR_DATA_EXT_NAME = "knativeerrordata";
@@ -402,7 +404,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
         logger.debug(
                 "Dispatch latency {} {}", consumerVerticleContext.getLoggingKeyValue(), keyValue("latency", latency));
 
-        if (meterRegistry != null) {
+        if (meterRegistry != null && !closed.get()) {
             Metrics.eventDispatchLatency(getTags(response, recordContext))
                     .register(meterRegistry)
                     .record(latency);
@@ -424,15 +426,9 @@ public class RecordDispatcherImpl implements RecordDispatcher {
                 : Tag.of(
                         Metrics.Tags.EVENT_TYPE,
                         recordContext.getRecord().value().getType());
-        Tags tags;
-        if (response == null) {
-            tags = Tags.of(eventTypeTag);
-        } else {
-            tags = this.consumerVerticleContext
-                    .getTags()
-                    .and(Tag.of(Metrics.Tags.RESPONSE_CODE, Integer.toString(response.statusCode())), eventTypeTag);
-        }
-        return tags;
+        final var statusCode =
+                response == null ? INTERNAL_SERVER_ERROR_STATUS_CODE : Integer.toString(response.statusCode());
+        return this.consumerVerticleContext.getTags().and(Tag.of(Metrics.Tags.RESPONSE_CODE, statusCode), eventTypeTag);
     }
 
     private Tags getTags(final ConsumerRecordContext recordContext) {
@@ -507,11 +503,11 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     }
 
     public Future<Void> close() {
-        this.closed.set(true);
-
-        Metrics.searchEgressMeters(
-                        meterRegistry, consumerVerticleContext.getEgress().getReference())
-                .forEach(meterRegistry::remove);
+        if (closed.compareAndSet(false, true) && meterRegistry != null) {
+            Metrics.searchEgressMeters(
+                            meterRegistry, consumerVerticleContext.getEgress().getReference())
+                    .forEach(meterRegistry::remove);
+        }
 
         if (inFlightEvents.get() == 0) {
             closePromise.tryComplete();
